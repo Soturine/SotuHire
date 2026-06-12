@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import io
 import re
 from pathlib import Path
@@ -194,6 +195,11 @@ def _detect_links(text: str) -> list[str]:
     return _unique([link.rstrip(".,;") for link in URL_PATTERN.findall(text)])
 
 
+def _first_match(pattern: re.Pattern[str], text: str) -> str:
+    match = pattern.search(text)
+    return match.group(0) if match else ""
+
+
 def _link_by_domain(links: list[str], domain: str) -> str:
     return next((link for link in links if domain in link.lower()), "")
 
@@ -239,12 +245,8 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
 
     return ResumeProfileSchema(
         name=_detect_name(lines),
-        email=(
-            EMAIL_PATTERN.search(clean_text).group(0) if EMAIL_PATTERN.search(clean_text) else ""
-        ),
-        phone=(
-            PHONE_PATTERN.search(clean_text).group(0) if PHONE_PATTERN.search(clean_text) else ""
-        ),
+        email=_first_match(EMAIL_PATTERN, clean_text),
+        phone=_first_match(PHONE_PATTERN, clean_text),
         city=_detect_city(clean_text),
         linkedin=_link_by_domain(links, "linkedin.com"),
         github=_link_by_domain(links, "github.com"),
@@ -279,7 +281,7 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
 
 def _extract_pdf_text(content: bytes) -> str:
     try:
-        import fitz
+        fitz = importlib.import_module("fitz")
     except ImportError as exc:
         raise RuntimeError("Instale pymupdf para ler curriculos PDF.") from exc
 
@@ -289,11 +291,11 @@ def _extract_pdf_text(content: bytes) -> str:
 
 def _extract_docx_text(content: bytes) -> str:
     try:
-        from docx import Document
+        document_module = importlib.import_module("docx")
     except ImportError as exc:
         raise RuntimeError("Instale python-docx para ler curriculos DOCX.") from exc
 
-    document = Document(io.BytesIO(content))
+    document = document_module.Document(io.BytesIO(content))
     return "\n".join(paragraph.text for paragraph in document.paragraphs)
 
 
