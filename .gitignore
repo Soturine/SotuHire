@@ -223,10 +223,10 @@ __marimo__/
 *.db
 n8n_data/
 postgres_data/
-storage/
+/storage/
 .cache/
-data/
-exports/
+/data/
+/exports/
 
 # Generated resumes and sensitive exports
 outputs/*.docx

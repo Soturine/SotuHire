@@ -2,19 +2,9 @@
 
 from __future__ import annotations
 
-KANBAN_COLUMNS = [
-    "found",
-    "analyzed",
-    "good_fit",
-    "applied",
-    "message_sent",
-    "follow_up",
-    "interview",
-    "technical_test",
-    "rejected",
-    "offer",
-    "archived",
-]
+from modules.tracker.status import JobStatus
+
+KANBAN_COLUMNS = [status.value for status in JobStatus]
 
 
 def is_valid_status(status: str) -> bool:
