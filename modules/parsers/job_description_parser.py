@@ -94,9 +94,16 @@ def _detect_modality(normalized: str) -> str:
 
 
 def _detect_salary(text: str) -> tuple[int | None, int | None]:
+    contexts = [
+        line
+        for line in text.splitlines()
+        if re.search(r"(R\$|sal[aá]rio|remunera[cç][aã]o|faixa salarial)", line, re.IGNORECASE)
+    ]
+    if not contexts:
+        return None, None
     amounts = re.findall(
         r"(?:R\$\s*)?(\d{1,3}(?:[.\s]\d{3})+|\d{4,6})(?:,\d{2})?",
-        text,
+        "\n".join(contexts),
         flags=re.IGNORECASE,
     )
     values = [int(re.sub(r"\D", "", amount)) for amount in amounts]
@@ -175,7 +182,9 @@ def parse_job_description(text: str) -> JobPostingSchema:
         required_skills=required_skills,
         desired_skills=desired_skills,
         english_required=bool(
-            re.search(r"\b(ingles|english)\b.*\b(obrigatorio|required|fluente|fluent)\b", normalized)
+            re.search(
+                r"\b(ingles|english)\b.*\b(obrigatorio|required|fluente|fluent)\b", normalized
+            )
         ),
         ats_keywords=extract_keywords(clean_text, limit=30),
         raw_text=clean_text,

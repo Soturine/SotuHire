@@ -1,5 +1,6 @@
 import io
 
+import fitz
 from docx import Document
 from modules.parsers.resume_parser import parse_resume_file, parse_resume_text
 
@@ -56,3 +57,16 @@ def test_resume_parser_reads_docx_file():
 
     assert profile.source_type == "docx"
     assert {"Python", "Docker"} <= set(profile.skills)
+
+
+def test_resume_parser_reads_pdf_file():
+    document = fitz.open()
+    page = document.new_page()
+    page.insert_text((72, 72), "Pessoa Exemplo\nSkills\nPython e SQL")
+    content = document.tobytes()
+    document.close()
+
+    profile = parse_resume_file("resume.pdf", content)
+
+    assert profile.source_type == "pdf"
+    assert {"Python", "SQL"} <= set(profile.skills)

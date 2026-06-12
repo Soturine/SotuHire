@@ -40,3 +40,4 @@ def test_job_parser_detects_remote_senior_role():
     assert parsed.modality == "remote"
     assert parsed.seniority == "senior"
     assert {"Python", "FastAPI", "PostgreSQL"} <= set(parsed.required_skills)
+    assert parsed.salary_min is None
