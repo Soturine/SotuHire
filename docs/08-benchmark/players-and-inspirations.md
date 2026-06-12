@@ -275,3 +275,42 @@ Diferenciais sugeridos:
 8. hidden jobs radar.
 9. extensão assistiva.
 10. documentação com screenshots.
+
+---
+
+# Referências adicionadas
+
+## RepoLogs
+
+- Link: <https://github.com/VictoriaSCorreia/RepoLogs_GithubExtension>
+- Inspira: extensão Chrome, análise de GitHub, seleção de arquivos, score de qualidade.
+- Aplicação: Portfolio Score e GitHub Analyzer.
+
+## Automated Job Search Scraper
+
+- Link: <https://github.com/VictoriaSCorreia/AUTOMATED_JOBSEACRH_SCRAPER>
+- Inspira: scraping de vagas, CSV, Telegram, Selenium, múltiplas fontes.
+- Aplicação: Opportunity Collector e Alert Engine.
+
+## LinkedIn Profile Score
+
+- Link: <https://github.com/henriquesantanati/linkedin-profile-score>
+- Inspira: análise segura via CSV exportado, score 0-100, recomendações.
+- Aplicação: LinkedIn Score e Profile Analyzer.
+
+## Estratégia de diferenciação
+
+O SotuHire deve se posicionar como:
+
+```text
+radar inteligente + análise de aderência + perfil profissional + tracker + revisão humana
+```
+
+Não como:
+
+```text
+auto apply bot
+spam bot
+scraper agressivo
+currículo mágico
+```

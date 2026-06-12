@@ -40,3 +40,13 @@ ignore = [
 quote-style = "double"
 indent-style = "space"
 line-ending = "auto"
+
+
+[tool.coverage.run]
+source = ["modules"]
+
+[tool.sotuhire]
+architecture = "modular"
+privacy_mode = "local-first"
+auto_apply = false
+review_required = true

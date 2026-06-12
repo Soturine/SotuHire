@@ -216,3 +216,65 @@ Ideias futuras:
 - dashboard mais avançado;
 - alertas por e-mail/Telegram;
 - deploy opcional.
+
+---
+
+# Roadmap expandido: copiloto completo de carreira
+
+## v0.6 - Search Intelligence
+
+- Gerar queries por cargo, stack, senioridade, modalidade e país.
+- Criar busca por domínio com `site:`.
+- Sugerir fontes alternativas por perfil.
+- Integrar com [Alternative Job Boards](../05-data-sources/alternative-job-boards.md).
+- Priorizar fontes para estágio, júnior, trainee, remoto e híbrido.
+
+## v0.7 - Social Opportunity Radar
+
+- Detectar oportunidade em post colado.
+- Extrair cargo, empresa, stack, local e contato.
+- Classificar confiança do post.
+- Criar card no tracker.
+- Gerar mensagem curta para recrutador.
+
+## v0.8 - Job Tracker Kanban
+
+- Criar colunas de candidatura.
+- Salvar score, fonte, link e próximo follow-up.
+- Gerar métricas por fonte.
+- Evitar candidatura duplicada.
+
+## v0.9 - Profile Score Engine
+
+- LinkedIn Score por CSV exportado.
+- Portfolio Score por GitHub/portfólio.
+- Lattes Score quando o usuário fornecer dados acadêmicos.
+- Readiness Score combinando perfil + vaga.
+
+## v1.0 - RAG Memory
+
+- Indexar currículo, vagas, posts, projetos, LinkedIn, Lattes e histórico.
+- Recuperar evidências relevantes para cada análise.
+- Explicar recomendações com base em fontes internas.
+
+## v1.1 - Browser Extension Assistant
+
+- Botão para analisar vaga aberta.
+- Botão para salvar vaga no tracker.
+- Botão para analisar post informal.
+- Botão para analisar repositório/portfólio.
+- Sempre exigir confirmação do usuário.
+
+## v1.2 - Alerts Engine
+
+- Alertas de vaga com alto match.
+- Alertas de follow-up.
+- Alertas de fonte nova.
+- Futuro: Telegram/e-mail.
+
+## v1.3 - Multi-provider AI
+
+- Interface `AIProvider`.
+- Gemini, OpenAI, OpenRouter e Ollama.
+- Comparação de custo/qualidade.
+- Modo local-first quando possível.

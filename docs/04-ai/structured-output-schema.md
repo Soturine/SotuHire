@@ -126,3 +126,39 @@ O JSON da IA não deve ser autoridade absoluta. Exemplo:
 - sistema ajusta para 45 ou mostra alerta forte.
 
 Isso evita score bonito para vaga incompatível.
+
+---
+
+# Schema expandido de análise completa
+
+```json
+{
+  "match_score": 82,
+  "ats_score": 76,
+  "risk_score": 18,
+  "linkedin_score": 70,
+  "portfolio_score": 84,
+  "lattes_score": null,
+  "readiness_score": 79,
+  "recommendation": "Aplicar com ajustes",
+  "evidence": [],
+  "strengths": [],
+  "gaps": [],
+  "missing_keywords": [],
+  "best_projects_to_highlight": [],
+  "linkedin_actions": [],
+  "portfolio_actions": [],
+  "message_to_recruiter": "",
+  "next_follow_up_days": 5,
+  "risk_flags": []
+}
+```
+
+## Regras para IA
+
+- Nunca inventar experiência.
+- Nunca alterar fatos do currículo.
+- Sempre separar evidência de sugestão.
+- Sempre indicar quando faltam dados.
+- Sempre devolver JSON válido.
+- Sempre permitir revisão humana antes de ação externa.

@@ -293,3 +293,59 @@ Testes:
 - normaliza senioridade;
 - não quebra com campo ausente;
 - ignora vaga sem título.
+
+---
+
+# Contrato expandido de conectores
+
+Conectores devem implementar uma interface comum.
+
+```python
+class JobSourceConnector:
+    source_name: str
+    access_mode: str
+
+    def search(self, query: JobSearchQuery) -> list[JobPosting]:
+        ...
+
+    def parse(self, raw: str) -> list[JobPosting]:
+        ...
+```
+
+## Conectores planejados
+
+- `ManualConnector`
+- `LinkedInManualConnector`
+- `GupyConnector`
+- `InfoJobsConnector`
+- `IndeedConnector`
+- `CieeConnector`
+- `CompanhiaEstagiosConnector`
+- `InHireConnector`
+- `RemotarConnector`
+- `MeuHomeConnector`
+- `GreenhouseConnector`
+- `LeverConnector`
+- `AshbyConnector`
+
+## Status possíveis
+
+```text
+manual_only
+planned
+experimental
+active
+paused
+blocked
+deprecated
+```
+
+## Testes obrigatórios
+
+- parse com HTML fixture;
+- normalização de campos;
+- deduplicação;
+- erro de rede;
+- fonte sem resultado;
+- fonte com layout alterado;
+- limite de rate.

@@ -151,3 +151,53 @@ Centraliza:
 - metadados do projeto;
 - configuração do pytest;
 - configuração do Ruff.
+
+---
+
+# Estrutura expandida sugerida
+
+```text
+modules/
+├── ai/
+│   ├── provider.py
+│   ├── gemini_provider.py
+│   ├── openrouter_provider.py
+│   └── prompt_registry.py
+├── core/
+│   ├── schemas.py
+│   └── scoring.py
+├── search_intelligence/
+│   ├── query_generator.py
+│   ├── source_ranker.py
+│   ├── post_detector.py
+│   └── source_registry.py
+├── sources/
+│   ├── base.py
+│   ├── registry.py
+│   ├── gupy.py
+│   ├── infojobs.py
+│   ├── indeed.py
+│   ├── ciee.py
+│   ├── inhire.py
+│   ├── linkedin_manual.py
+│   └── remotar.py
+├── profile/
+│   ├── linkedin_export_parser.py
+│   ├── profile_score.py
+│   └── lattes_parser.py
+├── portfolio/
+│   ├── github_analyzer.py
+│   ├── portfolio_score.py
+│   └── file_sampler.py
+├── rag/
+│   ├── ingestion.py
+│   ├── retriever.py
+│   └── memory_store.py
+├── tracker/
+│   ├── kanban.py
+│   └── follow_up.py
+└── alerts/
+    └── notifier.py
+```
+
+A regra é manter cada módulo pequeno, testável e sem acoplamento com a UI.

@@ -273,3 +273,39 @@ O scraping do SotuHire está pronto quando:
 - não depende de conta do usuário;
 - não faz auto-apply;
 - não coleta dados pessoais desnecessários.
+
+---
+
+# Scraping + Search Intelligence + Alertas
+
+O scraping no SotuHire deve ser um meio, não o produto inteiro.
+
+Fluxo correto:
+
+```text
+buscar fonte -> coletar com limite -> normalizar -> deduplicar -> ranquear -> analisar match -> alertar apenas se fizer sentido
+```
+
+## Ordem de preferência técnica
+
+1. Entrada manual.
+2. Link público colado.
+3. Requests/HTTPX + BeautifulSoup em página simples.
+4. Playwright para página pública dinâmica.
+5. Scrapy para crawlers maiores.
+6. Selenium apenas quando necessário.
+
+## Inspiração prática
+
+Projetos simples de scraping com Selenium e Telegram mostram valor rápido, mas o SotuHire deve adicionar:
+
+- arquitetura modular;
+- conectores por fonte;
+- logs estruturados;
+- cache;
+- rate limit;
+- testes;
+- deduplicação;
+- análise de match antes do alerta.
+
+Referência: [AUTOMATED_JOBSEACRH_SCRAPER](https://github.com/VictoriaSCorreia/AUTOMATED_JOBSEACRH_SCRAPER).

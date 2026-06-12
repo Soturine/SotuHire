@@ -47,3 +47,30 @@ Novos arquivos:
 - `docs/03-business-rules/resume-types.md`;
 - `docs/05-data-sources/brazilian-job-portals.md`;
 - `docs/05-data-sources/portal-connector-roadmap.md`.
+
+---
+
+# Atualização expandida
+
+Esta revisão adicionou documentação e módulos para:
+
+- Search Intelligence;
+- fontes alternativas;
+- Social Post Discovery;
+- RAG Memory;
+- AI Provider Strategy;
+- Profile Score;
+- GitHub/Portfolio Analyzer;
+- Job Tracker Kanban;
+- Follow-up Assistant;
+- Alerts Roadmap;
+- Browser Extension Roadmap;
+- projetos de referência.
+
+Garantia aplicada nesta geração:
+
+- nenhum arquivo existente foi removido;
+- nenhum documento Markdown existente teve número de linhas reduzido;
+- novos docs foram adicionados em subdiretórios existentes;
+- módulos Python foram adicionados como base inicial testável;
+- novos links e diagramas Mermaid foram incluídos.

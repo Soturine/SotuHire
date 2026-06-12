@@ -272,3 +272,52 @@ Próximo passo recomendado:
 ```text
 feat: add initial resume job match MVP
 ```
+
+---
+
+## Expansão planejada: SotuHire como copiloto completo de carreira
+
+A visão atual do SotuHire foi ampliada para ir além de currículo + vaga. O projeto passa a ser documentado como um **copiloto completo de carreira para tecnologia**, com módulos independentes e evolutivos:
+
+- **Resume Analyzer**: leitura de currículo ATS, currículo tradicional e Currículo Lattes.
+- **Job Match Engine**: comparação entre perfil e vaga.
+- **Search Intelligence**: geração de queries inteligentes para Google/Bing/DuckDuckGo e buscas por domínio.
+- **Hidden Jobs Radar**: detecção de oportunidades em posts e textos informais.
+- **Responsible Scraping**: coleta pública, limitada, com cache, rate limit e respeito a regras de fonte.
+- **Job Tracker / Kanban**: histórico de candidaturas, follow-up e métricas.
+- **Profile Score Engine**: LinkedIn Score, ATS Score, Portfolio Score, Lattes Score e Readiness Score.
+- **GitHub/Portfolio Analyzer**: análise de GitHub, GitLab, Kaggle, Hugging Face, npm, PyPI, portfólios e demos.
+- **RAG Memory**: memória de carreira para recuperar evidências relevantes do usuário.
+- **Browser Extension Assistant**: extensão assistiva para analisar página aberta com confirmação humana.
+- **Alert Engine**: alertas de vagas relevantes via UI, e futuramente Telegram/e-mail.
+
+### Novos docs importantes
+
+- [Rotina Inteligente de Busca](docs/01-product/job-search-routine.md)
+- [Search Intelligence](docs/05-data-sources/search-intelligence.md)
+- [Fontes Alternativas de Vagas](docs/05-data-sources/alternative-job-boards.md)
+- [Social Post Discovery](docs/05-data-sources/social-post-discovery.md)
+- [RAG e Memória de Carreira](docs/04-ai/rag-memory-architecture.md)
+- [Provider Strategy](docs/04-ai/provider-strategy.md)
+- [Profile Score](docs/03-business-rules/profile-score.md)
+- [GitHub/Portfolio Analyzer](docs/05-data-sources/github-portfolio-analyzer.md)
+- [Job Tracker Kanban](docs/07-development/job-tracker-kanban.md)
+- [Follow-up Assistant](docs/07-development/follow-up-assistant.md)
+- [Alerts Roadmap](docs/07-development/alerts-roadmap.md)
+- [Browser Extension Roadmap](docs/07-development/browser-extension-roadmap.md)
+- [Reference Projects](docs/08-benchmark/reference-projects.md)
+
+### Inspiração nos outros projetos Soturine
+
+O SotuHire pode aproveitar princípios usados em projetos como SoturAI e SotuRail:
+
+- raciocínio adaptativo;
+- análise baseada em sinais;
+- histórico e feedback loop;
+- documentação forte;
+- módulos isolados;
+- cuidado com overengineering;
+- qualidade de código com Ruff, testes e CI;
+- visão de produto, não apenas script.
+
+No SotuHire, isso se traduz em um sistema que observa vagas, posts, currículos, portfólio e histórico para sugerir ações melhores, sempre com revisão humana.

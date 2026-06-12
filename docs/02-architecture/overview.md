@@ -146,3 +146,74 @@ Source Connector -> Raw Job -> Normalizer -> Normalized Job -> Business Rules ->
 ```
 
 Cada conector deve ser substituível. Se uma fonte quebrar, o restante do app continua funcionando.
+
+---
+
+# Arquitetura expandida
+
+```mermaid
+flowchart TD
+    U[Usuário] --> UI[Streamlit/Web UI]
+    UI --> R[Resume Analyzer]
+    UI --> SI[Search Intelligence]
+    UI --> SP[Social Post Discovery]
+    UI --> JT[Job Tracker]
+    UI --> PA[Profile Analyzer]
+    UI --> GA[GitHub/Portfolio Analyzer]
+
+    R --> ME[Match Engine]
+    SI --> OC[Opportunity Collector]
+    SP --> OC
+    OC --> N[Normalizer]
+    N --> ME
+    PA --> ME
+    GA --> ME
+
+    RAG[RAG Memory] --> ME
+    ME --> AI[AI Provider]
+    AI --> JSON[Structured Output]
+    JSON --> JT
+    JSON --> UI
+    JT --> AL[Alerts]
+```
+
+## Camadas
+
+### Interface
+
+- Streamlit no MVP.
+- Futuro web app.
+- Futuro extension assistant.
+
+### Domínio
+
+- regras de ATS;
+- regras de matching;
+- regras de senioridade;
+- regras de fonte;
+- regras de score de perfil;
+- regras de portfolio.
+
+### Dados
+
+- SQLite no MVP;
+- arquivos locais;
+- JSON estruturado;
+- futuro PostgreSQL/pgvector.
+
+### IA
+
+- prompts versionados;
+- JSON schema;
+- AIProvider;
+- RAG;
+- avaliação automatizada.
+
+### Integrações
+
+- portais públicos;
+- entrada manual;
+- scraping responsável;
+- exportação CSV do LinkedIn;
+- GitHub API pública quando possível;
+- alertas.

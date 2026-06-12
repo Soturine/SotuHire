@@ -115,3 +115,32 @@ A saída deve ser estruturada:
 - o usuário pode interpretar recomendação como verdade absoluta.
 
 Por isso, o relatório sempre deve explicar o motivo da recomendação.
+
+---
+
+# Fluxo de dados expandido
+
+```mermaid
+sequenceDiagram
+    participant User as Usuário
+    participant UI as UI
+    participant Resume as Resume Analyzer
+    participant Search as Search Intelligence
+    participant Profile as Profile Analyzer
+    participant Portfolio as Portfolio Analyzer
+    participant RAG as RAG Memory
+    participant Match as Match Engine
+    participant Tracker as Tracker
+
+    User->>UI: envia currículo/vaga/post/link
+    UI->>Resume: extrair currículo
+    UI->>Search: gerar queries ou classificar fonte
+    UI->>Profile: importar LinkedIn/Lattes se houver
+    UI->>Portfolio: analisar GitHub/portfólio se houver
+    Resume->>RAG: indexar evidências
+    Profile->>RAG: indexar perfil
+    Portfolio->>RAG: indexar projetos
+    RAG->>Match: recuperar contexto relevante
+    Match->>Tracker: salvar análise e score
+    Tracker->>UI: mostrar recomendação e próxima ação
+```
