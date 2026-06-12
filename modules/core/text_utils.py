@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 import unicodedata
 
-TOKEN_PATTERN = re.compile(r"[a-z0-9][a-z0-9+#.-]*")
+TOKEN_PATTERN = re.compile(r"[a-z0-9]+(?:[+#]+|\.[a-z0-9]+)?")
 STOPWORDS = {
     "a",
     "ao",

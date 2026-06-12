@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-def rank_sections(job_text: str, available_sections: list[str]) -> list[str]:
+def rank_resume_sections(job_text: str, available_sections: list[str]) -> list[str]:
     """Rank resume sections based on the job text using simple deterministic rules."""
     text = job_text.lower()
     scores: dict[str, int] = {section: 0 for section in available_sections}
@@ -18,3 +18,8 @@ def rank_sections(job_text: str, available_sections: list[str]) -> list[str]:
         if "work" in key or "exper" in key:
             scores[section] += 2
     return sorted(available_sections, key=lambda section: scores[section], reverse=True)
+
+
+def rank_sections(job_text: str, available_sections: list[str]) -> list[str]:
+    """Backward-compatible alias for section ranking."""
+    return rank_resume_sections(job_text, available_sections)
