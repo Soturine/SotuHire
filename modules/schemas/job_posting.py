@@ -25,5 +25,7 @@ class JobPostingSchema(BaseModel):
     required_skills: list[str] = Field(default_factory=list)
     desired_skills: list[str] = Field(default_factory=list)
     english_required: bool = False
+    benefits: list[str] = Field(default_factory=list)
+    risk_flags: list[str] = Field(default_factory=list)
     ats_keywords: list[str] = Field(default_factory=list)
     raw_text: str = ""
