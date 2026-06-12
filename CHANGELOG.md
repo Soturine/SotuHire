@@ -2,6 +2,42 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [0.4.1] - 2026-06-12
+
+### Added
+
+- camada `modules/ui/` com componentes, estilos, layout e páginas reutilizáveis;
+- cards e chips para dados detectados do currículo e da vaga;
+- detecção de email, telefone, cidade, LinkedIn, GitHub, portfólio, soft skills e idiomas;
+- detecção de benefícios e alertas de dados ausentes na vaga;
+- testes realistas para parsers e helpers da interface;
+
+### Changed
+
+- `app.py` reduzido à orquestração da aplicação;
+- tema Streamlit unificado com contraste explícito em fundo escuro;
+- primeiro upload de currículo processado automaticamente;
+- vaga colada processada automaticamente antes da revisão;
+- termos internos como `unknown`, `mock`, modalidades e senioridades traduzidos na UI;
+- resultados reorganizados em score cards e tabs internas;
+- versão do projeto atualizada para `0.4.1`;
+
+### Fixed
+
+- texto branco e métricas ilegíveis sobre fundo claro;
+- labels, inputs e tabs com baixo contraste;
+- resumo do currículo contendo texto bruto excessivo;
+- links sem protocolo não detectados;
+- experiências e projetos existentes exibidos como zero;
+- coincidência falsa de skill `Git` causada por links do GitHub;
+- modalidade remota no feminino e contratos de estágio, trainee e freela;
+
+### Documentation
+
+- README atualizado para o fluxo v0.4.1;
+- hotfix de UI e parsers documentado;
+- relação com tracker, histórico e dashboard registrada;
+
 ## [0.4.0] - 2026-06-12
 
 ### Added

@@ -118,6 +118,7 @@ nav:
       - v0.2 UX e automação: 07-development/v0.2-ux-automation.md
       - v0.3 IA estruturada e exports: 07-development/v0.3-structured-ai-and-export.md
       - v0.4 Tracker e dashboard: 07-development/v0.4-tracker-history-dashboard.md
+      - v0.4.1 Hotfix UI e parsers: 07-development/v0.4.1-ui-parser-hotfix.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md

@@ -10,9 +10,9 @@ A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas dif
 
 O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
 
-## SotuHire v0.4 — Guided Career Copilot
+## SotuHire v0.4.1 — UI/UX Hotfix + Parser Fixes
 
-A versão atual transforma o MVP manual em um app local mais próximo de produto:
+A versão atual corrige o fluxo guiado da v0.4.0 para deixá-lo legível, automático e mais próximo de produto:
 
 ```text
 Suba um currículo TXT/PDF/DOCX + cole a vaga -> revise os dados detectados -> analise -> exporte -> salve no tracker.
@@ -29,6 +29,10 @@ Suba um currículo TXT/PDF/DOCX + cole a vaga -> revise os dados detectados -> a
 - downloads em JSON e Markdown;
 - tracker e histórico locais com confirmação de privacidade;
 - dashboard com médias, recomendações e riscos.
+- tema escuro consistente, com contraste explícito para labels, inputs, métricas e tabs;
+- dados detectados apresentados em cards e chips, com edição opcional;
+- primeiro upload de currículo processado automaticamente;
+- parsers realistas para contatos, links, formação, experiências, projetos, vaga e benefícios.
 
 O histórico não salva o texto bruto do currículo. A aplicação continua sem auto-apply, envio automático, scraping agressivo, PyTorch obrigatório ou Concurso Mode funcional.
 
@@ -357,7 +361,7 @@ Ele junta:
 
 ## Status
 
-**SotuHire v0.4.0 — UX guiada, automação, IA estruturada, exports, tracker e dashboard local.**
+**SotuHire v0.4.1 — hotfix de UI/UX, fluxo automático e parsers realistas.**
 
 O app atual executa análise local e explicável, extrai dados de currículos/vagas, permite revisão assistida, exporta resultados e mantém histórico local. Gemini é opcional; o fallback determinístico continua sendo o caminho seguro padrão.
 
@@ -410,6 +414,7 @@ O produto observa ferramentas de ATS, resume matching, trackers e assistentes de
 - [UX e automação v0.2](docs/07-development/v0.2-ux-automation.md)
 - [IA estruturada e exports v0.3](docs/07-development/v0.3-structured-ai-and-export.md)
 - [Tracker, histórico e dashboard v0.4](docs/07-development/v0.4-tracker-history-dashboard.md)
+- [Hotfix de UI e parsers v0.4.1](docs/07-development/v0.4.1-ui-parser-hotfix.md)
 - [Arquitetura de parsers](docs/02-architecture/parsers.md)
 - [Storage e histórico](docs/02-architecture/storage-and-history.md)
 - [Auditoria v0.4](docs/00-audit/v0.4-readiness-audit.md)
