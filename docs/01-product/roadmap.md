@@ -10,23 +10,43 @@ Não começar por scraper complexo. O núcleo do produto é o match entre currí
 
 ## v0.1 - Núcleo do produto
 
-Foco: provar que a análise CV + vaga é útil.
+Foco: entregar o **SotuHire v0.1 — MVP Core** como análise local, funcional, explicável e testável de currículo + vaga + preferências.
 
 Entregas:
 
-- upload de currículo PDF;
-- extração de texto com PyMuPDF;
-- campo para descrição de vaga;
-- chamada para LLM;
-- relatório inicial;
+- campo para texto do currículo;
+- campo para descrição da vaga;
+- preferências de modalidade, localização, salário, contrato e senioridade;
+- schemas Pydantic para preferências, análise, currículo mestre e Resume Tailor;
+- Match Score determinístico;
+- ATS Score simples;
+- Opportunity Fit Score;
+- Risk Score simples;
+- recomendação final explicável;
+- pontos fortes, gaps e palavras-chave ausentes;
+- Resume Tailor em modo sugestão com regra anti-invenção;
 - Streamlit simples;
-- tratamento básico de erro.
+- tratamento básico de texto vazio e erro;
+- testes pytest;
+- Ruff.
 
 Critério de pronto:
 
 - usuário consegue rodar localmente;
-- currículo e vaga geram relatório;
+- currículo, vaga e preferências geram relatório estruturado;
+- scores permanecem entre 0 e 100;
+- regras de negócio rodam sem depender da UI ou de LLM;
+- sugestões do Resume Tailor não inventam experiência;
 - erros básicos são tratados.
+
+Fora da v0.1:
+
+- scraping real;
+- extensão Chrome;
+- auto-apply ou envio automático para recrutador;
+- DOCX/PDF final;
+- PyTorch, fine-tuning e multi-agent complexo;
+- Concurso Mode funcional.
 
 ## v0.2 - Saída estruturada
 
@@ -285,12 +305,12 @@ A partir da análise das referências e das perguntas de validação do produto,
 
 ### MVP imediato
 
-- Schemas Pydantic.
-- Análise currículo x vaga.
-- ATS Score.
-- Match Score.
-- Opportunity Fit Score.
-- Resume Tailor em modo sugestão.
+- Schemas Pydantic — v0.1.
+- Análise currículo x vaga — v0.1.
+- ATS Score — v0.1.
+- Match Score — v0.1.
+- Opportunity Fit Score — v0.1.
+- Resume Tailor em modo sugestão — v0.1.
 
 ### Evolução de produto
 

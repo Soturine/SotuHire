@@ -54,3 +54,29 @@ classDiagram
 ## Benefício
 
 Com esse modelo, o Resume Tailor pode adaptar o currículo com rastreabilidade.
+
+## Contrato mínimo da v0.1
+
+O schema `JSONResume` da v0.1 é propositalmente parcial. Ele representa:
+
+- `basics`;
+- `work`;
+- `education`;
+- `skills`;
+- `projects`;
+- `certificates`;
+- `languages`;
+- `evidence`.
+
+`CareerEvidence` registra fato, fonte, evidência, confiança, permissão de uso e data de verificação opcional.
+
+## Validação anti-invenção
+
+Uma sugestão só pode virar fato no currículo quando existir evidência utilizável. O Resume Tailor deve considerar currículo mestre, GitHub, Lattes, LinkedIn, portfólio e outras fontes fornecidas pelo usuário, sem coletá-las silenciosamente.
+
+```text
+requisito da vaga + evidência existente = keyword segura para sugerir
+requisito da vaga sem evidência = gap ou warning
+```
+
+Os schemas Pydantic também limitam scores, recomendações e modalidades aceitas. Gemini Structured Outputs poderá produzir os mesmos contratos no futuro, mas a validação local continua obrigatória.

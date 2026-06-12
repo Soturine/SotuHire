@@ -65,3 +65,41 @@ O mesmo histórico pode ter pesos diferentes por vaga:
 - ranquear seções conforme vaga;
 - detectar termos industriais quando aplicável;
 - sugerir keywords sem afirmar experiência inexistente.
+
+## Contrato da v0.1
+
+Na v0.1, o Resume Tailor não gera um arquivo final. Ele retorna sugestões estruturadas para revisão humana.
+
+Cada sugestão precisa satisfazer:
+
+1. `invented_information` permanece `false`;
+2. `evidence_source` não está vazio;
+3. a keyword sugerida já aparece em alguma evidência fornecida;
+4. o texto adaptado não aumenta senioridade, tempo, impacto ou domínio técnico;
+5. warnings deixam explícito quando a vaga pede algo não comprovado.
+
+Fontes aceitas de evidência:
+
+- currículo mestre / JSON Resume;
+- currículo colado na interface;
+- GitHub ou portfólio fornecido pelo usuário;
+- Lattes fornecido pelo usuário;
+- LinkedIn fornecido pelo usuário;
+- outras evidências explicitamente fornecidas.
+
+## Fluxo seguro
+
+```mermaid
+flowchart TD
+    A[Requisitos da vaga] --> B[Detectar keywords]
+    C[Evidências do usuário] --> D[Verificar suporte]
+    B --> D
+    D -->|Com evidência| E[Sugerir adaptação]
+    D -->|Sem evidência| F[Gerar warning]
+    E --> G[Revisão humana]
+    F --> G
+```
+
+## Regra de bloqueio
+
+Uma seção com `invented_information=True` é inválida para exportação. O sistema deve rejeitar esse estado no schema ou interromper a sugestão antes de apresentá-la como segura.

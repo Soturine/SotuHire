@@ -10,6 +10,61 @@ A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas dif
 
 O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
 
+## SotuHire v0.1 — MVP Core
+
+**SotuHire = copiloto de carreira com IA para analisar currículo, vaga, ATS, prioridades pessoais e estratégia de candidatura.**
+
+A v0.1 entrega um núcleo local, leve, determinístico e testável. O usuário cola o texto do currículo e da vaga, informa preferências básicas e recebe Match Score, ATS Score simples, Opportunity Fit Score, Risk Score, recomendação, pontos fortes, gaps, palavras-chave ausentes e sugestões seguras de adaptação.
+
+O Resume Tailor da v0.1 funciona em **modo sugestão**. Ele pode reorganizar, resumir e aproximar o vocabulário do currículo ao da vaga, mas toda sugestão precisa permanecer apoiada por evidências fornecidas pelo usuário.
+
+### Princípios inegociáveis
+
+```text
+O SotuHire não faz auto-apply em massa.
+O SotuHire não burla CAPTCHA.
+O SotuHire não raspa dados privados/logados de forma agressiva.
+O SotuHire trabalha com revisão humana.
+```
+
+Também não fazem parte da v0.1: scraping real, extensão Chrome, PyTorch, fine-tuning, multi-agent complexo, Concurso Mode funcional, envio automático para recrutador e geração final de DOCX/PDF.
+
+### Features da v0.1
+
+- entrada manual de currículo e descrição da vaga;
+- preferências de modalidade, localização, salário, contrato e senioridade;
+- Match Score determinístico por palavras-chave relevantes;
+- ATS Score simples com problemas explicáveis;
+- Opportunity Fit Score baseado nas prioridades do usuário;
+- Risk Score simples e flags de risco;
+- recomendação `apply`, `apply_with_adjustments`, `save_for_later` ou `ignore`;
+- pontos fortes, gaps e palavras-chave ausentes;
+- resumo direcionado apoiado pelo texto fornecido;
+- Resume Tailor em modo sugestão com regra anti-invenção;
+- schemas Pydantic para contratos de entrada e saída;
+- interface Streamlit com regras de negócio fora da UI;
+- testes com pytest e qualidade com Ruff.
+
+### Arquitetura do MVP
+
+```mermaid
+flowchart TD
+    A[Currículo do usuário] --> B[Normalização de texto]
+    C[Descrição da vaga] --> B
+    D[Preferências do usuário] --> E[Opportunity Fit Score]
+    B --> F[Job Analyzer]
+    F --> G[Match Score]
+    F --> H[ATS Score]
+    F --> I[Risk Score]
+    E --> J[Recomendação final]
+    G --> J
+    H --> J
+    I --> J
+    J --> K[Resume Tailor em modo sugestão]
+```
+
+As funções puras vivem em `modules/`; a interface `app.py` apenas coleta entradas e apresenta o resultado. O MVP não depende de provedor de IA externo para executar a análise básica.
+
 ## O que o SotuHire faz
 
 O sistema deve evoluir em módulos:
@@ -91,12 +146,14 @@ O objetivo não é usar tudo diretamente no currículo final. O sistema deve con
 
 ### v0.1 — Análise manual de currículo + vaga
 
-- Upload de currículo PDF;
+- texto de currículo colado pelo usuário;
 - colagem manual da descrição da vaga;
-- extração de texto com PyMuPDF;
-- chamada para LLM;
-- relatório estruturado;
-- interface Streamlit.
+- preferências básicas do usuário;
+- Match Score, ATS Score, Opportunity Fit Score e Risk Score;
+- relatório estruturado com Pydantic;
+- Resume Tailor em modo sugestão e sem invenção;
+- interface Streamlit;
+- testes pytest e validação Ruff.
 
 ### v0.2 — JSON estruturado e UI melhor
 
@@ -184,15 +241,13 @@ Cada fonte deve ter política própria: algumas começam como entrada manual, al
 
 - Python;
 - Streamlit;
-- PyMuPDF;
 - Pydantic;
-- Google Gemini API ou outro LLM;
-- SQLite;
+- python-dotenv;
+- pandas;
 - pytest;
 - Ruff;
-- Requests/HTTPX + BeautifulSoup para páginas públicas simples;
-- Playwright somente quando renderização dinâmica for realmente necessária;
-- Scrapy somente quando o projeto precisar de crawlers mais estruturados.
+
+Dependências de scraping, documentação e ML futuro ficam separadas da instalação padrão. Gemini Structured Outputs é uma evolução planejada para análises tipadas; PyTorch e ML pesado permanecem fora do MVP.
 
 ## Qualidade
 
@@ -237,7 +292,7 @@ Qualidade:
 ```bash
 ruff check .
 ruff format .
-pytest
+python -m pytest -q
 ```
 
 Documentação:
@@ -265,13 +320,53 @@ Ele junta:
 
 ## Status
 
-Projeto em fase inicial de documentação e preparação do MVP.
+**SotuHire v0.1 — MVP Core implementado nesta branch de desenvolvimento.**
 
-Próximo passo recomendado:
+O núcleo atual executa análise local e explicável de currículo x vaga, com schemas Pydantic, scores determinísticos, Resume Tailor seguro, Streamlit, testes e Ruff. Integrações externas e automações permanecem deliberadamente fora do runtime padrão.
+
+Próximo passo recomendado após validar a v0.1:
 
 ```text
-feat: add initial resume job match MVP
+Validar heurísticas com exemplos fictícios e preparar Gemini Structured Outputs como integração opcional.
 ```
+
+## Privacidade e compliance
+
+- currículos reais, exportações pessoais, bancos locais e segredos não devem ser versionados;
+- a v0.1 processa apenas conteúdo fornecido conscientemente pelo usuário;
+- não existe auto-apply, bypass de CAPTCHA ou scraping agressivo;
+- qualquer integração futura deve respeitar termos da fonte, limites técnicos e revisão humana;
+- sugestões do Resume Tailor precisam manter rastreabilidade até o currículo mestre, GitHub, Lattes, LinkedIn ou outra evidência fornecida.
+
+Leia também [Security & Privacy](docs/06-engineering/security-privacy.md) e [Compliance & Ethics](docs/05-data-sources/compliance-and-ethics.md).
+
+## Inspiração e benchmarks
+
+O produto observa ferramentas de ATS, resume matching, trackers e assistentes de candidatura para aprender padrões úteis sem copiar práticas agressivas. As referências e decisões estão registradas em:
+
+- [Players e inspirações](docs/08-benchmark/players-and-inspirations.md);
+- [Projetos de referência](docs/08-benchmark/reference-projects.md);
+- [LA Jobs AI Claude](docs/08-benchmark/la-jobs-ai-claude.md).
+
+## Documentação principal da v0.1
+
+- [Escopo do MVP](docs/01-product/mvp-scope.md)
+- [Roadmap](docs/01-product/roadmap.md)
+- [Implementação v0.1](docs/07-development/mvp-v0.1-implementation.md)
+- [Regras do Resume Tailor](docs/03-business-rules/resume-tailor-rules.md)
+- [Regras do Opportunity Fit](docs/03-business-rules/opportunity-fit-rules.md)
+- [Gemini Structured Output](docs/04-ai/gemini-structured-output.md)
+- [JSON Resume e Pydantic](docs/04-ai/json-resume-and-pydantic.md)
+- [Auditoria de prontidão v0.1](docs/00-audit/v0.1-readiness-audit.md)
+- [Metadados do repositório](docs/07-development/repository-metadata.md)
+
+## Próximos passos
+
+1. validar scores e recomendações com exemplos fictícios diversos;
+2. adicionar fixtures de currículos e vagas sem dados pessoais;
+3. integrar Gemini Structured Outputs como opção, mantendo fallback determinístico;
+4. evoluir para RAG simples de carreira com evidências rastreáveis;
+5. preparar Job Tracker/Kanban antes de qualquer automação de descoberta.
 
 ---
 
