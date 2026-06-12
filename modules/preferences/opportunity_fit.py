@@ -6,11 +6,12 @@ The goal is not to replace AI, but to make user preferences testable and explain
 from __future__ import annotations
 
 from modules.core.scoring import clamp_score, weighted_score
+from modules.core.text_utils import normalize_text
 from modules.schemas.user_preferences import UserPreferences
 
 
 def _norm(value: str | None) -> str:
-    return (value or "").strip().lower()
+    return normalize_text(value)
 
 
 def modality_score(job_modality: str | None, preferences: UserPreferences) -> int | None:
@@ -84,3 +85,9 @@ def calculate_opportunity_fit(job: dict, preferences: UserPreferences) -> int | 
         "seniority": preferences.seniority_weight,
     }
     return weighted_score(values, weights)
+
+
+def calculate_opportunity_fit_score(job: dict, preferences: UserPreferences) -> int:
+    """Return a stable 0-100 score, using a neutral value without preferences."""
+    score = calculate_opportunity_fit(job, preferences)
+    return 70 if score is None else score

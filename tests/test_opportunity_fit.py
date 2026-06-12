@@ -1,4 +1,7 @@
-from modules.preferences.opportunity_fit import calculate_opportunity_fit
+from modules.preferences.opportunity_fit import (
+    calculate_opportunity_fit,
+    calculate_opportunity_fit_score,
+)
 from modules.schemas.user_preferences import UserPreferences
 
 
@@ -36,3 +39,19 @@ def test_opportunity_fit_penalizes_senior_onsite_far_job():
         "seniority": "senior",
     }
     assert calculate_opportunity_fit(job, prefs) < 40
+
+
+def test_opportunity_fit_score_is_neutral_without_preferences():
+    assert calculate_opportunity_fit_score({}, UserPreferences()) == 70
+
+
+def test_opportunity_fit_accepts_empty_job_without_breaking():
+    prefs = UserPreferences(
+        preferred_locations=["São Paulo"],
+        preferred_modalities=["remote"],
+        min_salary=5000,
+    )
+
+    score = calculate_opportunity_fit_score({}, prefs)
+
+    assert 0 <= score <= 100
