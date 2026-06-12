@@ -36,6 +36,9 @@ def test_safe_tailor_output_never_invents_information():
     assert all(not section.invented_information for section in output.tailored_sections)
     assert "power" not in output.keywords_added
     assert any("sem evidencia" in warning for warning in output.warnings)
+    assert output.professional_summary
+    assert output.improved_bullets
+    assert output.evidence_used
 
 
 def test_safe_tailor_output_accepts_empty_texts():

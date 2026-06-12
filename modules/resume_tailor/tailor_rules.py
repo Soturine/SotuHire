@@ -59,7 +59,9 @@ def build_safe_tailor_output(
     ]
 
     tailored_sections: list[TailoredResumeSection] = []
-    original_summary = " ".join(first_sentences(evidence_text, limit=2))
+    evidence_sentences = first_sentences(evidence_text, limit=8)
+    original_summary = " ".join(evidence_sentences[:2])
+    improved_bullets = [_improve_bullet(sentence) for sentence in evidence_sentences[:5]]
     if original_summary:
         tailored_sections.append(
             TailoredResumeSection(
@@ -80,6 +82,18 @@ def build_safe_tailor_output(
         target_company=target_company,
         section_order=rank_resume_sections(job_text, available_sections),
         tailored_sections=tailored_sections,
+        professional_summary=original_summary,
+        improved_bullets=improved_bullets,
         keywords_added=safe_keywords,
+        evidence_used=evidence_sentences[:5],
         warnings=warnings,
     )
+
+
+def _improve_bullet(text: str) -> str:
+    """Normalize an evidence sentence into a reviewable resume bullet."""
+    cleaned = text.strip(" -*\t")
+    if not cleaned:
+        return ""
+    improved = cleaned[0].upper() + cleaned[1:]
+    return improved if improved.endswith((".", "!", "?")) else f"{improved}."

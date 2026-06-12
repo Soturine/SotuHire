@@ -1,14 +1,5 @@
-"""AI provider interface."""
+"""Backward-compatible import for the structured provider contract."""
 
-from __future__ import annotations
+from modules.ai.providers.base import AIProvider, ProviderUnavailableError
 
-from abc import ABC, abstractmethod
-from typing import Any
-
-
-class AIProvider(ABC):
-    """Provider-agnostic JSON generation contract."""
-
-    @abstractmethod
-    def generate_json(self, prompt: str, schema: dict[str, Any]) -> dict[str, Any]:
-        """Generate a JSON-compatible response."""
+__all__ = ["AIProvider", "ProviderUnavailableError"]

@@ -225,6 +225,8 @@ n8n_data/
 postgres_data/
 storage/
 .cache/
+data/
+exports/
 
 # Generated resumes and sensitive exports
 outputs/*.docx

@@ -29,7 +29,10 @@ class ResumeTailorOutput(BaseModel):
     target_company: str | None = None
     section_order: list[str] = Field(default_factory=list)
     tailored_sections: list[TailoredResumeSection] = Field(default_factory=list)
+    professional_summary: str = ""
+    improved_bullets: list[str] = Field(default_factory=list)
     keywords_added: list[str] = Field(default_factory=list)
+    evidence_used: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
 
     def has_invented_information(self) -> bool:
