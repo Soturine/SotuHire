@@ -321,3 +321,15 @@ O SotuHire pode aproveitar princípios usados em projetos como SoturAI e SotuRai
 - visão de produto, não apenas script.
 
 No SotuHire, isso se traduz em um sistema que observa vagas, posts, currículos, portfólio e histórico para sugerir ações melhores, sempre com revisão humana.
+
+## Atualização de escopo: currículo direcionado, preferências e MVP Core
+
+O SotuHire também passa a tratar três frentes novas como parte da visão do produto:
+
+1. **Resume Tailor**: gerar uma versão direcionada do currículo para uma vaga específica, sem inventar informações.
+2. **Opportunity Fit Score**: cruzar match técnico com prioridades do usuário, como salário, modalidade, localização e contrato.
+3. **Concurso Mode**: manter como ideia futura separada para análise de editais, sem misturar com o MVP de vagas.
+
+A fundação técnica recomendada é começar por schemas Pydantic e outputs estruturados. O padrão [JSON Resume](https://jsonresume.org/schema) serve como inspiração para o currículo mestre, enquanto [Gemini Structured Outputs](https://ai.google.dev/gemini-api/docs/structured-output) orienta a geração de respostas tipadas.
+
+PyTorch, fine-tuning e agentes avançados ficam fora do MVP. Eles podem aparecer como camada futura opcional, quando houver dados reais suficientes.

@@ -349,3 +349,15 @@ deprecated
 - fonte sem resultado;
 - fonte com layout alterado;
 - limite de rate.
+
+## Complemento: JobSpy como referência experimental
+
+O [JobSpy](https://github.com/Bunsly/JobSpy) pode ser estudado como referência técnica de agregação de vagas, mas qualquer adoção precisa passar por revisão de compliance. O SotuHire não deve se vender como ferramenta de bypass, proxy agressivo ou coleta automatizada contra termos de plataformas.
+
+Status sugerido:
+
+```text
+jobspy: experimental_reference
+production_use: not_decided
+requires_compliance_review: true
+```

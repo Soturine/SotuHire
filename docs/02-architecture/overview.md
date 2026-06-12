@@ -217,3 +217,22 @@ flowchart TD
 - exportação CSV do LinkedIn;
 - GitHub API pública quando possível;
 - alertas.
+
+## Complemento arquitetural: núcleo tipado antes da interface
+
+O SotuHire deve evitar começar pela extensão ou por scraping complexo. A fundação correta é um núcleo tipado:
+
+```text
+schemas -> regras determinísticas -> IA estruturada -> tracker/dashboard
+```
+
+Esse núcleo permite que Streamlit, FastAPI, extensão Chrome, scraper e RAG usem os mesmos contratos de dados.
+
+Novos módulos arquiteturais:
+
+- `modules/schemas/`: Pydantic e contratos de dados.
+- `modules/preferences/`: cálculo de Opportunity Fit.
+- `modules/resume_tailor/`: adaptação segura de currículo.
+- `modules/public_exams/`: modo concurso futuro, isolado.
+
+PyTorch e agentes avançados ficam como camada futura opcional, sem entrar na dependência padrão.

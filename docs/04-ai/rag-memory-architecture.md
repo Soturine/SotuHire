@@ -213,3 +213,13 @@ Toda recomendação importante deve mostrar evidências:
 - Não compartilhar base com terceiros.
 - Não usar RAG para inventar experiências.
 - Não sugerir mentir no currículo.
+
+## Complemento: RAG simples antes de ML pesado
+
+O SotuHire pode usar RAG sem PyTorch no MVP. A primeira versão pode ser lexical e baseada em evidências pequenas:
+
+```text
+currículo mestre -> chunks -> busca por termos -> evidências -> análise estruturada
+```
+
+Depois, quando houver dados reais, a camada pode evoluir para embeddings locais e reranking. PyTorch e modelos próprios ficam como futuro opcional, não como requisito atual.

@@ -65,3 +65,19 @@ Depois abra o endereço mostrado no terminal.
 ### Benchmark
 
 - [Projetos de Referência](08-benchmark/reference-projects.md)
+
+## Atualização de documentação: MVP Core e escopo futuro
+
+Novos documentos adicionados cobrem:
+
+- Resume Tailor;
+- Opportunity Fit Score;
+- Concurso Mode futuro;
+- Pydantic schemas;
+- JSON Resume;
+- Gemini Structured Outputs;
+- extensão assistiva local;
+- background jobs;
+- LA_Jobs_AI_CLAUDE;
+- JobSpy como referência experimental;
+- ML avançado futuro sem dependência obrigatória.

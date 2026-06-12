@@ -88,3 +88,17 @@ No MVP, usar um provider simples. Na arquitetura, deixar interface pronta.
 Não implementar múltiplos providers antes do MVP.
 Mas não acoplar o código a um provider só.
 ```
+
+## Complemento: Claude, Groq e OpenRouter como providers, não como acoplamento
+
+Benchmarks externos podem usar Groq, Claude, Gemini ou OpenAI. O SotuHire não deve acoplar regra de negócio a nenhum deles.
+
+A interface ideal é:
+
+```text
+AIProvider.analyze_job()
+AIProvider.tailor_resume()
+AIProvider.generate_message()
+```
+
+Assim, Gemini pode ser o MVP e Claude/Groq/OpenRouter podem entrar depois sem reescrever o produto.

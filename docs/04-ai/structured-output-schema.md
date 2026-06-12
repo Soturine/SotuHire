@@ -162,3 +162,29 @@ Isso evita score bonito para vaga incompatível.
 - Sempre indicar quando faltam dados.
 - Sempre devolver JSON válido.
 - Sempre permitir revisão humana antes de ação externa.
+
+## Atualização: Pydantic como contrato principal
+
+O SotuHire deve usar Pydantic para validar toda saída de IA que tenha efeito no produto. Isso inclui análise de vaga, currículo direcionado, profile score e portfolio score.
+
+Schemas novos:
+
+- `JobAnalysisSchema`
+- `UserPreferences`
+- `ResumeTailorOutput`
+- `TailoredResumeSection`
+- `JSONResume`
+- `CareerEvidence`
+
+Regra:
+
+```text
+Sem schema, a saída da IA é rascunho.
+Com schema validado, a saída pode entrar no produto.
+```
+
+Referências:
+
+- [Gemini Structured Outputs](https://ai.google.dev/gemini-api/docs/structured-output)
+- [JSON Resume](https://jsonresume.org/schema)
+- [Pydantic](https://docs.pydantic.dev/)

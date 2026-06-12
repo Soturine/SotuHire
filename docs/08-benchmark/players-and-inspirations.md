@@ -314,3 +314,21 @@ spam bot
 scraper agressivo
 currículo mágico
 ```
+
+## Novas referências incorporadas
+
+### LA_Jobs_AI_CLAUDE
+
+Referência para extensão assistiva, tracker, dashboard, fila de processamento e geração de currículo ATS. O SotuHire aproveita a arquitetura conceitual, mas melhora com Pydantic, schemas, guardrails e docs fortes.
+
+### JSON Resume
+
+Referência para currículo mestre em formato aberto. O SotuHire usa como base, adicionando evidência, fonte e confiança.
+
+### JobSpy
+
+Referência experimental para busca agregada de vagas. Deve ser estudada com cuidado de compliance, sem transformar o SotuHire em ferramenta de bypass.
+
+### Ideias da validação humana
+
+As perguntas sobre currículo direcionado, prioridades do usuário e concurso reforçam que o produto deve avaliar estratégia, não apenas texto.

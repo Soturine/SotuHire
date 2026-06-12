@@ -278,3 +278,46 @@ Ideias futuras:
 - Gemini, OpenAI, OpenRouter e Ollama.
 - Comparação de custo/qualidade.
 - Modo local-first quando possível.
+
+## Ajuste de rota: Resume Tailor, preferências e concursos
+
+A partir da análise das referências e das perguntas de validação do produto, o roadmap passa a separar claramente o que é MVP, o que é evolução natural e o que é produto futuro.
+
+### MVP imediato
+
+- Schemas Pydantic.
+- Análise currículo x vaga.
+- ATS Score.
+- Match Score.
+- Opportunity Fit Score.
+- Resume Tailor em modo sugestão.
+
+### Evolução de produto
+
+- Tracker/Kanban.
+- RAG simples de carreira.
+- GitHub/Portfolio Score.
+- LinkedIn/Profile Score.
+- Extensão assistiva local.
+- Resume Tailor com DOCX/PDF revisável.
+
+### Futuro separado
+
+- Concurso Mode.
+- ML avançado com embeddings locais.
+- Agentes especializados.
+- Reranking semântico com modelos próprios.
+
+### Mermaid do roadmap consolidado
+
+```mermaid
+flowchart LR
+    A[v0.1 Schemas + Match] --> B[v0.2 ATS + Fit]
+    B --> C[v0.3 Resume Tailor]
+    C --> D[v0.4 Tracker]
+    D --> E[v0.5 Search Intelligence]
+    E --> F[v0.6 Profile/Portfolio]
+    F --> G[v0.7 RAG simples]
+    G --> H[v0.8 Extensão]
+    H --> I[v1.0 Concurso Mode experimental]
+```

@@ -309,3 +309,15 @@ Projetos simples de scraping com Selenium e Telegram mostram valor rápido, mas 
 - análise de match antes do alerta.
 
 Referência: [AUTOMATED_JOBSEACRH_SCRAPER](https://github.com/VictoriaSCorreia/AUTOMATED_JOBSEACRH_SCRAPER).
+
+## Complemento: extensão assistiva antes de scraping agressivo
+
+Quando a fonte for sensível, a estratégia preferida é:
+
+1. usuário abre a página manualmente;
+2. extensão captura apenas a página atual com clique explícito;
+3. SotuHire salva no tracker;
+4. análise ocorre localmente;
+5. nenhuma candidatura é enviada automaticamente.
+
+Essa abordagem é mais segura do que tentar navegar em massa por plataformas logadas.

@@ -1,0 +1,52 @@
+# MVP Tailor/Fit Update Summary
+
+```json
+{
+  "markdown_before_count": 52,
+  "markdown_after_count": 68,
+  "markdown_reduced": [],
+  "added_files_count": 37,
+  "added_files": [
+    "docs/01-product/concurso-mode.md",
+    "docs/01-product/resume-tailor.md",
+    "docs/01-product/user-preferences-opportunity-fit.md",
+    "docs/02-architecture/background-jobs.md",
+    "docs/02-architecture/local-companion-app.md",
+    "docs/02-architecture/mvp-core-schemas.md",
+    "docs/03-business-rules/opportunity-fit-score.md",
+    "docs/03-business-rules/public-exam-rules.md",
+    "docs/03-business-rules/resume-tailor-rules.md",
+    "docs/04-ai/advanced-ml-future.md",
+    "docs/04-ai/gemini-structured-output.md",
+    "docs/04-ai/json-resume-and-pydantic.md",
+    "docs/05-data-sources/jobspy-experimental-reference.md",
+    "docs/07-development/mvp-core-implementation.md",
+    "docs/07-development/resume-tailor-docx.md",
+    "docs/08-benchmark/la-jobs-ai-claude.md",
+    "modules/analyzer/__init__.py",
+    "modules/analyzer/recommendation.py",
+    "modules/preferences/__init__.py",
+    "modules/preferences/opportunity_fit.py",
+    "modules/public_exams/__init__.py",
+    "modules/public_exams/edital_score.py",
+    "modules/resume_tailor/__init__.py",
+    "modules/resume_tailor/keyword_injector.py",
+    "modules/resume_tailor/section_ranker.py",
+    "modules/resume_tailor/tailor_rules.py",
+    "modules/schemas/__init__.py",
+    "modules/schemas/job_analysis.py",
+    "modules/schemas/json_resume.py",
+    "modules/schemas/resume_tailor.py",
+    "modules/schemas/user_preferences.py",
+    "requirements-dev.txt",
+    "requirements-ml.txt",
+    "requirements-scraping.txt",
+    "tests/test_opportunity_fit.py",
+    "tests/test_pydantic_schemas.py",
+    "tests/test_resume_tailor.py"
+  ],
+  "pytest_returncode": 0,
+  "pytest_stdout": "............                                                             [100%]\n12 passed in 0.23s\n",
+  "pytest_stderr": ""
+}
+```

@@ -86,3 +86,21 @@ RepoLogs inspira a ideia de botão contextual e análise em página aberta. O So
 - perfil/portfólio aberto.
 
 Referência: [RepoLogs GitHub Extension](https://github.com/VictoriaSCorreia/RepoLogs_GithubExtension).
+
+## Complemento: botão próprio e API local
+
+A extensão do SotuHire deve usar botões próprios:
+
+- Salvar vaga no SotuHire.
+- Analisar com meu currículo.
+- Enviar para tracker.
+
+Ela não deve depender do clique em botões nativos de candidatura, pois isso pode tornar a captura ambígua.
+
+Fluxo recomendado:
+
+```text
+content script -> payload normalizado -> localhost -> tracker -> análise
+```
+
+Referência técnica: [Chrome Extension Storage API](https://developer.chrome.com/docs/extensions/reference/api/storage).

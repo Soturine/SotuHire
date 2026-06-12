@@ -1,0 +1,10 @@
+# Optional future ML/RAG dependencies. Not required for the MVP.
+# Keep this file separate so Windows setup stays light.
+
+# torch
+# sentence-transformers
+# transformers
+# chromadb
+# faiss-cpu
+# scikit-learn
+# numpy

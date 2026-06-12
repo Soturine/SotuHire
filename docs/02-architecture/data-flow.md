@@ -144,3 +144,22 @@ sequenceDiagram
     Match->>Tracker: salvar análise e score
     Tracker->>UI: mostrar recomendação e próxima ação
 ```
+
+## Fluxo consolidado com Resume Tailor e preferências
+
+```mermaid
+flowchart TD
+    A[Currículo mestre] --> B[Parser]
+    C[Vaga alvo] --> D[Job normalizer]
+    E[Preferências do usuário] --> F[Opportunity Fit]
+    B --> G[Job Analysis]
+    D --> G
+    F --> G
+    G --> H[Scores]
+    G --> I[Resume Tailor]
+    I --> J[Versão ATS revisável]
+    H --> K[Kanban]
+    J --> K
+```
+
+Esse fluxo mantém o usuário no controle e separa análise, decisão e geração de currículo.

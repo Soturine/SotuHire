@@ -110,3 +110,28 @@ O tracker deve disparar lembretes locais:
 - candidatura sem status há muitos dias.
 
 Ver: [Alerts Roadmap](./alerts-roadmap.md).
+
+## Complemento: campos inspirados em TrackedJob
+
+O tracker deve armazenar mais do que título e link. Campos recomendados:
+
+- título;
+- empresa;
+- descrição;
+- URL;
+- fonte;
+- senioridade;
+- stack;
+- keywords;
+- inglês exigido;
+- remoto/híbrido/presencial;
+- match score;
+- ATS score;
+- Opportunity Fit Score;
+- Risk Score;
+- LinkedIn Score;
+- Portfolio Score;
+- status;
+- próximo follow-up.
+
+Isso aproxima o SotuHire de um produto real de carreira, não apenas um analisador de texto.

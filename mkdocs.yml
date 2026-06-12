@@ -46,23 +46,35 @@ nav:
       - Roadmap: 01-product/roadmap.md
       - Histórias de usuário: 01-product/user-stories.md
       - Rotina inteligente de busca: 01-product/job-search-routine.md
+      - Resume Tailor: 01-product/resume-tailor.md
+      - Opportunity Fit Score: 01-product/user-preferences-opportunity-fit.md
+      - Concurso Mode: 01-product/concurso-mode.md
   - Arquitetura:
       - Overview: 02-architecture/overview.md
       - Data flow: 02-architecture/data-flow.md
       - Folder structure: 02-architecture/folder-structure.md
       - Architecture decisions: 02-architecture/architecture-decisions.md
+      - MVP core schemas: 02-architecture/mvp-core-schemas.md
+      - Local companion app: 02-architecture/local-companion-app.md
+      - Background jobs: 02-architecture/background-jobs.md
   - Regras de negócio:
       - ATS rules: 03-business-rules/ats-rules.md
       - Matching rules: 03-business-rules/matching-rules.md
       - Job filtering: 03-business-rules/job-filtering.md
       - Resume types: 03-business-rules/resume-types.md
       - Profile score: 03-business-rules/profile-score.md
+      - Resume tailor rules: 03-business-rules/resume-tailor-rules.md
+      - Opportunity fit score: 03-business-rules/opportunity-fit-score.md
+      - Public exam rules: 03-business-rules/public-exam-rules.md
   - IA:
       - Prompting: 04-ai/prompting.md
       - Structured output: 04-ai/structured-output-schema.md
       - Evaluation: 04-ai/evaluation.md
       - RAG memory: 04-ai/rag-memory-architecture.md
       - Provider strategy: 04-ai/provider-strategy.md
+      - Gemini structured output: 04-ai/gemini-structured-output.md
+      - JSON Resume e Pydantic: 04-ai/json-resume-and-pydantic.md
+      - ML avançado futuro: 04-ai/advanced-ml-future.md
   - Fontes de dados:
       - Job sources: 05-data-sources/job-sources.md
       - Brazilian job portals: 05-data-sources/brazilian-job-portals.md
@@ -75,6 +87,7 @@ nav:
       - Alternative job boards: 05-data-sources/alternative-job-boards.md
       - Social post discovery: 05-data-sources/social-post-discovery.md
       - GitHub portfolio analyzer: 05-data-sources/github-portfolio-analyzer.md
+      - JobSpy experimental reference: 05-data-sources/jobspy-experimental-reference.md
   - Engenharia:
       - Clean Code e SOLID: 06-engineering/clean-code-solid.md
       - QA Testing: 06-engineering/qa-testing.md
@@ -91,6 +104,9 @@ nav:
       - Alerts roadmap: 07-development/alerts-roadmap.md
       - Browser extension roadmap: 07-development/browser-extension-roadmap.md
       - Profile analyzer roadmap: 07-development/profile-analyzer-roadmap.md
+      - Resume Tailor DOCX: 07-development/resume-tailor-docx.md
+      - MVP core implementation: 07-development/mvp-core-implementation.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md
+      - LA Jobs AI Claude: 08-benchmark/la-jobs-ai-claude.md
