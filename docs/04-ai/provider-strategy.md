@@ -102,3 +102,26 @@ AIProvider.generate_message()
 ```
 
 Assim, Gemini pode ser o MVP e Claude/Groq/OpenRouter podem entrar depois sem reescrever o produto.
+## Implementação v0.3/v0.4
+
+A camada atual usa `modules/ai/providers/`:
+
+- `base.py`: contrato `AIProvider`;
+- `mock_provider.py`: análise determinística usada por padrão e em testes;
+- `gemini_provider.py`: integração opcional com Gemini Structured Outputs;
+- `structured_analysis.py`: roteamento e fallback local.
+
+`DEFAULT_AI_PROVIDER=mock` é a configuração segura. Quando `gemini` é selecionado sem chave ou SDK, o app não quebra: registra warning e usa o provider local.
+
+O provider não pode ignorar schemas Pydantic, inventar fatos ou contornar regras determinísticas. O SDK Gemini fica em `requirements-ai.txt`, fora das dependências obrigatórias.
+
+```mermaid
+flowchart LR
+    A[UI] --> B[Structured Analysis]
+    B --> C{Provider}
+    C --> D[Mock/local]
+    C --> E[Gemini opcional]
+    E -->|Falha| D
+    D --> F[JobAnalysisSchema]
+    E --> F
+```

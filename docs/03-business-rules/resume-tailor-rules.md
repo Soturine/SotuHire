@@ -103,3 +103,19 @@ flowchart TD
 ## Regra de bloqueio
 
 Uma seção com `invented_information=True` é inválida para exportação. O sistema deve rejeitar esse estado no schema ou interromper a sugestão antes de apresentá-la como segura.
+
+## Saída ampliada na v0.3
+
+O Resume Tailor atual entrega:
+
+- resumo profissional direcionado;
+- ordem sugerida das seções;
+- bullet points normalizados;
+- keywords apoiadas por evidências;
+- warnings para requisitos sem evidência;
+- lista das evidências usadas;
+- sugestões por seção com fonte.
+
+Os bullets são reescritas leves de frases fornecidas pelo usuário. O sistema não adiciona empresa, curso, certificado, stack, resultado, número ou senioridade ausentes.
+
+Exportações em Markdown mantêm warnings e evidências visíveis para revisão humana.

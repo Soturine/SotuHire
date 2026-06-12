@@ -99,3 +99,17 @@ python -m pytest -q
 3. adicionar RAG simples de carreira;
 4. criar Job Tracker/Kanban;
 5. evoluir Profile Score e GitHub/Portfolio Score.
+
+## Evolução após a v0.1
+
+A v0.1 permanece como fundação do domínio, mas foi expandida sem remover suas garantias:
+
+- v0.2 adicionou parsers automáticos e revisão assistida;
+- v0.3 adicionou providers estruturados, exports e Resume Tailor mais rico;
+- v0.4 adicionou tracker local, histórico e dashboard.
+
+As funções determinísticas, schemas Pydantic e regra anti-invenção continuam sendo usadas pela versão atual. Veja:
+
+- [v0.2 — UX e automação](v0.2-ux-automation.md);
+- [v0.3 — IA estruturada e export](v0.3-structured-ai-and-export.md);
+- [v0.4 — Tracker e dashboard](v0.4-tracker-history-dashboard.md).

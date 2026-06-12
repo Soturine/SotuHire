@@ -71,3 +71,29 @@ flowchart LR
 ```
 
 Essa fronteira mantém custo, privacidade e falhas de rede fora do caminho crítico do MVP.
+
+## Provider preparado na v0.3
+
+O `GeminiProvider` usa o SDK opcional `google-genai` e configura:
+
+```python
+response_mime_type="application/json"
+response_schema=JobAnalysisSchema
+```
+
+O provider valida `response.parsed` ou o JSON retornado com Pydantic. Sem `GEMINI_API_KEY` ou sem o SDK opcional, `analyze_structured()` retorna o resultado local e informa que houve fallback.
+
+Instalação opcional:
+
+```bash
+pip install -r requirements-ai.txt
+```
+
+Configuração:
+
+```text
+DEFAULT_AI_PROVIDER=gemini
+GEMINI_API_KEY=...
+```
+
+O default permanece `mock` para testes, privacidade, custo previsível e funcionamento offline.

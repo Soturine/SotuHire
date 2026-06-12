@@ -66,3 +66,11 @@ flowchart LR
 - valores extremos permanecem entre 0 e 100.
 
 Veja também [Opportunity Fit Score](opportunity-fit-score.md) para a visão de negócio mais ampla.
+
+## Integração com parser e histórico
+
+Na v0.4, modalidade, localização, salário, contrato e senioridade podem ser detectados automaticamente pelo parser de vaga. O usuário revisa esses campos antes da análise.
+
+O Opportunity Fit salvo no histórico representa as preferências vigentes no momento da análise. Alterar preferências depois não reescreve silenciosamente scores antigos.
+
+Campos ausentes continuam neutros/parciais; o parser não deve inventar um valor para melhorar o fit.

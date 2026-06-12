@@ -81,3 +81,22 @@ Novos documentos adicionados cobrem:
 - LA_Jobs_AI_CLAUDE;
 - JobSpy como referência experimental;
 - ML avançado futuro sem dependência obrigatória.
+
+## Documentação da versão v0.4
+
+### Arquitetura
+
+- [Parsers](02-architecture/parsers.md)
+- [Storage e histórico](02-architecture/storage-and-history.md)
+
+### Desenvolvimento
+
+- [v0.2 — UX e automação](07-development/v0.2-ux-automation.md)
+- [v0.3 — IA estruturada e exports](07-development/v0.3-structured-ai-and-export.md)
+- [v0.4 — Tracker, histórico e dashboard](07-development/v0.4-tracker-history-dashboard.md)
+
+### Auditoria
+
+- [Prontidão v0.4](00-audit/v0.4-readiness-audit.md)
+
+A v0.4 mantém revisão humana, fallback local, exportações simples e persistência local sem armazenar o texto bruto do currículo.

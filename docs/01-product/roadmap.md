@@ -8,6 +8,25 @@ O SotuHire deve evoluir em etapas pequenas. A regra é:
 
 Não começar por scraper complexo. O núcleo do produto é o match entre currículo e vaga.
 
+## Roadmap entregue até v0.4
+
+O roadmap foi consolidado em 12 de junho de 2026:
+
+- **v0.1:** núcleo determinístico, Pydantic, scores e Resume Tailor seguro;
+- **v0.2:** UX guiada, modo rápido/avançado e parsers automáticos;
+- **v0.3:** provider estruturado, Gemini opcional, fallback local e exports;
+- **v0.4:** tracker local, histórico e dashboard inicial.
+
+As seções históricas abaixo continuam registradas para preservar decisões anteriores. O próximo ciclo começa após validar a experiência v0.4 com dados fictícios variados.
+
+### Próximo ciclo
+
+- melhorar heurísticas e revisão dos parsers;
+- adicionar filtros e tendências ao dashboard;
+- RAG simples de carreira apoiado por evidências;
+- Search Intelligence responsável;
+- extensão assistiva apenas no futuro.
+
 ## v0.1 - Núcleo do produto
 
 Foco: entregar o **SotuHire v0.1 — MVP Core** como análise local, funcional, explicável e testável de currículo + vaga + preferências.

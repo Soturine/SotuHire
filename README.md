@@ -10,6 +10,43 @@ A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas dif
 
 O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
 
+## SotuHire v0.4 — Guided Career Copilot
+
+A versão atual transforma o MVP manual em um app local mais próximo de produto:
+
+```text
+Suba um currículo TXT/PDF/DOCX + cole a vaga -> revise os dados detectados -> analise -> exporte -> salve no tracker.
+```
+
+### O que mudou
+
+- interface guiada com abas, cards, sidebar e modos rápido/avançado;
+- parser automático de currículo e descrição de vaga;
+- revisão assistida antes da análise;
+- análise estruturada com mock/local por padrão e Gemini opcional;
+- fallback local quando chave ou SDK externo não estão disponíveis;
+- Resume Tailor com bullets, resumo, ordem, keywords, warnings e evidências;
+- downloads em JSON e Markdown;
+- tracker e histórico locais com confirmação de privacidade;
+- dashboard com médias, recomendações e riscos.
+
+O histórico não salva o texto bruto do currículo. A aplicação continua sem auto-apply, envio automático, scraping agressivo, PyTorch obrigatório ou Concurso Mode funcional.
+
+### Fluxo v0.4
+
+```mermaid
+flowchart LR
+    A[Currículo TXT/PDF/DOCX] --> B[Resume Parser]
+    C[Descrição da vaga] --> D[Job Parser]
+    B --> E[Revisão assistida]
+    D --> E
+    E --> F[Structured Analysis]
+    F --> G[Resume Tailor seguro]
+    F --> H[Exports JSON/Markdown]
+    F --> I[Tracker local]
+    I --> J[Histórico e Dashboard]
+```
+
 ## SotuHire v0.1 — MVP Core
 
 **SotuHire = copiloto de carreira com IA para analisar currículo, vaga, ATS, prioridades pessoais e estratégia de candidatura.**
@@ -320,14 +357,14 @@ Ele junta:
 
 ## Status
 
-**SotuHire v0.1 — MVP Core implementado nesta branch de desenvolvimento.**
+**SotuHire v0.4.0 — UX guiada, automação, IA estruturada, exports, tracker e dashboard local.**
 
-O núcleo atual executa análise local e explicável de currículo x vaga, com schemas Pydantic, scores determinísticos, Resume Tailor seguro, Streamlit, testes e Ruff. Integrações externas e automações permanecem deliberadamente fora do runtime padrão.
+O app atual executa análise local e explicável, extrai dados de currículos/vagas, permite revisão assistida, exporta resultados e mantém histórico local. Gemini é opcional; o fallback determinístico continua sendo o caminho seguro padrão.
 
 Próximo passo recomendado após validar a v0.1:
 
 ```text
-Validar heurísticas com exemplos fictícios e preparar Gemini Structured Outputs como integração opcional.
+Validar heurísticas e parsers com fixtures fictícias mais diversas e evoluir a experiência do tracker.
 ```
 
 ## Privacidade e compliance
@@ -363,10 +400,19 @@ O produto observa ferramentas de ATS, resume matching, trackers e assistentes de
 ## Próximos passos
 
 1. validar scores e recomendações com exemplos fictícios diversos;
-2. adicionar fixtures de currículos e vagas sem dados pessoais;
-3. integrar Gemini Structured Outputs como opção, mantendo fallback determinístico;
+2. adicionar fixtures PDF/DOCX sem dados pessoais;
+3. evoluir tracker e dashboard com filtros e tendências;
 4. evoluir para RAG simples de carreira com evidências rastreáveis;
-5. preparar Job Tracker/Kanban antes de qualquer automação de descoberta.
+5. preparar Search Intelligence sem scraping agressivo.
+
+## Documentação v0.4
+
+- [UX e automação v0.2](docs/07-development/v0.2-ux-automation.md)
+- [IA estruturada e exports v0.3](docs/07-development/v0.3-structured-ai-and-export.md)
+- [Tracker, histórico e dashboard v0.4](docs/07-development/v0.4-tracker-history-dashboard.md)
+- [Arquitetura de parsers](docs/02-architecture/parsers.md)
+- [Storage e histórico](docs/02-architecture/storage-and-history.md)
+- [Auditoria v0.4](docs/00-audit/v0.4-readiness-audit.md)
 
 ---
 
