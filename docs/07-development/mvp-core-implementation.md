@@ -41,3 +41,9 @@ tests/test_resume_tailor.py
 - scraping logado;
 - extensão antes da análise local;
 - DOCX antes do Markdown revisável.
+
+## Atualização v0.1
+
+A implementação consolidada da versão inicial está descrita em [MVP v0.1 Implementation](mvp-v0.1-implementation.md). O núcleo agora prioriza texto colado, scores determinísticos, Pydantic, Streamlit e testes antes de integrações externas.
+
+O arquivo atual permanece como histórico da ordem de implementação e referência para evoluções posteriores.

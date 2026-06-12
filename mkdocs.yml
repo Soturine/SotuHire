@@ -40,6 +40,9 @@ nav:
   - Auditoria:
       - Auditoria de documentação: 00-audit/documentation-audit.md
       - Relatório local: 00-audit/local-build-report.md
+      - Atualização expandida: 00-audit/expanded-update-summary.md
+      - Atualização Tailor/Fit: 00-audit/mvp-tailor-fit-update-summary.md
+      - Prontidão v0.1: 00-audit/v0.1-readiness-audit.md
   - Produto:
       - Visão: 01-product/vision.md
       - MVP: 01-product/mvp-scope.md
@@ -65,6 +68,7 @@ nav:
       - Profile score: 03-business-rules/profile-score.md
       - Resume tailor rules: 03-business-rules/resume-tailor-rules.md
       - Opportunity fit score: 03-business-rules/opportunity-fit-score.md
+      - Opportunity fit rules v0.1: 03-business-rules/opportunity-fit-rules.md
       - Public exam rules: 03-business-rules/public-exam-rules.md
   - IA:
       - Prompting: 04-ai/prompting.md
@@ -106,6 +110,8 @@ nav:
       - Profile analyzer roadmap: 07-development/profile-analyzer-roadmap.md
       - Resume Tailor DOCX: 07-development/resume-tailor-docx.md
       - MVP core implementation: 07-development/mvp-core-implementation.md
+      - MVP v0.1 implementation: 07-development/mvp-v0.1-implementation.md
+      - Repository metadata: 07-development/repository-metadata.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md

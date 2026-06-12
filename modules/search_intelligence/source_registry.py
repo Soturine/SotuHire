@@ -13,4 +13,6 @@ def list_sources() -> list[SourceProfile]:
 def find_source(name: str) -> SourceProfile | None:
     """Find a source by case-insensitive name."""
     normalized = name.casefold()
-    return next((source for source in DEFAULT_SOURCES if source.name.casefold() == normalized), None)
+    return next(
+        (source for source in DEFAULT_SOURCES if source.name.casefold() == normalized), None
+    )

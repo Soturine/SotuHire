@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CareerEvidence(BaseModel):
     """Evidence that supports a career fact used by the resume tailor."""
 
-    fact: str
-    source: str
-    evidence: str
+    model_config = ConfigDict(extra="forbid")
+
+    fact: str = Field(min_length=1)
+    source: str = Field(min_length=1)
+    evidence: str = Field(min_length=1)
     confidence: float = Field(ge=0, le=1)
     can_use_in_resume: bool = True
     last_verified_at: str | None = None
@@ -21,6 +23,8 @@ class JSONResume(BaseModel):
 
     This is intentionally partial. The full standard can be imported/exported later.
     """
+
+    model_config = ConfigDict(extra="forbid")
 
     basics: dict = Field(default_factory=dict)
     work: list[dict] = Field(default_factory=list)

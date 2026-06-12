@@ -2,24 +2,30 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, Field
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class TailoredResumeSection(BaseModel):
     """A single resume section rewritten with evidence tracking."""
 
-    section_name: str
+    model_config = ConfigDict(extra="forbid")
+
+    section_name: str = Field(min_length=1)
     original_text: str
     tailored_text: str
-    reason_for_change: str
-    evidence_source: str
-    invented_information: bool = False
+    reason_for_change: str = Field(min_length=1)
+    evidence_source: str = Field(min_length=1)
+    invented_information: Literal[False] = False
 
 
 class ResumeTailorOutput(BaseModel):
     """Structured result for a tailored resume draft."""
 
-    target_role: str
+    model_config = ConfigDict(extra="forbid")
+
+    target_role: str = Field(min_length=1)
     target_company: str | None = None
     section_order: list[str] = Field(default_factory=list)
     tailored_sections: list[TailoredResumeSection] = Field(default_factory=list)

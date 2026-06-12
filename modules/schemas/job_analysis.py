@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 Recommendation = Literal["apply", "apply_with_adjustments", "save_for_later", "ignore"]
 
 
 class JobAnalysisSchema(BaseModel):
     """Validated output for CV x job analysis."""
+
+    model_config = ConfigDict(extra="forbid")
 
     match_score: int = Field(ge=0, le=100)
     ats_score: int = Field(ge=0, le=100)

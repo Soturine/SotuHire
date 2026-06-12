@@ -15,6 +15,36 @@ A ordem correta é:
 7. analisar posts;
 8. criar extensão ou automações.
 
+## Consolidação da v0.1 — MVP Core
+
+A v0.1 consolida os antigos MVPs 1, 2 e 3 em uma entrega pequena e coerente. Isso evita publicar uma interface sem contratos tipados ou uma análise sem testes.
+
+Entram na v0.1:
+
+- currículo e vaga em texto;
+- preferências básicas;
+- schemas Pydantic;
+- Match Score;
+- ATS Score simples;
+- Opportunity Fit Score;
+- Risk Score simples;
+- recomendação explicável;
+- Resume Tailor em modo sugestão;
+- Streamlit;
+- pytest e Ruff.
+
+Continuam fora da v0.1:
+
+- scraping real e coleta autenticada;
+- extensão assistiva;
+- auto-apply;
+- envio automático para recrutador;
+- geração final em DOCX/PDF;
+- Concurso Mode funcional;
+- PyTorch, fine-tuning e agentes complexos.
+
+O Concurso Mode permanece apenas como futuro experimental separado. Search Intelligence, Hidden Jobs Radar, Job Tracker/Kanban, GitHub/Portfolio Score, LinkedIn/Profile Score e RAG simples de carreira são evoluções planejadas depois que o núcleo estiver validado.
+
 ## MVP 1 - Análise manual de currículo e vaga
 
 ### Objetivo

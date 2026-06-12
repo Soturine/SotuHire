@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
-Modality = Literal["remote", "hybrid", "onsite", "unknown"]
+Modality = Literal["remote", "hybrid", "onsite"]
 
 
 class UserPreferences(BaseModel):
     """Career and lifestyle preferences used by Opportunity Fit Score."""
+
+    model_config = ConfigDict(extra="forbid")
 
     preferred_locations: list[str] = Field(default_factory=list)
     preferred_modalities: list[Modality] = Field(default_factory=list)

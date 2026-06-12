@@ -43,3 +43,31 @@ flowchart TD
 ## Regra
 
 Qualquer resposta de IA que afete decisão do usuário deve ter schema.
+
+## Estado na v0.1
+
+Gemini não é dependência obrigatória do runtime da v0.1. O núcleo determinístico funciona offline e produz um `JobAnalysisSchema` válido.
+
+A integração futura com Gemini Structured Outputs deve:
+
+1. reutilizar os mesmos schemas Pydantic do núcleo;
+2. solicitar JSON tipado em vez de texto livre;
+3. validar toda resposta antes de exibir ou salvar;
+4. rejeitar scores fora de 0 a 100;
+5. rejeitar recomendações fora dos valores permitidos;
+6. manter a regra anti-invenção do Resume Tailor;
+7. oferecer fallback determinístico quando a API falhar.
+
+## Fronteira entre IA e regras
+
+Regras de score, preferência, segurança e recomendação permanecem testáveis sem chamada externa. A IA pode ajudar a explicar, resumir ou sugerir redação, mas não deve contornar validações.
+
+```mermaid
+flowchart LR
+    A[Funções determinísticas] --> B[Schema Pydantic]
+    C[Gemini opcional] --> B
+    B --> D[Validação]
+    D --> E[Interface]
+```
+
+Essa fronteira mantém custo, privacidade e falhas de rede fora do caminho crítico do MVP.

@@ -1,5 +1,12 @@
 """Analysis helpers."""
 
-from .recommendation import choose_recommendation
+from .job_analyzer import analyze_job, detect_missing_keywords
+from .recommendation import build_recommendation, choose_recommendation, detect_risk_flags
 
-__all__ = ["choose_recommendation"]
+__all__ = [
+    "analyze_job",
+    "build_recommendation",
+    "choose_recommendation",
+    "detect_missing_keywords",
+    "detect_risk_flags",
+]

@@ -1,7 +1,6 @@
-from pydantic import ValidationError
-
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.json_resume import CareerEvidence, JSONResume
+from pydantic import ValidationError
 
 
 def test_job_analysis_schema_validates_score_range():
