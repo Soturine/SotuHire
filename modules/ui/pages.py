@@ -257,11 +257,14 @@ def render_job_step() -> None:
         "A vaga",
         "Cole a descrição. Cargo, modalidade, contrato, senioridade e skills serão sugeridos.",
     )
-    vacancy_text = st.text_area(
-        "Descrição completa da vaga",
-        value=st.session_state.job_text,
-        height=240,
-        placeholder="Cole a descrição completa da oportunidade.",
+    vacancy_text = (
+        st.text_area(
+            "Descrição completa da vaga",
+            value=st.session_state.job_text,
+            height=240,
+            placeholder="Cole a descrição completa da oportunidade.",
+        )
+        or ""
     )
     if vacancy_text.strip() and vacancy_text != st.session_state.job_text:
         st.session_state.job_text = vacancy_text
@@ -434,7 +437,13 @@ def render_history_step() -> None:
         f"{record.company or 'Empresa não informada'} · {record.created_at:%d/%m/%Y %H:%M}"
         for record in records
     }
-    selected_id = st.selectbox("Abrir análise", list(labels), format_func=labels.get)
+    selected_id = st.selectbox(
+        "Abrir análise",
+        list(labels),
+        format_func=lambda value: labels[value],
+    )
+    if selected_id is None:
+        return
     selected = next(record for record in records if record.id == selected_id)
     scores = st.columns(4)
     scores[0].metric("Match", selected.analysis.match_score)
@@ -446,7 +455,7 @@ def render_history_step() -> None:
         [status.value for status in JobStatus],
         index=[status.value for status in JobStatus].index(selected.status.value),
     )
-    if st.button("Atualizar status"):
+    if st.button("Atualizar status") and new_status is not None:
         TRACKER.change_status(selected.id, new_status)
         st.success("Status atualizado.")
         st.rerun()

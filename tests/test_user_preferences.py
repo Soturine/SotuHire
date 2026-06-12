@@ -22,7 +22,7 @@ def test_user_preferences_reject_negative_salary():
 
 def test_user_preferences_reject_unknown_modality():
     with pytest.raises(ValidationError):
-        UserPreferences(preferred_modalities=["flexible"])
+        UserPreferences.model_validate({"preferred_modalities": ["flexible"]})
 
 
 def test_empty_user_preferences_are_valid():

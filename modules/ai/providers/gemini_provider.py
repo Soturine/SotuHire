@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 import os
 
 from modules.ai.providers.base import AIProvider, ProviderUnavailableError
@@ -29,8 +30,8 @@ class GeminiProvider(AIProvider):
         if not self.api_key:
             raise ProviderUnavailableError("GEMINI_API_KEY nao configurada.")
         try:
-            from google import genai
-            from google.genai import types
+            genai = importlib.import_module("google.genai")
+            types = importlib.import_module("google.genai.types")
         except ImportError as exc:
             raise ProviderUnavailableError(
                 "Instale requirements-ai.txt para habilitar o Gemini."

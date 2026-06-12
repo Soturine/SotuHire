@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 from modules.core.text_utils import extract_keywords, normalize_text
-from modules.schemas.job_posting import JobPostingSchema
+from modules.schemas.job_posting import JobModality, JobPostingSchema
 
 SKILL_CATALOG = [
     "Python",
@@ -98,7 +98,7 @@ def _detect_title(lines: list[str]) -> str:
     return lines[0].strip("# -*") if lines else ""
 
 
-def _detect_modality(normalized: str) -> str:
+def _detect_modality(normalized: str) -> JobModality:
     if any(term in normalized for term in ["remoto", "remota", "remote", "home office"]):
         return "remote"
     if any(term in normalized for term in ["hibrido", "hibrida", "hybrid"]):

@@ -41,13 +41,15 @@ def test_job_analysis_rejects_unknown_recommendation():
 
 def test_resume_tailor_rejects_invented_information():
     with pytest.raises(ValidationError):
-        TailoredResumeSection(
-            section_name="Experiência",
-            original_text="Projeto acadêmico em Python",
-            tailored_text="Cinco anos de experiência profissional em Python",
-            reason_for_change="Aumentar aderência",
-            evidence_source="currículo mestre",
-            invented_information=True,
+        TailoredResumeSection.model_validate(
+            {
+                "section_name": "Experiência",
+                "original_text": "Projeto acadêmico em Python",
+                "tailored_text": "Cinco anos de experiência profissional em Python",
+                "reason_for_change": "Aumentar aderência",
+                "evidence_source": "currículo mestre",
+                "invented_information": True,
+            }
         )
 
 

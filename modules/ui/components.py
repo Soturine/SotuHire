@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from html import escape
+from typing import Any
 
 import streamlit as st
 
@@ -91,7 +92,7 @@ def render_list(items: list[str], empty_message: str) -> None:
         st.markdown(f"- {item}")
 
 
-def render_score_card(column: object, label: str, score: int, note: str) -> None:
+def render_score_card(column: Any, label: str, score: int, note: str) -> None:
     """Render a metric plus its short explanation."""
     column.metric(label, f"{score}/100")
     column.markdown(f'<div class="score-note">{escape(note)}</div>', unsafe_allow_html=True)

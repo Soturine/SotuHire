@@ -6,6 +6,16 @@ kept deterministic and unit-tested.
 
 from __future__ import annotations
 
+from typing import overload
+
+
+@overload
+def clamp_score(value: None) -> None: ...
+
+
+@overload
+def clamp_score(value: int | float) -> int: ...
+
 
 def clamp_score(value: int | float | None) -> int | None:
     """Clamp a numeric score to the 0-100 range."""

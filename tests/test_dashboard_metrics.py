@@ -1,9 +1,11 @@
-from modules.schemas.job_analysis import JobAnalysisSchema
+from modules.schemas.job_analysis import JobAnalysisSchema, Recommendation
 from modules.storage.models import StoredAnalysis
 from modules.tracker.dashboard import calculate_dashboard_metrics
 
 
-def _record(match: int, ats: int, fit: int, risk: int, recommendation: str) -> StoredAnalysis:
+def _record(
+    match: int, ats: int, fit: int, risk: int, recommendation: Recommendation
+) -> StoredAnalysis:
     return StoredAnalysis(
         analysis=JobAnalysisSchema(
             match_score=match,

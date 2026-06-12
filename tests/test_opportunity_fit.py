@@ -38,7 +38,10 @@ def test_opportunity_fit_penalizes_senior_onsite_far_job():
         "contract": "PJ",
         "seniority": "senior",
     }
-    assert calculate_opportunity_fit(job, prefs) < 40
+    score = calculate_opportunity_fit(job, prefs)
+
+    assert score is not None
+    assert score < 40
 
 
 def test_opportunity_fit_score_is_neutral_without_preferences():

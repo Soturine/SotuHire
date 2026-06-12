@@ -11,5 +11,8 @@ def test_generate_queries_contains_domain_search():
 
 def test_detect_opportunity_post():
     result = detect_opportunity_post("Estamos contratando QA júnior remoto, envie currículo")
+    confidence = result["confidence"]
+
     assert result["is_opportunity"] is True
-    assert result["confidence"] >= 30
+    assert isinstance(confidence, int)
+    assert confidence >= 30
