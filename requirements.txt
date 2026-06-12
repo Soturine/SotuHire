@@ -1,0 +1,7 @@
+streamlit
+pymupdf
+google-genai
+pydantic
+python-dotenv
+pytest
+ruff

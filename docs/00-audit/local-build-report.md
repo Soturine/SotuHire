@@ -1,0 +1,42 @@
+# Local build report
+
+| File | Bytes | Lines |
+|---|---:|---:|
+| `.env.example` | 134 | 5 |
+| `.gitignore` | 4628 | 219 |
+| `CONTRIBUTING.md` | 1114 | 34 |
+| `LICENSE` | 11357 | 202 |
+| `README.md` | 6855 | 149 |
+| `data/.gitkeep` | 0 | 1 |
+| `docs/00-audit/documentation-audit.md` | 3153 | 74 |
+| `docs/01-product/mvp-scope.md` | 3210 | 140 |
+| `docs/01-product/roadmap.md` | 2476 | 136 |
+| `docs/01-product/user-stories.md` | 2804 | 95 |
+| `docs/01-product/vision.md` | 2660 | 62 |
+| `docs/02-architecture/architecture-decisions.md` | 2233 | 89 |
+| `docs/02-architecture/data-flow.md` | 2671 | 118 |
+| `docs/02-architecture/folder-structure.md` | 2598 | 119 |
+| `docs/02-architecture/overview.md` | 2516 | 124 |
+| `docs/03-business-rules/ats-rules.md` | 2033 | 81 |
+| `docs/03-business-rules/job-filtering.md` | 2130 | 122 |
+| `docs/03-business-rules/matching-rules.md` | 2609 | 93 |
+| `docs/04-ai/evaluation.md` | 1569 | 62 |
+| `docs/04-ai/prompting.md` | 2290 | 79 |
+| `docs/04-ai/structured-output-schema.md` | 2580 | 99 |
+| `docs/05-data-sources/compliance-and-ethics.md` | 2102 | 76 |
+| `docs/05-data-sources/hidden-jobs-radar.md` | 2522 | 114 |
+| `docs/05-data-sources/job-sources.md` | 1929 | 83 |
+| `docs/06-engineering/avoid-overengineering.md` | 1552 | 57 |
+| `docs/06-engineering/clean-code-solid.md` | 2393 | 102 |
+| `docs/06-engineering/qa-testing.md` | 2084 | 91 |
+| `docs/06-engineering/security-privacy.md` | 1690 | 88 |
+| `docs/07-development/commands.md` | 625 | 71 |
+| `docs/07-development/contributing.md` | 1391 | 61 |
+| `docs/07-development/setup.md` | 1208 | 98 |
+| `docs/README.md` | 2862 | 55 |
+| `mkdocs.yml` | 1770 | 40 |
+| `modules/.gitkeep` | 0 | 1 |
+| `outputs/.gitkeep` | 0 | 1 |
+| `requirements.txt` | 66 | 8 |
+| `tests/.gitkeep` | 0 | 1 |
+| `tests/fixtures/.gitkeep` | 0 | 1 |

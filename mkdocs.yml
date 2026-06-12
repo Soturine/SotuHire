@@ -1,0 +1,39 @@
+site_name: SotuHire Docs
+site_description: Documentation for the SotuHire AI-assisted career copilot.
+repo_url: https://github.com/Soturine/SotuHire
+
+nav:
+  - Home: README.md
+  - Audit:
+      - Documentation Audit: docs/00-audit/documentation-audit.md
+  - Product:
+      - Vision: docs/01-product/vision.md
+      - MVP Scope: docs/01-product/mvp-scope.md
+      - User Stories: docs/01-product/user-stories.md
+      - Roadmap: docs/01-product/roadmap.md
+  - Architecture:
+      - Overview: docs/02-architecture/overview.md
+      - Folder Structure: docs/02-architecture/folder-structure.md
+      - Data Flow: docs/02-architecture/data-flow.md
+      - Architecture Decisions: docs/02-architecture/architecture-decisions.md
+  - Business Rules:
+      - Matching Rules: docs/03-business-rules/matching-rules.md
+      - ATS Rules: docs/03-business-rules/ats-rules.md
+      - Job Filtering: docs/03-business-rules/job-filtering.md
+  - AI:
+      - Prompting: docs/04-ai/prompting.md
+      - Structured Output: docs/04-ai/structured-output-schema.md
+      - Evaluation: docs/04-ai/evaluation.md
+  - Data Sources:
+      - Job Sources: docs/05-data-sources/job-sources.md
+      - Hidden Jobs Radar: docs/05-data-sources/hidden-jobs-radar.md
+      - Compliance and Ethics: docs/05-data-sources/compliance-and-ethics.md
+  - Engineering:
+      - Clean Code and SOLID: docs/06-engineering/clean-code-solid.md
+      - QA and Testing: docs/06-engineering/qa-testing.md
+      - Avoiding Overengineering: docs/06-engineering/avoid-overengineering.md
+      - Security and Privacy: docs/06-engineering/security-privacy.md
+  - Development:
+      - Setup: docs/07-development/setup.md
+      - Contributing: docs/07-development/contributing.md
+      - Commands: docs/07-development/commands.md
