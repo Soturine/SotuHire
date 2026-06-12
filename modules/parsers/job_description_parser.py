@@ -211,9 +211,7 @@ def parse_job_description(text: str) -> JobPostingSchema:
     lines = [line.strip() for line in clean_text.splitlines() if line.strip()]
     normalized = normalize_text(clean_text)
     desired_skills = _detect_skills(_desired_section(clean_text))
-    required_skills = [
-        skill for skill in _detect_skills(clean_text) if skill not in desired_skills
-    ]
+    required_skills = [skill for skill in _detect_skills(clean_text) if skill not in desired_skills]
     salary_min, salary_max = _detect_salary(clean_text)
     job = JobPostingSchema(
         title=_detect_title(lines),

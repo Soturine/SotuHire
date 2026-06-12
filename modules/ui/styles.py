@@ -46,6 +46,16 @@ def inject_styles() -> None:
         .stTextInput input::placeholder, .stTextArea textarea::placeholder {
           color: #8190a5 !important;
         }
+        [data-testid="stFileUploaderDropzone"] {
+          background: var(--surface-2);
+          border-color: var(--border);
+        }
+        [data-testid="stFileUploaderDropzone"] * { color: var(--muted) !important; }
+        [data-testid="stFileUploaderDropzone"] button {
+          background: var(--surface);
+          border-color: var(--border);
+          color: var(--text) !important;
+        }
         [data-baseweb="popover"], [data-baseweb="menu"] { background: var(--surface-2); }
         [data-baseweb="menu"] * { color: var(--text); }
         .stButton > button, .stDownloadButton > button {

@@ -233,16 +233,18 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
     lines = [line.strip() for line in clean_text.splitlines() if line.strip()]
     sections = _split_sections(lines)
     links = _detect_links(clean_text)
-    experiences = _unique(
-        sections["experiences"] or _infer_lines(lines, ROLE_TERMS)
-    )
+    experiences = _unique(sections["experiences"] or _infer_lines(lines, ROLE_TERMS))
     projects = _unique(sections["projects"] or _infer_lines(lines, PROJECT_TERMS))
     education = _unique(sections["education"] or _infer_lines(lines, EDUCATION_TERMS))
 
     return ResumeProfileSchema(
         name=_detect_name(lines),
-        email=(EMAIL_PATTERN.search(clean_text).group(0) if EMAIL_PATTERN.search(clean_text) else ""),
-        phone=(PHONE_PATTERN.search(clean_text).group(0) if PHONE_PATTERN.search(clean_text) else ""),
+        email=(
+            EMAIL_PATTERN.search(clean_text).group(0) if EMAIL_PATTERN.search(clean_text) else ""
+        ),
+        phone=(
+            PHONE_PATTERN.search(clean_text).group(0) if PHONE_PATTERN.search(clean_text) else ""
+        ),
         city=_detect_city(clean_text),
         linkedin=_link_by_domain(links, "linkedin.com"),
         github=_link_by_domain(links, "github.com"),
@@ -250,7 +252,10 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
             (
                 link
                 for link in links
-                if any(domain in link.lower() for domain in ["behance", "vercel", "netlify", "github.io"])
+                if any(
+                    domain in link.lower()
+                    for domain in ["behance", "vercel", "netlify", "github.io"]
+                )
             ),
             "",
         ),
@@ -264,9 +269,7 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
         soft_skills=_unique(
             [*sections["soft_skills"], *_detect_skills(clean_text, SOFT_SKILL_CATALOG)]
         ),
-        languages=_unique(
-            [*sections["languages"], *_detect_skills(clean_text, LANGUAGE_CATALOG)]
-        ),
+        languages=_unique([*sections["languages"], *_detect_skills(clean_text, LANGUAGE_CATALOG)]),
         links=links,
         keywords=extract_keywords(clean_text, limit=40),
         raw_text=clean_text,
