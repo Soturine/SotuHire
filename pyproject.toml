@@ -1,0 +1,42 @@
+[project]
+name = "sotuhire"
+version = "0.1.0"
+description = "AI-assisted career copilot for resume analysis, job matching and responsible opportunity discovery."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "Soturine" }
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["modules", "tests"]
+
+[tool.ruff.lint]
+select = [
+  "E",
+  "F",
+  "I",
+  "B",
+  "UP",
+  "SIM",
+]
+ignore = [
+  "E501"
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["S101"]
+"docs/*" = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"

@@ -121,3 +121,28 @@ Streamlit é suficiente para validar o produto rápido.
 Microserviços seriam overengineering. O SotuHire ainda não tem tráfego, múltiplas equipes, escala independente nem necessidade de deploy isolado por serviço.
 
 Para o MVP, módulos Python são mais simples e suficientes.
+
+
+## Módulos de coleta
+
+Com scraping no roadmap, a arquitetura passa a incluir uma camada de fontes:
+
+```text
+modules/
+├── sources/
+│   ├── base.py
+│   ├── manual_source.py
+│   ├── public_page_source.py
+│   ├── normalizer.py
+│   └── deduplication.py
+```
+
+Essa camada não deve conhecer Streamlit nem regras de UI. Ela apenas coleta e normaliza oportunidades.
+
+Fluxo:
+
+```text
+Source Connector -> Raw Job -> Normalizer -> Normalized Job -> Business Rules -> AI Analyzer -> Result
+```
+
+Cada conector deve ser substituível. Se uma fonte quebrar, o restante do app continua funcionando.

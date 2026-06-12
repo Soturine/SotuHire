@@ -59,3 +59,20 @@ O SotuHire não é:
 - sistema definitivo de ATS real de empresas.
 
 Ele é uma ferramenta de apoio à decisão.
+
+
+## Atualização: coleta de oportunidades
+
+O SotuHire pode incluir scraping, desde que seja tratado como coleta responsável de oportunidades públicas.
+
+A visão correta é:
+
+```text
+Manual-first
+Public-data-first
+Human-review-always
+No mass auto-apply
+No bypass
+```
+
+O scraping entra para reduzir trabalho repetitivo, não para violar plataformas. O sistema deve preferir APIs, feeds, páginas públicas simples e entrada manual. Playwright e Scrapy entram apenas quando houver justificativa técnica.

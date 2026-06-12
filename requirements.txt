@@ -4,4 +4,16 @@ google-genai
 pydantic
 python-dotenv
 pytest
+pytest-cov
 ruff
+requests
+httpx
+beautifulsoup4
+lxml
+mkdocs
+mkdocs-material
+
+# Optional future dependencies:
+# scrapy
+# pytest-playwright
+# playwright

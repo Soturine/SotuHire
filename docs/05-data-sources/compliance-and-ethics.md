@@ -1,75 +1,190 @@
-# Compliance e ética
+# Compliance, ética e limites de automação
 
-## Por que este documento existe
+## Objetivo
 
-Ferramentas de busca de vagas podem facilmente virar bots agressivos. O SotuHire deve ser construído como projeto profissional, com limites claros.
+Este documento define limites para que o SotuHire seja um projeto profissional, apresentável e seguro.
+
+Ferramentas de vagas podem facilmente virar spam bots. O SotuHire deve seguir outro caminho:
+
+> Assistir o candidato, não substituir sua responsabilidade.
 
 ## Princípio central
 
-> O SotuHire ajuda o usuário a decidir e preparar candidaturas. Ele não deve remover o controle humano nem violar regras de plataformas.
+O SotuHire deve:
 
-## Candidatura automática
+- ajudar a decidir;
+- explicar recomendações;
+- preparar textos;
+- organizar oportunidades;
+- preservar revisão humana;
+- respeitar privacidade;
+- respeitar limites de plataformas.
 
-Não recomendado:
+O SotuHire não deve:
 
 - aplicar em massa;
-- enviar currículo sem revisão;
-- personalizar respostas automaticamente sem o usuário olhar;
-- usar conta do usuário para clicar em botões em larga escala;
-- simular comportamento humano para driblar bloqueios.
+- simular usuário para burlar regras;
+- extrair dados privados;
+- enviar mensagens sem revisão;
+- contornar bloqueios técnicos;
+- esconder origem dos dados.
 
-Recomendado:
+## Scraping responsável
 
-- preparar texto;
-- sugerir ajustes;
-- ranquear vagas;
-- registrar status;
-- deixar o usuário aplicar manualmente.
+Scraping deve ser usado apenas quando fizer sentido e respeitar limites.
 
-## LinkedIn e plataformas similares
+### Permitido
 
-A documentação oficial do LinkedIn deve ser considerada antes de qualquer integração. O contrato de usuário do LinkedIn menciona limites de uso, responsabilidade do usuário, disponibilidade do serviço, restrições e possibilidade de limitação/suspensão por uso indevido.
-
-Referência: [LinkedIn User Agreement](https://www.linkedin.com/legal/user-agreement)
-
-## Scraping
-
-Scraping pode ser útil em contexto controlado, mas exige cuidado.
-
-Não fazer:
-
-- burlar login;
-- burlar captcha;
-- ignorar bloqueios;
-- usar proxies para contornar rate limit;
-- coletar dados pessoais em massa;
-- copiar bases inteiras;
-- violar termos de uso.
-
-Preferir:
-
+- páginas públicas;
+- HTML acessível sem login;
 - APIs oficiais;
 - feeds públicos;
-- páginas públicas simples;
-- entrada manual;
-- exportações feitas pelo próprio usuário;
-- links de vagas fornecidos pelo usuário.
+- textos colados pelo usuário;
+- links salvos manualmente;
+- newsletters públicas;
+- páginas de carreira de empresas.
 
-## Privacidade
+### Não permitido no projeto
 
-Currículo contém dados pessoais. O projeto deve evitar:
+- bypass de CAPTCHA;
+- bypass de autenticação;
+- uso de cookies roubados ou compartilhados;
+- coleta de dados pessoais em massa;
+- scraping de áreas privadas;
+- proxies para contornar bloqueio;
+- automação de candidatura em massa;
+- spam para recrutadores;
+- automação que gere engajamento falso.
 
-- salvar currículo real no GitHub;
-- logar texto completo do currículo;
-- expor e-mail/telefone em exemplos;
-- enviar dados para múltiplas APIs sem necessidade;
-- manter arquivos enviados sem aviso.
+## LinkedIn
 
-## Transparência
+O LinkedIn deve ser tratado como fonte manual/assistiva.
 
-A UI deve deixar claro:
+Motivo: o contrato de usuário do LinkedIn restringe scripts, robôs, crawlers, plugins e outros meios para copiar/raspar serviços, perfis e dados; também restringe bots e métodos automatizados não autorizados para acessar serviços, adicionar/baixar contatos, enviar mensagens ou gerar engajamento.
 
-- IA pode errar;
-- score é estimativa;
-- usuário deve revisar textos;
-- candidatura final é responsabilidade do usuário.
+No SotuHire, o uso seguro é:
+
+- usuário copia a descrição;
+- usuário copia o texto do post;
+- usuário salva o link manualmente;
+- usuário revisa qualquer mensagem gerada;
+- nenhuma aplicação automática é feita.
+
+## Geração de conteúdo com IA
+
+Mensagens para recrutadores, respostas de formulário e cartas devem ser tratadas como rascunhos.
+
+Sempre deixar claro:
+
+- o usuário deve revisar;
+- o usuário deve corrigir dados;
+- o usuário deve remover exageros;
+- o usuário é responsável pelo que envia.
+
+## Dados pessoais
+
+O SotuHire lida com currículo. Portanto, deve minimizar dados.
+
+Boas práticas:
+
+- salvar localmente por padrão;
+- não enviar currículo para serviços externos sem aviso;
+- permitir apagar histórico;
+- não salvar API keys em código;
+- não versionar currículos reais;
+- usar exemplos fictícios nos testes.
+
+## Logs
+
+Logs não devem expor:
+
+- currículo completo;
+- e-mail pessoal;
+- telefone;
+- documentos;
+- links privados;
+- tokens;
+- API keys.
+
+Logs devem focar em:
+
+- fonte;
+- status;
+- erro técnico;
+- tempo;
+- quantidade de itens.
+
+## Política de auto-apply
+
+Auto-apply em massa fica fora do escopo.
+
+Motivos:
+
+- risco de spam;
+- risco de candidatura errada;
+- risco de violar termos de plataformas;
+- baixa qualidade para recrutadores;
+- risco para conta do usuário;
+- pior valor de portfólio.
+
+O SotuHire pode preparar:
+
+- mensagem;
+- carta;
+- resposta;
+- checklist;
+- ajustes no currículo;
+- link da vaga.
+
+Mas a ação final deve ser humana.
+
+## Extensão de navegador
+
+Uma extensão futura deve ser assistiva:
+
+Permitido:
+
+- ler o texto da vaga aberta pelo usuário;
+- enviar o texto ao SotuHire local;
+- mostrar match;
+- salvar no tracker;
+- gerar rascunho.
+
+Não permitido:
+
+- coletar feed em massa;
+- navegar sozinho por páginas;
+- aplicar automaticamente;
+- enviar mensagens;
+- burlar limitações.
+
+## Checklist antes de criar um conector
+
+Antes de implementar uma fonte, responder:
+
+1. A página é pública?
+2. Existe API oficial?
+3. Existe feed?
+4. A fonte permite esse uso?
+5. O dado é realmente necessário?
+6. Há dados pessoais?
+7. O scraper respeita `robots.txt`?
+8. Existe rate limit?
+9. Existe cache?
+10. O usuário consegue revisar a oportunidade?
+11. A fonte pode ser desativada facilmente?
+12. Há teste com fixture?
+
+## Conclusão
+
+O SotuHire pode usar scraping, mas deve usar scraping como engenharia de coleta de dados, não como gambiarra para burlar plataformas.
+
+A postura correta é:
+
+```text
+coletar oportunidades públicas
+normalizar dados
+explicar match
+preparar candidatura
+manter decisão humana
+```

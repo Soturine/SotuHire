@@ -1,5 +1,13 @@
 # Roadmap
 
+## Estratégia geral
+
+O SotuHire deve evoluir em etapas pequenas. A regra é:
+
+> Primeiro entregar valor manualmente. Depois automatizar coleta. Depois escalar.
+
+Não começar por scraper complexo. O núcleo do produto é o match entre currículo e vaga.
+
 ## v0.1 - Núcleo do produto
 
 Foco: provar que a análise CV + vaga é útil.
@@ -10,8 +18,9 @@ Entregas:
 - extração de texto com PyMuPDF;
 - campo para descrição de vaga;
 - chamada para LLM;
-- relatório textual inicial;
-- README e docs básicos.
+- relatório inicial;
+- Streamlit simples;
+- tratamento básico de erro.
 
 Critério de pronto:
 
@@ -33,9 +42,10 @@ Entregas:
 
 Critério de pronto:
 
-- a UI não depende de texto solto;
+- UI não depende de texto solto;
 - score aparece como métrica;
-- listas aparecem organizadas.
+- listas aparecem organizadas;
+- output inválido não quebra a aplicação.
 
 ## v0.3 - Regras de negócio
 
@@ -44,9 +54,10 @@ Foco: deixar critérios explícitos e testáveis.
 Entregas:
 
 - regras de senioridade;
-- termos de prioridade;
-- termos de desclassificação;
+- termos prioritários;
+- termos impeditivos;
 - classificação de recomendação;
+- score de risco;
 - testes unitários.
 
 Critério de pronto:
@@ -55,23 +66,26 @@ Critério de pronto:
 - testes passam;
 - alteração de regra não exige mexer na UI.
 
-## v0.4 - QA e refatoração
+## v0.4 - QA e qualidade
 
-Foco: qualidade de código.
+Foco: mostrar engenharia.
 
 Entregas:
 
-- `pytest`;
-- `ruff`;
-- funções menores;
+- pytest;
+- Ruff;
+- pyproject.toml;
+- GitHub Actions;
+- fixtures;
 - mocks para IA;
-- README de desenvolvimento.
+- comandos de desenvolvimento.
 
 Critério de pronto:
 
-- testes cobrem lógica principal;
-- lint não mostra erros graves;
-- código está separado por responsabilidade.
+- `ruff check .` passa;
+- `ruff format . --check` passa;
+- `pytest` passa;
+- CI passa no GitHub.
 
 ## v0.5 - Persistência local
 
@@ -82,54 +96,123 @@ Entregas:
 - SQLite;
 - salvar análises;
 - listar histórico;
-- filtrar por score e recomendação;
-- exportar relatório.
+- filtrar por status;
+- editar status;
+- exportar CSV/JSON.
 
-## v0.6 - Buscador de vagas públicas
+Critério de pronto:
 
-Foco: encontrar vagas sem depender de processos manuais.
+- análise fica salva;
+- usuário consegue ver histórico;
+- dados sensíveis não são versionados.
+
+## v0.6 - Scraping responsável
+
+Foco: começar coleta automática controlada.
 
 Entregas:
 
-- fontes públicas configuráveis;
+- interface de fontes;
+- conector manual;
+- conector de página pública simples;
+- normalizador;
 - deduplicação;
-- normalização de campos;
-- match em lote;
-- dashboard.
+- rate limit;
+- cache;
+- logs;
+- fixtures HTML.
+
+Critério de pronto:
+
+- conector roda sem login;
+- não acessa área privada;
+- respeita limites;
+- não faz auto-apply;
+- testes usam fixtures locais.
 
 ## v0.7 - Hidden Jobs Radar
 
-Foco: oportunidades em posts e indicações.
+Foco: identificar oportunidades em textos informais.
 
 Entregas:
 
 - classificador de post;
-- extração de contato/link;
+- extração de cargo/empresa/local/contato;
+- score de confiança;
 - match com currículo;
-- mensagem de abordagem;
-- status “post informal”.
+- mensagem sugerida para abordagem;
+- salvamento no tracker.
 
-## v0.8 - Extensão de navegador
+Critério de pronto:
 
-Foco: analisar páginas abertas pelo usuário.
+- texto de post colado vira oportunidade estruturada;
+- falso positivo é sinalizado;
+- usuário revisa antes de qualquer ação.
 
-Entregas:
+## v0.8 - Job Tracker
 
-- extensão simples;
-- leitura do texto visível;
-- envio para backend local;
-- retorno do relatório.
-
-## v1.0 - Versão demonstrável de portfólio
-
-Foco: projeto apresentável.
+Foco: organizar busca.
 
 Entregas:
 
-- documentação completa;
+- tabela de vagas;
+- status da candidatura;
+- campos de contato;
+- data de aplicação;
+- notas;
+- filtros;
+- métricas simples.
+
+Status sugeridos:
+
+```text
+saved
+analyzed
+applied
+interview
+rejected
+offer
+archived
+```
+
+## v0.9 - Extensão assistiva
+
+Foco: reduzir copiar/colar.
+
+Entregas:
+
+- extensão lê página aberta pelo usuário;
+- envia texto ao app local;
+- mostra match;
+- salva no tracker;
+- sem auto-apply;
+- sem envio automático de mensagens.
+
+## v1.0 - Produto apresentável
+
+Foco: portfólio forte.
+
+Entregas:
+
+- README com screenshots;
+- demo em vídeo/GIF;
+- docs publicadas;
+- CI;
 - testes;
-- demo;
-- screenshots;
-- exemplos sem dados pessoais;
-- instruções de instalação;
-- limitações claras.
+- release;
+- exemplos fictícios;
+- roadmap claro.
+
+## Pós-v1
+
+Ideias futuras:
+
+- suporte a currículo DOCX;
+- exportação de relatório PDF;
+- comparação entre múltiplos currículos;
+- modo local com LLM via Ollama;
+- embeddings;
+- ranking semântico;
+- dashboard mais avançado;
+- alertas por e-mail/Telegram;
+- deploy opcional.

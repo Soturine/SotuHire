@@ -2,14 +2,22 @@
 
 ## Ambiente
 
+Criar ambiente:
+
 ```bash
 python -m venv .venv
 ```
 
-Ativar no Windows:
+Ativar no Windows PowerShell:
+
+```powershell
+.venv\Scripts\activate
+```
+
+Ativar no Git Bash:
 
 ```bash
-.venv\Scripts\activate
+source .venv/Scripts/activate
 ```
 
 Ativar no Linux/macOS:
@@ -20,23 +28,29 @@ source .venv/bin/activate
 
 ## Dependências
 
+Instalar:
+
 ```bash
 pip install -r requirements.txt
 ```
 
-Gerar requirements a partir do ambiente atual:
+Atualizar pip:
 
 ```bash
-pip freeze > requirements.txt
+python -m pip install --upgrade pip
 ```
 
 ## App
+
+Rodar Streamlit:
 
 ```bash
 streamlit run app.py
 ```
 
 ## Testes
+
+Rodar todos:
 
 ```bash
 pytest
@@ -48,23 +62,119 @@ Com detalhes:
 pytest -v
 ```
 
-## Lint
+Com coverage, se instalado:
+
+```bash
+pytest --cov=modules --cov-report=term-missing
+```
+
+## Ruff
+
+Lint:
 
 ```bash
 ruff check .
 ```
 
-## Format
+Corrigir automaticamente o que for seguro:
+
+```bash
+ruff check . --fix
+```
+
+Formatar:
 
 ```bash
 ruff format .
 ```
 
+Checar formatação sem alterar:
+
+```bash
+ruff format . --check
+```
+
+Fluxo recomendado antes de commit:
+
+```bash
+ruff check .
+ruff format . --check
+pytest
+```
+
+## MkDocs
+
+Rodar docs localmente:
+
+```bash
+mkdocs serve
+```
+
+Build:
+
+```bash
+mkdocs build
+```
+
+Deploy no GitHub Pages, quando fizer sentido:
+
+```bash
+mkdocs gh-deploy
+```
+
+## Playwright futuro
+
+Instalar plugin:
+
+```bash
+pip install pytest-playwright
+playwright install
+```
+
+Usar apenas quando houver testes E2E ou páginas públicas dinâmicas.
+
 ## Git
+
+Ver status:
 
 ```bash
 git status
+```
+
+Adicionar arquivos:
+
+```bash
 git add .
-git commit -m "docs: rebuild project documentation"
+```
+
+Commit para docs:
+
+```bash
+git commit -m "docs: expand scraping and quality documentation"
+```
+
+Commit para MVP:
+
+```bash
+git commit -m "feat: add initial resume job match MVP"
+```
+
+Enviar:
+
+```bash
+git push
+```
+
+## Aplicar patch
+
+```bash
+git apply SotuHire-scraping-ruff-update.patch
+```
+
+Depois:
+
+```bash
+git add .
+git commit -m "docs: expand scraping strategy and Ruff setup"
 git push
 ```

@@ -116,3 +116,38 @@ sotuhire/
 ```
 
 Mas isso só deve acontecer quando a estrutura simples começar a doer de verdade.
+
+
+## Estrutura futura para fontes
+
+```text
+modules/
+├── sources/
+│   ├── __init__.py
+│   ├── base.py
+│   ├── manual_source.py
+│   ├── public_page_source.py
+│   ├── normalizer.py
+│   ├── deduplication.py
+│   └── errors.py
+```
+
+## Estrutura futura para CI
+
+```text
+.github/
+└── workflows/
+    └── ci.yml
+```
+
+## Configuração Python
+
+```text
+pyproject.toml
+```
+
+Centraliza:
+
+- metadados do projeto;
+- configuração do pytest;
+- configuração do Ruff.

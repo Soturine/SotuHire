@@ -2,22 +2,48 @@
 
 ## Estratégia
 
-O SotuHire deve começar com entrada manual. Só depois deve evoluir para coleta de oportunidades. Isso reduz risco técnico e mantém foco no núcleo do produto.
+O SotuHire deve começar com entrada manual e evoluir para coleta controlada.
 
-## Fontes formais futuras
+A ordem recomendada é:
 
-Possíveis fontes:
+1. descrição colada manualmente;
+2. texto de post colado manualmente;
+3. link de vaga salvo manualmente;
+4. leitura de páginas públicas simples;
+5. conectores específicos para fontes públicas;
+6. Hidden Jobs Radar;
+7. extensão assistiva;
+8. crawlers mais estruturados, se fizer sentido.
 
-- Gupy;
+## Fontes formais possíveis
+
+Fontes que podem ser estudadas:
+
 - Greenhouse;
 - Lever;
 - Ashby;
+- Gupy;
 - Indeed;
 - InfoJobs;
 - Remotar;
 - Programathor;
 - sites de carreira de empresas;
-- páginas públicas com vagas.
+- páginas de programas de estágio;
+- newsletters públicas.
+
+## Prioridade inicial
+
+Para o MVP, não tente cobrir tudo.
+
+Prioridade recomendada:
+
+```text
+1. entrada manual
+2. páginas públicas simples
+3. páginas de carreira de empresas específicas
+4. Greenhouse/Lever/Ashby quando a URL pública for clara
+5. Hidden Jobs Radar por texto colado
+```
 
 ## Campos normalizados
 
@@ -25,15 +51,24 @@ Toda vaga coletada deve virar um objeto comum:
 
 ```json
 {
+  "id": "hash-or-uuid",
   "title": "Estágio em Dados",
   "company": "Empresa X",
-  "location": "Remoto - Brasil",
-  "work_model": "Remoto",
-  "seniority": "Estágio",
-  "source": "Gupy",
-  "url": "https://...",
+  "location": "São Paulo, SP",
+  "work_model": "hybrid",
+  "seniority": "internship",
+  "source": "company_page",
+  "source_url": "https://...",
+  "application_url": "https://...",
   "description": "Texto completo da vaga",
-  "published_at": "2026-06-12"
+  "requirements": ["Python", "SQL"],
+  "nice_to_have": ["Power BI"],
+  "salary_min": null,
+  "salary_max": null,
+  "currency": "BRL",
+  "published_at": null,
+  "collected_at": "2026-06-12T03:00:00",
+  "content_hash": "sha256..."
 }
 ```
 
@@ -41,42 +76,133 @@ Toda vaga coletada deve virar um objeto comum:
 
 A mesma vaga pode aparecer em várias fontes. O sistema deve comparar:
 
+- URL;
 - título;
 - empresa;
 - local;
-- link;
-- trecho da descrição.
+- senioridade;
+- trecho da descrição;
+- hash do conteúdo.
 
-## Cuidados com scraping
+## Scraping
 
-Scraping deve ser tratado com maturidade:
+Sim, o SotuHire pode fazer scraping, mas com limites claros.
+
+Regras:
 
 - respeitar `robots.txt` quando aplicável;
-- não burlar login;
-- não burlar captcha;
-- não simular comportamento humano para escapar de bloqueios;
-- não coletar dados pessoais desnecessários;
 - aplicar rate limit;
-- preferir APIs, feeds, páginas públicas e entrada manual.
+- usar cache;
+- não burlar login;
+- não burlar CAPTCHA;
+- não usar proxies para contornar bloqueio;
+- não coletar dados pessoais em massa;
+- não acessar áreas privadas;
+- não fazer auto-apply;
+- não enviar mensagens automáticas.
+
+## Ferramentas possíveis
+
+### Requests/HTTPX + BeautifulSoup
+
+Usar para páginas HTML simples.
+
+Vantagens:
+
+- simples;
+- rápido;
+- fácil de testar;
+- bom para MVP.
+
+### Playwright
+
+Usar quando a página pública depende de JavaScript.
+
+Vantagens:
+
+- renderiza páginas dinâmicas;
+- permite testes E2E;
+- útil para extensão/validação visual.
+
+Desvantagens:
+
+- mais pesado;
+- mais lento;
+- aumenta risco de overengineering;
+- deve ser usado com cuidado.
+
+### Scrapy
+
+Usar quando houver múltiplas páginas, paginação, pipelines e necessidade de controle fino.
+
+Vantagens:
+
+- estrutura própria para crawlers;
+- settings para `robots.txt`;
+- throttling;
+- pipelines;
+- logs.
+
+Desvantagens:
+
+- mais complexo;
+- não é necessário no MVP 1;
+- pode virar overengineering se usado cedo demais.
 
 ## LinkedIn
 
-LinkedIn deve ser tratado com cuidado. O SotuHire pode suportar:
+LinkedIn deve ser tratado com cuidado.
 
-- usuário colar texto da vaga;
-- usuário colar texto de post;
-- usuário colar link para registro manual;
-- extensão lendo página aberta pelo próprio usuário, se for implementada com limites claros.
+Permitido no SotuHire:
 
-O projeto não deve começar com bot logado no LinkedIn, coleta agressiva, automação de candidatura ou tentativa de contornar controles da plataforma.
+- colar descrição da vaga;
+- colar texto do post;
+- salvar link manualmente;
+- extensão local que lê o conteúdo aberto pelo usuário, se houver cuidado e transparência.
 
-## Abordagem segura para MVPs
+Evitar:
 
-Ordem recomendada:
+- bot logado;
+- scraping de feed;
+- scraping de perfis;
+- download de contatos;
+- envio automático de mensagem;
+- auto-apply.
 
-1. vaga colada manualmente;
-2. importação de links públicos;
-3. leitura de páginas públicas simples;
-4. fontes com estrutura previsível;
-5. dashboard;
-6. extensão opcional.
+## Critérios para adicionar uma fonte
+
+Uma fonte só deve ser adicionada quando:
+
+- há valor real para o usuário;
+- o acesso é público ou permitido;
+- a fonte tem estrutura estável;
+- o conector é testável;
+- existe rate limit;
+- existe log de coleta;
+- não exige bypass;
+- não coleta dados desnecessários.
+
+## Métricas de coleta
+
+O sistema deve registrar:
+
+- quantidade de vagas coletadas;
+- quantidade de vagas válidas;
+- quantidade de duplicatas;
+- quantidade de erros;
+- tempo de execução;
+- fontes ativas;
+- última coleta por fonte.
+
+## Próximo passo técnico
+
+Criar:
+
+```text
+modules/sources/
+├── base.py
+├── manual_source.py
+├── public_page_source.py
+├── normalizer.py
+└── deduplication.py
+```

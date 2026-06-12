@@ -1,148 +1,234 @@
 # SotuHire
 
-> Assistente inteligente de carreira para análise de currículo, compatibilidade com vagas, otimização ATS, radar de oportunidades e apoio à candidatura — sem candidatura automática em massa.
+> Assistente inteligente de carreira para análise de currículo, compatibilidade com vagas, otimização ATS, radar de oportunidades, coleta controlada de vagas e apoio à candidatura — **sem candidatura automática em massa**.
 
-O **SotuHire** é um projeto de portfólio focado em **IA aplicada, engenharia de software, regras de negócio, qualidade de código e produto real**. A ideia é ajudar uma pessoa candidata a decidir com mais clareza em quais vagas vale aplicar, quais pontos do currículo precisam melhorar e como escrever uma abordagem mais alinhada para recrutadores ou formulários.
+O **SotuHire** é um projeto de portfólio focado em **IA aplicada, NLP, scraping responsável, engenharia de software, regras de negócio, QA, Clean Code e produto real**.
 
-O projeto começou como um “achador de vagas”, mas o escopo correto é mais forte e mais seguro: um **copiloto de carreira**. Ele não deve ser um bot de spam que entra em plataformas e se candidata sozinho. Ele deve buscar, organizar, analisar, explicar, ranquear e preparar a candidatura para revisão humana.
+A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas difícil na prática:
 
-## Problema
+> “Essa vaga vale meu tempo? Meu currículo combina? O que eu preciso ajustar antes de aplicar?”
 
-Buscar vaga manualmente é cansativo porque muitas oportunidades são ruins para o perfil do candidato:
-
-- pedem senioridade incompatível;
-- exigem experiência impossível para estágio/júnior;
-- misturam requisitos obrigatórios e desejáveis;
-- escondem dados importantes no texto;
-- aparecem como posts informais, e não como anúncio oficial;
-- exigem adaptar currículo, mensagem e palavras-chave para cada vaga.
-
-O SotuHire tenta resolver isso com um fluxo claro:
-
-1. o usuário envia o currículo;
-2. cola uma descrição de vaga, link ou texto de post;
-3. o sistema extrai informações importantes;
-4. calcula compatibilidade;
-5. explica o resultado;
-6. sugere melhorias;
-7. ajuda a preparar uma resposta personalizada.
+O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
 
 ## O que o SotuHire faz
 
-No MVP inicial, o sistema deve receber um currículo em PDF e uma descrição de vaga colada manualmente. A saída esperada é uma análise estruturada contendo:
+O sistema deve evoluir em módulos:
 
-- score de match entre currículo e vaga;
-- recomendação: aplicar, aplicar com cautela ou não aplicar;
-- pontos fortes do candidato;
-- gaps técnicos e de senioridade;
-- palavras-chave ausentes ou pouco destacadas;
-- análise ATS básica;
-- sugestão de mensagem curta para recrutador;
-- observações sobre riscos da vaga.
+1. **Resume Parser**  
+   Lê currículo em PDF/DOCX e extrai texto, seções, skills, experiências, formação, projetos e links.
 
-Em versões futuras, o projeto pode evoluir para:
+2. **ATS Analyzer**  
+   Avalia se o currículo está legível para sistemas ATS e aponta problemas como formatação excessiva, seções fracas, falta de palavras-chave e baixa clareza.
 
-- histórico de análises;
-- dashboard de vagas;
-- buscador de vagas públicas;
-- radar de posts de recrutadores;
-- extensão de navegador para analisar uma vaga aberta pelo usuário;
-- relatórios de melhoria do currículo;
-- alertas configuráveis.
+3. **Job Matcher**  
+   Compara o currículo com uma descrição de vaga e calcula:
+   - Match Score;
+   - ATS Score;
+   - Seniority Fit;
+   - Risk Score;
+   - recomendação final.
 
-## Princípios do projeto
+4. **Business Rules Engine**  
+   Aplica regras determinísticas antes da IA, como bloqueio de vagas sênior, detecção de termos críticos, priorização de estágio/júnior e filtros por localidade/modalidade.
 
-O SotuHire deve ser desenvolvido com estes princípios:
+5. **Application Assistant**  
+   Gera mensagem curta para recrutador, resposta para formulário, carta curta e sugestões de ajuste no currículo.
 
-- **MVP simples primeiro:** validar o núcleo antes de adicionar dashboard, banco, scrapers e extensão.
-- **Clean Code:** funções pequenas, nomes claros e responsabilidades bem separadas.
-- **SOLID sem exagero:** aplicar separação de responsabilidades, interfaces simples e baixo acoplamento, mas sem transformar o MVP em arquitetura corporativa pesada.
-- **Regras de negócio explícitas:** filtros, pesos, cortes de senioridade e critérios de recomendação devem estar em arquivos próprios, não escondidos dentro da UI.
-- **QA desde cedo:** testar lógica determinística com `pytest`, principalmente regras de negócio e classificação.
-- **IA estruturada:** preferir JSON/schema para respostas de LLM, em vez de texto solto difícil de validar.
-- **Privacidade:** currículo é dado sensível; não deve ser versionado, logado nem enviado para mais serviços do que o necessário.
-- **Uso responsável de fontes:** evitar automação agressiva, scraping logado sem autorização, bypass de captcha ou candidatura automática em massa.
+6. **Job Tracker**  
+   Salva oportunidades analisadas e acompanha status: salva, analisada, aplicada, entrevista, rejeitada, oferta.
 
-## Arquitetura inicial
+7. **Scraping & Source Connectors**  
+   Coleta oportunidades em fontes permitidas e públicas, respeitando limites técnicos, termos de uso, `robots.txt`, rate limit e privacidade.
 
-A primeira versão deve ser simples:
+8. **Hidden Jobs Radar**  
+   Detecta vagas escondidas em textos informais, como posts públicos, newsletters, páginas de carreira, comunidades e mensagens copiadas pelo usuário.
+
+## O que o SotuHire NÃO deve ser
+
+O SotuHire **não** deve virar um robô agressivo de candidatura.
+
+Não é objetivo:
+
+- aplicar automaticamente em massa;
+- enviar currículo sem revisão humana;
+- fazer login em contas do usuário para contornar limites;
+- burlar CAPTCHA, paywall, autenticação ou bloqueios;
+- extrair dados pessoais em massa;
+- simular comportamento humano para driblar plataformas;
+- gerar spam para recrutadores.
+
+O objetivo é:
+
+> encontrar, organizar, analisar, explicar, preparar e deixar o usuário decidir.
+
+## Fluxo principal do MVP
 
 ```text
-sotuhire/
-├── app.py
-├── requirements.txt
-├── .env.example
-├── README.md
-├── modules/
-│   ├── cv_parser.py
-│   ├── ats_analyzer.py
-│   ├── ai_analyzer.py
-│   ├── job_matcher.py
-│   ├── business_rules.py
-│   └── application_helper.py
-├── tests/
-│   ├── test_business_rules.py
-│   ├── test_job_matcher.py
-│   └── test_ats_analyzer.py
-└── docs/
-    ├── 00-audit/
-    ├── 01-product/
-    ├── 02-architecture/
-    ├── 03-business-rules/
-    ├── 04-ai/
-    ├── 05-data-sources/
-    ├── 06-engineering/
-    └── 07-development/
+1. Usuário envia currículo
+2. Usuário cola descrição da vaga ou texto de post
+3. Sistema extrai texto do currículo
+4. Sistema normaliza a vaga
+5. Regras determinísticas identificam riscos
+6. IA gera análise estruturada em JSON
+7. UI mostra score, recomendação, gaps e mensagens
+8. Usuário revisa e decide se aplica
 ```
 
-## Documentação
+## MVPs
 
-A documentação completa está organizada em subdiretórios:
+### v0.1 — Análise manual de currículo + vaga
 
-| Área | Documento |
-|---|---|
-| Auditoria | [docs/00-audit/documentation-audit.md](docs/00-audit/documentation-audit.md) |
-| Produto | [docs/01-product/vision.md](docs/01-product/vision.md) |
-| Escopo | [docs/01-product/mvp-scope.md](docs/01-product/mvp-scope.md) |
-| Roadmap | [docs/01-product/roadmap.md](docs/01-product/roadmap.md) |
-| Arquitetura | [docs/02-architecture/overview.md](docs/02-architecture/overview.md) |
-| Fluxo de dados | [docs/02-architecture/data-flow.md](docs/02-architecture/data-flow.md) |
-| Regras de match | [docs/03-business-rules/matching-rules.md](docs/03-business-rules/matching-rules.md) |
-| ATS | [docs/03-business-rules/ats-rules.md](docs/03-business-rules/ats-rules.md) |
-| IA e prompts | [docs/04-ai/prompting.md](docs/04-ai/prompting.md) |
-| JSON/schema | [docs/04-ai/structured-output-schema.md](docs/04-ai/structured-output-schema.md) |
-| Fontes de vagas | [docs/05-data-sources/job-sources.md](docs/05-data-sources/job-sources.md) |
-| Radar de posts | [docs/05-data-sources/hidden-jobs-radar.md](docs/05-data-sources/hidden-jobs-radar.md) |
-| Clean Code/SOLID | [docs/06-engineering/clean-code-solid.md](docs/06-engineering/clean-code-solid.md) |
-| QA/Testes | [docs/06-engineering/qa-testing.md](docs/06-engineering/qa-testing.md) |
-| Setup | [docs/07-development/setup.md](docs/07-development/setup.md) |
+- Upload de currículo PDF;
+- colagem manual da descrição da vaga;
+- extração de texto com PyMuPDF;
+- chamada para LLM;
+- relatório estruturado;
+- interface Streamlit.
 
-## Tecnologias sugeridas
+### v0.2 — JSON estruturado e UI melhor
 
-Para o MVP:
+- Pydantic schemas;
+- validação de resposta da IA;
+- `st.metric`, `st.progress`, cards e tabelas;
+- fallback para resposta inválida;
+- separação entre Match Score, ATS Score e Risk Score.
 
-- Python
-- Streamlit
-- PyMuPDF
-- Gemini API ou OpenAI API
-- Pydantic
-- pytest
-- python-dotenv
-- SQLite em versão futura
+### v0.3 — Regras de negócio
 
-Referências úteis:
+- detecção de senioridade;
+- termos impeditivos;
+- termos prioritários;
+- filtros por modalidade/localidade;
+- testes unitários.
 
-- [Gemini API - Libraries](https://ai.google.dev/gemini-api/docs/libraries)
-- [Gemini API - Structured outputs](https://ai.google.dev/gemini-api/docs/structured-output)
-- [Streamlit - Secrets management](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)
-- [PyMuPDF - Text extraction](https://pymupdf.readthedocs.io/en/latest/recipes-text.html)
-- [pytest - Getting started](https://docs.pytest.org/en/stable/getting-started.html)
-- [LinkedIn User Agreement](https://www.linkedin.com/legal/user-agreement)
+### v0.4 — QA e qualidade de código
+
+- `pytest`;
+- `ruff check`;
+- `ruff format`;
+- GitHub Actions;
+- fixtures de teste;
+- mocks para IA.
+
+### v0.5 — Persistência local
+
+- SQLite;
+- histórico de análises;
+- status da candidatura;
+- filtros e exportação.
+
+### v0.6 — Scraping responsável
+
+- conectores para fontes públicas;
+- normalização de vagas;
+- deduplicação;
+- rate limit;
+- respeito a `robots.txt`;
+- logs de origem.
+
+### v0.7 — Hidden Jobs Radar
+
+- análise de posts copiados manualmente;
+- classificação de textos como oportunidade real ou não;
+- extração de cargo, empresa, local, contato e requisitos;
+- priorização de oportunidades informais.
+
+### v0.8 — Extensão assistiva
+
+- extensão de navegador para enviar a vaga aberta ao SotuHire;
+- sem auto-apply;
+- sem scraping autenticado em massa;
+- apenas leitura assistida do conteúdo que o usuário já abriu.
+
+## Stack inicial
+
+- Python;
+- Streamlit;
+- PyMuPDF;
+- Pydantic;
+- Google Gemini API ou outro LLM;
+- SQLite;
+- pytest;
+- Ruff;
+- Requests/HTTPX + BeautifulSoup para páginas públicas simples;
+- Playwright somente quando renderização dinâmica for realmente necessária;
+- Scrapy somente quando o projeto precisar de crawlers mais estruturados.
+
+## Qualidade
+
+O projeto deve seguir:
+
+- Clean Code;
+- SOLID sem exagero;
+- regras de negócio explícitas;
+- testes para lógica determinística;
+- validação de schema;
+- lint e format com Ruff;
+- separação entre UI, domínio, IA e fontes de dados;
+- simplicidade no MVP;
+- evolução incremental.
+
+## Estrutura de documentação
+
+```text
+docs/
+├── 00-audit/
+├── 01-product/
+├── 02-architecture/
+├── 03-business-rules/
+├── 04-ai/
+├── 05-data-sources/
+├── 06-engineering/
+├── 07-development/
+└── 08-benchmark/
+```
+
+## Comandos principais
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+Qualidade:
+
+```bash
+ruff check .
+ruff format .
+pytest
+```
+
+Documentação:
+
+```bash
+mkdocs serve
+```
+
+## Posicionamento
+
+O diferencial do SotuHire é ser um projeto de **engenharia aplicada a carreira**, não apenas um prompt em uma tela.
+
+Ele junta:
+
+- IA generativa;
+- NLP;
+- ATS;
+- matching semântico;
+- scraping responsável;
+- regras de negócio;
+- dashboard;
+- QA;
+- privacidade;
+- explicabilidade.
 
 ## Status
 
-Este repositório está em fase inicial de documentação e definição de arquitetura. O próximo passo recomendado é implementar o **MVP 1**: upload de currículo + descrição de vaga + análise estruturada.
+Projeto em fase inicial de documentação e preparação do MVP.
 
-## Licença
+Próximo passo recomendado:
 
-Este projeto está licenciado sob a licença Apache 2.0. Consulte o arquivo [LICENSE](LICENSE).
+```text
+feat: add initial resume job match MVP
+```

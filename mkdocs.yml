@@ -2,38 +2,53 @@ site_name: SotuHire Docs
 site_description: Documentation for the SotuHire AI-assisted career copilot.
 repo_url: https://github.com/Soturine/SotuHire
 
+theme:
+  name: material
+  language: en
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+
 nav:
   - Home: README.md
   - Audit:
-      - Documentation Audit: docs/00-audit/documentation-audit.md
+      - Documentation Audit: 00-audit/documentation-audit.md
+      - Local Build Report: 00-audit/local-build-report.md
   - Product:
-      - Vision: docs/01-product/vision.md
-      - MVP Scope: docs/01-product/mvp-scope.md
-      - User Stories: docs/01-product/user-stories.md
-      - Roadmap: docs/01-product/roadmap.md
+      - Vision: 01-product/vision.md
+      - MVP Scope: 01-product/mvp-scope.md
+      - User Stories: 01-product/user-stories.md
+      - Roadmap: 01-product/roadmap.md
   - Architecture:
-      - Overview: docs/02-architecture/overview.md
-      - Folder Structure: docs/02-architecture/folder-structure.md
-      - Data Flow: docs/02-architecture/data-flow.md
-      - Architecture Decisions: docs/02-architecture/architecture-decisions.md
+      - Overview: 02-architecture/overview.md
+      - Folder Structure: 02-architecture/folder-structure.md
+      - Data Flow: 02-architecture/data-flow.md
+      - Architecture Decisions: 02-architecture/architecture-decisions.md
   - Business Rules:
-      - Matching Rules: docs/03-business-rules/matching-rules.md
-      - ATS Rules: docs/03-business-rules/ats-rules.md
-      - Job Filtering: docs/03-business-rules/job-filtering.md
+      - Matching Rules: 03-business-rules/matching-rules.md
+      - ATS Rules: 03-business-rules/ats-rules.md
+      - Job Filtering: 03-business-rules/job-filtering.md
   - AI:
-      - Prompting: docs/04-ai/prompting.md
-      - Structured Output: docs/04-ai/structured-output-schema.md
-      - Evaluation: docs/04-ai/evaluation.md
+      - Prompting: 04-ai/prompting.md
+      - Structured Output Schema: 04-ai/structured-output-schema.md
+      - Evaluation: 04-ai/evaluation.md
   - Data Sources:
-      - Job Sources: docs/05-data-sources/job-sources.md
-      - Hidden Jobs Radar: docs/05-data-sources/hidden-jobs-radar.md
-      - Compliance and Ethics: docs/05-data-sources/compliance-and-ethics.md
+      - Job Sources: 05-data-sources/job-sources.md
+      - Scraping Strategy: 05-data-sources/scraping-strategy.md
+      - Source Connectors: 05-data-sources/source-connectors.md
+      - Hidden Jobs Radar: 05-data-sources/hidden-jobs-radar.md
+      - Compliance and Ethics: 05-data-sources/compliance-and-ethics.md
   - Engineering:
-      - Clean Code and SOLID: docs/06-engineering/clean-code-solid.md
-      - QA and Testing: docs/06-engineering/qa-testing.md
-      - Avoiding Overengineering: docs/06-engineering/avoid-overengineering.md
-      - Security and Privacy: docs/06-engineering/security-privacy.md
+      - Clean Code and SOLID: 06-engineering/clean-code-solid.md
+      - QA and Testing: 06-engineering/qa-testing.md
+      - Ruff: 06-engineering/ruff.md
+      - CI/CD: 06-engineering/ci-cd.md
+      - Avoid Overengineering: 06-engineering/avoid-overengineering.md
+      - Security and Privacy: 06-engineering/security-privacy.md
   - Development:
-      - Setup: docs/07-development/setup.md
-      - Contributing: docs/07-development/contributing.md
-      - Commands: docs/07-development/commands.md
+      - Setup: 07-development/setup.md
+      - Contributing: 07-development/contributing.md
+      - Commands: 07-development/commands.md
+  - Benchmark:
+      - Players and Inspirations: 08-benchmark/players-and-inspirations.md
