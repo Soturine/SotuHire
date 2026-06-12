@@ -17,7 +17,9 @@ from modules.schemas.user_preferences import UserPreferences
 def detect_missing_keywords(resume_text: str, job_text: str, limit: int = 15) -> list[str]:
     """Return job keywords that are absent from the supplied resume."""
     resume_keywords = set(extract_keywords(resume_text, limit=200))
-    return [keyword for keyword in extract_keywords(job_text) if keyword not in resume_keywords][:limit]
+    return [keyword for keyword in extract_keywords(job_text) if keyword not in resume_keywords][
+        :limit
+    ]
 
 
 def detect_strengths(resume_text: str, job_text: str, limit: int = 8) -> list[str]:

@@ -19,7 +19,7 @@ def generate_basic_queries(query: JobSearchQuery) -> list[str]:
         f'"{role}" "estamos contratando" {skills}',
         f'"{role}" "time crescendo" {skills}',
     ]
-    return [item.replace('  ', ' ').strip() for item in candidates if item.strip()]
+    return [item.replace("  ", " ").strip() for item in candidates if item.strip()]
 
 
 def generate_domain_queries(query: JobSearchQuery) -> list[str]:
