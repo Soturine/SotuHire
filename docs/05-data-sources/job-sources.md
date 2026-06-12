@@ -23,13 +23,27 @@ Fontes que podem ser estudadas:
 - Lever;
 - Ashby;
 - Gupy;
-- Indeed;
+- LinkedIn;
+- Indeed Brasil;
 - InfoJobs;
+- CIEE;
+- Companhia de Estágios;
+- InHire;
+- Vagas.com;
+- Catho;
+- Cia de Talentos;
+- Nube;
+- 99jobs;
+- Eureca;
 - Remotar;
 - Programathor;
+- Trabalha Brasil;
+- BNE;
 - sites de carreira de empresas;
 - páginas de programas de estágio;
-- newsletters públicas.
+- murais de universidades;
+- newsletters públicas;
+- comunidades com entrada manual.
 
 ## Prioridade inicial
 
@@ -44,6 +58,21 @@ Prioridade recomendada:
 4. Greenhouse/Lever/Ashby quando a URL pública for clara
 5. Hidden Jobs Radar por texto colado
 ```
+
+
+## Portais brasileiros
+
+Os detalhes por portal estão em [`brazilian-job-portals.md`](brazilian-job-portals.md).
+
+Resumo de abordagem:
+
+- **LinkedIn**: manual/assistivo; não usar bot logado.
+- **Gupy**: prioridade alta; começar com link e descrição colada; conector planejado.
+- **InfoJobs/Indeed**: agregadores; exigem deduplicação forte.
+- **CIEE/Companhia de Estágios**: prioridade alta para estágio, aprendiz e trainee.
+- **InHire**: fonte dinâmica; começar manual e avaliar caso a caso.
+- **Vagas.com/Catho**: úteis, mas com conectores planejados e avaliação de termos.
+- **Cia de Talentos/Nube/99jobs/Eureca**: categoria de programas de entrada.
 
 ## Campos normalizados
 

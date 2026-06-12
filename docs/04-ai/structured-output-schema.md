@@ -68,6 +68,36 @@ class MatchAnalysis(BaseModel):
     recruiter_message: str
 ```
 
+
+## Extensão futura do schema
+
+Quando o SotuHire passar a usar Lattes, GitHub, LinkedIn e portais como fontes explícitas, o schema pode evoluir para:
+
+```json
+{
+  "resume_type_detected": "ats_resume",
+  "source_profiles_used": ["pdf_resume", "lattes", "github"],
+  "source_portal": "gupy",
+  "portal_strategy": "manual_url_and_text",
+  "ats_score": 78,
+  "academic_score": 64,
+  "portfolio_score": 82,
+  "risk_score": 30,
+  "lattes_relevant_items": [],
+  "github_relevant_projects": [],
+  "recommended_resume_version": "ats_resume_for_data_internship"
+}
+```
+
+Esses campos ajudam a separar:
+
+- qualidade ATS;
+- aderência semântica;
+- relevância acadêmica;
+- força dos projetos;
+- risco da fonte/vaga;
+- recomendação de versão do currículo.
+
 ## Validações
 
 O sistema deve validar:

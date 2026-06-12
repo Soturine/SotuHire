@@ -29,6 +29,7 @@ nav:
       - Matching Rules: 03-business-rules/matching-rules.md
       - ATS Rules: 03-business-rules/ats-rules.md
       - Job Filtering: 03-business-rules/job-filtering.md
+      - Resume Types: 03-business-rules/resume-types.md
   - AI:
       - Prompting: 04-ai/prompting.md
       - Structured Output Schema: 04-ai/structured-output-schema.md
@@ -37,6 +38,8 @@ nav:
       - Job Sources: 05-data-sources/job-sources.md
       - Scraping Strategy: 05-data-sources/scraping-strategy.md
       - Source Connectors: 05-data-sources/source-connectors.md
+      - Brazilian Job Portals: 05-data-sources/brazilian-job-portals.md
+      - Portal Connector Roadmap: 05-data-sources/portal-connector-roadmap.md
       - Hidden Jobs Radar: 05-data-sources/hidden-jobs-radar.md
       - Compliance and Ethics: 05-data-sources/compliance-and-ethics.md
   - Engineering:

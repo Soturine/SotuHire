@@ -30,3 +30,20 @@ pyproject.toml
 ## Data
 
 Gerado em: 2026-06-12T06:29:01
+
+
+## Atualização: Lattes, ATS e portais brasileiros
+
+Foi adicionada uma nova camada de documentação para:
+
+- separar currículo ATS de Currículo Lattes;
+- tratar GitHub, LinkedIn e portfólio como fontes complementares;
+- mapear portais brasileiros de vagas e estágio;
+- planejar conectores por prioridade;
+- registrar riscos e abordagens por fonte.
+
+Novos arquivos:
+
+- `docs/03-business-rules/resume-types.md`;
+- `docs/05-data-sources/brazilian-job-portals.md`;
+- `docs/05-data-sources/portal-connector-roadmap.md`.

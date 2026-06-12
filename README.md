@@ -15,7 +15,7 @@ O projeto começou como um “achador de vagas”, mas o escopo correto é maior
 O sistema deve evoluir em módulos:
 
 1. **Resume Parser**  
-   Lê currículo em PDF/DOCX e extrai texto, seções, skills, experiências, formação, projetos e links.
+   Lê currículo em PDF/DOCX e extrai texto, seções, skills, experiências, formação, projetos e links. Também deve evoluir para lidar com currículo ATS, Currículo Lattes, LinkedIn, GitHub e portfólio como fontes diferentes de perfil profissional.
 
 2. **ATS Analyzer**  
    Avalia se o currículo está legível para sistemas ATS e aponta problemas como formatação excessiva, seções fracas, falta de palavras-chave e baixa clareza.
@@ -60,6 +60,19 @@ Não é objetivo:
 O objetivo é:
 
 > encontrar, organizar, analisar, explicar, preparar e deixar o usuário decidir.
+
+
+## Currículo ATS, Lattes e perfis profissionais
+
+O SotuHire deve tratar fontes de perfil de forma separada:
+
+- **currículo ATS** para candidaturas corporativas e plataformas de vagas;
+- **Currículo Lattes** para histórico acadêmico, pesquisa, iniciação científica, publicações e projetos;
+- **LinkedIn** para narrativa profissional e networking;
+- **GitHub** para evidência técnica;
+- **portfólio** para apresentação visual e contexto dos projetos.
+
+O objetivo não é usar tudo diretamente no currículo final. O sistema deve converter essas fontes em um `CandidateProfile` estruturado e recomendar o que destacar conforme a vaga.
 
 ## Fluxo principal do MVP
 
@@ -139,6 +152,33 @@ O objetivo é:
 - sem auto-apply;
 - sem scraping autenticado em massa;
 - apenas leitura assistida do conteúdo que o usuário já abriu.
+
+
+## Portais brasileiros e fontes planejadas
+
+Além de fontes globais como Greenhouse, Lever e Ashby, o SotuHire deve mapear fontes brasileiras importantes:
+
+- LinkedIn;
+- Gupy;
+- InfoJobs;
+- Indeed Brasil;
+- CIEE;
+- Companhia de Estágios;
+- InHire;
+- Vagas.com;
+- Catho;
+- Cia de Talentos;
+- Nube;
+- 99jobs;
+- Eureca;
+- Trabalha Brasil;
+- BNE;
+- Remotar;
+- Programathor;
+- páginas públicas de empresas;
+- newsletters e comunidades com entrada manual.
+
+Cada fonte deve ter política própria: algumas começam como entrada manual, algumas podem virar conectores públicos e outras devem permanecer apenas assistivas por exigirem login ou apresentarem risco de automação indevida.
 
 ## Stack inicial
 

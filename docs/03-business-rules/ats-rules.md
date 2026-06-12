@@ -69,6 +69,21 @@ Possíveis validações:
 - presença de palavras-chave da vaga aumenta score;
 - excesso de caracteres estranhos gera alerta.
 
+
+## ATS não é Currículo Lattes
+
+O SotuHire deve separar currículo ATS de Currículo Lattes.
+
+O Lattes é excelente para contexto acadêmico, pesquisa, iniciação científica, publicações e produção técnica, mas normalmente não é o melhor formato para uma candidatura corporativa em ATS.
+
+Regra prática:
+
+- use o Lattes como fonte de dados;
+- extraia projetos, publicações, cursos e produção técnica relevantes;
+- transforme o conteúdo em linguagem objetiva para currículo ATS;
+- não envie um Lattes longo como currículo principal para toda vaga corporativa;
+- para vagas de pesquisa/P&D, aumente o peso do `academic_score`.
+
 ## Limite da análise ATS
 
 O SotuHire não deve prometer:

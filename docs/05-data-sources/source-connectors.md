@@ -47,10 +47,18 @@ Fontes possíveis:
 - Lever;
 - Ashby;
 - Gupy;
+- InHire;
+- Vagas.com;
 - Programathor;
 - Remotar;
 - páginas públicas de empresas;
-- páginas de programas de estágio.
+- páginas de programas de estágio;
+- CIEE;
+- Companhia de Estágios;
+- Cia de Talentos;
+- Nube;
+- 99jobs;
+- Eureca.
 
 Essas fontes devem ser avaliadas caso a caso.
 
@@ -58,8 +66,11 @@ Essas fontes devem ser avaliadas caso a caso.
 
 Possíveis fontes:
 
-- Indeed;
+- Indeed Brasil;
 - InfoJobs;
+- Catho;
+- Trabalha Brasil;
+- BNE;
 - sites regionais;
 - newsletters públicas.
 
@@ -114,6 +125,13 @@ Greenhouse: planned
 Lever: planned
 Company pages: experimental
 Gupy: planned
+InfoJobs: planned
+Indeed Brasil: planned
+CIEE: planned
+Companhia de Estágios: experimental
+InHire: planned_dynamic
+Vagas.com: planned
+Catho: planned
 Generic public pages: active
 ```
 
@@ -182,6 +200,26 @@ Campos úteis:
 - localidade;
 - modalidade;
 - link.
+
+
+## Portais brasileiros específicos
+
+A matriz completa está em [`brazilian-job-portals.md`](brazilian-job-portals.md).
+
+Conectores prioritários por valor para o público-alvo:
+
+1. Gupy;
+2. LinkedIn em modo manual/assistivo;
+3. CIEE;
+4. Companhia de Estágios;
+5. InfoJobs;
+6. Indeed Brasil;
+7. InHire;
+8. Vagas.com;
+9. Catho;
+10. Cia de Talentos/Nube/99jobs/Eureca para programas de entrada.
+
+Esses conectores não devem compartilhar código improvisado. Cada fonte deve ter parser, normalizador, testes e política própria.
 
 ## Normalização de senioridade
 

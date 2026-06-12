@@ -22,3 +22,10 @@ mkdocs serve
 ```
 
 Depois abra o endereço mostrado no terminal.
+
+
+## Novos documentos importantes
+
+- [`03-business-rules/resume-types.md`](03-business-rules/resume-types.md): currículo ATS, Currículo Lattes, LinkedIn, GitHub e portfólio.
+- [`05-data-sources/brazilian-job-portals.md`](05-data-sources/brazilian-job-portals.md): matriz de portais brasileiros como Gupy, InfoJobs, Indeed, CIEE, Companhia de Estágios, InHire, Vagas.com, Catho e outros.
+- [`05-data-sources/portal-connector-roadmap.md`](05-data-sources/portal-connector-roadmap.md): plano de implementação dos conectores.
