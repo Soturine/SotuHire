@@ -1,205 +1,116 @@
 # SotuHire
 
-> Assistente inteligente de carreira para análise de currículo, compatibilidade com vagas, otimização ATS, radar de oportunidades, coleta controlada de vagas e apoio à candidatura — **sem candidatura automática em massa**.
+[![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
+[![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
-O **SotuHire** é um projeto de portfólio focado em **IA aplicada, NLP, scraping responsável, engenharia de software, regras de negócio, QA, Clean Code e produto real**.
+Copiloto de carreira local-first para analisar currículos, comparar vagas, melhorar aderência ATS,
+descobrir oportunidades e acompanhar candidaturas.
 
-A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas difícil na prática:
+O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 
-> “Essa vaga vale meu tempo? Meu currículo combina? O que eu preciso ajustar antes de aplicar?”
+> Esta vaga faz sentido para mim, quais são os gaps e o que devo ajustar antes de aplicar?
 
-O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
+[Documentação](https://soturine.github.io/SotuHire/) ·
+[Roadmap](docs/01-product/roadmap.md) ·
+[Changelog](CHANGELOG.md) ·
+[Segurança e privacidade](docs/06-engineering/security-privacy.md)
 
-## SotuHire v0.7.0 — Public Scraping, UX Fixes and Real Opportunity Collection
+![Interface atual do SotuHire](docs/assets/screenshots/sotuhire-v0.7-advanced-mode.png)
 
-A v0.7.0 conecta descoberta, coleta e análise em um fluxo utilizável:
+## O Que O Projeto Faz
 
-- responsible public scraping com `robots.txt`, user-agent identificável e logs;
-- coleta por URL pública manual;
-- ingestão de oportunidades por RSS/Atom;
-- parsing universal de listagens e páginas públicas de carreira;
-- fontes configuráveis em `config/sources.toml`;
-- cache local, rate limit e deduplicação;
-- Search Intelligence e Hidden Jobs Radar acionáveis;
-- oportunidade coletada convertida para o schema de análise e tracker;
-- modo rápido compacto e modo avançado com workflow completo;
-- chave Gemini digitada usada imediatamente na análise real.
+- lê currículos em TXT, PDF e DOCX;
+- extrai experiências, formação, projetos, links e competências;
+- interpreta descrições de vagas e publicações com oportunidades;
+- calcula Match Score, ATS Score, Opportunity Fit Score e Risk Score;
+- explica pontos fortes, gaps, riscos e palavras-chave ausentes;
+- sugere adaptações de currículo sem inventar experiências;
+- oferece análise local por padrão e Gemini opcional;
+- coleta oportunidades públicas, URLs específicas, conteúdo assistido e fontes autenticadas
+  autorizadas;
+- normaliza, deduplica e salva oportunidades para análise;
+- mantém tracker, histórico e dashboard locais;
+- gera Search Intelligence e Hidden Jobs Radar.
 
-O fluxo avançado passa a ser:
+## Como Usar
+
+### Modo rápido
+
+Use quando já possui um currículo e uma vaga:
 
 ```text
-Gerar estratégia -> escolher fonte pública -> coletar vagas -> analisar -> salvar no tracker.
+Carregar currículo -> colar vaga -> receber análise -> revisar sugestões
 ```
-
-Copie o exemplo de fontes antes de personalizar:
-
-```bash
-cp config/sources.example.toml config/sources.toml
-```
-
-O produto também oferece crawling autenticado opt-in para fontes em que a pessoa usuária
-possui autorização documentada. Login automatizado, bypass de bloqueios, auto-apply e spam
-permanecem fora do produto.
-
-### Modos de coleta
-
-O app distingue quatro modos:
-
-- **PUBLIC_SCRAPING**: coleta automática de páginas públicas, RSS, boards e páginas de carreira com cache, rate limit, limites e `robots.txt`.
-- **MANUAL_URL**: coleta somente a URL específica colada pela pessoa usuária, sem seguir links em massa.
-- **USER_ASSISTED_CAPTURE**: a pessoa usuária abre uma vaga ou publicação, inclusive em uma sessão própria já autenticada, e envia somente o conteúdo visível da página atual para salvar, analisar ou registrar no tracker.
-- **AUTHENTICATED_BROWSER**: conecta via CDP a um Chromium já autenticado pela pessoa usuária e navega vagas ou publicações de uma fonte autorizada, com limites de itens, páginas/rolagens e intervalo.
-
-O modo autenticado abre abas próprias no contexto existente, não automatiza login, interrompe em checkpoint/CAPTCHA, exige confirmação e permite registrar a referência da autorização.
-Na própria tela, **Abrir navegador para login** inicia um perfil persistente com CDP habilitado;
-depois do login manual, **Testar conexão do navegador** confirma que a coleta está pronta.
-
-## Screenshots v0.7.0
-
-Todos os screenshots usam a demo fictícia e oportunidades de fixture.
-
-### Modo rápido compacto
-![SotuHire quick mode](docs/assets/screenshots/sotuhire-v0.7-quick-mode.png)
 
 ### Modo avançado
-![SotuHire advanced mode](docs/assets/screenshots/sotuhire-v0.7-advanced-mode.png)
 
-### Coleta de vagas
-![SotuHire collect jobs](docs/assets/screenshots/sotuhire-v0.7-collect-jobs.png)
+Use para revisar dados detectados, configurar IA, coletar oportunidades, comparar vagas, exportar
+resultados e acompanhar candidaturas no tracker.
 
-### Oportunidades coletadas
-![SotuHire collected opportunities](docs/assets/screenshots/sotuhire-v0.7-collected-opportunities.png)
+Também é possível clicar em **Rodar análise de exemplo** para conhecer o fluxo sem usar dados
+pessoais.
 
-### Search Intelligence acionável
-![SotuHire actionable search intelligence](docs/assets/screenshots/sotuhire-v0.7-search-intelligence.png)
+## Instalação
 
-### Hidden Jobs Radar acionável
-![SotuHire actionable hidden radar](docs/assets/screenshots/sotuhire-v0.7-hidden-radar.png)
+### Requisitos
 
-### Resultado de análise
-![SotuHire analysis result](docs/assets/screenshots/sotuhire-v0.7-result.png)
+- Python 3.11 ou superior;
+- Git;
+- Windows, Linux ou macOS;
+- chave Gemini apenas se desejar análise externa opcional.
 
-### Dashboard
-![SotuHire dashboard v0.7](docs/assets/screenshots/sotuhire-v0.7-dashboard.png)
+### Baixar e executar
 
-## SotuHire v0.6.0 — Polished UX, AI Diagnostics and Search Intelligence
-
-A v0.6.0 torna o produto mais claro para uso real:
-
-- teste Gemini simples, sem schema, para validar chave/modelo/SDK;
-- teste Gemini estruturado separado, usando o payload real do SotuHire;
-- diagnóstico seguro de `400 INVALID_ARGUMENT`, autenticação, modelo e quota;
-- seletor de modelos Gemini no wizard;
-- modo rápido em página única e modo avançado com ferramentas completas;
-- demo completa local com dados fictícios;
-- Search Intelligence e Hidden Jobs Radar sem scraping automático;
-- skills principais limitadas e tecnologias secundárias recolhidas;
-- screenshots reais e reproduzíveis do app.
-
-O fluxo rápido permanece:
-
-```text
-Subir currículo -> colar vaga -> resultado automático.
+```bash
+git clone https://github.com/Soturine/SotuHire.git
+cd SotuHire
+python -m venv .venv
 ```
 
-O modo avançado adiciona revisão, preferências, exports, histórico, dashboard, detalhes técnicos e estratégia manual de busca.
+Ative o ambiente virtual:
 
-## Screenshots
-
-Todos os screenshots usam fixtures fictícias do próprio repositório.
-
-### Home / Fluxo principal
-
-![SotuHire home](docs/assets/screenshots/sotuhire-v0.6-home.png)
-
-### Análise de currículo
-
-![SotuHire resume analysis](docs/assets/screenshots/sotuhire-v0.6-resume.png)
-
-### Vaga detectada
-
-![SotuHire job analysis](docs/assets/screenshots/sotuhire-v0.6-job.png)
-
-### Resultado
-
-![SotuHire result](docs/assets/screenshots/sotuhire-v0.6-result.png)
-
-### Dashboard
-
-![SotuHire dashboard](docs/assets/screenshots/sotuhire-v0.6-dashboard.png)
-
-### Setup de IA
-
-![SotuHire AI setup](docs/assets/screenshots/sotuhire-v0.6-ai-setup.png)
-
-## SotuHire v0.5.0 — Real Usability, AI Setup and Validation
-
-A v0.5.0 reduz o trabalho manual do fluxo principal e permite testar o produto sem currículo real:
-
-```text
-Enviar currículo -> colar vaga -> receber análise automática -> revisar apenas se quiser.
+```powershell
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
 ```
 
-### Destaques da v0.5.0
-
-- modo rápido executa análise automaticamente quando currículo ou vaga mudam;
-- botões para carregar currículo, vaga e análise completa de exemplo;
-- setup guiado do Gemini na sidebar, com chave segura, teste e salvamento local;
-- status claro da chave, SDK, análise solicitada e análise realmente usada;
-- `GOOGLE_API_KEY`, `LLM_PROVIDER` e `LLM_MODEL` aceitos como aliases legados;
-- skills técnicas sem prefixos de categoria, duplicatas ou soft skills;
-- contadores úteis para skills técnicas, soft skills, links, experiências, projetos e formação;
-- dashboard com filtros por recomendação, modalidade, senioridade, risco e data;
-- fixtures fictícios e expected outputs para validação reprodutível;
-- regressões automatizadas do setup, fluxo rápido, parser, exemplos, histórico e dashboard.
-
-### Testar sem dados pessoais
-
-Abra o app e clique em `Rodar análise de exemplo`, ou use separadamente:
-
-- `Carregar exemplo de currículo`;
-- `Usar vaga fictícia de exemplo`.
-
-Os arquivos ficam em `examples/` e não contêm dados pessoais reais.
-
-## SotuHire v0.4.2 — Parser Semantics + AI Provider Fix
-
-A versão atual corrige a leitura semântica de currículos e deixa explícito quando a análise usa Gemini ou o fallback local:
-
-```text
-Suba um currículo TXT/PDF/DOCX + cole a vaga -> revise os dados detectados -> analise -> exporte -> salve no tracker.
+```bash
+# Linux/macOS
+source .venv/bin/activate
 ```
 
-### O que mudou
+Instale e abra o app:
 
-- interface guiada com abas, cards, sidebar e modos rápido/avançado;
-- parser automático de currículo e descrição de vaga;
-- revisão assistida antes da análise;
-- análise estruturada local por padrão e Gemini opcional;
-- fallback local quando chave ou SDK externo não estão disponíveis;
-- Resume Tailor com bullets, resumo, ordem, keywords, warnings e evidências;
-- downloads em JSON e Markdown;
-- tracker e histórico locais com confirmação de privacidade;
-- dashboard com médias, recomendações e riscos.
-- tema escuro consistente, com contraste explícito para labels, inputs, métricas e tabs;
-- dados detectados apresentados em cards e chips, com edição opcional;
-- primeiro upload de currículo processado automaticamente;
-- parsers realistas para contatos, links, formação, experiências, projetos, vaga e benefícios.
-- experiências e projetos agrupados em blocos semânticos, sem contar linhas de descrição;
-- headings como `PROJETOS SELECIONADOS`, `COMPETÊNCIAS TÉCNICAS` e `FORMAÇÃO E CURSOS`;
-- links clicáveis com rótulos compactos e listas longas atrás de expansores;
-- provider solicitado, provider usado e fallback visíveis no resultado;
-- variáveis `DEFAULT_AI_PROVIDER` e `GEMINI_MODEL` como padrão documentado.
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
 
-### Usar Gemini
+O Streamlit mostrará o endereço local, normalmente `http://localhost:8501`.
 
-Instale o SDK opcional:
+## Configuração
+
+O modo local funciona sem chave de API. Para personalizar configurações:
+
+```bash
+cp .env.example .env
+```
+
+No Windows PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+### Gemini opcional
 
 ```bash
 pip install -r requirements-ai.txt
 ```
 
-Configure o `.env`:
+Configure no `.env`:
 
 ```env
 DEFAULT_AI_PROVIDER=gemini
@@ -207,469 +118,155 @@ GEMINI_API_KEY=sua_chave
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
-Inicie a aplicação:
+Também é possível configurar e testar a chave pela seção **Configurar IA** dentro do app.
+
+### Coleta autenticada opcional
+
+Instale as dependências de scraping:
 
 ```bash
-streamlit run app.py
+pip install -r requirements-scraping.txt
+playwright install chromium
 ```
 
-Sem chave, sem SDK ou em caso de erro do Gemini, a interface informa o motivo e usa a análise local.
+No app, selecione **Navegador autenticado autorizado**, clique em **Abrir navegador para login**,
+faça login manualmente no navegador dedicado e teste a conexão antes de coletar.
 
-Na v0.5.0, também é possível abrir `Configurar IA` na sidebar, colar a chave, testar e salvar em `.streamlit/secrets.toml` sem editar `.env` manualmente.
+Leia o guia de [crawling com navegador autenticado](docs/05-data-sources/authenticated-browser-crawling.md).
 
-O histórico não salva o texto bruto do currículo. A aplicação continua sem auto-apply, envio automático, scraping agressivo, PyTorch obrigatório ou Concurso Mode funcional.
+## Modos De Coleta
 
-### Fluxo v0.4
+| Modo | Uso |
+| --- | --- |
+| `PUBLIC_SCRAPING` | RSS, páginas públicas de carreira, boards e listagens abertas com cache, rate limit e `robots.txt`. |
+| `MANUAL_URL` | Coleta somente a URL informada, sem seguir links em massa. |
+| `USER_ASSISTED_CAPTURE` | Processa o conteúdo da vaga ou publicação atual enviado pela pessoa usuária. |
+| `AUTHENTICATED_BROWSER` | Usa um navegador dedicado previamente autenticado para fontes autorizadas, com limites configuráveis. |
 
-```mermaid
-flowchart LR
-    A[Currículo TXT/PDF/DOCX] --> B[Resume Parser]
-    C[Descrição da vaga] --> D[Job Parser]
-    B --> E[Revisão assistida]
-    D --> E
-    E --> F[Structured Analysis]
-    F --> G[Resume Tailor seguro]
-    F --> H[Exports JSON/Markdown]
-    F --> I[Tracker local]
-    I --> J[Histórico e Dashboard]
-```
+O SotuHire não automatiza login, não contorna CAPTCHA ou checkpoints e não envia candidaturas
+automaticamente.
 
-## SotuHire v0.1 — MVP Core
+## Módulos Principais
 
-**SotuHire = copiloto de carreira com IA para analisar currículo, vaga, ATS, prioridades pessoais e estratégia de candidatura.**
+| Módulo | Responsabilidade |
+| --- | --- |
+| `modules/parsers` | Extração e normalização de currículo e vaga. |
+| `modules/analyzer`, `modules/ats`, `modules/preferences` | Scores, recomendação, riscos e aderência às preferências. |
+| `modules/ai` | Providers, diagnóstico, Gemini opcional e análise estruturada. |
+| `modules/resume_tailor` | Sugestões rastreáveis para adaptar o currículo. |
+| `modules/scraping`, `modules/opportunities` | Conectores, coleta, deduplicação e armazenamento de oportunidades. |
+| `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
+| `modules/tracker`, `modules/storage` | Histórico, Kanban, follow-up e persistência local. |
+| `modules/profile`, `modules/portfolio`, `modules/rag` | Perfil profissional, portfólio e memória de carreira. |
+| `modules/ui` | Fluxos Streamlit rápido e avançado. |
 
-A v0.1 entrega um núcleo local, leve, determinístico e testável. O usuário cola o texto do currículo e da vaga, informa preferências básicas e recebe Match Score, ATS Score simples, Opportunity Fit Score, Risk Score, recomendação, pontos fortes, gaps, palavras-chave ausentes e sugestões seguras de adaptação.
-
-O Resume Tailor da v0.1 funciona em **modo sugestão**. Ele pode reorganizar, resumir e aproximar o vocabulário do currículo ao da vaga, mas toda sugestão precisa permanecer apoiada por evidências fornecidas pelo usuário.
-
-### Princípios inegociáveis
+Arquitetura resumida:
 
 ```text
-O SotuHire não faz auto-apply em massa.
-O SotuHire não burla CAPTCHA.
-O SotuHire não raspa dados privados/logados de forma agressiva.
-O SotuHire trabalha com revisão humana.
+currículo + vaga + preferências
+        -> parsers e schemas
+        -> regras, scores e IA opcional
+        -> análise explicável e Resume Tailor
+        -> tracker, histórico e dashboard
+
+fontes e buscas
+        -> conectores e coleta
+        -> normalização e deduplicação
+        -> análise e tracker
 ```
 
-Também não fazem parte da v0.1: scraping real, extensão Chrome, PyTorch, fine-tuning, multi-agent complexo, Concurso Mode funcional, envio automático para recrutador e geração final de DOCX/PDF.
+Veja a [documentação de arquitetura](docs/02-architecture/overview.md) e o
+[pipeline de oportunidades](docs/02-architecture/opportunity-collection-pipeline.md).
 
-### Features da v0.1
-
-- entrada manual de currículo e descrição da vaga;
-- preferências de modalidade, localização, salário, contrato e senioridade;
-- Match Score determinístico por palavras-chave relevantes;
-- ATS Score simples com problemas explicáveis;
-- Opportunity Fit Score baseado nas prioridades do usuário;
-- Risk Score simples e flags de risco;
-- recomendação `apply`, `apply_with_adjustments`, `save_for_later` ou `ignore`;
-- pontos fortes, gaps e palavras-chave ausentes;
-- resumo direcionado apoiado pelo texto fornecido;
-- Resume Tailor em modo sugestão com regra anti-invenção;
-- schemas Pydantic para contratos de entrada e saída;
-- interface Streamlit com regras de negócio fora da UI;
-- testes com pytest e qualidade com Ruff.
-
-### Arquitetura do MVP
-
-```mermaid
-flowchart TD
-    A[Currículo do usuário] --> B[Normalização de texto]
-    C[Descrição da vaga] --> B
-    D[Preferências do usuário] --> E[Opportunity Fit Score]
-    B --> F[Job Analyzer]
-    F --> G[Match Score]
-    F --> H[ATS Score]
-    F --> I[Risk Score]
-    E --> J[Recomendação final]
-    G --> J
-    H --> J
-    I --> J
-    J --> K[Resume Tailor em modo sugestão]
-```
-
-As funções puras vivem em `modules/`; a interface `app.py` apenas coleta entradas e apresenta o resultado. O MVP não depende de provedor de IA externo para executar a análise básica.
-
-## O que o SotuHire faz
-
-O sistema deve evoluir em módulos:
-
-1. **Resume Parser**  
-   Lê currículo em PDF/DOCX e extrai texto, seções, skills, experiências, formação, projetos e links. Também deve evoluir para lidar com currículo ATS, Currículo Lattes, LinkedIn, GitHub e portfólio como fontes diferentes de perfil profissional.
-
-2. **ATS Analyzer**  
-   Avalia se o currículo está legível para sistemas ATS e aponta problemas como formatação excessiva, seções fracas, falta de palavras-chave e baixa clareza.
-
-3. **Job Matcher**  
-   Compara o currículo com uma descrição de vaga e calcula:
-   - Match Score;
-   - ATS Score;
-   - Seniority Fit;
-   - Risk Score;
-   - recomendação final.
-
-4. **Business Rules Engine**  
-   Aplica regras determinísticas antes da IA, como bloqueio de vagas sênior, detecção de termos críticos, priorização de estágio/júnior e filtros por localidade/modalidade.
-
-5. **Application Assistant**  
-   Gera mensagem curta para recrutador, resposta para formulário, carta curta e sugestões de ajuste no currículo.
-
-6. **Job Tracker**  
-   Salva oportunidades analisadas e acompanha status: salva, analisada, aplicada, entrevista, rejeitada, oferta.
-
-7. **Scraping & Source Connectors**  
-   Coleta oportunidades em fontes permitidas e públicas, respeitando limites técnicos, termos de uso, `robots.txt`, rate limit e privacidade.
-
-8. **Hidden Jobs Radar**  
-   Detecta vagas escondidas em textos informais, como posts públicos, newsletters, páginas de carreira, comunidades e mensagens copiadas pelo usuário.
-
-## O que o SotuHire NÃO deve ser
-
-O SotuHire **não** deve virar um robô agressivo de candidatura.
-
-Não é objetivo:
-
-- aplicar automaticamente em massa;
-- enviar currículo sem revisão humana;
-- fazer login em contas do usuário para contornar limites;
-- burlar CAPTCHA, paywall, autenticação ou bloqueios;
-- extrair dados pessoais em massa;
-- simular comportamento humano para driblar plataformas;
-- gerar spam para recrutadores.
-
-O objetivo é:
-
-> encontrar, organizar, analisar, explicar, preparar e deixar o usuário decidir.
-
-
-## Currículo ATS, Lattes e perfis profissionais
-
-O SotuHire deve tratar fontes de perfil de forma separada:
-
-- **currículo ATS** para candidaturas corporativas e plataformas de vagas;
-- **Currículo Lattes** para histórico acadêmico, pesquisa, iniciação científica, publicações e projetos;
-- **LinkedIn** para narrativa profissional e networking;
-- **GitHub** para evidência técnica;
-- **portfólio** para apresentação visual e contexto dos projetos.
-
-O objetivo não é usar tudo diretamente no currículo final. O sistema deve converter essas fontes em um `CandidateProfile` estruturado e recomendar o que destacar conforme a vaga.
-
-## Fluxo principal do MVP
+## Estrutura Do Repositório
 
 ```text
-1. Usuário envia currículo
-2. Usuário cola descrição da vaga ou texto de post
-3. Sistema extrai texto do currículo
-4. Sistema normaliza a vaga
-5. Regras determinísticas identificam riscos
-6. IA gera análise estruturada em JSON
-7. UI mostra score, recomendação, gaps e mensagens
-8. Usuário revisa e decide se aplica
+SotuHire/
+├── app.py                  # entrada Streamlit
+├── modules/                # domínio, serviços, conectores e UI
+├── tests/                  # testes unitários, integração e regressão
+├── examples/               # currículos, vagas e resultados fictícios
+├── config/                 # exemplos de fontes configuráveis
+├── docs/                   # documentação publicada com MkDocs
+├── scripts/                # automações auxiliares
+└── .github/workflows/      # CI e publicação da documentação
 ```
 
-## MVPs
+## Qualidade E Desenvolvimento
 
-### v0.1 — Análise manual de currículo + vaga
-
-- texto de currículo colado pelo usuário;
-- colagem manual da descrição da vaga;
-- preferências básicas do usuário;
-- Match Score, ATS Score, Opportunity Fit Score e Risk Score;
-- relatório estruturado com Pydantic;
-- Resume Tailor em modo sugestão e sem invenção;
-- interface Streamlit;
-- testes pytest e validação Ruff.
-
-### v0.2 — JSON estruturado e UI melhor
-
-- Pydantic schemas;
-- validação de resposta da IA;
-- `st.metric`, `st.progress`, cards e tabelas;
-- fallback para resposta inválida;
-- separação entre Match Score, ATS Score e Risk Score.
-
-### v0.3 — Regras de negócio
-
-- detecção de senioridade;
-- termos impeditivos;
-- termos prioritários;
-- filtros por modalidade/localidade;
-- testes unitários.
-
-### v0.4 — QA e qualidade de código
-
-- `pytest`;
-- `ruff check`;
-- `ruff format`;
-- GitHub Actions;
-- fixtures de teste;
-- mocks para IA.
-
-### v0.5 — Persistência local
-
-- SQLite;
-- histórico de análises;
-- status da candidatura;
-- filtros e exportação.
-
-### v0.6 — Scraping responsável
-
-- conectores para fontes públicas;
-- normalização de vagas;
-- deduplicação;
-- rate limit;
-- respeito a `robots.txt`;
-- logs de origem.
-
-### v0.7 — Hidden Jobs Radar
-
-- análise de posts copiados manualmente;
-- classificação de textos como oportunidade real ou não;
-- extração de cargo, empresa, local, contato e requisitos;
-- priorização de oportunidades informais.
-
-### v0.8 — Extensão assistiva
-
-- extensão de navegador para enviar a vaga aberta ao SotuHire;
-- sem auto-apply;
-- sem scraping autenticado em massa;
-- apenas leitura assistida do conteúdo que o usuário já abriu.
-
-
-## Portais brasileiros e fontes planejadas
-
-Além de fontes globais como Greenhouse, Lever e Ashby, o SotuHire deve mapear fontes brasileiras importantes:
-
-- LinkedIn;
-- Gupy;
-- InfoJobs;
-- Indeed Brasil;
-- CIEE;
-- Companhia de Estágios;
-- InHire;
-- Vagas.com;
-- Catho;
-- Cia de Talentos;
-- Nube;
-- 99jobs;
-- Eureca;
-- Trabalha Brasil;
-- BNE;
-- Remotar;
-- Programathor;
-- páginas públicas de empresas;
-- newsletters e comunidades com entrada manual.
-
-Cada fonte deve ter política própria: algumas começam como entrada manual, algumas podem virar conectores públicos e outras devem permanecer apenas assistivas por exigirem login ou apresentarem risco de automação indevida.
-
-## Stack inicial
-
-- Python;
-- Streamlit;
-- Pydantic;
-- python-dotenv;
-- pandas;
-- pytest;
-- Ruff;
-
-Dependências de scraping, documentação e ML futuro ficam separadas da instalação padrão. Gemini Structured Outputs é uma evolução planejada para análises tipadas; PyTorch e ML pesado permanecem fora do MVP.
-
-## Qualidade
-
-O projeto deve seguir:
-
-- Clean Code;
-- SOLID sem exagero;
-- regras de negócio explícitas;
-- testes para lógica determinística;
-- validação de schema;
-- lint e format com Ruff;
-- separação entre UI, domínio, IA e fontes de dados;
-- simplicidade no MVP;
-- evolução incremental.
-
-## Estrutura de documentação
-
-```text
-docs/
-├── 00-audit/
-├── 01-product/
-├── 02-architecture/
-├── 03-business-rules/
-├── 04-ai/
-├── 05-data-sources/
-├── 06-engineering/
-├── 07-development/
-└── 08-benchmark/
-```
-
-## Comandos principais
+Instale as dependências de desenvolvimento:
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-streamlit run app.py
+pip install -r requirements-dev.txt
 ```
 
-Qualidade:
+Execute as verificações:
 
 ```bash
 ruff check .
-ruff format .
+ruff format . --check
 python -m pytest -q
+mkdocs build --strict
 ```
 
-Documentação:
+Para visualizar a documentação localmente:
 
 ```bash
 mkdocs serve
 ```
 
-## Posicionamento
+## Roadmap
 
-O diferencial do SotuHire é ser um projeto de **engenharia aplicada a carreira**, não apenas um prompt em uma tela.
+### Disponível atualmente
 
-Ele junta:
+- análise local e Gemini opcional;
+- parsers de currículo e vaga;
+- scores explicáveis e Resume Tailor;
+- tracker, histórico e dashboard;
+- Search Intelligence e Hidden Jobs Radar;
+- coleta pública, URL manual, captura assistida e navegador autenticado autorizado.
 
-- IA generativa;
-- NLP;
-- ATS;
-- matching semântico;
-- scraping responsável;
-- regras de negócio;
-- dashboard;
-- QA;
-- privacidade;
-- explicabilidade.
+### Próximas evoluções
 
-## Status
+- extensão de navegador para salvar e analisar a página atual;
+- Resume Tailor exportável em DOCX/PDF;
+- alertas configuráveis e follow-up;
+- análise expandida de GitHub, portfólio, LinkedIn e Lattes;
+- memória de carreira com RAG e evidências;
+- conectores adicionais por fonte.
 
-**SotuHire v0.6.0 — UX polida, diagnóstico real de IA e estratégia segura de busca.**
+O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).
 
-O app atual executa análise local e explicável, extrai dados de currículos/vagas, permite revisão assistida, exporta resultados e mantém histórico local. Gemini é opcional e validável em duas etapas; o fallback determinístico continua sendo o caminho seguro padrão.
+## Privacidade
 
-Próximo passo recomendado após validar a v0.6.0:
+- a análise local é o padrão;
+- currículos reais, segredos, bancos locais e exports privados não devem ser versionados;
+- o histórico não precisa armazenar o texto bruto do currículo;
+- sugestões devem permanecer apoiadas por evidências fornecidas pela pessoa usuária;
+- integrações externas e coletas devem ser habilitadas conscientemente.
 
-```text
-Validar o Gemini com uma chave real e evoluir Search Intelligence com entradas explícitas e fontes públicas responsáveis.
-```
+Consulte [Security & Privacy](docs/06-engineering/security-privacy.md) e
+[Compliance & Ethics](docs/05-data-sources/compliance-and-ethics.md).
 
-## Privacidade e compliance
+## Documentação
 
-- currículos reais, exportações pessoais, bancos locais e segredos não devem ser versionados;
-- a v0.1 processa apenas conteúdo fornecido conscientemente pelo usuário;
-- não existe auto-apply, bypass de CAPTCHA ou scraping agressivo;
-- qualquer integração futura deve respeitar termos da fonte, limites técnicos e revisão humana;
-- sugestões do Resume Tailor precisam manter rastreabilidade até o currículo mestre, GitHub, Lattes, LinkedIn ou outra evidência fornecida.
+A documentação completa está publicada em
+[soturine.github.io/SotuHire](https://soturine.github.io/SotuHire/) e organizada por:
 
-Leia também [Security & Privacy](docs/06-engineering/security-privacy.md) e [Compliance & Ethics](docs/05-data-sources/compliance-and-ethics.md).
+- produto e roadmap;
+- arquitetura e fluxo de dados;
+- regras de negócio e scores;
+- IA e providers;
+- fontes de dados e conectores;
+- engenharia, testes e desenvolvimento.
 
-## Inspiração e benchmarks
+O histórico de versões fica exclusivamente no [CHANGELOG.md](CHANGELOG.md).
 
-O produto observa ferramentas de ATS, resume matching, trackers e assistentes de candidatura para aprender padrões úteis sem copiar práticas agressivas. As referências e decisões estão registradas em:
+## Contribuição
 
-- [Players e inspirações](docs/08-benchmark/players-and-inspirations.md);
-- [Projetos de referência](docs/08-benchmark/reference-projects.md);
-- [LA Jobs AI Claude](docs/08-benchmark/la-jobs-ai-claude.md).
+Contribuições são bem-vindas. Antes de enviar mudanças, execute a suíte de qualidade e consulte o
+[guia de contribuição](docs/07-development/contributing.md).
 
-## Documentação principal da v0.1
+## Licença
 
-- [Escopo do MVP](docs/01-product/mvp-scope.md)
-- [Roadmap](docs/01-product/roadmap.md)
-- [Implementação v0.1](docs/07-development/mvp-v0.1-implementation.md)
-- [Regras do Resume Tailor](docs/03-business-rules/resume-tailor-rules.md)
-- [Regras do Opportunity Fit](docs/03-business-rules/opportunity-fit-rules.md)
-- [Gemini Structured Output](docs/04-ai/gemini-structured-output.md)
-- [JSON Resume e Pydantic](docs/04-ai/json-resume-and-pydantic.md)
-- [Auditoria de prontidão v0.1](docs/00-audit/v0.1-readiness-audit.md)
-- [Metadados do repositório](docs/07-development/repository-metadata.md)
-
-## Próximos passos
-
-1. validar scores e recomendações com exemplos fictícios diversos;
-2. adicionar fixtures PDF/DOCX sem dados pessoais;
-3. evoluir tracker e dashboard com filtros e tendências;
-4. evoluir para RAG simples de carreira com evidências rastreáveis;
-5. preparar Search Intelligence sem scraping agressivo.
-
-## Documentação v0.4
-
-- [UX e automação v0.2](docs/07-development/v0.2-ux-automation.md)
-- [IA estruturada e exports v0.3](docs/07-development/v0.3-structured-ai-and-export.md)
-- [Tracker, histórico e dashboard v0.4](docs/07-development/v0.4-tracker-history-dashboard.md)
-- [Hotfix de UI e parsers v0.4.1](docs/07-development/v0.4.1-ui-parser-hotfix.md)
-- [Hotfix de parser e provider v0.4.2](docs/07-development/v0.4.2-parser-ai-provider-hotfix.md)
-- [Usabilidade e validação v0.5.0](docs/07-development/v0.5.0-real-usability-validation.md)
-- [UX, diagnóstico de IA e busca v0.6.0](docs/07-development/v0.6.0-polished-ux-ai-search.md)
-- [Arquitetura de parsers](docs/02-architecture/parsers.md)
-- [Semântica do parser](docs/02-architecture/parser-semantics.md)
-- [Fluxo automático](docs/02-architecture/auto-flow.md)
-- [Setup local do Gemini](docs/04-ai/gemini-local-setup.md)
-- [Fixtures realistas](docs/06-testing/realistic-fixtures.md)
-- [Testes de regressão](docs/06-testing/regression-testing.md)
-- [Testes de screenshots](docs/06-testing/screenshot-testing.md)
-- [Search Intelligence foundation](docs/05-data-sources/search-intelligence-foundation.md)
-- [Hidden Jobs Radar safe mode](docs/05-data-sources/hidden-jobs-radar-safe-mode.md)
-- [Storage e histórico](docs/02-architecture/storage-and-history.md)
-- [Auditoria v0.4](docs/00-audit/v0.4-readiness-audit.md)
-
----
-
-## Expansão planejada: SotuHire como copiloto completo de carreira
-
-A visão atual do SotuHire foi ampliada para ir além de currículo + vaga. O projeto passa a ser documentado como um **copiloto completo de carreira para tecnologia**, com módulos independentes e evolutivos:
-
-- **Resume Analyzer**: leitura de currículo ATS, currículo tradicional e Currículo Lattes.
-- **Job Match Engine**: comparação entre perfil e vaga.
-- **Search Intelligence**: geração de queries inteligentes para Google/Bing/DuckDuckGo e buscas por domínio.
-- **Hidden Jobs Radar**: detecção de oportunidades em posts e textos informais.
-- **Responsible Scraping**: coleta pública, limitada, com cache, rate limit e respeito a regras de fonte.
-- **Job Tracker / Kanban**: histórico de candidaturas, follow-up e métricas.
-- **Profile Score Engine**: LinkedIn Score, ATS Score, Portfolio Score, Lattes Score e Readiness Score.
-- **GitHub/Portfolio Analyzer**: análise de GitHub, GitLab, Kaggle, Hugging Face, npm, PyPI, portfólios e demos.
-- **RAG Memory**: memória de carreira para recuperar evidências relevantes do usuário.
-- **Browser Extension Assistant**: extensão assistiva para analisar página aberta com confirmação humana.
-- **Alert Engine**: alertas de vagas relevantes via UI, e futuramente Telegram/e-mail.
-
-### Novos docs importantes
-
-- [Rotina Inteligente de Busca](docs/01-product/job-search-routine.md)
-- [Search Intelligence](docs/05-data-sources/search-intelligence.md)
-- [Fontes Alternativas de Vagas](docs/05-data-sources/alternative-job-boards.md)
-- [Social Post Discovery](docs/05-data-sources/social-post-discovery.md)
-- [RAG e Memória de Carreira](docs/04-ai/rag-memory-architecture.md)
-- [Provider Strategy](docs/04-ai/provider-strategy.md)
-- [Profile Score](docs/03-business-rules/profile-score.md)
-- [GitHub/Portfolio Analyzer](docs/05-data-sources/github-portfolio-analyzer.md)
-- [Job Tracker Kanban](docs/07-development/job-tracker-kanban.md)
-- [Follow-up Assistant](docs/07-development/follow-up-assistant.md)
-- [Alerts Roadmap](docs/07-development/alerts-roadmap.md)
-- [Browser Extension Roadmap](docs/07-development/browser-extension-roadmap.md)
-- [Reference Projects](docs/08-benchmark/reference-projects.md)
-
-### Inspiração nos outros projetos Soturine
-
-O SotuHire pode aproveitar princípios usados em projetos como SoturAI e SotuRail:
-
-- raciocínio adaptativo;
-- análise baseada em sinais;
-- histórico e feedback loop;
-- documentação forte;
-- módulos isolados;
-- cuidado com overengineering;
-- qualidade de código com Ruff, testes e CI;
-- visão de produto, não apenas script.
-
-No SotuHire, isso se traduz em um sistema que observa vagas, posts, currículos, portfólio e histórico para sugerir ações melhores, sempre com revisão humana.
-
-## Atualização de escopo: currículo direcionado, preferências e MVP Core
-
-O SotuHire também passa a tratar três frentes novas como parte da visão do produto:
-
-1. **Resume Tailor**: gerar uma versão direcionada do currículo para uma vaga específica, sem inventar informações.
-2. **Opportunity Fit Score**: cruzar match técnico com prioridades do usuário, como salário, modalidade, localização e contrato.
-3. **Concurso Mode**: manter como ideia futura separada para análise de editais, sem misturar com o MVP de vagas.
-
-A fundação técnica recomendada é começar por schemas Pydantic e outputs estruturados. O padrão [JSON Resume](https://jsonresume.org/schema) serve como inspiração para o currículo mestre, enquanto [Gemini Structured Outputs](https://ai.google.dev/gemini-api/docs/structured-output) orienta a geração de respostas tipadas.
-
-PyTorch, fine-tuning e agentes avançados ficam fora do MVP. Eles podem aparecer como camada futura opcional, quando houver dados reais suficientes.
+Distribuído sob a licença [Apache 2.0](LICENSE).
