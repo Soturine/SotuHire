@@ -65,6 +65,8 @@ def inject_styles() -> None:
         [data-baseweb="popover"], [data-baseweb="menu"] { background: var(--surface-2); }
         [data-baseweb="menu"] * { color: var(--text); }
         .stButton > button, .stDownloadButton > button {
+          background: var(--surface-2);
+          color: var(--text);
           border-radius: 12px;
           border: 1px solid var(--border);
           min-height: 2.65rem;
@@ -74,6 +76,12 @@ def inject_styles() -> None:
         .stButton > button:hover, .stDownloadButton > button:hover {
           transform: translateY(-1px);
           border-color: #5a7090;
+        }
+        .stButton > button:disabled, .stDownloadButton > button:disabled {
+          background: #111d2e !important;
+          border-color: #263852 !important;
+          color: #6f8097 !important;
+          opacity: .78;
         }
         .stButton > button[kind="primary"] {
           background: linear-gradient(115deg, var(--accent), #e83f67);

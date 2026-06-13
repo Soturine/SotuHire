@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
-from modules.opportunities import OpportunityStore
-from modules.scraping.connectors.manual_url import opportunity_from_text
 from playwright.sync_api import Page, sync_playwright
 
 OUTPUT_DIR = Path("docs/assets/screenshots")
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 def _wait(page: Page) -> None:
@@ -24,6 +24,9 @@ def _screenshot(page: Page, name: str) -> None:
 
 def _seed_fictitious_opportunities() -> None:
     """Populate the ignored local store with a reproducible fictitious opportunity."""
+    from modules.opportunities import OpportunityStore
+    from modules.scraping.connectors.manual_url import opportunity_from_text
+
     opportunity = opportunity_from_text(
         (
             "Cargo: Desenvolvedor Python Júnior\nEmpresa: Example Tech\n"

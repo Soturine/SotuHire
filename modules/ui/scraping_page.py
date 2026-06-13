@@ -125,7 +125,7 @@ def render_scraping_page(provider_name: str) -> None:
         )
         st.rerun()
     if actions[1].button("Testar fonte", use_container_width=True, disabled=not safety.allowed):
-        st.session_state.collection_result = collect_public_source(source)
+        st.session_state.collection_result = collect_public_source(source, persist=False)
     if actions[2].button(
         "Coletar vagas", type="primary", use_container_width=True, disabled=not safety.allowed
     ):

@@ -12,10 +12,11 @@ def collect_public_source(
     source: ScrapingSource,
     *,
     store: OpportunityStore | None = None,
+    persist: bool = True,
 ) -> CollectionResult:
     """Collect one public source and persist deduplicated opportunities."""
     result = ConfiguredSourceConnector(default_source_registry()).collect(source)
-    if result.opportunities:
+    if result.opportunities and persist:
         summary = (store or OpportunityStore()).save_many(result.opportunities)
         result = result.model_copy(
             update={

@@ -42,7 +42,9 @@ def render_actionable_source(
         if actions[0].button("Salvar fonte", key=f"{key_prefix}_save"):
             st.success(f"Fonte salva em {save_source(configured)}.")
         if actions[1].button("Testar fonte", key=f"{key_prefix}_test", disabled=not safety.allowed):
-            st.session_state[f"{key_prefix}_result"] = collect_public_source(configured)
+            st.session_state[f"{key_prefix}_result"] = collect_public_source(
+                configured, persist=False
+            )
         if actions[2].button(
             "Coletar desta fonte",
             key=f"{key_prefix}_collect",
