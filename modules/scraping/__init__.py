@@ -9,7 +9,7 @@ from .schemas import (
     ScrapingSource,
     SourceSafety,
 )
-from .source_registry import SourceRegistry
+from .source_registry import SourceRegistry, default_source_registry
 
 __all__ = [
     "CollectionResult",
@@ -20,4 +20,5 @@ __all__ = [
     "SourceRegistry",
     "SourceSafety",
     "inspect_source_safety",
+    "default_source_registry",
 ]

@@ -216,6 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+config/sources.toml
 
 # Local databases and automation state
 *.sqlite

@@ -28,17 +28,12 @@ def inspect_source_safety(url: str) -> SourceSafety:
     parsed = urlparse(url.strip())
     domain = parsed.netloc.lower()
     authentication_required = any(marker in parsed.path.lower() for marker in AUTH_MARKERS)
-    is_linkedin = domain.endswith("linkedin.com") or domain.endswith("www.linkedin.com")
     allowed = parsed.scheme in {"http", "https"} and bool(domain) and not authentication_required
     warning = ""
     if authentication_required:
         warning = "A URL parece exigir autenticação. Coleta autenticada não é permitida."
-    elif is_linkedin:
-        allowed = False
-        warning = (
-            "LinkedIn não é coletado automaticamente. Use texto ou URL pública fornecida "
-            "manualmente e respeite os termos da plataforma."
-        )
+    elif domain.endswith("linkedin.com") or domain.endswith("www.linkedin.com"):
+        warning = "URL pública do LinkedIn: a coleta só continuará se robots.txt permitir."
     elif not allowed:
         warning = "Informe uma URL pública HTTP ou HTTPS."
     return SourceSafety(

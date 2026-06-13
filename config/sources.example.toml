@@ -1,0 +1,23 @@
+[[sources]]
+name = "Example Jobs RSS"
+type = "rss"
+url = "https://example.com/jobs.xml"
+enabled = false
+max_items = 20
+delay_seconds = 2.0
+
+[[sources]]
+name = "Example Public Listing"
+type = "generic_public_page"
+url = "https://example.com/careers"
+enabled = false
+max_items = 20
+delay_seconds = 2.0
+
+[[sources]]
+name = "Example Company Careers"
+type = "company_career_page"
+url = "https://example.com/jobs"
+enabled = false
+max_items = 20
+delay_seconds = 2.0

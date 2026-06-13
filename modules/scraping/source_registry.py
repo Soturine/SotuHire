@@ -24,3 +24,18 @@ class SourceRegistry:
 
     def available_types(self) -> list[str]:
         return sorted(self._factories)
+
+
+def default_source_registry() -> SourceRegistry:
+    """Return the built-in connector registry."""
+    from modules.scraping.connectors.company_career_page import CompanyCareerPageConnector
+    from modules.scraping.connectors.generic_public_page import GenericPublicPageConnector
+    from modules.scraping.connectors.manual_url import ManualUrlConnector
+    from modules.scraping.connectors.rss_feed import RssFeedConnector
+
+    registry = SourceRegistry()
+    registry.register("manual_url", ManualUrlConnector)
+    registry.register("generic_public_page", GenericPublicPageConnector)
+    registry.register("company_career_page", CompanyCareerPageConnector)
+    registry.register("rss", RssFeedConnector)
+    return registry
