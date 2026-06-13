@@ -280,3 +280,9 @@ def load_example_flow() -> None:
     st.session_state.job_text = job_text
     st.session_state.job_posting = parse_job_description(job_text)
     st.session_state.last_analysis_fingerprint = ""
+
+
+def run_demo(provider_name: str = "local") -> None:
+    """Load fictitious inputs and execute the complete safe demo flow."""
+    load_example_flow()
+    run_analysis(provider_name)

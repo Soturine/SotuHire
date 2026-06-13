@@ -10,6 +10,34 @@ A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas dif
 
 O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
 
+## Screenshots
+
+Todos os screenshots usam fixtures fictícias do próprio repositório.
+
+### Home / Fluxo principal
+
+![SotuHire home](docs/assets/screenshots/sotuhire-v0.6-home.png)
+
+### Análise de currículo
+
+![SotuHire resume analysis](docs/assets/screenshots/sotuhire-v0.6-resume.png)
+
+### Vaga detectada
+
+![SotuHire job analysis](docs/assets/screenshots/sotuhire-v0.6-job.png)
+
+### Resultado
+
+![SotuHire result](docs/assets/screenshots/sotuhire-v0.6-result.png)
+
+### Dashboard
+
+![SotuHire dashboard](docs/assets/screenshots/sotuhire-v0.6-dashboard.png)
+
+### Setup de IA
+
+![SotuHire AI setup](docs/assets/screenshots/sotuhire-v0.6-ai-setup.png)
+
 ## SotuHire v0.5.0 — Real Usability, AI Setup and Validation
 
 A v0.5.0 reduz o trabalho manual do fluxo principal e permite testar o produto sem currículo real:

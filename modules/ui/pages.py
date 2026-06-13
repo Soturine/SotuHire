@@ -48,6 +48,7 @@ from modules.ui.layout import (
     render_header,
     render_sidebar,
     run_analysis,
+    run_demo,
     should_run_quick_analysis,
 )
 from modules.ui.styles import inject_styles
@@ -524,6 +525,10 @@ def render_quick_mode(provider_name: str) -> None:
         "<span>Envie o currículo, cole a vaga e receba a análise automaticamente.</span></div>",
         unsafe_allow_html=True,
     )
+    if st.button("Rodar demo completa", type="primary", use_container_width=True):
+        with st.spinner("Carregando dados fictícios e preparando a análise..."):
+            run_demo(provider_name)
+        st.rerun()
     inputs = st.columns(2, gap="large")
     with inputs[0]:
         render_resume_step(advanced=False)
@@ -717,6 +722,10 @@ def render_app() -> None:
         "<span>Revisão completa, preferências, exports, histórico e estratégia de busca.</span></div>",
         unsafe_allow_html=True,
     )
+    if st.button("Rodar demo completa", use_container_width=True):
+        with st.spinner("Carregando dados fictícios e preparando a análise..."):
+            run_demo(provider_name)
+        st.rerun()
     tabs = st.tabs(
         [
             "Currículo",
