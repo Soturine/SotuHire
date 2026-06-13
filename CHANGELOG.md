@@ -2,6 +2,38 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [0.6.0] - 2026-06-13
+
+### Added
+
+- diagnóstico tipado e seguro para chamadas Gemini;
+- testes Gemini simples e estruturado separados;
+- modelos Gemini selecionáveis no wizard;
+- modo rápido em página única e Search Intelligence no modo avançado;
+- query builder, plano de fontes e Hidden Jobs Radar sem scraping;
+- demo completa local e script Playwright para screenshots;
+- screenshots reais do app no README;
+- regressões de Gemini, modos, busca, screenshots, skills e demo;
+
+### Changed
+
+- payload estruturado Gemini usa um JSON Schema mínimo compatível;
+- layout, hero, badges, sidebar, upload, botões e cards foram compactados;
+- skills principais são limitadas e tecnologias restantes ficam recolhidas;
+- detalhes técnicos aparecem somente no modo avançado ou no wizard;
+
+### Fixed
+
+- teste Gemini confundindo erro de schema com erro de chave/modelo;
+- `400 INVALID_ARGUMENT` sem diagnóstico acionável;
+- modo rápido e avançado visualmente equivalentes;
+- fluxo de demonstração dependente de múltiplos cliques;
+
+### Security
+
+- diagnóstico nunca mostra a chave completa;
+- Search Intelligence e Hidden Jobs Radar não fazem scraping nem chamadas de rede;
+
 ## [0.5.0] - 2026-06-13
 
 ### Added

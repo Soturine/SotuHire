@@ -10,6 +10,28 @@ A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas dif
 
 O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
 
+## SotuHire v0.6.0 — Polished UX, AI Diagnostics and Search Intelligence
+
+A v0.6.0 torna o produto mais claro para uso real:
+
+- teste Gemini simples, sem schema, para validar chave/modelo/SDK;
+- teste Gemini estruturado separado, usando o payload real do SotuHire;
+- diagnóstico seguro de `400 INVALID_ARGUMENT`, autenticação, modelo e quota;
+- seletor de modelos Gemini no wizard;
+- modo rápido em página única e modo avançado com ferramentas completas;
+- demo completa local com dados fictícios;
+- Search Intelligence e Hidden Jobs Radar sem scraping automático;
+- skills principais limitadas e tecnologias secundárias recolhidas;
+- screenshots reais e reproduzíveis do app.
+
+O fluxo rápido permanece:
+
+```text
+Subir currículo -> colar vaga -> resultado automático.
+```
+
+O modo avançado adiciona revisão, preferências, exports, histórico, dashboard, detalhes técnicos e estratégia manual de busca.
+
 ## Screenshots
 
 Todos os screenshots usam fixtures fictícias do próprio repositório.
@@ -450,14 +472,14 @@ Ele junta:
 
 ## Status
 
-**SotuHire v0.5.0 — fluxo automático, setup guiado de IA e validação realista.**
+**SotuHire v0.6.0 — UX polida, diagnóstico real de IA e estratégia segura de busca.**
 
-O app atual executa análise local e explicável, extrai dados de currículos/vagas, permite revisão assistida, exporta resultados e mantém histórico local. Gemini é opcional; o fallback determinístico continua sendo o caminho seguro padrão.
+O app atual executa análise local e explicável, extrai dados de currículos/vagas, permite revisão assistida, exporta resultados e mantém histórico local. Gemini é opcional e validável em duas etapas; o fallback determinístico continua sendo o caminho seguro padrão.
 
-Próximo passo recomendado após validar a v0.1:
+Próximo passo recomendado após validar a v0.6.0:
 
 ```text
-Validar heurísticas e parsers com fixtures fictícias mais diversas e evoluir a experiência do tracker.
+Validar o Gemini com uma chave real e evoluir Search Intelligence com entradas explícitas e fontes públicas responsáveis.
 ```
 
 ## Privacidade e compliance
@@ -506,12 +528,16 @@ O produto observa ferramentas de ATS, resume matching, trackers e assistentes de
 - [Hotfix de UI e parsers v0.4.1](docs/07-development/v0.4.1-ui-parser-hotfix.md)
 - [Hotfix de parser e provider v0.4.2](docs/07-development/v0.4.2-parser-ai-provider-hotfix.md)
 - [Usabilidade e validação v0.5.0](docs/07-development/v0.5.0-real-usability-validation.md)
+- [UX, diagnóstico de IA e busca v0.6.0](docs/07-development/v0.6.0-polished-ux-ai-search.md)
 - [Arquitetura de parsers](docs/02-architecture/parsers.md)
 - [Semântica do parser](docs/02-architecture/parser-semantics.md)
 - [Fluxo automático](docs/02-architecture/auto-flow.md)
 - [Setup local do Gemini](docs/04-ai/gemini-local-setup.md)
 - [Fixtures realistas](docs/06-testing/realistic-fixtures.md)
 - [Testes de regressão](docs/06-testing/regression-testing.md)
+- [Testes de screenshots](docs/06-testing/screenshot-testing.md)
+- [Search Intelligence foundation](docs/05-data-sources/search-intelligence-foundation.md)
+- [Hidden Jobs Radar safe mode](docs/05-data-sources/hidden-jobs-radar-safe-mode.md)
 - [Storage e histórico](docs/02-architecture/storage-and-history.md)
 - [Auditoria v0.4](docs/00-audit/v0.4-readiness-audit.md)
 

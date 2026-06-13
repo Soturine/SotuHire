@@ -372,3 +372,16 @@ A v0.5.0 transforma o fluxo guiado em uma demonstração utilizável sem dados p
 - regressões do fluxo real simulado.
 
 Scraping real, extensão Chrome, auto-apply, envio automático, PyTorch obrigatório e Concurso Mode funcional continuam fora deste marco.
+
+# Marco entregue: v0.6.0
+
+A v0.6.0 inicia Search Intelligence e Hidden Jobs Radar em modo estritamente seguro:
+
+- gera queries e cargos equivalentes;
+- sugere fontes públicas e alertas manuais;
+- cria rotina semanal de busca;
+- não acessa rede, não raspa páginas e não envia mensagens;
+- diferencia claramente modo rápido e avançado;
+- adiciona diagnóstico real do Gemini e screenshots reproduzíveis.
+
+Scraping responsável permanece uma etapa futura separada, dependente de políticas por fonte, rate limit, cache e revisão humana.

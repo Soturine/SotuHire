@@ -170,3 +170,14 @@ As mensagens principais evitam termos internos. `provider`, `fallback` e nomes d
 O alias `GOOGLE_API_KEY` é aceito para compatibilidade, mas `GEMINI_API_KEY` continua sendo o padrão documentado.
 
 Veja [Setup local do Gemini](gemini-local-setup.md).
+
+## Diagnóstico real na v0.6.0
+
+O wizard separa duas perguntas:
+
+1. `Testar Gemini simples`: valida chave, modelo, SDK e configuração com uma chamada mínima sem schema.
+2. `Testar Gemini estruturado`: valida o caminho real do SotuHire com `response_json_schema`.
+
+Se o teste simples passa e o estruturado falha, o problema está no schema ou payload. Se ambos falham, a causa provável é chave, modelo, quota, região ou projeto.
+
+O payload estruturado usa somente o subconjunto necessário de JSON Schema, sem metadados Pydantic incompatíveis. O diagnóstico registra código, categoria, modelo, versão do SDK, origem da variável e tipo de chamada, mas nunca mostra a chave.

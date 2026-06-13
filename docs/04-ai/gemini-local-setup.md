@@ -71,3 +71,39 @@ Se Gemini falhar por chave ausente, SDK ausente, autenticação ou indisponibili
 - currículo e vaga só são enviados ao Gemini quando ele está selecionado;
 - o histórico local não salva os textos brutos;
 - `.env` e `.streamlit/secrets.toml` não devem ser commitados.
+
+## Teste simples versus estruturado
+
+`Testar Gemini simples` envia somente:
+
+```text
+Responda apenas: ok
+```
+
+Não há schema estruturado. Uma falha aqui aponta para chave, modelo, SDK, quota, região ou projeto.
+
+`Testar Gemini estruturado` usa uma entrada fictícia pequena e o schema real do SotuHire. Se o teste simples passar e este falhar, revise schema e payload.
+
+## Diagnóstico de 400 INVALID_ARGUMENT
+
+O wizard mostra:
+
+- código recebido;
+- motivo resumido;
+- modelo usado;
+- versão do SDK;
+- variável encontrada;
+- tipo de chamada;
+- erro bruto resumido e sanitizado.
+
+`INVALID_ARGUMENT` no teste simples sugere testar outro modelo. No teste estruturado, sugere comparar com o teste simples e revisar o schema.
+
+Modelos disponíveis no seletor:
+
+```text
+gemini-2.5-flash
+gemini-2.5-pro
+gemini-1.5-flash
+```
+
+O padrão continua vindo de `GEMINI_MODEL`.

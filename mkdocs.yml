@@ -94,6 +94,8 @@ nav:
       - Compliance and ethics: 05-data-sources/compliance-and-ethics.md
       - Hidden jobs radar: 05-data-sources/hidden-jobs-radar.md
       - Search intelligence: 05-data-sources/search-intelligence.md
+      - Search Intelligence foundation: 05-data-sources/search-intelligence-foundation.md
+      - Hidden Jobs Radar safe mode: 05-data-sources/hidden-jobs-radar-safe-mode.md
       - Alternative job boards: 05-data-sources/alternative-job-boards.md
       - Social post discovery: 05-data-sources/social-post-discovery.md
       - GitHub portfolio analyzer: 05-data-sources/github-portfolio-analyzer.md
@@ -108,6 +110,7 @@ nav:
   - Testes:
       - Fixtures realistas: 06-testing/realistic-fixtures.md
       - Testes de regressão: 06-testing/regression-testing.md
+      - Testes de screenshots: 06-testing/screenshot-testing.md
   - Desenvolvimento:
       - Setup: 07-development/setup.md
       - Commands: 07-development/commands.md
@@ -127,6 +130,7 @@ nav:
       - v0.4.1 Hotfix UI e parsers: 07-development/v0.4.1-ui-parser-hotfix.md
       - v0.4.2 Hotfix parser e provider: 07-development/v0.4.2-parser-ai-provider-hotfix.md
       - v0.5.0 Usabilidade e validação: 07-development/v0.5.0-real-usability-validation.md
+      - v0.6.0 UX, IA e busca: 07-development/v0.6.0-polished-ux-ai-search.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md
