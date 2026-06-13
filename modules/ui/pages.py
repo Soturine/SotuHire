@@ -18,6 +18,7 @@ from modules.parsers.resume_parser import parse_resume_file, parse_resume_text
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput
+from modules.search_intelligence import SearchStrategyInput, build_search_intelligence_plan
 from modules.tracker.dashboard import calculate_dashboard_metrics, filter_dashboard_records
 from modules.tracker.job_tracker import JobTracker
 from modules.tracker.status import JobStatus
@@ -642,6 +643,60 @@ def render_dashboard_step() -> None:
     )
 
 
+def render_search_intelligence_step() -> None:
+    """Render a manual-first search strategy without network automation."""
+    _section_heading(
+        "SEARCH INTELLIGENCE",
+        "Plano seguro de busca",
+        "Gera estratégia e termos de busca. Esta etapa não faz scraping automático.",
+    )
+    profile = st.session_state.resume_profile
+    job = st.session_state.job_posting
+    controls = st.columns(2)
+    target_role = controls[0].text_input(
+        "Cargo alvo",
+        value=job.title or "Engenheiro de Software Júnior",
+        key="search_target_role",
+    )
+    target_companies_text = controls[1].text_input(
+        "Empresas ou domínios alvo",
+        placeholder="empresa.com.br, startup alvo",
+        key="search_target_companies",
+    )
+    strategy = SearchStrategyInput(
+        target_role=target_role,
+        skills=profile.skills[:8],
+        location=job.location or profile.city,
+        modality="" if job.modality == "unknown" else job.modality,
+        seniority=job.seniority,
+        target_companies=csv_items(target_companies_text),
+        contract=job.contract,
+    )
+    plan = build_search_intelligence_plan(strategy)
+
+    st.info("Nenhuma busca de rede foi executada. Copie as queries e pesquise manualmente.")
+    sections = st.tabs(
+        ["Queries sugeridas", "Cargos equivalentes", "Fontes", "Plano semanal", "Radar oculto"]
+    )
+    with sections[0]:
+        for query in plan.queries:
+            st.code(query)
+    with sections[1]:
+        render_list(plan.radar.alternative_roles, "Nenhum cargo alternativo sugerido.")
+    with sections[2]:
+        for source in plan.sources:
+            st.markdown(f"**[{source.name}]({source.url})** · {source.reason}")
+    with sections[3]:
+        render_list(plan.weekly_plan, "Nenhum plano gerado.")
+    with sections[4]:
+        st.markdown("**Empresas onde faz sentido procurar**")
+        render_list(plan.radar.target_company_ideas, "")
+        st.markdown("**Alertas manuais sugeridos**")
+        render_list(plan.radar.manual_alerts, "")
+        st.markdown("**Riscos de vaga genérica**")
+        render_list(plan.radar.generic_job_risks, "")
+
+
 def render_app() -> None:
     """Configure and render the complete guided application."""
     st.set_page_config(page_title="SotuHire v0.5.0", page_icon="S", layout="wide")
@@ -657,7 +712,22 @@ def render_app() -> None:
         )
         return
 
-    tabs = st.tabs(["Currículo", "Vaga", "Preferências", "Resultado", "Histórico", "Dashboard"])
+    st.markdown(
+        '<div class="mode-banner"><strong>Modo avançado</strong>'
+        "<span>Revisão completa, preferências, exports, histórico e estratégia de busca.</span></div>",
+        unsafe_allow_html=True,
+    )
+    tabs = st.tabs(
+        [
+            "Currículo",
+            "Vaga",
+            "Preferências",
+            "Resultado",
+            "Search Intelligence",
+            "Histórico",
+            "Dashboard",
+        ]
+    )
     with tabs[0]:
         render_resume_step(advanced=True)
     with tabs[1]:
@@ -667,8 +737,10 @@ def render_app() -> None:
     with tabs[3]:
         render_results_step("Modo avançado", provider_name)
     with tabs[4]:
-        render_history_step()
+        render_search_intelligence_step()
     with tabs[5]:
+        render_history_step()
+    with tabs[6]:
         render_dashboard_step()
     st.caption(
         "Processamento local por padrão · revisão humana obrigatória · sem auto-apply · "
