@@ -5,8 +5,7 @@ from __future__ import annotations
 import tomllib
 from pathlib import Path
 
-from modules.scraping.client import ScrapingClient
-from modules.scraping.connectors.base import PublicSourceConnector
+from modules.scraping.connectors.base import FetchClient, PublicSourceConnector
 from modules.scraping.schemas import CollectionResult, ScrapingSource
 from modules.scraping.source_registry import SourceRegistry
 
@@ -24,7 +23,7 @@ def load_configured_sources(path: str | Path = "config/sources.toml") -> list[Sc
 class ConfiguredSourceConnector(PublicSourceConnector):
     """Dispatch a configured source through the connector registry."""
 
-    def __init__(self, registry: SourceRegistry, client: ScrapingClient | None = None) -> None:
+    def __init__(self, registry: SourceRegistry, client: FetchClient | None = None) -> None:
         super().__init__(client=client)
         self.registry = registry
 

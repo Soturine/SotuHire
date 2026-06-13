@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0"><channel><title>Example Jobs</title>
+<item><title>Python Junior</title><link>https://example.com/jobs/1</link>
+<description>Empresa: Example. Python SQL remoto.</description></item>
+<item><title>Data Internship</title><link>https://example.com/jobs/2</link>
+<description>Estagio em dados com Power BI.</description></item>
+</channel></rss>
