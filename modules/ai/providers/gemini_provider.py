@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import importlib
-import os
 
 from modules.ai.providers.base import AIProvider, ProviderUnavailableError
+from modules.ai.setup import gemini_api_key, gemini_model
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
 
@@ -16,10 +16,8 @@ class GeminiProvider(AIProvider):
     name = "gemini"
 
     def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
-        self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
-        self.model = (
-            model or os.getenv("GEMINI_MODEL") or os.getenv("LLM_MODEL") or "gemini-2.5-flash"
-        )
+        self.api_key = gemini_api_key(api_key)
+        self.model = gemini_model(model)
 
     def analyze(
         self,

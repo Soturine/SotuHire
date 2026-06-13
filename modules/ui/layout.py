@@ -4,6 +4,12 @@ from __future__ import annotations
 
 import streamlit as st
 
+from modules.ai.setup import (
+    gemini_api_key,
+    gemini_setup_status,
+    save_local_ai_config,
+    test_gemini_connection,
+)
 from modules.ai.structured_analysis import analyze_structured, gemini_setup_warning, get_provider
 from modules.resume_tailor.tailor_rules import build_safe_tailor_output
 from modules.schemas.job_posting import JobPostingSchema
@@ -30,6 +36,7 @@ def initialize_state() -> None:
         "analysis_result": None,
         "tailor_output": None,
         "resume_upload_fingerprint": "",
+        "ai_setup_test_result": None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -81,6 +88,53 @@ def render_sidebar() -> tuple[str, str]:
                 st.caption("Gemini configurado. O currículo será enviado para análise externa.")
         else:
             st.caption("Análise determinística feita localmente, sem API.")
+        with st.expander("Configurar IA"):
+            result = st.session_state.analysis_result
+            actual_provider = result.provider if result else "Ainda não executado"
+            status = gemini_setup_status()
+            st.caption(f"Selecionado: {provider_label}")
+            st.caption(f"Usado na última análise: {actual_provider}")
+            if result:
+                st.caption(
+                    "Troca automática para análise local: sim"
+                    if result.fallback_used
+                    else "Troca automática para análise local: não"
+                )
+            st.caption(
+                "Gemini key: configurada" if status.key_configured else "Gemini key: ausente"
+            )
+            st.caption("SDK Gemini: instalado" if status.sdk_installed else "SDK Gemini: ausente")
+            (st.success if status.available else st.warning)(
+                status.message
+                if not status.reason
+                else f"{status.message} Motivo: {status.reason}."
+            )
+            st.link_button(
+                "Abrir Google AI Studio",
+                "https://aistudio.google.com/app/apikey",
+                use_container_width=True,
+            )
+            api_key = st.text_input(
+                "GEMINI_API_KEY",
+                value=gemini_api_key(),
+                type="password",
+                help="A chave fica apenas neste computador e não deve ser commitada.",
+            )
+            setup_actions = st.columns(2)
+            if setup_actions[0].button("Testar Gemini", use_container_width=True):
+                st.session_state.ai_setup_test_result = test_gemini_connection(api_key)
+            if setup_actions[1].button("Salvar configuração local", use_container_width=True):
+                try:
+                    target = save_local_ai_config(api_key)
+                    st.success(f"Configuração salva localmente em {target}.")
+                except ValueError as exc:
+                    st.error(str(exc))
+            if st.session_state.ai_setup_test_result:
+                test_result = st.session_state.ai_setup_test_result
+                (st.success if test_result.success else st.error)(test_result.message)
+                if test_result.detail:
+                    with st.expander("Detalhes técnicos"):
+                        st.code(test_result.detail)
         st.divider()
         st.markdown("**Privacidade e responsabilidade**")
         st.caption("Currículos não são enviados para IA externa sem configuração explícita.")

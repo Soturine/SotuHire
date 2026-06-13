@@ -17,5 +17,5 @@ def test_gemini_failure_reports_actual_provider_and_fallback(monkeypatch):
     assert result.requested_provider == "gemini"
     assert result.provider == "local"
     assert result.fallback_used
-    assert "Provider usado: Análise local" in result.warning
-    assert "Fallback usado" in result.warning
+    assert "Gemini falhou, então usei análise local" in result.warning
+    assert "Motivo:" in result.warning

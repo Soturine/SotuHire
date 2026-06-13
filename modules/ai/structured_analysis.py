@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import importlib.util
 import os
 
 from pydantic import BaseModel, ConfigDict
 
 from modules.ai.providers import AIProvider, GeminiProvider, MockProvider
+from modules.ai.setup import gemini_setup_status
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
 
@@ -42,15 +42,8 @@ def get_provider(name: str | None = None) -> AIProvider:
 
 def gemini_setup_warning(api_key: str | None = None) -> str:
     """Return a clear setup warning when Gemini cannot be selected yet."""
-    if not (api_key or os.getenv("GEMINI_API_KEY", "")).strip():
-        return "Gemini não configurado. Usando análise local."
-    try:
-        sdk_available = importlib.util.find_spec("google.genai") is not None
-    except ModuleNotFoundError:
-        sdk_available = False
-    if not sdk_available:
-        return "Instale requirements-ai.txt para usar Gemini."
-    return ""
+    status = gemini_setup_status(api_key)
+    return "" if status.available else f"{status.message} Motivo: {status.reason}."
 
 
 def _short_error(exc: Exception) -> str:
@@ -82,7 +75,5 @@ def analyze_structured(
             provider=fallback.name,
             requested_provider=selected.name,
             fallback_used=True,
-            warning=(
-                f"Gemini falhou: {_short_error(exc)} Provider usado: Análise local. Fallback usado."
-            ),
+            warning=f"Gemini falhou, então usei análise local. Motivo: {_short_error(exc)}",
         )
