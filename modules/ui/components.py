@@ -89,6 +89,19 @@ def render_chips(items: list[str], empty_message: str = "Nenhum item detectado."
     st.markdown(chips, unsafe_allow_html=True)
 
 
+def render_limited_chips(
+    items: list[str],
+    empty_message: str = "Nenhum item detectado.",
+    visible_limit: int = 8,
+    expander_label: str = "Outras tecnologias detectadas",
+) -> None:
+    """Render a focused chip set and keep secondary items in an expander."""
+    render_chips(items[:visible_limit], empty_message)
+    if len(items) > visible_limit:
+        with st.expander(f"{expander_label} ({len(items) - visible_limit})"):
+            render_chips(items[visible_limit:])
+
+
 def link_label(url: str) -> str:
     """Return a compact human label for a detected resume link."""
     lowered = url.lower()

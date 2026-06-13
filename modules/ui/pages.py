@@ -31,6 +31,7 @@ from modules.ui.components import (
     render_chips,
     render_data_card,
     render_item_cards,
+    render_limited_chips,
     render_links,
     render_list,
     render_score_card,
@@ -59,7 +60,7 @@ def _section_heading(kicker: str, title: str, caption: str) -> None:
     st.caption(caption)
 
 
-def _resume_review(profile: ResumeProfileSchema) -> None:
+def _resume_review(profile: ResumeProfileSchema, *, advanced: bool = True) -> None:
     st.markdown("#### Dados detectados")
     contact = st.columns(4)
     with contact[0]:
@@ -74,7 +75,7 @@ def _resume_review(profile: ResumeProfileSchema) -> None:
     st.markdown("**Links**")
     render_links(profile.links)
     st.markdown("**Skills técnicas**")
-    render_chips(profile.skills, "Nenhuma skill detectada.")
+    render_limited_chips(profile.skills, "Nenhuma skill detectada.")
     if profile.soft_skills:
         st.markdown("**Soft skills**")
         render_chips(profile.soft_skills)
@@ -90,6 +91,9 @@ def _resume_review(profile: ResumeProfileSchema) -> None:
     second_summary[0].metric("Experiências", len(profile.experiences))
     second_summary[1].metric("Projetos", len(profile.projects))
     second_summary[2].metric("Formação", len(profile.education))
+
+    if not advanced:
+        return
 
     sections = st.tabs(["Resumo", "Formação", "Experiências", "Projetos"])
     with sections[0]:
@@ -138,7 +142,7 @@ def _resume_review(profile: ResumeProfileSchema) -> None:
             st.success("Revisão do currículo salva.")
 
 
-def render_resume_step() -> None:
+def render_resume_step(*, advanced: bool = True) -> None:
     """Render upload/paste and automatically process the first upload."""
     _section_heading(
         "PASSO 1",
@@ -196,10 +200,10 @@ def render_resume_step() -> None:
             st.error(str(exc))
 
     if st.session_state.resume_profile.raw_text:
-        _resume_review(st.session_state.resume_profile)
+        _resume_review(st.session_state.resume_profile, advanced=advanced)
 
 
-def _job_review(job: JobPostingSchema) -> None:
+def _job_review(job: JobPostingSchema, *, advanced: bool = True) -> None:
     st.markdown("#### Dados detectados")
     facts = st.columns(4)
     with facts[0]:
@@ -229,6 +233,9 @@ def _job_review(job: JobPostingSchema) -> None:
         render_chips(job.benefits)
     if job.risk_flags:
         st.warning("Revise estes dados: " + " ".join(job.risk_flags))
+
+    if not advanced:
+        return
 
     with st.expander("Editar dados detectados"), st.form("job_review"):
         left, right = st.columns(2)
@@ -277,7 +284,7 @@ def _job_review(job: JobPostingSchema) -> None:
             st.success("Revisão da vaga salva.")
 
 
-def render_job_step() -> None:
+def render_job_step(*, advanced: bool = True) -> None:
     """Render vacancy paste and automatically refresh detected fields."""
     _section_heading(
         "PASSO 2",
@@ -309,7 +316,7 @@ def render_job_step() -> None:
         st.session_state.job_posting = parse_job_description(vacancy_text)
         st.session_state.last_analysis_fingerprint = ""
     if st.session_state.job_posting.raw_text:
-        _job_review(st.session_state.job_posting)
+        _job_review(st.session_state.job_posting, advanced=advanced)
 
 
 def render_preferences_step(mode: str) -> None:
@@ -339,7 +346,9 @@ def render_preferences_step(mode: str) -> None:
         st.text_input("Notas de prioridade", key="priority_notes")
 
 
-def _render_result_content(result: StructuredAnalysisResult, tailor: ResumeTailorOutput) -> None:
+def _render_result_content(
+    result: StructuredAnalysisResult, tailor: ResumeTailorOutput, *, advanced: bool = True
+) -> None:
     analysis = result.analysis
     cards = st.columns(4)
     render_score_card(
@@ -359,22 +368,37 @@ def _render_result_content(result: StructuredAnalysisResult, tailor: ResumeTailo
         st.info("Usando análise local no seu computador.")
     if result.warning:
         st.warning(result.warning)
-    with st.expander("Detalhes técnicos da análise"):
-        st.caption(f"Provider solicitado: {provider_label(result.requested_provider)}")
-        st.caption(f"Provider realmente usado: {provider_label(result.provider)}")
-        st.caption(f"Fallback usado: {'sim' if result.fallback_used else 'não'}")
-        if result.diagnostic:
-            diagnostic = result.diagnostic
-            st.caption(f"Código: {diagnostic.code or 'não informado'}")
-            st.caption(f"Motivo resumido: {diagnostic.summary}")
-            st.caption(f"Modelo usado: {diagnostic.model}")
-            st.caption(f"SDK instalado: google-genai {diagnostic.sdk_version}")
-            st.caption(f"Variável encontrada: {diagnostic.key_source}")
-            st.caption(f"Tipo de chamada: {diagnostic.call_type}")
-            if diagnostic.suggestion:
-                st.info(diagnostic.suggestion)
-            if diagnostic.raw_error:
-                st.code(diagnostic.raw_error)
+    if advanced:
+        with st.expander("Detalhes técnicos da análise"):
+            st.caption(f"Provider solicitado: {provider_label(result.requested_provider)}")
+            st.caption(f"Provider realmente usado: {provider_label(result.provider)}")
+            st.caption(f"Fallback usado: {'sim' if result.fallback_used else 'não'}")
+            if result.diagnostic:
+                diagnostic = result.diagnostic
+                st.caption(f"Código: {diagnostic.code or 'não informado'}")
+                st.caption(f"Motivo resumido: {diagnostic.summary}")
+                st.caption(f"Modelo usado: {diagnostic.model}")
+                st.caption(f"SDK instalado: google-genai {diagnostic.sdk_version}")
+                st.caption(f"Variável encontrada: {diagnostic.key_source}")
+                st.caption(f"Tipo de chamada: {diagnostic.call_type}")
+                if diagnostic.suggestion:
+                    st.info(diagnostic.suggestion)
+                if diagnostic.raw_error:
+                    st.code(diagnostic.raw_error)
+
+    if not advanced:
+        recommendation = analysis.recommendation.replace("_", " ").title()
+        (st.success if analysis.should_apply() else st.warning)(f"Recomendação: {recommendation}")
+        quick_sections = st.columns(2)
+        with quick_sections[0]:
+            st.markdown("**Por que aplicar**")
+            render_list(analysis.strengths, "Nenhum ponto forte detectado.")
+        with quick_sections[1]:
+            st.markdown("**O que ajustar**")
+            render_list(analysis.gaps, "Nenhum ajuste prioritário.")
+        st.markdown("**Keywords prioritárias**")
+        render_limited_chips(analysis.missing_keywords, "Nenhuma keyword prioritária ausente.")
+        return
 
     tabs = st.tabs(
         [
@@ -477,14 +501,34 @@ def render_results_step(mode: str, provider_name: str) -> None:
             run_analysis(provider_name)
         st.success("Análise atualizada automaticamente.")
     if st.button(
-        "Rodar análise novamente",
+        "Analisar agora" if mode == "Modo rápido" else "Rodar análise novamente",
+        type="primary" if mode == "Modo rápido" else "secondary",
         use_container_width=True,
         disabled=not ready,
     ):
         with st.spinner("Analisando aderência, ATS, preferências e riscos..."):
             run_analysis(provider_name)
     if st.session_state.analysis_result and st.session_state.tailor_output:
-        _render_result_content(st.session_state.analysis_result, st.session_state.tailor_output)
+        _render_result_content(
+            st.session_state.analysis_result,
+            st.session_state.tailor_output,
+            advanced=mode == "Modo avançado",
+        )
+
+
+def render_quick_mode(provider_name: str) -> None:
+    """Render the compact one-page quick analysis flow."""
+    st.markdown(
+        '<div class="mode-banner"><strong>Modo rápido</strong>'
+        "<span>Envie o currículo, cole a vaga e receba a análise automaticamente.</span></div>",
+        unsafe_allow_html=True,
+    )
+    inputs = st.columns(2, gap="large")
+    with inputs[0]:
+        render_resume_step(advanced=False)
+    with inputs[1]:
+        render_job_step(advanced=False)
+    render_results_step("Modo rápido", provider_name)
 
 
 def render_history_step() -> None:
@@ -605,17 +649,23 @@ def render_app() -> None:
     inject_styles()
     render_header()
     mode, provider_name = render_sidebar()
-    tabs = st.tabs(
-        ["1. Currículo", "2. Vaga", "3. Preferências", "4. Resultado", "Histórico", "Dashboard"]
-    )
+    if mode == "Modo rápido":
+        render_quick_mode(provider_name)
+        st.caption(
+            "Processamento local por padrão · revisão humana obrigatória · sem auto-apply · "
+            "sem invenção de experiência."
+        )
+        return
+
+    tabs = st.tabs(["Currículo", "Vaga", "Preferências", "Resultado", "Histórico", "Dashboard"])
     with tabs[0]:
-        render_resume_step()
+        render_resume_step(advanced=True)
     with tabs[1]:
-        render_job_step()
+        render_job_step(advanced=True)
     with tabs[2]:
         render_preferences_step(mode)
     with tabs[3]:
-        render_results_step(mode, provider_name)
+        render_results_step("Modo avançado", provider_name)
     with tabs[4]:
         render_history_step()
     with tabs[5]:
