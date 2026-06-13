@@ -246,6 +246,43 @@ def test_gemini_structured(api_key: str, model: str | None = None) -> GeminiDiag
     )
 
 
+def test_gemini_analysis(api_key: str, model: str | None = None) -> GeminiDiagnostic:
+    """Test the same provider analysis call used by the application."""
+    status = gemini_setup_status(api_key)
+    if not status.available:
+        return GeminiDiagnostic(
+            success=False,
+            test_type="analysis",
+            summary=status.reason,
+            category=status.reason,
+            model=gemini_model(model),
+            sdk_version="não instalado" if not status.sdk_installed else "instalado",
+            key_source=gemini_key_source(api_key),
+            call_type="análise real do SotuHire",
+        )
+    try:
+        from modules.ai.providers.gemini_provider import GeminiProvider
+
+        GeminiProvider(api_key=api_key, model=model).analyze(
+            "Currículo fictício: pessoa desenvolvedora júnior com Python e SQL.",
+            "Vaga fictícia: pessoa desenvolvedora júnior com Python.",
+        )
+    except Exception as exc:
+        return diagnose_gemini_error(
+            exc,
+            test_type="analysis",
+            model=gemini_model(model),
+            key_source=gemini_key_source(api_key),
+            call_type="análise real do SotuHire",
+        )
+    return successful_diagnostic(
+        test_type="analysis",
+        model=gemini_model(model),
+        key_source=gemini_key_source(api_key),
+        call_type="análise real do SotuHire",
+    )
+
+
 def test_gemini_connection(api_key: str) -> GeminiTestResult:
     """Backward-compatible wrapper around the structured Gemini test."""
     diagnostic = test_gemini_structured(api_key)

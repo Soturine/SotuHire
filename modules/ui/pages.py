@@ -378,6 +378,12 @@ def _render_result_content(
         st.success("Usando Gemini para melhorar a análise.")
     else:
         st.info("Usando análise local no seu computador.")
+    provider_summary = st.columns(3)
+    provider_summary[0].metric("Análise usada", provider_label(result.provider))
+    provider_summary[1].metric("Modelo", result.model or "Local")
+    provider_summary[2].metric("Fallback", "Sim" if result.fallback_used else "Não")
+    if result.fallback_used and result.diagnostic:
+        st.caption(f"Motivo do fallback: {result.diagnostic.summary}")
     if result.warning:
         st.warning(result.warning)
     if advanced:

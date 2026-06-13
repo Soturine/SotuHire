@@ -13,6 +13,7 @@ from modules.ai.setup import (
     gemini_model,
     gemini_setup_status,
     save_local_ai_config,
+    test_gemini_analysis,
     test_gemini_simple,
     test_gemini_structured,
 )
@@ -47,6 +48,8 @@ def initialize_state() -> None:
         "resume_upload_fingerprint": "",
         "last_analysis_fingerprint": "",
         "ai_setup_test_result": None,
+        "gemini_session_key": gemini_api_key(),
+        "gemini_session_model": gemini_model(),
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -107,7 +110,9 @@ def render_sidebar() -> tuple[str, str]:
             help="O modo rápido usa padrões. O avançado libera preferências opcionais.",
         )
         provider_options = list(PROVIDERS)
-        default_provider = get_provider().name
+        session_key = st.session_state.get("gemini_session_key", "")
+        session_model = st.session_state.get("gemini_session_model", gemini_model())
+        default_provider = get_provider(api_key=session_key, model=session_model).name
         default_index = next(
             (
                 index
@@ -123,7 +128,7 @@ def render_sidebar() -> tuple[str, str]:
             key="provider_selection",
         )
         if provider_selection == "Gemini":
-            warning = gemini_setup_warning()
+            warning = gemini_setup_warning(session_key)
             if warning:
                 st.warning(warning)
             else:
@@ -133,7 +138,7 @@ def render_sidebar() -> tuple[str, str]:
         with st.expander("Configurar IA"):
             result = st.session_state.analysis_result
             actual_provider = provider_label(result.provider) if result else "Ainda não executado"
-            status = gemini_setup_status()
+            status = gemini_setup_status(session_key)
             st.caption(f"Selecionado: {provider_selection}")
             st.caption(f"Usado na última análise: {actual_provider}")
             if result:
@@ -163,24 +168,29 @@ def render_sidebar() -> tuple[str, str]:
             )
             api_key = st.text_input(
                 "GEMINI_API_KEY",
-                value=gemini_api_key(),
                 type="password",
+                key="gemini_session_key",
                 help="A chave fica apenas neste computador e não deve ser commitada.",
             )
-            configured_model = gemini_model()
+            configured_model = str(st.session_state.get("gemini_session_model", gemini_model()))
             model_options = list(dict.fromkeys([configured_model, *SUPPORTED_GEMINI_MODELS]))
             selected_model = st.selectbox(
                 "Modelo Gemini",
                 model_options,
                 index=model_options.index(configured_model),
+                key="gemini_session_model",
             )
-            setup_actions = st.columns(2)
+            setup_actions = st.columns(3)
             if setup_actions[0].button("Testar Gemini simples", use_container_width=True):
                 st.session_state.ai_setup_simple_result = test_gemini_simple(
                     api_key, selected_model
                 )
             if setup_actions[1].button("Testar Gemini estruturado", use_container_width=True):
                 st.session_state.ai_setup_structured_result = test_gemini_structured(
+                    api_key, selected_model
+                )
+            if setup_actions[2].button("Testar análise real", use_container_width=True):
+                st.session_state.ai_setup_analysis_result = test_gemini_analysis(
                     api_key, selected_model
                 )
             if st.button("Salvar configuração local", use_container_width=True):
@@ -198,6 +208,7 @@ def render_sidebar() -> tuple[str, str]:
                 )
             _render_gemini_diagnostic(st.session_state.get("ai_setup_simple_result"))
             _render_gemini_diagnostic(st.session_state.get("ai_setup_structured_result"))
+            _render_gemini_diagnostic(st.session_state.get("ai_setup_analysis_result"))
         st.divider()
         with st.expander("Privacidade"):
             st.caption("Currículos não são enviados para IA externa sem configuração explícita.")
@@ -237,7 +248,11 @@ def run_analysis(provider_name: str) -> None:
         st.session_state.job_text,
         build_preferences(),
         job_details(job),
-        provider=get_provider(provider_name),
+        provider=get_provider(
+            provider_name,
+            api_key=st.session_state.get("gemini_session_key", ""),
+            model=st.session_state.get("gemini_session_model", gemini_model()),
+        ),
     )
     st.session_state.tailor_output = build_safe_tailor_output(
         target_role=job.title or "Cargo alvo",
@@ -255,6 +270,8 @@ def analysis_fingerprint(provider_name: str) -> str:
             st.session_state.resume_text,
             st.session_state.job_text,
             provider_name,
+            str(st.session_state.get("gemini_session_model", "")),
+            "key-present" if st.session_state.get("gemini_session_key", "") else "key-absent",
             build_preferences().model_dump_json(),
         ]
     )

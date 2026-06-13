@@ -25,6 +25,7 @@ class StructuredAnalysisResult(BaseModel):
     provider: str
     requested_provider: str
     fallback_used: bool = False
+    model: str = ""
     warning: str = ""
     diagnostic: GeminiDiagnostic | None = None
 
@@ -33,11 +34,16 @@ def _configured_provider(name: str | None = None) -> str:
     return default_ai_provider(name)
 
 
-def get_provider(name: str | None = None) -> AIProvider:
+def get_provider(
+    name: str | None = None,
+    *,
+    api_key: str | None = None,
+    model: str | None = None,
+) -> AIProvider:
     """Create a supported provider from explicit or environment configuration."""
     provider_name = _configured_provider(name)
     if provider_name == "gemini":
-        return GeminiProvider()
+        return GeminiProvider(api_key=api_key, model=model)
     return MockProvider()
 
 
@@ -62,6 +68,7 @@ def analyze_structured(
             analysis=analysis,
             provider=selected.name,
             requested_provider=selected.name,
+            model=getattr(selected, "model", ""),
         )
     except Exception as exc:
         fallback = MockProvider()
@@ -78,6 +85,7 @@ def analyze_structured(
             provider=fallback.name,
             requested_provider=selected.name,
             fallback_used=True,
+            model=getattr(selected, "model", ""),
             warning=(
                 "Gemini falhou, então usei análise local. "
                 f"Motivo: {diagnostic.summary}. "
