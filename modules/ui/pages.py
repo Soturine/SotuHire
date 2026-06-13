@@ -53,6 +53,7 @@ from modules.ui.layout import (
     should_run_quick_analysis,
 )
 from modules.ui.quick_mode import QUICK_INPUT_HEIGHT, compact_status
+from modules.ui.scraping_page import render_scraping_page
 from modules.ui.styles import inject_styles
 
 TRACKER = JobTracker()
@@ -301,7 +302,7 @@ def render_job_step(*, advanced: bool = True) -> None:
     )
     vacancy_text = (
         st.text_area(
-            "Descrição completa da vaga",
+            "Descrição completa da vaga ou URL pública",
             value=st.session_state.job_text,
             height=240 if advanced else QUICK_INPUT_HEIGHT,
             placeholder="Cole a descrição completa da oportunidade.",
@@ -315,8 +316,29 @@ def render_job_step(*, advanced: bool = True) -> None:
         st.session_state.last_analysis_fingerprint = ""
         st.rerun()
     if vacancy_text.strip() and vacancy_text != st.session_state.job_text:
-        st.session_state.job_text = vacancy_text
-        st.session_state.job_posting = parse_job_description(vacancy_text)
+        if not advanced and vacancy_text.strip().startswith(("http://", "https://")):
+            from modules.opportunities import opportunity_to_job_posting
+            from modules.scraping.collection import collect_public_source
+            from modules.scraping.schemas import ScrapingSource
+
+            result = collect_public_source(
+                ScrapingSource(
+                    name="URL pública rápida",
+                    type="manual_url",
+                    url=vacancy_text.strip(),
+                    enabled=True,
+                    max_items=1,
+                )
+            )
+            if result.opportunities:
+                opportunity = result.opportunities[0]
+                st.session_state.job_text = opportunity.description
+                st.session_state.job_posting = opportunity_to_job_posting(opportunity)
+            elif result.failures:
+                st.error(result.failures[0])
+        else:
+            st.session_state.job_text = vacancy_text
+            st.session_state.job_posting = parse_job_description(vacancy_text)
         st.session_state.last_analysis_fingerprint = ""
         st.success("Vaga processada automaticamente. Revise os dados abaixo.")
     if st.button("Reprocessar vaga", disabled=not vacancy_text.strip()):
@@ -752,7 +774,7 @@ def render_app() -> None:
     with tabs[3]:
         render_results_step("Modo avançado", provider_name)
     with tabs[4]:
-        st.info("A coleta pública responsável será configurada nesta área.")
+        render_scraping_page(provider_name)
     with tabs[5]:
         render_search_intelligence_step()
     with tabs[6]:
