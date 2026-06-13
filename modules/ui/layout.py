@@ -60,7 +60,13 @@ def render_header() -> None:
         <div class="product-header">
           <div>
             <h1>SotuHire</h1>
-            <p>Currículo, vaga e decisão em um fluxo revisável.</p>
+            <p>Copiloto de carreira para currículo, vaga e estratégia de candidatura.</p>
+            <div class="product-badges">
+              <span class="product-badge">Local-first</span>
+              <span class="product-badge">ATS</span>
+              <span class="product-badge">Gemini opcional</span>
+              <span class="product-badge">Sem auto-apply</span>
+            </div>
           </div>
           <span class="version-pill">v0.5.0</span>
         </div>
@@ -94,7 +100,7 @@ def render_sidebar() -> tuple[str, str]:
         if st.session_state.pop("activate_gemini_after_save", False):
             st.session_state.provider_selection = "Gemini"
         st.title("Sua análise")
-        st.caption("Escolha o nível de detalhe. O processamento local é o padrão.")
+        st.caption("Escolha a experiência e como deseja analisar.")
         mode = st.radio(
             "Experiência",
             ["Modo rápido", "Modo avançado"],
@@ -123,7 +129,7 @@ def render_sidebar() -> tuple[str, str]:
             else:
                 st.caption("Gemini configurado. O currículo será enviado para análise externa.")
         else:
-            st.caption("Análise determinística feita localmente, sem API.")
+            st.caption("Análise local, privada e sem API externa.")
         with st.expander("Configurar IA"):
             result = st.session_state.analysis_result
             actual_provider = provider_label(result.provider) if result else "Ainda não executado"
@@ -193,10 +199,10 @@ def render_sidebar() -> tuple[str, str]:
             _render_gemini_diagnostic(st.session_state.get("ai_setup_simple_result"))
             _render_gemini_diagnostic(st.session_state.get("ai_setup_structured_result"))
         st.divider()
-        st.markdown("**Privacidade e responsabilidade**")
-        st.caption("Currículos não são enviados para IA externa sem configuração explícita.")
-        st.caption("O histórico local só é salvo após sua confirmação.")
-        st.caption("Revisão humana obrigatória. O SotuHire não inventa dados.")
+        with st.expander("Privacidade"):
+            st.caption("Currículos não são enviados para IA externa sem configuração explícita.")
+            st.caption("O histórico local só é salvo após sua confirmação.")
+            st.caption("Revisão humana obrigatória. O SotuHire não inventa dados.")
         return mode, PROVIDERS[provider_selection]
 
 

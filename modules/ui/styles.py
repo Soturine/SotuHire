@@ -23,9 +23,13 @@ def inject_styles() -> None:
           --warning: #ffcc66;
         }
         .stApp, [data-testid="stAppViewContainer"] {
-          background: radial-gradient(circle at 85% 0%, #172850 0%, var(--bg) 35%);
+          background:
+            radial-gradient(circle at 88% -10%, rgba(124, 140, 255, .24) 0%, transparent 34%),
+            radial-gradient(circle at 10% 0%, rgba(255, 90, 103, .10) 0%, transparent 25%),
+            var(--bg);
           color: var(--text);
         }
+        .block-container { max-width: 1380px; padding-top: 1.25rem; padding-bottom: 2rem; }
         [data-testid="stHeader"] { background: rgba(7, 17, 31, .92); }
         [data-testid="stSidebar"] {
           background: #0a1423;
@@ -47,8 +51,10 @@ def inject_styles() -> None:
           color: #8190a5 !important;
         }
         [data-testid="stFileUploaderDropzone"] {
-          background: var(--surface-2);
-          border-color: var(--border);
+          background: linear-gradient(145deg, var(--surface), var(--surface-2));
+          border: 1px dashed #49617f;
+          border-radius: 16px;
+          min-height: 8rem;
         }
         [data-testid="stFileUploaderDropzone"] * { color: var(--muted) !important; }
         [data-testid="stFileUploaderDropzone"] button {
@@ -59,10 +65,15 @@ def inject_styles() -> None:
         [data-baseweb="popover"], [data-baseweb="menu"] { background: var(--surface-2); }
         [data-baseweb="menu"] * { color: var(--text); }
         .stButton > button, .stDownloadButton > button {
-          border-radius: 10px;
+          border-radius: 12px;
           border: 1px solid var(--border);
-          min-height: 2.7rem;
+          min-height: 2.65rem;
           font-weight: 700;
+          transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+        }
+        .stButton > button:hover, .stDownloadButton > button:hover {
+          transform: translateY(-1px);
+          border-color: #5a7090;
         }
         .stButton > button[kind="primary"] {
           background: linear-gradient(115deg, var(--accent), #e83f67);
@@ -106,12 +117,22 @@ def inject_styles() -> None:
           align-items: center;
           justify-content: space-between;
           gap: 1rem;
-          padding: .75rem 0 1.15rem;
+          padding: .8rem 0 1.35rem;
           border-bottom: 1px solid var(--border);
           margin-bottom: 1rem;
         }
-        .product-header h1 { margin: 0; font-size: 1.9rem; letter-spacing: -.04em; }
-        .product-header p { margin: .25rem 0 0; color: var(--muted); }
+        .product-header h1 { margin: 0; font-size: 2.2rem; letter-spacing: -.055em; }
+        .product-header p { margin: .3rem 0 .7rem; color: var(--muted); font-size: 1rem; }
+        .product-badges { display: flex; flex-wrap: wrap; gap: .35rem; }
+        .product-badge {
+          border: 1px solid #334965;
+          background: rgba(22, 36, 58, .78);
+          color: #c8d7ea;
+          border-radius: 999px;
+          padding: .22rem .58rem;
+          font-size: .72rem;
+          font-weight: 750;
+        }
         .version-pill, .chip {
           display: inline-flex;
           align-items: center;
@@ -132,18 +153,36 @@ def inject_styles() -> None:
           letter-spacing: .12em;
           margin-bottom: .2rem;
         }
+        .mode-banner {
+          display: flex;
+          align-items: center;
+          gap: .75rem;
+          background: linear-gradient(105deg, rgba(124, 140, 255, .18), rgba(255, 90, 103, .08));
+          border: 1px solid #3c5070;
+          border-radius: 14px;
+          padding: .7rem .9rem;
+          margin: .2rem 0 1rem;
+          color: var(--muted);
+        }
+        .mode-banner strong { color: var(--text); white-space: nowrap; }
         .data-card {
-          background: linear-gradient(145deg, var(--surface), #101f33);
+          background: linear-gradient(145deg, rgba(15, 27, 45, .96), rgba(16, 31, 51, .96));
           border: 1px solid var(--border);
           border-radius: 14px;
-          padding: .9rem 1rem;
-          margin: .35rem 0;
-          min-height: 4.25rem;
+          padding: .78rem .9rem;
+          margin: .28rem 0;
+          min-height: 3.8rem;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
         }
         .data-card strong { color: var(--text); }
         .data-card small { color: var(--muted); display: block; margin-bottom: .25rem; }
         .score-note { color: var(--muted); font-size: .82rem; margin-top: -.55rem; }
         hr { border-color: var(--border) !important; }
+        @media (max-width: 900px) {
+          .product-header { align-items: flex-start; }
+          .version-pill { display: none; }
+          .mode-banner { align-items: flex-start; flex-direction: column; gap: .2rem; }
+        }
         </style>
         """,
         unsafe_allow_html=True,
