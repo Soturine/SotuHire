@@ -18,7 +18,7 @@ from modules.parsers.resume_parser import parse_resume_file, parse_resume_text
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput
-from modules.tracker.dashboard import calculate_dashboard_metrics
+from modules.tracker.dashboard import calculate_dashboard_metrics, filter_dashboard_records
 from modules.tracker.job_tracker import JobTracker
 from modules.tracker.status import JobStatus
 from modules.ui.components import (
@@ -34,6 +34,7 @@ from modules.ui.components import (
     render_links,
     render_list,
     render_score_card,
+    risk_label,
     seniority_label,
 )
 from modules.ui.layout import (
@@ -435,6 +436,8 @@ def _render_result_content(result: StructuredAnalysisResult, tailor: ResumeTailo
                     analysis,
                     job_title=st.session_state.job_posting.title,
                     company=st.session_state.job_posting.company,
+                    modality=st.session_state.job_posting.modality,
+                    seniority=st.session_state.job_posting.seniority,
                     tailor=tailor,
                     notes=notes,
                     privacy_acknowledged=acknowledged,
@@ -509,7 +512,45 @@ def render_history_step() -> None:
 def render_dashboard_step() -> None:
     """Render local dashboard metrics."""
     _section_heading("DASHBOARD", "Visão geral da busca", "Acompanhamento das análises salvas.")
-    metrics = calculate_dashboard_metrics(TRACKER.list_analyses())
+    records = TRACKER.list_analyses()
+    with st.expander("Filtrar análises"):
+        filters = st.columns(4)
+        recommendation = filters[0].selectbox(
+            "Recomendação",
+            ["", "apply", "apply_with_adjustments", "save_for_later", "ignore"],
+            format_func=lambda value: value.replace("_", " ").title() if value else "Todas",
+        )
+        modality = filters[1].selectbox(
+            "Modalidade",
+            ["", *MODALITIES],
+            format_func=lambda value: modality_label(value) if value else "Todas",
+        )
+        seniority = filters[2].selectbox(
+            "Senioridade",
+            ["", *LEVELS],
+            format_func=lambda value: seniority_label(value) if value else "Todas",
+        )
+        risk = filters[3].selectbox(
+            "Risco",
+            ["", "low", "medium", "high"],
+            format_func=risk_label,
+        )
+        use_dates = st.checkbox("Filtrar por período")
+        date_from = date_to = None
+        if use_dates:
+            dates = st.columns(2)
+            date_from = dates[0].date_input("De")
+            date_to = dates[1].date_input("Até")
+    filtered = filter_dashboard_records(
+        records,
+        recommendation=recommendation,
+        modality=modality,
+        seniority=seniority,
+        risk=risk,
+        date_from=date_from,
+        date_to=date_to,
+    )
+    metrics = calculate_dashboard_metrics(filtered)
     first = st.columns(3)
     first[0].metric("Vagas analisadas", metrics.total_analyzed)
     first[1].metric("Match médio", metrics.average_match_score)
@@ -527,6 +568,9 @@ def render_dashboard_step() -> None:
                 "Cargo": item.job_title,
                 "Empresa": item.company,
                 "Status": item.status.value,
+                "Recomendação": item.analysis.recommendation,
+                "Modalidade": modality_label(item.modality),
+                "Senioridade": seniority_label(item.seniority),
                 "Match": item.analysis.match_score,
                 "ATS": item.analysis.ats_score,
                 "Fit": item.analysis.opportunity_fit_score,

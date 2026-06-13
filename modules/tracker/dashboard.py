@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from modules.storage.models import StoredAnalysis
@@ -39,3 +41,37 @@ def calculate_dashboard_metrics(records: list[StoredAnalysis]) -> DashboardMetri
         high_risk=sum(item.analysis.risk_score >= 75 for item in records),
         latest=records[:5],
     )
+
+
+def filter_dashboard_records(
+    records: list[StoredAnalysis],
+    *,
+    recommendation: str = "",
+    modality: str = "",
+    seniority: str = "",
+    risk: str = "",
+    date_from: date | None = None,
+    date_to: date | None = None,
+) -> list[StoredAnalysis]:
+    """Filter saved analyses using the simple dashboard controls."""
+
+    def risk_matches(record: StoredAnalysis) -> bool:
+        score = record.analysis.risk_score
+        if risk == "low":
+            return score < 40
+        if risk == "medium":
+            return 40 <= score < 75
+        if risk == "high":
+            return score >= 75
+        return True
+
+    return [
+        record
+        for record in records
+        if (not recommendation or record.analysis.recommendation == recommendation)
+        and (not modality or record.modality == modality)
+        and (not seniority or record.seniority == seniority)
+        and risk_matches(record)
+        and (date_from is None or record.created_at.date() >= date_from)
+        and (date_to is None or record.created_at.date() <= date_to)
+    ]

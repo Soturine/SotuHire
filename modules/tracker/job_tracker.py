@@ -20,6 +20,8 @@ class JobTracker:
         analysis: JobAnalysisSchema,
         job_title: str = "",
         company: str = "",
+        modality: str = "",
+        seniority: str = "",
         tailor: ResumeTailorOutput | None = None,
         notes: str = "",
         privacy_acknowledged: bool = False,
@@ -28,6 +30,8 @@ class JobTracker:
         record = StoredAnalysis(
             job_title=job_title,
             company=company,
+            modality=modality,
+            seniority=seniority,
             status=JobStatus.GOOD_FIT if analysis.should_apply() else JobStatus.ANALYZED,
             analysis=analysis,
             tailor=tailor,

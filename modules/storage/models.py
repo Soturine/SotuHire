@@ -27,6 +27,8 @@ class StoredAnalysis(BaseModel):
     updated_at: datetime = Field(default_factory=utc_now)
     job_title: str = ""
     company: str = ""
+    modality: str = ""
+    seniority: str = ""
     status: JobStatus = JobStatus.ANALYZED
     analysis: JobAnalysisSchema
     tailor: ResumeTailorOutput | None = None

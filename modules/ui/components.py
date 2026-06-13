@@ -29,6 +29,7 @@ PROVIDER_LABELS = {
     "local": "Análise local",
     "mock": "Análise local",
 }
+RISK_LABELS = {"": "Todos", "low": "Baixo", "medium": "Médio", "high": "Alto"}
 
 
 def csv_items(value: str) -> list[str]:
@@ -72,6 +73,11 @@ def seniority_label(value: str) -> str:
 def provider_label(value: str) -> str:
     """Translate an internal provider name for presentation."""
     return PROVIDER_LABELS.get(value, display_value(value))
+
+
+def risk_label(value: str) -> str:
+    """Translate a dashboard risk filter."""
+    return RISK_LABELS.get(value, display_value(value))
 
 
 def render_chips(items: list[str], empty_message: str = "Nenhum item detectado.") -> None:
