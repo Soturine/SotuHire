@@ -2,6 +2,35 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [0.5.0] - 2026-06-13
+
+### Added
+
+- setup guiado do Gemini com status de chave/SDK, teste explícito e salvamento local;
+- fluxo automático do modo rápido e análise completa de exemplo;
+- currículos, vagas e expected outputs fictícios para validação;
+- filtros simples no dashboard por recomendação, modalidade, senioridade, risco e data;
+- testes de regressão para setup, fluxo, skills, exemplos, histórico e dashboard;
+
+### Changed
+
+- análise local e Gemini passam a usar mensagens principais amigáveis;
+- preferências permanecem opcionais e escondidas no modo rápido;
+- contadores do currículo passam a refletir fatos úteis e deduplicados;
+- histórico passa a guardar modalidade e senioridade sem salvar textos brutos;
+
+### Fixed
+
+- prefixos como `Linguagens:`, `Ferramentas:` e `Hardware/IoT:` em chips técnicos;
+- duplicatas normalizadas e soft skills misturadas às skills técnicas;
+- necessidade de editar `.env` manualmente para ativar Gemini;
+- análise rápida dependente de clique após cada mudança;
+
+### Documentation
+
+- setup local de Gemini, fluxo automático, fixtures e regressões documentados;
+- roadmap, README, provider strategy e guias de desenvolvimento atualizados;
+
 ## [0.4.2] - 2026-06-13
 
 ### Added

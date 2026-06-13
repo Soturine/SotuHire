@@ -152,3 +152,21 @@ O resultado estruturado registra:
 - `warning`: motivo resumido e ação necessária.
 
 A interface nunca apresenta `mock` ao usuário. O nome exibido é `Análise local`. Quando Gemini não possui chave, o aviso é `Gemini não configurado. Usando análise local.`. Quando falta o SDK, a orientação é `Instale requirements-ai.txt para usar Gemini.`.
+
+## Evolução na v0.5.0
+
+A sidebar passa a oferecer `Configurar IA`, evitando que a pessoa precise editar `.env` manualmente. O wizard:
+
+- mostra análise selecionada e análise realmente usada;
+- verifica chave e SDK;
+- abre o Google AI Studio;
+- aceita a chave em campo seguro;
+- testa uma chamada mínima somente após clique explícito;
+- salva configuração em `.streamlit/secrets.toml`;
+- ativa Gemini no rerun seguinte.
+
+As mensagens principais evitam termos internos. `provider`, `fallback` e nomes de implementação aparecem apenas no expander de detalhes técnicos.
+
+O alias `GOOGLE_API_KEY` é aceito para compatibilidade, mas `GEMINI_API_KEY` continua sendo o padrão documentado.
+
+Veja [Setup local do Gemini](gemini-local-setup.md).

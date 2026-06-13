@@ -63,6 +63,7 @@ nav:
       - Background jobs: 02-architecture/background-jobs.md
       - Parsers: 02-architecture/parsers.md
       - Semântica do parser: 02-architecture/parser-semantics.md
+      - Fluxo automático: 02-architecture/auto-flow.md
       - Storage e histórico: 02-architecture/storage-and-history.md
   - Regras de negócio:
       - ATS rules: 03-business-rules/ats-rules.md
@@ -81,6 +82,7 @@ nav:
       - RAG memory: 04-ai/rag-memory-architecture.md
       - Provider strategy: 04-ai/provider-strategy.md
       - Gemini structured output: 04-ai/gemini-structured-output.md
+      - Setup local do Gemini: 04-ai/gemini-local-setup.md
       - JSON Resume e Pydantic: 04-ai/json-resume-and-pydantic.md
       - ML avançado futuro: 04-ai/advanced-ml-future.md
   - Fontes de dados:
@@ -103,6 +105,9 @@ nav:
       - CI/CD: 06-engineering/ci-cd.md
       - Security Privacy: 06-engineering/security-privacy.md
       - Avoid overengineering: 06-engineering/avoid-overengineering.md
+  - Testes:
+      - Fixtures realistas: 06-testing/realistic-fixtures.md
+      - Testes de regressão: 06-testing/regression-testing.md
   - Desenvolvimento:
       - Setup: 07-development/setup.md
       - Commands: 07-development/commands.md
@@ -121,6 +126,7 @@ nav:
       - v0.4 Tracker e dashboard: 07-development/v0.4-tracker-history-dashboard.md
       - v0.4.1 Hotfix UI e parsers: 07-development/v0.4.1-ui-parser-hotfix.md
       - v0.4.2 Hotfix parser e provider: 07-development/v0.4.2-parser-ai-provider-hotfix.md
+      - v0.5.0 Usabilidade e validação: 07-development/v0.5.0-real-usability-validation.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md

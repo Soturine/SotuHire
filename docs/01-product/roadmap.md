@@ -360,3 +360,15 @@ flowchart LR
     G --> H[v0.8 Extensão]
     H --> I[v1.0 Concurso Mode experimental]
 ```
+# Marco entregue: v0.5.0
+
+A v0.5.0 transforma o fluxo guiado em uma demonstração utilizável sem dados pessoais:
+
+- análise automática no modo rápido;
+- setup local assistido do Gemini;
+- exemplos fictícios e expected outputs;
+- skills técnicas limpas;
+- dashboard filtrável;
+- regressões do fluxo real simulado.
+
+Scraping real, extensão Chrome, auto-apply, envio automático, PyTorch obrigatório e Concurso Mode funcional continuam fora deste marco.

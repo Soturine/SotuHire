@@ -1,2 +1,4 @@
-# Optional structured AI provider. The default local analysis needs no API SDK.
+# Optional structured AI provider used by the guided Gemini setup.
+# Install with: pip install -r requirements-ai.txt
+# The default local analysis needs no API SDK.
 google-genai>=1.0.0

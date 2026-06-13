@@ -10,6 +10,36 @@ A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas dif
 
 O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
 
+## SotuHire v0.5.0 — Real Usability, AI Setup and Validation
+
+A v0.5.0 reduz o trabalho manual do fluxo principal e permite testar o produto sem currículo real:
+
+```text
+Enviar currículo -> colar vaga -> receber análise automática -> revisar apenas se quiser.
+```
+
+### Destaques da v0.5.0
+
+- modo rápido executa análise automaticamente quando currículo ou vaga mudam;
+- botões para carregar currículo, vaga e análise completa de exemplo;
+- setup guiado do Gemini na sidebar, com chave segura, teste e salvamento local;
+- status claro da chave, SDK, análise solicitada e análise realmente usada;
+- `GOOGLE_API_KEY`, `LLM_PROVIDER` e `LLM_MODEL` aceitos como aliases legados;
+- skills técnicas sem prefixos de categoria, duplicatas ou soft skills;
+- contadores úteis para skills técnicas, soft skills, links, experiências, projetos e formação;
+- dashboard com filtros por recomendação, modalidade, senioridade, risco e data;
+- fixtures fictícios e expected outputs para validação reprodutível;
+- regressões automatizadas do setup, fluxo rápido, parser, exemplos, histórico e dashboard.
+
+### Testar sem dados pessoais
+
+Abra o app e clique em `Rodar análise de exemplo`, ou use separadamente:
+
+- `Carregar exemplo de currículo`;
+- `Usar vaga fictícia de exemplo`.
+
+Os arquivos ficam em `examples/` e não contêm dados pessoais reais.
+
 ## SotuHire v0.4.2 — Parser Semantics + AI Provider Fix
 
 A versão atual corrige a leitura semântica de currículos e deixa explícito quando a análise usa Gemini ou o fallback local:
@@ -62,6 +92,8 @@ streamlit run app.py
 ```
 
 Sem chave, sem SDK ou em caso de erro do Gemini, a interface informa o motivo e usa a análise local.
+
+Na v0.5.0, também é possível abrir `Configurar IA` na sidebar, colar a chave, testar e salvar em `.streamlit/secrets.toml` sem editar `.env` manualmente.
 
 O histórico não salva o texto bruto do currículo. A aplicação continua sem auto-apply, envio automático, scraping agressivo, PyTorch obrigatório ou Concurso Mode funcional.
 
@@ -390,7 +422,7 @@ Ele junta:
 
 ## Status
 
-**SotuHire v0.4.2 — parser semântico e roteamento de IA explícito.**
+**SotuHire v0.5.0 — fluxo automático, setup guiado de IA e validação realista.**
 
 O app atual executa análise local e explicável, extrai dados de currículos/vagas, permite revisão assistida, exporta resultados e mantém histórico local. Gemini é opcional; o fallback determinístico continua sendo o caminho seguro padrão.
 
@@ -445,8 +477,13 @@ O produto observa ferramentas de ATS, resume matching, trackers e assistentes de
 - [Tracker, histórico e dashboard v0.4](docs/07-development/v0.4-tracker-history-dashboard.md)
 - [Hotfix de UI e parsers v0.4.1](docs/07-development/v0.4.1-ui-parser-hotfix.md)
 - [Hotfix de parser e provider v0.4.2](docs/07-development/v0.4.2-parser-ai-provider-hotfix.md)
+- [Usabilidade e validação v0.5.0](docs/07-development/v0.5.0-real-usability-validation.md)
 - [Arquitetura de parsers](docs/02-architecture/parsers.md)
 - [Semântica do parser](docs/02-architecture/parser-semantics.md)
+- [Fluxo automático](docs/02-architecture/auto-flow.md)
+- [Setup local do Gemini](docs/04-ai/gemini-local-setup.md)
+- [Fixtures realistas](docs/06-testing/realistic-fixtures.md)
+- [Testes de regressão](docs/06-testing/regression-testing.md)
 - [Storage e histórico](docs/02-architecture/storage-and-history.md)
 - [Auditoria v0.4](docs/00-audit/v0.4-readiness-audit.md)
 
