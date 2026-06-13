@@ -321,3 +321,16 @@ Quando a fonte for sensível, a estratégia preferida é:
 5. nenhuma candidatura é enviada automaticamente.
 
 Essa abordagem é mais segura do que tentar navegar em massa por plataformas logadas.
+
+## Implementação pública da v0.7.0
+
+A v0.7.0 implementa coleta automática após ação explícita da pessoa usuária:
+
+```text
+detectar URL -> validar acesso público -> consultar robots.txt -> cache/rate limit
+-> coletar -> normalizar -> deduplicar -> analisar
+```
+
+O cliente limita o tamanho da resposta, usa user-agent identificável e registra o domínio coletado. O cache local evita downloads repetidos e o store mantém oportunidades sem duplicação.
+
+URLs públicas de qualquer domínio podem ser testadas. Caminhos que exigem autenticação e fontes proibidas por `robots.txt` retornam erro claro, sem tentativa de bypass.

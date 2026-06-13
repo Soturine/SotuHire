@@ -43,3 +43,14 @@ O campo `scraping_performed` permanece `false`. A UI informa que esta etapa gera
 A aba **Search Intelligence** usa dados já detectados no currículo e na vaga para montar um plano inicial. A pessoa usuária pode copiar queries, escolher fontes e executar as buscas manualmente.
 
 Essa fundação permite adicionar conectores públicos no futuro sem misturar descoberta responsável com automação agressiva.
+
+## Evolução acionável na v0.7.0
+
+Search Intelligence mantém queries, cargos alternativos e plano semanal, mas agora cada fonte sugerida oferece ações para:
+
+- salvar a fonte localmente;
+- testar a fonte pública;
+- coletar oportunidades;
+- abrir uma oportunidade coletada na análise.
+
+A geração da estratégia continua sem rede. A coleta é uma etapa explícita, separada e rastreável, executada somente quando a pessoa usuária escolhe uma fonte.

@@ -43,3 +43,9 @@ O script navega pelas experiências rápida e avançada, usa a demo local e salv
 - nenhum arquivo excede o limite definido pelo teste.
 
 Antes de publicar uma versão, recapture as imagens depois de atualizar o badge de versão e confirme visualmente que não há segredos nem dados reais.
+
+## Screenshots da v0.7.0
+
+A v0.7.0 amplia a captura para oito superfícies: modo rápido, modo avançado, coleta, oportunidades coletadas, Search Intelligence, Hidden Jobs Radar, resultado e dashboard.
+
+Antes de abrir o navegador, o script grava uma oportunidade fictícia no store local ignorado pelo Git. Assim, a tela de oportunidades coletadas é reproduzível sem depender de rede nem de dados pessoais.

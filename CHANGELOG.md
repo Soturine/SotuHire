@@ -2,6 +2,32 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [0.7.0] - 2026-06-13
+
+### Added
+
+- coleta pública por URL, listagem genérica, página de carreira e RSS/Atom;
+- registry extensível e fontes configuráveis por TOML;
+- cache local, rate limit por domínio, logs e deduplicação;
+- store local e normalização de oportunidades para `JobPostingSchema`;
+- aba de coleta com preview, teste, coleta, filtro, análise e tracker;
+- Search Intelligence e Hidden Jobs Radar acionáveis;
+- terceiro teste Gemini pelo caminho real da análise;
+- fixtures HTML/XML e regressões da pipeline pública;
+
+### Changed
+
+- modo rápido ficou mais compacto e modo avançado ganhou workflow completo;
+- chave e modelo Gemini digitados na sessão são usados imediatamente;
+- resultado mostra provider, modelo, fallback e motivo;
+- fontes públicas de qualquer domínio podem ser testadas quando `robots.txt` permitir;
+
+### Security
+
+- URLs autenticadas não são coletadas;
+- coleta pública usa user-agent identificável, limites, cache e revisão humana;
+- auto-apply, spam e bypass de bloqueios continuam ausentes;
+
 ## [0.6.0] - 2026-06-13
 
 ### Added

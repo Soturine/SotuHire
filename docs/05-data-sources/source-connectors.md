@@ -361,3 +361,17 @@ jobspy: experimental_reference
 production_use: not_decided
 requires_compliance_review: true
 ```
+
+## Conectores ativos na v0.7.0
+
+A implementação inicial usa um registry extensível com:
+
+- `ManualUrlConnector`;
+- `GenericPublicPageConnector`;
+- `RssFeedConnector`;
+- `CompanyCareerPageConnector`;
+- `ConfiguredSourceConnector`.
+
+Todos recebem `ScrapingSource`, retornam `CollectionResult` e dependem de um protocolo pequeno de cliente. Isso permite testes com fixtures sem rede e novas implementações sem acoplar o parser ao transporte HTTP.
+
+Fontes públicas compatíveis podem ser adicionadas em `config/sources.toml`. O dispatcher escolhe o conector pelo campo `type`.

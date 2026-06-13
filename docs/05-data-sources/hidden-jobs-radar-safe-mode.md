@@ -30,3 +30,11 @@ Toda saída inclui `scraping_performed=false`. Esse contrato é coberto por regr
 ## Próxima evolução responsável
 
 Uma versão futura pode aceitar textos e links fornecidos explicitamente pela pessoa usuária, classificar sinais de oportunidade e registrar a origem. Qualquer conector deve ter limites, transparência e revisão humana.
+
+## Evolução acionável na v0.7.0
+
+O radar transforma empresas e domínios alvo em sugestões de páginas públicas de carreira. Para cada fonte acionável, a UI permite salvar, testar, coletar e analisar oportunidades.
+
+O status começa como `pendente` e muda na interface após a tentativa de coleta. Se nenhuma fonte acionável foi informada, o app orienta a escolher uma URL pública.
+
+O radar continua sem auto-apply, sem mensagens automáticas e sem coleta autenticada.

@@ -10,6 +10,63 @@ A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas dif
 
 O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
 
+## SotuHire v0.7.0 — Public Scraping, UX Fixes and Real Opportunity Collection
+
+A v0.7.0 conecta descoberta, coleta e análise em um fluxo utilizável:
+
+- responsible public scraping com `robots.txt`, user-agent identificável e logs;
+- coleta por URL pública manual;
+- ingestão de oportunidades por RSS/Atom;
+- parsing universal de listagens e páginas públicas de carreira;
+- fontes configuráveis em `config/sources.toml`;
+- cache local, rate limit e deduplicação;
+- Search Intelligence e Hidden Jobs Radar acionáveis;
+- oportunidade coletada convertida para o schema de análise e tracker;
+- modo rápido compacto e modo avançado com workflow completo;
+- chave Gemini digitada usada imediatamente na análise real.
+
+O fluxo avançado passa a ser:
+
+```text
+Gerar estratégia -> escolher fonte pública -> coletar vagas -> analisar -> salvar no tracker.
+```
+
+Copie o exemplo de fontes antes de personalizar:
+
+```bash
+cp config/sources.example.toml config/sources.toml
+```
+
+Coleta autenticada, bypass de bloqueios, auto-apply e spam permanecem fora do produto.
+
+## Screenshots v0.7.0
+
+Todos os screenshots usam a demo fictícia e oportunidades de fixture.
+
+### Modo rápido compacto
+![SotuHire quick mode](docs/assets/screenshots/sotuhire-v0.7-quick-mode.png)
+
+### Modo avançado
+![SotuHire advanced mode](docs/assets/screenshots/sotuhire-v0.7-advanced-mode.png)
+
+### Coleta de vagas
+![SotuHire collect jobs](docs/assets/screenshots/sotuhire-v0.7-collect-jobs.png)
+
+### Oportunidades coletadas
+![SotuHire collected opportunities](docs/assets/screenshots/sotuhire-v0.7-collected-opportunities.png)
+
+### Search Intelligence acionável
+![SotuHire actionable search intelligence](docs/assets/screenshots/sotuhire-v0.7-search-intelligence.png)
+
+### Hidden Jobs Radar acionável
+![SotuHire actionable hidden radar](docs/assets/screenshots/sotuhire-v0.7-hidden-radar.png)
+
+### Resultado de análise
+![SotuHire analysis result](docs/assets/screenshots/sotuhire-v0.7-result.png)
+
+### Dashboard
+![SotuHire dashboard v0.7](docs/assets/screenshots/sotuhire-v0.7-dashboard.png)
+
 ## SotuHire v0.6.0 — Polished UX, AI Diagnostics and Search Intelligence
 
 A v0.6.0 torna o produto mais claro para uso real:

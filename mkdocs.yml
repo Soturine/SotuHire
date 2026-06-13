@@ -65,6 +65,8 @@ nav:
       - Semântica do parser: 02-architecture/parser-semantics.md
       - Fluxo automático: 02-architecture/auto-flow.md
       - Storage e histórico: 02-architecture/storage-and-history.md
+      - Pipeline de coleta de oportunidades: 02-architecture/opportunity-collection-pipeline.md
+      - Modo rápido vs avançado: 02-architecture/quick-vs-advanced-mode.md
   - Regras de negócio:
       - ATS rules: 03-business-rules/ats-rules.md
       - Matching rules: 03-business-rules/matching-rules.md
@@ -83,6 +85,7 @@ nav:
       - Provider strategy: 04-ai/provider-strategy.md
       - Gemini structured output: 04-ai/gemini-structured-output.md
       - Setup local do Gemini: 04-ai/gemini-local-setup.md
+      - Gemini na análise real: 04-ai/gemini-real-analysis-routing.md
       - JSON Resume e Pydantic: 04-ai/json-resume-and-pydantic.md
       - ML avançado futuro: 04-ai/advanced-ml-future.md
   - Fontes de dados:
@@ -96,6 +99,7 @@ nav:
       - Search intelligence: 05-data-sources/search-intelligence.md
       - Search Intelligence foundation: 05-data-sources/search-intelligence-foundation.md
       - Hidden Jobs Radar safe mode: 05-data-sources/hidden-jobs-radar-safe-mode.md
+      - RSS e URL manual: 05-data-sources/rss-and-manual-url-connectors.md
       - Alternative job boards: 05-data-sources/alternative-job-boards.md
       - Social post discovery: 05-data-sources/social-post-discovery.md
       - GitHub portfolio analyzer: 05-data-sources/github-portfolio-analyzer.md

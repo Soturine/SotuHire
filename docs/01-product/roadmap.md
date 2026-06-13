@@ -385,3 +385,17 @@ A v0.6.0 inicia Search Intelligence e Hidden Jobs Radar em modo estritamente seg
 - adiciona diagnóstico real do Gemini e screenshots reproduzíveis.
 
 Scraping responsável permanece uma etapa futura separada, dependente de políticas por fonte, rate limit, cache e revisão humana.
+
+# Marco entregue: v0.7.0
+
+A v0.7.0 transforma a estratégia em coleta pública acionável:
+
+- conecta URL manual, RSS/Atom, listagens e páginas públicas de carreira;
+- adiciona registry e fontes configuráveis;
+- usa robots.txt, user-agent identificável, cache, rate limit e logs;
+- normaliza e deduplica oportunidades antes da análise;
+- permite analisar e salvar oportunidades no tracker;
+- torna Search Intelligence e Hidden Jobs Radar acionáveis;
+- corrige o roteamento da chave Gemini da sessão para a análise real.
+
+Coleta autenticada, bypass de bloqueios, auto-apply e envio automático permanecem fora do roadmap entregue.
