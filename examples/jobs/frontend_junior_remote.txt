@@ -1,0 +1,11 @@
+Cargo: Desenvolvedor Frontend Júnior
+Empresa: Interface Clara
+Localização: Brasil
+Modalidade: Remota
+Contrato: CLT
+
+Procuramos pessoa com experiência em JavaScript, TypeScript, React, Git e APIs REST.
+A rotina inclui revisão de acessibilidade, testes e colaboração com design.
+
+Desejável: Docker, Node.js e inglês intermediário.
+Benefícios: auxílio home office, plano de saúde e vale-refeição.

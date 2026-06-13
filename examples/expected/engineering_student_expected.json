@@ -1,0 +1,10 @@
+{
+  "fixture": "resumes/engineering_student_resume.txt",
+  "name": "Camila Torres Andrade",
+  "experience_count": 1,
+  "project_count": 2,
+  "education_count": 2,
+  "course_count": 1,
+  "required_skills": ["Python", "Java", "React", "SQL", "Git", "Docker", "ESP32", "MQTT"],
+  "required_links": ["linkedin.com/in/camila-torres-engenharia", "github.com/camila-torres-lab"]
+}

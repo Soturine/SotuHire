@@ -1,0 +1,26 @@
+Bruno Martins Lima
+Campinas, SP | bruno.martins@example.com
+github.com/bruno-martins-iot
+
+RESUMO PROFISSIONAL
+Técnico em Eletrônica com experiência CLT em manutenção e projetos pessoais de IoT.
+
+FORMAÇÃO
+Técnico em Eletrônica - Escola Técnica Central | 2022
+
+HISTÓRICO PROFISSIONAL
+Fábrica Modelo Ltda. - Técnico de Manutenção | jan/2023 - atual | CLT
+Diagnóstico de falhas, manutenção preventiva e registro de intervenções.
+Apoio a melhorias simples em sensores e painéis.
+
+PROJETOS DESTACADOS
+Monitor de Energia: medição experimental com ESP32, MQTT e dashboard.
+Controle de Estufa: protótipo com sensores e alertas em Python.
+
+STACK TÉCNICA
+Hardware/IoT: ESP32, MQTT, sensores
+Linguagens: Python, C++
+Ferramentas: Git, Docker
+
+COMPETÊNCIAS COMPORTAMENTAIS
+Organização; resolução de problemas; comunicação; trabalho em equipe

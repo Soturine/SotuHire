@@ -1,0 +1,10 @@
+{
+  "fixture": "resumes/web_developer_resume.txt",
+  "name": "Lucas Ferreira Nunes",
+  "experience_count": 1,
+  "project_count": 2,
+  "education_count": 1,
+  "course_count": 0,
+  "required_skills": ["JavaScript", "TypeScript", "React", "Node.js", "PostgreSQL", "Git", "Docker"],
+  "required_links": ["www.lucasferreira.dev", "github.com/lucas-ferreira-web"]
+}

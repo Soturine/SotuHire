@@ -1,0 +1,32 @@
+Camila Torres Andrade
+São José dos Campos, SP | camila.torres@example.com | +55 (12) 97777-2200
+linkedin.com/in/camila-torres-engenharia | github.com/camila-torres-lab
+
+OBJETIVO PROFISSIONAL
+Estágio ou posição júnior em engenharia de software, automação ou sistemas embarcados.
+
+FORMAÇÃO E CURSOS
+Técnico em Automação Industrial - Escola Técnica Horizonte | concluído em 2023
+Engenharia da Computação - Universidade Vale Digital | previsão 2028
+Curso de Git e colaboração - Escola Aberta | 20 horas
+
+EXPERIÊNCIA TÉCNICA
+Laboratório Universitário - Estagiária de Automação | fev/2025 - atual
+Apoio à montagem de bancadas, leitura de sensores e documentação de testes.
+Desenvolvimento de pequenos scripts para organizar resultados.
+
+PROJETOS SELECIONADOS
+Estação Ambiental: protótipo com ESP32, MQTT e Python para registrar temperatura.
+Dashboard Acadêmico: painel React para acompanhar atividades de laboratório.
+
+COMPETÊNCIAS TÉCNICAS
+Linguagens: Python, Java, Python
+Web/Mobile: React
+Dados/DevOps/Ferramentas: SQL, Git, Docker, Git
+Hardware/IoT: ESP32, MQTT
+
+SOFT SKILLS
+Trabalho em equipe, comunicação técnica, organização e aprendizado rápido
+
+IDIOMAS
+Português nativo, Inglês intermediário

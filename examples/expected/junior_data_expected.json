@@ -1,0 +1,10 @@
+{
+  "fixture": "resumes/junior_data_resume.txt",
+  "name": "Marina Lopes Ribeiro",
+  "experience_count": 1,
+  "project_count": 2,
+  "education_count": 1,
+  "course_count": 1,
+  "required_skills": ["Python", "SQL", "Power BI", "Excel", "Git"],
+  "required_links": ["linkedin.com/in/marina-lopes-dados", "github.com/marina-lopes-labs"]
+}

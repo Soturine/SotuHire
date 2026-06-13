@@ -1,0 +1,10 @@
+Cargo: Técnico de Suporte Júnior
+Empresa: Atendimento Horizonte
+Localização: Curitiba, PR
+Modalidade: Híbrida
+Contrato: CLT
+
+Atendimento a usuários, organização de chamados, manutenção de computadores e documentação.
+Conhecimentos desejáveis: redes, Excel, SQL, Git e comunicação clara.
+
+Benefícios: vale-transporte e plano odontológico.

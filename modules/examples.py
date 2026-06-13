@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 EXAMPLES_ROOT = Path("examples")
-DEFAULT_RESUME_EXAMPLE = "resumes/rafael_like_engineering_resume.txt"
+DEFAULT_RESUME_EXAMPLE = "resumes/engineering_student_resume.txt"
 DEFAULT_JOB_EXAMPLE = "jobs/junior_software_engineer.txt"
 
 
