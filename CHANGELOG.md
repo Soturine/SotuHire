@@ -6,20 +6,22 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ### Added
 
-- modos explícitos `PUBLIC_SCRAPING`, `MANUAL_URL` e `USER_ASSISTED_CAPTURE`;
+- modos explícitos `PUBLIC_SCRAPING`, `MANUAL_URL`, `USER_ASSISTED_CAPTURE` e `AUTHENTICATED_BROWSER`;
 - captura assistida da vaga ou publicação atualmente aberta pela pessoa usuária;
 - ações para salvar a vaga atual, analisar e enviar ao tracker;
 - roadmap dedicado para extensão de captura assistida;
+- crawling autorizado via sessão Chromium já autenticada, com presets para vagas e publicações do LinkedIn;
+- limites de itens, páginas/rolagens, intervalo e referência local de autorização;
 
 ### Changed
 
-- a aba de coleta distingue coleta pública automática, URL única e captura assistida;
+- a aba de coleta distingue coleta pública automática, URL única, captura assistida e navegador autenticado;
 - fontes configuradas persistem o modo de coleta;
 
 ### Security
 
 - captura assistida processa somente o conteúdo visível explicitamente fornecido;
-- cookies, tokens, navegação autenticada em massa e auto-apply não são usados;
+- login, CAPTCHA, checkpoints, auto-apply e envio automático não são automatizados;
 
 ## [0.7.0] - 2026-06-13
 

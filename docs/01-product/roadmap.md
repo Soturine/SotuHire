@@ -398,7 +398,8 @@ A v0.7.0 transforma a estratégia em coleta pública acionável:
 - torna Search Intelligence e Hidden Jobs Radar acionáveis;
 - corrige o roteamento da chave Gemini da sessão para a análise real.
 
-Coleta autenticada, bypass de bloqueios, auto-apply e envio automático permanecem fora do roadmap entregue.
+Coleta autenticada autorizada passa a integrar o escopo após a v0.7.0. Bypass de bloqueios,
+auto-apply e envio automático permanecem fora do roadmap entregue.
 
 # Ajuste de escopo: captura assistida
 
@@ -412,4 +413,5 @@ Próximo marco:
 - preview do conteúdo antes do envio;
 - permissões mínimas por página.
 
-Crawling massivo autenticado, leitura de cookies e auto-apply continuam fora desse marco.
+Crawling autenticado autorizado foi implementado como modo separado, conectado via CDP a uma
+sessão iniciada pela pessoa usuária. Auto-apply e bypass continuam fora desse marco.

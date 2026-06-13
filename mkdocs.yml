@@ -94,6 +94,7 @@ nav:
       - Portal connector roadmap: 05-data-sources/portal-connector-roadmap.md
       - Source connectors: 05-data-sources/source-connectors.md
       - Scraping strategy: 05-data-sources/scraping-strategy.md
+      - Authenticated browser crawling: 05-data-sources/authenticated-browser-crawling.md
       - Compliance and ethics: 05-data-sources/compliance-and-ethics.md
       - Hidden jobs radar: 05-data-sources/hidden-jobs-radar.md
       - Search intelligence: 05-data-sources/search-intelligence.md

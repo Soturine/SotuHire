@@ -37,17 +37,20 @@ Copie o exemplo de fontes antes de personalizar:
 cp config/sources.example.toml config/sources.toml
 ```
 
-Coleta autenticada, bypass de bloqueios, auto-apply e spam permanecem fora do produto.
+O produto também oferece crawling autenticado opt-in para fontes em que a pessoa usuária
+possui autorização documentada. Login automatizado, bypass de bloqueios, auto-apply e spam
+permanecem fora do produto.
 
 ### Modos de coleta
 
-O app distingue três modos:
+O app distingue quatro modos:
 
 - **PUBLIC_SCRAPING**: coleta automática de páginas públicas, RSS, boards e páginas de carreira com cache, rate limit, limites e `robots.txt`.
 - **MANUAL_URL**: coleta somente a URL específica colada pela pessoa usuária, sem seguir links em massa.
 - **USER_ASSISTED_CAPTURE**: a pessoa usuária abre uma vaga ou publicação, inclusive em uma sessão própria já autenticada, e envia somente o conteúdo visível da página atual para salvar, analisar ou registrar no tracker.
+- **AUTHENTICATED_BROWSER**: conecta via CDP a um Chromium já autenticado pela pessoa usuária e navega vagas ou publicações de uma fonte autorizada, com limites de itens, páginas/rolagens e intervalo.
 
-O modo assistido não lê cookies, não navega automaticamente pela conta, não burla CAPTCHA e não envia candidaturas.
+O modo autenticado abre abas próprias no contexto existente, não automatiza login, interrompe em checkpoint/CAPTCHA, exige confirmação e permite registrar a referência da autorização.
 
 ## Screenshots v0.7.0
 

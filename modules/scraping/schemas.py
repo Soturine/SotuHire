@@ -7,7 +7,12 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-CollectionMode = Literal["PUBLIC_SCRAPING", "MANUAL_URL", "USER_ASSISTED_CAPTURE"]
+CollectionMode = Literal[
+    "PUBLIC_SCRAPING",
+    "MANUAL_URL",
+    "USER_ASSISTED_CAPTURE",
+    "AUTHENTICATED_BROWSER",
+]
 
 
 class ScrapedOpportunity(BaseModel):
@@ -43,8 +48,12 @@ class ScrapingSource(BaseModel):
     url: str
     collection_mode: CollectionMode = "PUBLIC_SCRAPING"
     enabled: bool = False
-    max_items: int = Field(default=20, ge=1, le=200)
+    max_items: int = Field(default=20, ge=1, le=1000)
+    max_pages: int = Field(default=3, ge=1, le=50)
     delay_seconds: float = Field(default=2.0, ge=0.2, le=60)
+    browser_cdp_url: str = "http://127.0.0.1:9222"
+    authorized_use: bool = False
+    authorization_reference: str = ""
     selectors: dict[str, str] = Field(default_factory=dict)
     notes: str = ""
 
@@ -88,3 +97,4 @@ class CollectionResult(BaseModel):
     failures: list[str] = Field(default_factory=list)
     scraping_performed: bool = False
     user_assisted_capture: bool = False
+    authenticated_browser: bool = False

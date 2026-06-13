@@ -26,8 +26,13 @@ Cada coleta parte de uma ação explícita. O cliente usa user-agent identificá
 - `PUBLIC_SCRAPING`: cliente HTTP para páginas públicas e feeds;
 - `MANUAL_URL`: coleta uma única URL e não segue links em massa;
 - `USER_ASSISTED_CAPTURE`: processa somente o conteúdo visível da página atual fornecido pela pessoa usuária.
+- `AUTHENTICATED_BROWSER`: navega uma fonte autorizada usando um Chromium já autenticado e conectado via CDP.
 
 Uma captura assistida pode vir de uma página aberta em uma sessão própria já autenticada. Nesse modo, o SotuHire não faz requisição à plataforma, não lê cookies e não percorre outras páginas.
+
+No modo autenticado, o Playwright conecta ao contexto existente sem receber senha ou automatizar
+login. O crawler abre abas próprias, coleta cards ou links, percorre páginas/rolagens até os limites
+configurados, normaliza os resultados e fecha somente as abas que criou.
 
 ## Contratos
 
@@ -41,4 +46,4 @@ Respostas públicas ficam em `data/scraping-cache` por seis horas. Uma fonte com
 
 ## Limites
 
-A pipeline não autentica em plataformas, não contorna captcha ou bloqueios e não envia candidaturas. Páginas autenticadas abertas pela pessoa usuária podem ser processadas somente via captura assistida da página atual. Fontes públicas compatíveis podem ser adicionadas pelo registry ou por `config/sources.toml`.
+A pipeline não automatiza login, não contorna CAPTCHA/checkpoints e não envia candidaturas. A coleta autenticada exige confirmação, permite registrar a referência de autorização e aplica limites de itens, páginas/rolagens e intervalo. Fontes públicas ou autenticadas autorizadas podem ser adicionadas pelo registry ou por `config/sources.toml`.

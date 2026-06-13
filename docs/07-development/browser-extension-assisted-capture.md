@@ -25,11 +25,13 @@ pessoa abre página
 
 ## Limites técnicos
 
-A extensão não envia cookies, senhas ou tokens ao SotuHire. Ela não percorre automaticamente listas autenticadas, não abre vagas em massa, não burla CAPTCHA e não clica em botões nativos de candidatura.
+A extensão não envia cookies, senhas ou tokens ao SotuHire. Ela não percorre automaticamente listas autenticadas, não burla CAPTCHA e não clica em botões nativos de candidatura.
 
 Esses limites preservam controle humano e permitem processar conteúdo que a própria pessoa decidiu abrir e compartilhar.
 
-Se uma plataforma conceder autorização formal para crawling ou oferecer uma API oficial adequada, um conector separado pode ser criado com os limites específicos dessa autorização. A captura assistida não deve ser convertida silenciosamente em crawler autenticado.
+Para crawling previamente autorizado, o app usa um conector separado:
+[Authenticated Browser Crawling](../05-data-sources/authenticated-browser-crawling.md). A captura
+assistida não é convertida silenciosamente em crawler autenticado.
 
 ## Contrato sugerido
 

@@ -31,7 +31,10 @@ def inspect_source_safety(url: str) -> SourceSafety:
     allowed = parsed.scheme in {"http", "https"} and bool(domain) and not authentication_required
     warning = ""
     if authentication_required:
-        warning = "A URL parece exigir autenticação. Coleta autenticada não é permitida."
+        warning = (
+            "A URL parece exigir autenticação. A coleta pública não é permitida; "
+            "use o modo Navegador autenticado autorizado quando aplicável."
+        )
     elif domain.endswith("linkedin.com") or domain.endswith("www.linkedin.com"):
         warning = "URL pública do LinkedIn: a coleta só continuará se robots.txt permitir."
     elif not allowed:

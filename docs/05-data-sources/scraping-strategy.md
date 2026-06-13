@@ -351,8 +351,13 @@ A pessoa usuária abre manualmente uma vaga ou publicação no navegador e envia
 
 Esse modo oferece ações explícitas para salvar a vaga atual, analisá-la e enviá-la ao tracker. Ele não percorre feeds autenticados, não burla CAPTCHA e não envia candidatura.
 
-## Plataformas com autorização específica
+### AUTHENTICATED_BROWSER
 
-O fato de uma sessão pertencer à pessoa usuária não significa, por si só, que crawling automatizado é autorizado pela plataforma. Quando uma fonte exige autorização formal, o SotuHire só deve criar um conector autenticado depois de obter essa permissão ou usar uma API oficial.
+Para fontes autorizadas, conecta via CDP a um Chromium já autenticado pela pessoa usuária. O modo
+navega automaticamente por listas de vagas ou publicações, abre detalhes, rola páginas dinâmicas e
+normaliza oportunidades até os limites configurados.
 
-No caso do LinkedIn, os [Crawling Terms](https://www.linkedin.com/legal/crawling-terms) exigem permissão expressa para crawling automatizado. Sem essa autorização, o modo indicado é `USER_ASSISTED_CAPTURE` para a página atual.
+Cada execução exige confirmação de uso autorizado e pode registrar uma referência local da autorização. O
+crawler não automatiza login, interrompe em CAPTCHA/checkpoint, não tenta ocultar a automação e
+não executa candidatura. Consulte o guia
+[Authenticated Browser Crawling](authenticated-browser-crawling.md).

@@ -14,10 +14,20 @@ def test_collection_modes_are_explicit():
         collection_mode="MANUAL_URL",
         max_items=1,
     )
+    authenticated = ScrapingSource(
+        name="Authorized",
+        type="authenticated_browser",
+        url="https://platform.example/jobs",
+        collection_mode="AUTHENTICATED_BROWSER",
+        authorized_use=True,
+        authorization_reference="Owner approval",
+    )
 
     assert public.collection_mode == "PUBLIC_SCRAPING"
     assert manual.collection_mode == "MANUAL_URL"
     assert manual.max_items == 1
+    assert authenticated.collection_mode == "AUTHENTICATED_BROWSER"
+    assert authenticated.authorized_use
 
 
 def test_user_assisted_capture_processes_only_supplied_current_page(tmp_path: Path):

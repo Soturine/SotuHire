@@ -384,6 +384,16 @@ Além do tipo de conector, cada fonte declara um modo:
 PUBLIC_SCRAPING
 MANUAL_URL
 USER_ASSISTED_CAPTURE
+AUTHENTICATED_BROWSER
 ```
 
 `USER_ASSISTED_CAPTURE` não é um crawler HTTP. Ele recebe somente a vaga ou publicação atual que a pessoa usuária decidiu enviar a partir do navegador, mesmo quando essa página está dentro de uma sessão própria autenticada.
+
+`AUTHENTICATED_BROWSER` usa `AuthenticatedBrowserConnector` e conecta via CDP a um Chromium
+iniciado e autenticado pela pessoa usuária. O conector possui presets para listas de vagas e
+publicações do LinkedIn, aceita seletores customizados para outras fontes autorizadas e registra a
+referência de autorização em `ScrapingSource.authorization_reference`.
+
+O transporte real fica em `PlaywrightAuthenticatedCrawler`, atrás do protocolo
+`AuthenticatedCrawler`. Assim, normalização, deduplicação e erros podem ser testados sem iniciar
+um navegador real.

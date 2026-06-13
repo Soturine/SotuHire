@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from modules.opportunities.opportunity_store import OpportunityStore
+from modules.scraping.connectors.authenticated_browser import AuthenticatedBrowserConnector
 from modules.scraping.connectors.configured_source import ConfiguredSourceConnector
 from modules.scraping.connectors.manual_url import opportunity_from_text
 from modules.scraping.schemas import CollectionResult, ScrapingSource
@@ -23,6 +24,26 @@ def collect_public_source(
             update={
                 "new_count": summary.new_count,
                 "duplicate_count": summary.duplicate_count,
+                "updated_count": summary.updated_count,
+            }
+        )
+    return result
+
+
+def collect_authenticated_source(
+    source: ScrapingSource,
+    *,
+    store: OpportunityStore | None = None,
+    persist: bool = True,
+) -> CollectionResult:
+    """Collect an authorized source through a user-authenticated browser session."""
+    result = AuthenticatedBrowserConnector().collect(source)
+    if result.opportunities and persist:
+        summary = (store or OpportunityStore()).save_many(result.opportunities)
+        result = result.model_copy(
+            update={
+                "new_count": summary.new_count,
+                "duplicate_count": result.duplicate_count + summary.duplicate_count,
                 "updated_count": summary.updated_count,
             }
         )

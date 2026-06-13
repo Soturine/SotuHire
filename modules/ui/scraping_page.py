@@ -8,7 +8,11 @@ import streamlit as st
 
 from modules.opportunities import OpportunityStore, filter_opportunities, opportunity_to_job_posting
 from modules.scraping import ScrapingSource, inspect_source_safety
-from modules.scraping.collection import capture_user_assisted_opportunity, collect_public_source
+from modules.scraping.collection import (
+    capture_user_assisted_opportunity,
+    collect_authenticated_source,
+    collect_public_source,
+)
 from modules.scraping.connectors.configured_source import load_configured_sources
 from modules.scraping.schemas import CollectionMode, ScrapedOpportunity
 from modules.tracker.job_tracker import JobTracker
@@ -24,6 +28,7 @@ COLLECTION_MODES: dict[str, CollectionMode] = {
     "Coleta pública automática": "PUBLIC_SCRAPING",
     "Coleta por URL": "MANUAL_URL",
     "Captura assistida pelo usuário": "USER_ASSISTED_CAPTURE",
+    "Navegador autenticado autorizado": "AUTHENTICATED_BROWSER",
 }
 OPPORTUNITY_STORE = OpportunityStore()
 TRACKER = JobTracker()
@@ -35,6 +40,8 @@ def save_source(source: ScrapingSource, path: str | Path = "config/sources.toml"
     target.parent.mkdir(parents=True, exist_ok=True)
     escaped_name = source.name.replace('"', '\\"')
     escaped_url = source.url.replace('"', '\\"')
+    escaped_cdp_url = source.browser_cdp_url.replace('"', '\\"')
+    escaped_authorization = source.authorization_reference.replace('"', '\\"')
     block = "\n".join(
         [
             "[[sources]]",
@@ -44,7 +51,11 @@ def save_source(source: ScrapingSource, path: str | Path = "config/sources.toml"
             f'collection_mode = "{source.collection_mode}"',
             f"enabled = {str(source.enabled).lower()}",
             f"max_items = {source.max_items}",
+            f"max_pages = {source.max_pages}",
             f"delay_seconds = {source.delay_seconds}",
+            f'browser_cdp_url = "{escaped_cdp_url}"',
+            f"authorized_use = {str(source.authorized_use).lower()}",
+            f'authorization_reference = "{escaped_authorization}"',
             "",
         ]
     )
@@ -179,6 +190,126 @@ def render_user_assisted_capture(provider_name: str) -> None:
         st.success("Vaga atual analisada e enviada para o tracker.")
 
 
+def authenticated_source_from_controls() -> ScrapingSource:
+    """Build an authorized browser source from current Streamlit state."""
+    url = str(st.session_state.get("authenticated_start_url", "")).strip()
+    return ScrapingSource(
+        name=str(st.session_state.get("authenticated_source_name", "")).strip()
+        or "Navegador autenticado",
+        type="authenticated_browser",
+        url=url,
+        collection_mode="AUTHENTICATED_BROWSER",
+        enabled=True,
+        max_items=int(st.session_state.get("authenticated_max_items", 50)),
+        max_pages=int(st.session_state.get("authenticated_max_pages", 5)),
+        delay_seconds=float(st.session_state.get("authenticated_delay", 2.0)),
+        browser_cdp_url=str(
+            st.session_state.get("authenticated_cdp_url", "http://127.0.0.1:9222")
+        ).strip(),
+        authorized_use=bool(st.session_state.get("authenticated_authorized_use", False)),
+        authorization_reference=str(
+            st.session_state.get("authenticated_authorization_reference", "")
+        ).strip(),
+    )
+
+
+def render_authenticated_browser_collection() -> None:
+    """Render authorized crawling controls for a previously authenticated browser."""
+    st.info(
+        "Conecta a um Chromium iniciado pelo usuário via CDP e usa a sessão já autenticada. "
+        "O SotuHire abre abas próprias, navega vagas ou publicações e não automatiza o login."
+    )
+    identity = st.columns(2)
+    identity[0].text_input("Nome da fonte", key="authenticated_source_name")
+    identity[1].text_input(
+        "Endpoint CDP do navegador",
+        value="http://127.0.0.1:9222",
+        key="authenticated_cdp_url",
+    )
+    st.text_input(
+        "URL inicial autenticada",
+        placeholder="https://www.linkedin.com/jobs/search/?keywords=python",
+        key="authenticated_start_url",
+    )
+    limits = st.columns(3)
+    limits[0].number_input("Limite de itens", 1, 1000, 50, key="authenticated_max_items")
+    limits[1].number_input("Páginas/rolagens", 1, 50, 5, key="authenticated_max_pages")
+    limits[2].number_input("Intervalo de navegação", 0.2, 60.0, 2.0, key="authenticated_delay")
+    st.text_input(
+        "Referência da autorização",
+        placeholder="Responsável, documento ou finalidade autorizada",
+        key="authenticated_authorization_reference",
+    )
+    st.checkbox(
+        "Confirmo que esta conta e esta coleta estão autorizadas para uso automatizado.",
+        key="authenticated_authorized_use",
+    )
+    source = authenticated_source_from_controls()
+    ready = bool(source.url and source.browser_cdp_url and source.authorized_use)
+    actions = st.columns(2)
+    if actions[0].button(
+        "Coletar no navegador autenticado",
+        type="primary",
+        use_container_width=True,
+        disabled=not ready,
+    ):
+        with st.spinner("Navegando na sessão autenticada..."):
+            st.session_state.collection_result = collect_authenticated_source(source)
+    if actions[1].button(
+        "Salvar fonte autenticada",
+        use_container_width=True,
+        disabled=not ready,
+    ):
+        st.success(f"Fonte salva localmente em {save_source(source)}.")
+
+
+def render_collection_results(provider_name: str) -> None:
+    """Render the latest collection summary and locally stored opportunities."""
+    result = st.session_state.get("collection_result")
+    if result:
+        summary = st.columns(4)
+        summary[0].metric("Vagas novas", result.new_count)
+        summary[1].metric("Duplicadas ignoradas", result.duplicate_count)
+        summary[2].metric("Atualizadas", result.updated_count)
+        summary[3].metric("Falhas", len(result.failures))
+        for failure in result.failures:
+            st.error(failure)
+
+    opportunities = OPPORTUNITY_STORE.list()
+    st.markdown("### Oportunidades coletadas")
+    if not opportunities:
+        st.info("Nenhuma coleta executada ainda. Escolha uma fonte para iniciar.")
+        return
+    filters = st.columns(2)
+    query = filters[0].text_input("Filtrar oportunidades", key="opportunity_query")
+    sources = sorted({item.source for item in opportunities})
+    source_filter = filters[1].selectbox("Fonte", ["", *sources], key="opportunity_source_filter")
+    filtered = filter_opportunities(opportunities, query=query, source=source_filter)
+    for opportunity in filtered:
+        index = opportunities.index(opportunity)
+        with st.container(border=True):
+            st.markdown(
+                f"**{opportunity.title}** · {opportunity.company or 'Empresa não informada'}"
+            )
+            st.caption(f"{opportunity.source} · {opportunity.location or 'Local não informado'}")
+            st.write(opportunity.description[:500])
+            item_actions = st.columns(4)
+            if item_actions[0].button("Analisar esta vaga", key=f"analyze_{index}"):
+                use_opportunity_for_analysis(index, provider_name)
+                st.success("Vaga carregada e análise preparada.")
+            item_actions[1].link_button("Abrir fonte", opportunity.source_url)
+            if item_actions[2].button("Comparar com currículo", key=f"compare_{index}"):
+                use_opportunity_for_analysis(index, provider_name)
+                st.success("Comparação concluída.")
+            if item_actions[3].button(
+                "Salvar no tracker",
+                key=f"save_collected_{index}",
+                disabled=st.session_state.get("analysis_result") is None,
+            ):
+                save_opportunity_to_tracker(opportunity, provider_name)
+                st.success("Oportunidade salva no tracker.")
+
+
 def render_scraping_page(provider_name: str) -> None:
     """Render collection controls and locally stored opportunities."""
     st.markdown("### Coletar ou capturar oportunidade")
@@ -192,6 +323,10 @@ def render_scraping_page(provider_name: str) -> None:
     mode = COLLECTION_MODES[st.session_state.collection_mode_label]
     if mode == "USER_ASSISTED_CAPTURE":
         render_user_assisted_capture(provider_name)
+        return
+    if mode == "AUTHENTICATED_BROWSER":
+        render_authenticated_browser_collection()
+        render_collection_results(provider_name)
         return
     if mode == "MANUAL_URL":
         st.info("Cole uma URL específica. O sistema coleta somente essa página e não segue links.")
@@ -260,46 +395,4 @@ def render_scraping_page(provider_name: str) -> None:
     if actions[3].button("Salvar fonte", use_container_width=True, disabled=not safety.allowed):
         st.success(f"Fonte salva localmente em {save_source(source)}.")
 
-    result = st.session_state.get("collection_result")
-    if result:
-        summary = st.columns(4)
-        summary[0].metric("Vagas novas", result.new_count)
-        summary[1].metric("Duplicadas ignoradas", result.duplicate_count)
-        summary[2].metric("Atualizadas", result.updated_count)
-        summary[3].metric("Falhas", len(result.failures))
-        for failure in result.failures:
-            st.error(failure)
-
-    opportunities = OPPORTUNITY_STORE.list()
-    st.markdown("### Oportunidades coletadas")
-    if not opportunities:
-        st.info("Nenhuma coleta executada ainda. Escolha uma fonte pública para iniciar.")
-        return
-    filters = st.columns(2)
-    query = filters[0].text_input("Filtrar oportunidades", key="opportunity_query")
-    sources = sorted({item.source for item in opportunities})
-    source_filter = filters[1].selectbox("Fonte", ["", *sources], key="opportunity_source_filter")
-    filtered = filter_opportunities(opportunities, query=query, source=source_filter)
-    for opportunity in filtered:
-        index = opportunities.index(opportunity)
-        with st.container(border=True):
-            st.markdown(
-                f"**{opportunity.title}** · {opportunity.company or 'Empresa não informada'}"
-            )
-            st.caption(f"{opportunity.source} · {opportunity.location or 'Local não informado'}")
-            st.write(opportunity.description[:500])
-            item_actions = st.columns(4)
-            if item_actions[0].button("Analisar esta vaga", key=f"analyze_{index}"):
-                use_opportunity_for_analysis(index, provider_name)
-                st.success("Vaga carregada e análise preparada.")
-            item_actions[1].link_button("Abrir fonte", opportunity.source_url)
-            if item_actions[2].button("Comparar com currículo", key=f"compare_{index}"):
-                use_opportunity_for_analysis(index, provider_name)
-                st.success("Comparação concluída.")
-            if item_actions[3].button(
-                "Salvar no tracker",
-                key=f"save_collected_{index}",
-                disabled=st.session_state.get("analysis_result") is None,
-            ):
-                save_opportunity_to_tracker(opportunity, provider_name)
-                st.success("Oportunidade salva no tracker.")
+    render_collection_results(provider_name)

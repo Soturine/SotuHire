@@ -24,3 +24,16 @@ collection_mode = "PUBLIC_SCRAPING"
 enabled = false
 max_items = 20
 delay_seconds = 2.0
+
+[[sources]]
+name = "LinkedIn Authorized Jobs"
+type = "authenticated_browser"
+url = "https://www.linkedin.com/jobs/search/?keywords=python"
+collection_mode = "AUTHENTICATED_BROWSER"
+enabled = false
+max_items = 50
+max_pages = 5
+delay_seconds = 2.0
+browser_cdp_url = "http://127.0.0.1:9222"
+authorized_use = false
+authorization_reference = ""
