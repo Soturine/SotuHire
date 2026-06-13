@@ -6,6 +6,7 @@ import logging
 from collections.abc import Callable
 from urllib.request import Request, urlopen
 
+from modules.scraping.cache import ScrapingCache
 from modules.scraping.rate_limit import DomainRateLimiter
 from modules.scraping.robots import inspect_source_safety, robots_allows
 from modules.scraping.schemas import FetchResult
@@ -26,6 +27,7 @@ class ScrapingClient:
         rate_limiter: DomainRateLimiter | None = None,
         robot_checker: Callable[[str, str], bool] = robots_allows,
         transport: Callable[[str, dict[str, str], float, int], FetchResult] | None = None,
+        cache: ScrapingCache | None = None,
     ) -> None:
         self.user_agent = user_agent
         self.timeout_seconds = timeout_seconds
@@ -33,22 +35,27 @@ class ScrapingClient:
         self.rate_limiter = rate_limiter or DomainRateLimiter()
         self.robot_checker = robot_checker
         self.transport = transport or self._urllib_transport
+        self.cache = cache or ScrapingCache()
 
     def fetch(self, url: str, *, delay_seconds: float = 2.0) -> FetchResult:
         """Fetch one public URL or raise a clear safety error."""
         safety = inspect_source_safety(url)
         if not safety.allowed:
             raise ValueError(safety.warning)
+        cached = self.cache.get(url)
+        if cached:
+            return cached
         if not self.robot_checker(url, self.user_agent):
             raise PermissionError("robots.txt não permite coleta desta URL.")
         self.rate_limiter.wait(url, delay_seconds)
         LOGGER.info("Collecting public URL domain=%s type=%s", safety.domain, safety.detected_type)
-        return self.transport(
+        result = self.transport(
             url,
             {"User-Agent": self.user_agent, "Accept": "text/html, application/xml, text/xml"},
             self.timeout_seconds,
             self.max_bytes,
         )
+        return self.cache.set(result)
 
     @staticmethod
     def _urllib_transport(
