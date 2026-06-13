@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib
 import io
 import re
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path
 
 from modules.core.text_utils import extract_keywords, normalize_text
@@ -22,6 +24,24 @@ URL_PATTERN = re.compile(
 CITY_PATTERN = re.compile(
     r"\b([A-ZÀ-Ý][A-Za-zÀ-ÿ' -]{2,30})\s*[,/-]\s*([A-Z]{2})\b",
 )
+PERIOD_PATTERN = re.compile(
+    r"\b(?:jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[a-zç]*/?\s*\d{2,4}"
+    r"|\b(?:19|20)\d{2}\s*(?:-|–|—|a|até)\s*(?:(?:19|20)\d{2}|atual|presente)"
+    r"|\b(?:19|20)\d{2}\b",
+    flags=re.IGNORECASE,
+)
+LIST_SEPARATOR_PATTERN = re.compile(r"\s*(?:,|;|/|\||•|·)\s*")
+
+
+@dataclass
+class ResumeSection:
+    """A heading and all resume lines that belong to it."""
+
+    name: str
+    title: str
+    lines: list[str]
+
+
 SECTION_ALIASES = {
     "summary": {
         "objetivo",
@@ -40,11 +60,16 @@ SECTION_ALIASES = {
         "formacao",
         "formacao academica",
         "formacao profissional",
+        "formacao e cursos",
+        "formacao academica e cursos",
     },
     "experiences": {
+        "atuacao profissional",
         "employment",
         "experiencia",
         "experiencia profissional",
+        "experiencia profissional e tecnica",
+        "experiencia tecnica",
         "experiencias",
         "experiencias profissionais",
         "historico profissional",
@@ -54,18 +79,23 @@ SECTION_ALIASES = {
         "portfolio",
         "projetos",
         "projetos academicos",
+        "projetos destacados",
         "projetos pessoais",
         "projetos profissionais",
+        "projetos relevantes",
+        "projetos selecionados",
         "projects",
     },
     "courses": {"cursos", "cursos complementares", "cursos livres"},
     "certifications": {"certificacoes", "certificados", "certifications"},
     "skills": {
         "competencias",
+        "competencias tecnicas",
         "habilidades",
         "skills",
         "skills tecnicas",
         "stack",
+        "stack tecnica",
         "tecnologias",
     },
     "soft_skills": {"competencias comportamentais", "soft skills", "softskills"},
@@ -79,17 +109,20 @@ ROLE_TERMS = {
     "bolsista",
     "developer",
     "desenvolvedor",
+    "eletricista",
     "engenheiro",
     "estagio",
     "estagiario",
     "freelancer",
     "monitor",
     "suporte",
+    "tecnico",
 }
 PROJECT_TERMS = {
     "aplicacao",
     "app",
     "dashboard",
+    "plataforma",
     "projeto academico",
     "projeto pessoal",
     "projeto profissional",
@@ -105,11 +138,14 @@ EDUCATION_TERMS = {
     "tecnico em",
     "universidade",
 }
+COURSE_TERMS = {"certificacao", "certificado", "curso", "formacao complementar", "treinamento"}
 SOFT_SKILL_CATALOG = [
     "Adaptabilidade",
     "Aprendizado contínuo",
+    "Aprendizado rápido",
     "Autonomia",
     "Comunicação",
+    "Comunicação técnica",
     "Criatividade",
     "Liderança",
     "Melhoria contínua",
@@ -133,35 +169,38 @@ def _unique(items: list[str]) -> list[str]:
     return output
 
 
-def _section_marker(line: str) -> tuple[str | None, str]:
-    """Return a section name and optional content after an inline heading."""
+def _section_marker(line: str) -> tuple[str | None, str, str]:
+    """Return section name, original heading, and optional inline content."""
     stripped = line.strip(" \t#-*•")
     normalized = normalize_text(stripped.rstrip(":"))
     for section, aliases in SECTION_ALIASES.items():
         if normalized in aliases:
-            return section, ""
+            return section, stripped.rstrip(":"), ""
         for alias in aliases:
             match = re.match(rf"^{re.escape(alias)}\s*[:|-]\s*(.+)$", normalized)
             if match:
                 separator = re.search(r"[:|-]", stripped)
                 trailing = stripped[separator.end() :].strip() if separator else ""
-                return section, trailing
-    return None, ""
+                title = stripped[: separator.start()].strip() if separator else alias
+                return section, title, trailing
+    return None, "", ""
 
 
-def _split_sections(lines: list[str]) -> dict[str, list[str]]:
-    sections: dict[str, list[str]] = {"header": []}
-    sections.update({key: [] for key in SECTION_ALIASES})
-    current = "header"
+def _split_sections(lines: list[str]) -> list[ResumeSection]:
+    sections = [ResumeSection(name="header", title="", lines=[])]
     for line in lines:
-        detected, trailing = _section_marker(line)
+        detected, title, trailing = _section_marker(line)
         if detected:
-            current = detected
+            sections.append(ResumeSection(name=detected, title=title, lines=[]))
             if trailing:
-                sections[current].append(trailing)
+                sections[-1].lines.append(trailing)
             continue
-        sections[current].append(line)
+        sections[-1].lines.append(line)
     return sections
+
+
+def _section_lines(sections: list[ResumeSection], name: str) -> list[str]:
+    return [line for section in sections if section.name == name for line in section.lines]
 
 
 def _detect_name(lines: list[str]) -> str:
@@ -209,17 +248,33 @@ def _detect_city(text: str) -> str:
     return f"{match.group(1).strip()}/{match.group(2)}" if match else ""
 
 
-def _short_summary(lines: list[str]) -> str:
-    """Keep only a few meaningful summary lines, never the whole resume."""
-    cleaned = [
-        line
+def _meaningful_lines(lines: list[str]) -> list[str]:
+    return [
+        line.strip(" \t-*•")
         for line in lines
-        if not EMAIL_PATTERN.search(line)
+        if line.strip(" \t-*•")
+        and not EMAIL_PATTERN.search(line)
         and not PHONE_PATTERN.search(line)
         and not URL_PATTERN.search(line)
-        and len(line) >= 20
-    ][:3]
-    return " ".join(cleaned)[:600].strip()
+    ]
+
+
+def _short_summary(
+    summary_lines: list[str],
+    education: list[str],
+    skills: list[str],
+) -> str:
+    """Return at most three explicit summary lines or a conservative local synthesis."""
+    explicit = _meaningful_lines(summary_lines)[:3]
+    if explicit:
+        return " ".join(explicit)[:600].strip()
+
+    parts: list[str] = []
+    if education:
+        parts.append(education[0].splitlines()[0])
+    if skills:
+        parts.append(f"Competências principais: {', '.join(skills[:6])}.")
+    return " ".join(parts)[:400].strip()
 
 
 def _infer_lines(lines: list[str], terms: set[str]) -> list[str]:
@@ -228,6 +283,98 @@ def _infer_lines(lines: list[str], terms: set[str]) -> list[str]:
         for line in lines
         if any(term in normalize_text(line) for term in terms) and len(line.split()) >= 2
     ]
+
+
+def _join_block(lines: list[str]) -> str:
+    return "\n".join(_meaningful_lines(lines)).strip()
+
+
+def _group_blocks(lines: list[str], starts_block: Callable[[str], bool]) -> list[str]:
+    """Group heading content, only splitting when a credible new item starts."""
+    cleaned = _meaningful_lines(lines)
+    if not cleaned:
+        return []
+
+    blocks: list[list[str]] = []
+    current: list[str] = []
+    for line in cleaned:
+        if current and starts_block(line):
+            blocks.append(current)
+            current = []
+        current.append(line)
+    if current:
+        blocks.append(current)
+    return _unique([_join_block(block) for block in blocks])
+
+
+def _starts_experience(line: str) -> bool:
+    normalized = normalize_text(line)
+    has_role = any(re.search(rf"\b{re.escape(term)}\b", normalized) for term in ROLE_TERMS)
+    has_period = bool(PERIOD_PATTERN.search(normalized))
+    has_header_separator = bool(re.search(r"\s[-–—|]\s", line))
+    return has_period and (has_role or has_header_separator)
+
+
+def _starts_project(line: str) -> bool:
+    normalized = normalize_text(line)
+    prefix = line.split(":", 1)[0].strip()
+    named_project = ":" in line and 1 <= len(prefix.split()) <= 8
+    explicit_project = any(term in normalized for term in PROJECT_TERMS)
+    return named_project or (explicit_project and len(line.split()) <= 18)
+
+
+def _starts_education(line: str) -> bool:
+    normalized = normalize_text(line)
+    return any(term in normalized for term in EDUCATION_TERMS)
+
+
+def _starts_course(line: str) -> bool:
+    normalized = normalize_text(line)
+    return any(term in normalized for term in COURSE_TERMS)
+
+
+def _split_list_items(lines: list[str], *, split_and: bool = False) -> list[str]:
+    items: list[str] = []
+    for line in _meaningful_lines(lines):
+        fragments = LIST_SEPARATOR_PATTERN.split(line)
+        if split_and:
+            fragments = [
+                part
+                for fragment in fragments
+                for part in re.split(r"\s+(?:e|and)\s+", fragment, flags=re.IGNORECASE)
+            ]
+        items.extend(fragment.strip(" .:-") for fragment in fragments)
+    return _unique(items)
+
+
+def _technical_skill_chips(lines: list[str], clean_text: str) -> list[str]:
+    chips = []
+    for item in _split_list_items(lines):
+        if len(item.split()) <= 5 and len(item) <= 50:
+            chips.append(item)
+        else:
+            chips.extend(_detect_skills(item, SKILL_CATALOG))
+    return _unique([*chips, *_detect_skills(clean_text, SKILL_CATALOG)])
+
+
+def _combined_education_and_courses(
+    sections: list[ResumeSection],
+) -> tuple[list[str], list[str]]:
+    education_lines = _section_lines(sections, "education")
+    education = _group_blocks(
+        [line for line in education_lines if not _starts_course(line) or _starts_education(line)],
+        _starts_education,
+    )
+    courses = _group_blocks(
+        [
+            line
+            for line in education_lines
+            if _starts_course(line) and not _starts_education(line)
+        ],
+        _starts_course,
+    )
+    courses.extend(_group_blocks(_section_lines(sections, "courses"), _starts_course))
+    return _unique(education), _unique(courses)
 
 
 def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSchema:
@@ -239,9 +386,26 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
     lines = [line.strip() for line in clean_text.splitlines() if line.strip()]
     sections = _split_sections(lines)
     links = _detect_links(clean_text)
-    experiences = _unique(sections["experiences"] or _infer_lines(lines, ROLE_TERMS))
-    projects = _unique(sections["projects"] or _infer_lines(lines, PROJECT_TERMS))
-    education = _unique(sections["education"] or _infer_lines(lines, EDUCATION_TERMS))
+    experience_lines = _section_lines(sections, "experiences")
+    project_lines = _section_lines(sections, "projects")
+    education, courses = _combined_education_and_courses(sections)
+
+    experiences = _group_blocks(experience_lines, _starts_experience)
+    projects = _group_blocks(project_lines, _starts_project)
+    if not experiences:
+        experiences = _unique(_infer_lines(lines, ROLE_TERMS))
+    if not projects:
+        projects = _unique(_infer_lines(lines, PROJECT_TERMS))
+    if not education:
+        education = _unique(_infer_lines(lines, EDUCATION_TERMS))
+
+    skills = _technical_skill_chips(_section_lines(sections, "skills"), clean_text)
+    soft_skills = _unique(
+        [
+            *_split_list_items(_section_lines(sections, "soft_skills"), split_and=True),
+            *_detect_skills(clean_text, SOFT_SKILL_CATALOG),
+        ]
+    )
 
     return ResumeProfileSchema(
         name=_detect_name(lines),
@@ -261,17 +425,22 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
             ),
             "",
         ),
-        summary=_short_summary(sections["summary"]),
+        summary=_short_summary(_section_lines(sections, "summary"), education, skills),
         education=education,
         experiences=experiences,
         projects=projects,
-        courses=_unique(sections["courses"]),
-        certifications=_unique(sections["certifications"]),
-        skills=_detect_skills(clean_text, SKILL_CATALOG),
-        soft_skills=_unique(
-            [*sections["soft_skills"], *_detect_skills(clean_text, SOFT_SKILL_CATALOG)]
+        courses=courses,
+        certifications=_group_blocks(
+            _section_lines(sections, "certifications"), _starts_course
         ),
-        languages=_unique([*sections["languages"], *_detect_skills(clean_text, LANGUAGE_CATALOG)]),
+        skills=skills,
+        soft_skills=soft_skills,
+        languages=_unique(
+            [
+                *_split_list_items(_section_lines(sections, "languages")),
+                *_detect_skills(clean_text, LANGUAGE_CATALOG),
+            ]
+        ),
         links=links,
         keywords=extract_keywords(clean_text, limit=40),
         raw_text=clean_text,
@@ -283,7 +452,7 @@ def _extract_pdf_text(content: bytes) -> str:
     try:
         fitz = importlib.import_module("fitz")
     except ImportError as exc:
-        raise RuntimeError("Instale pymupdf para ler curriculos PDF.") from exc
+        raise RuntimeError("Instale pymupdf para ler currículos PDF.") from exc
 
     with fitz.open(stream=content, filetype="pdf") as document:
         return "\n".join(page.get_text() for page in document)
@@ -293,7 +462,7 @@ def _extract_docx_text(content: bytes) -> str:
     try:
         document_module = importlib.import_module("docx")
     except ImportError as exc:
-        raise RuntimeError("Instale python-docx para ler curriculos DOCX.") from exc
+        raise RuntimeError("Instale python-docx para ler currículos DOCX.") from exc
 
     document = document_module.Document(io.BytesIO(content))
     return "\n".join(paragraph.text for paragraph in document.paragraphs)
@@ -309,5 +478,5 @@ def parse_resume_file(filename: str, content: bytes) -> ResumeProfileSchema:
     elif suffix == ".docx":
         text = _extract_docx_text(content)
     else:
-        raise ValueError("Formato nao suportado. Use TXT, PDF ou DOCX.")
+        raise ValueError("Formato não suportado. Use TXT, PDF ou DOCX.")
     return parse_resume_text(text, source_type=suffix.lstrip("."))
