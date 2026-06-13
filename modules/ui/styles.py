@@ -29,7 +29,7 @@ def inject_styles() -> None:
             var(--bg);
           color: var(--text);
         }
-        .block-container { max-width: 1380px; padding-top: 1.25rem; padding-bottom: 2rem; }
+        .block-container { max-width: 1380px; padding-top: .75rem; padding-bottom: 1.5rem; }
         [data-testid="stHeader"] { background: rgba(7, 17, 31, .92); }
         [data-testid="stSidebar"] {
           background: #0a1423;
@@ -117,12 +117,12 @@ def inject_styles() -> None:
           align-items: center;
           justify-content: space-between;
           gap: 1rem;
-          padding: .8rem 0 1.35rem;
+          padding: .35rem 0 .8rem;
           border-bottom: 1px solid var(--border);
           margin-bottom: 1rem;
         }
-        .product-header h1 { margin: 0; font-size: 2.2rem; letter-spacing: -.055em; }
-        .product-header p { margin: .3rem 0 .7rem; color: var(--muted); font-size: 1rem; }
+        .product-header h1 { margin: 0; font-size: 1.85rem; letter-spacing: -.055em; }
+        .product-header p { margin: .2rem 0 .45rem; color: var(--muted); font-size: .92rem; }
         .product-badges { display: flex; flex-wrap: wrap; gap: .35rem; }
         .product-badge {
           border: 1px solid #334965;
@@ -175,6 +175,7 @@ def inject_styles() -> None:
           box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
         }
         .data-card strong { color: var(--text); }
+        .data-card strong { overflow-wrap: anywhere; }
         .data-card small { color: var(--muted); display: block; margin-bottom: .25rem; }
         .score-note { color: var(--muted); font-size: .82rem; margin-top: -.55rem; }
         hr { border-color: var(--border) !important; }

@@ -22,6 +22,7 @@ from modules.search_intelligence import SearchStrategyInput, build_search_intell
 from modules.tracker.dashboard import calculate_dashboard_metrics, filter_dashboard_records
 from modules.tracker.job_tracker import JobTracker
 from modules.tracker.status import JobStatus
+from modules.ui.advanced_mode import ADVANCED_TABS
 from modules.ui.components import (
     block_items,
     csv_items,
@@ -51,6 +52,7 @@ from modules.ui.layout import (
     run_demo,
     should_run_quick_analysis,
 )
+from modules.ui.quick_mode import QUICK_INPUT_HEIGHT, compact_status
 from modules.ui.styles import inject_styles
 
 TRACKER = JobTracker()
@@ -155,7 +157,7 @@ def render_resume_step(*, advanced: bool = True) -> None:
     pasted_resume = st.text_area(
         "Ou cole o texto do currículo",
         value=st.session_state.resume_text if not uploaded else "",
-        height=170,
+        height=170 if advanced else QUICK_INPUT_HEIGHT,
         placeholder="Cole aqui quando não quiser enviar um arquivo.",
     )
     if not uploaded and not pasted_resume.strip() and st.button("Carregar exemplo de currículo"):
@@ -202,7 +204,11 @@ def render_resume_step(*, advanced: bool = True) -> None:
             st.error(str(exc))
 
     if st.session_state.resume_profile.raw_text:
-        _resume_review(st.session_state.resume_profile, advanced=advanced)
+        if advanced:
+            _resume_review(st.session_state.resume_profile, advanced=True)
+        else:
+            profile = st.session_state.resume_profile
+            st.success(compact_status("Currículo", profile.name, len(profile.skills)))
 
 
 def _job_review(job: JobPostingSchema, *, advanced: bool = True) -> None:
@@ -297,7 +303,7 @@ def render_job_step(*, advanced: bool = True) -> None:
         st.text_area(
             "Descrição completa da vaga",
             value=st.session_state.job_text,
-            height=240,
+            height=240 if advanced else QUICK_INPUT_HEIGHT,
             placeholder="Cole a descrição completa da oportunidade.",
         )
         or ""
@@ -318,7 +324,11 @@ def render_job_step(*, advanced: bool = True) -> None:
         st.session_state.job_posting = parse_job_description(vacancy_text)
         st.session_state.last_analysis_fingerprint = ""
     if st.session_state.job_posting.raw_text:
-        _job_review(st.session_state.job_posting, advanced=advanced)
+        if advanced:
+            _job_review(st.session_state.job_posting, advanced=True)
+        else:
+            job = st.session_state.job_posting
+            st.success(compact_status("Vaga", job.title or job.company, len(job.required_skills)))
 
 
 def render_preferences_step(mode: str) -> None:
@@ -726,17 +736,7 @@ def render_app() -> None:
         with st.spinner("Carregando dados fictícios e preparando a análise..."):
             run_demo(provider_name)
         st.rerun()
-    tabs = st.tabs(
-        [
-            "Currículo",
-            "Vaga",
-            "Preferências",
-            "Resultado",
-            "Search Intelligence",
-            "Histórico",
-            "Dashboard",
-        ]
-    )
+    tabs = st.tabs(ADVANCED_TABS)
     with tabs[0]:
         render_resume_step(advanced=True)
     with tabs[1]:
@@ -746,11 +746,17 @@ def render_app() -> None:
     with tabs[3]:
         render_results_step("Modo avançado", provider_name)
     with tabs[4]:
-        render_search_intelligence_step()
+        st.info("A coleta pública responsável será configurada nesta área.")
     with tabs[5]:
-        render_history_step()
+        render_search_intelligence_step()
     with tabs[6]:
+        render_history_step()
+    with tabs[7]:
         render_dashboard_step()
+    with tabs[8]:
+        st.info("Os exports completos ficam disponíveis no resultado analisado.")
+    with tabs[9]:
+        st.info("Diagnósticos técnicos ficam recolhidos e visíveis somente no modo avançado.")
     st.caption(
         "Processamento local por padrão · revisão humana obrigatória · sem auto-apply · "
         "sem invenção de experiência."
