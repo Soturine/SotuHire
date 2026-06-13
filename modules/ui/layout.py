@@ -6,11 +6,15 @@ import hashlib
 
 import streamlit as st
 
+from modules.ai.diagnostics import GeminiDiagnostic
 from modules.ai.setup import (
+    SUPPORTED_GEMINI_MODELS,
     gemini_api_key,
+    gemini_model,
     gemini_setup_status,
     save_local_ai_config,
-    test_gemini_connection,
+    test_gemini_simple,
+    test_gemini_structured,
 )
 from modules.ai.structured_analysis import analyze_structured, gemini_setup_warning, get_provider
 from modules.examples import load_default_job_example, load_default_resume_example
@@ -63,6 +67,25 @@ def render_header() -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
+def _render_gemini_diagnostic(diagnostic: GeminiDiagnostic | None) -> None:
+    """Render a safe Gemini diagnostic returned by an explicit setup test."""
+    if not diagnostic:
+        return
+    (st.success if diagnostic.success else st.error)(diagnostic.summary)
+    with st.expander("Detalhes técnicos do teste"):
+        st.caption(f"Teste: {diagnostic.test_type}")
+        st.caption(f"Código: {diagnostic.code or 'não informado'}")
+        st.caption(f"Categoria: {diagnostic.category or 'nenhuma'}")
+        st.caption(f"Modelo usado: {diagnostic.model}")
+        st.caption(f"SDK instalado: google-genai {diagnostic.sdk_version}")
+        st.caption(f"Variável encontrada: {diagnostic.key_source}")
+        st.caption(f"Tipo de chamada: {diagnostic.call_type}")
+        if diagnostic.suggestion:
+            st.info(diagnostic.suggestion)
+        if diagnostic.raw_error:
+            st.code(diagnostic.raw_error)
 
 
 def render_sidebar() -> tuple[str, str]:
@@ -138,12 +161,25 @@ def render_sidebar() -> tuple[str, str]:
                 type="password",
                 help="A chave fica apenas neste computador e não deve ser commitada.",
             )
+            configured_model = gemini_model()
+            model_options = list(dict.fromkeys([configured_model, *SUPPORTED_GEMINI_MODELS]))
+            selected_model = st.selectbox(
+                "Modelo Gemini",
+                model_options,
+                index=model_options.index(configured_model),
+            )
             setup_actions = st.columns(2)
-            if setup_actions[0].button("Testar Gemini", use_container_width=True):
-                st.session_state.ai_setup_test_result = test_gemini_connection(api_key)
-            if setup_actions[1].button("Salvar configuração local", use_container_width=True):
+            if setup_actions[0].button("Testar Gemini simples", use_container_width=True):
+                st.session_state.ai_setup_simple_result = test_gemini_simple(
+                    api_key, selected_model
+                )
+            if setup_actions[1].button("Testar Gemini estruturado", use_container_width=True):
+                st.session_state.ai_setup_structured_result = test_gemini_structured(
+                    api_key, selected_model
+                )
+            if st.button("Salvar configuração local", use_container_width=True):
                 try:
-                    target = save_local_ai_config(api_key)
+                    target = save_local_ai_config(api_key, model=selected_model)
                     st.session_state.activate_gemini_after_save = True
                     st.session_state.ai_setup_saved_path = str(target)
                     st.rerun()
@@ -154,12 +190,8 @@ def render_sidebar() -> tuple[str, str]:
                     "Gemini ativado. Configuração salva localmente em "
                     f"{st.session_state.ai_setup_saved_path}."
                 )
-            if st.session_state.ai_setup_test_result:
-                test_result = st.session_state.ai_setup_test_result
-                (st.success if test_result.success else st.error)(test_result.message)
-                if test_result.detail:
-                    with st.expander("Detalhes técnicos"):
-                        st.code(test_result.detail)
+            _render_gemini_diagnostic(st.session_state.get("ai_setup_simple_result"))
+            _render_gemini_diagnostic(st.session_state.get("ai_setup_structured_result"))
         st.divider()
         st.markdown("**Privacidade e responsabilidade**")
         st.caption("Currículos não são enviados para IA externa sem configuração explícita.")

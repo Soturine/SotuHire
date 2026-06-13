@@ -4,8 +4,14 @@ from __future__ import annotations
 
 from pydantic import BaseModel, ConfigDict
 
+from modules.ai.diagnostics import GeminiDiagnostic, diagnose_gemini_error
 from modules.ai.providers import AIProvider, GeminiProvider, MockProvider
-from modules.ai.setup import default_ai_provider, gemini_setup_status
+from modules.ai.setup import (
+    default_ai_provider,
+    gemini_key_source,
+    gemini_model,
+    gemini_setup_status,
+)
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
 
@@ -20,6 +26,7 @@ class StructuredAnalysisResult(BaseModel):
     requested_provider: str
     fallback_used: bool = False
     warning: str = ""
+    diagnostic: GeminiDiagnostic | None = None
 
 
 def _configured_provider(name: str | None = None) -> str:
@@ -38,11 +45,6 @@ def gemini_setup_warning(api_key: str | None = None) -> str:
     """Return a clear setup warning when Gemini cannot be selected yet."""
     status = gemini_setup_status(api_key)
     return "" if status.available else f"{status.message} Motivo: {status.reason}."
-
-
-def _short_error(exc: Exception) -> str:
-    message = " ".join(str(exc).split())
-    return message[:220] or exc.__class__.__name__
 
 
 def analyze_structured(
@@ -64,10 +66,23 @@ def analyze_structured(
     except Exception as exc:
         fallback = MockProvider()
         analysis = fallback.analyze(resume_text, job_text, preferences, job_details)
+        diagnostic = diagnose_gemini_error(
+            exc,
+            test_type="analysis",
+            model=getattr(selected, "model", gemini_model()),
+            key_source=gemini_key_source(getattr(selected, "api_key", None)),
+            call_type="generate_content com response_json_schema",
+        )
         return StructuredAnalysisResult(
             analysis=analysis,
             provider=fallback.name,
             requested_provider=selected.name,
             fallback_used=True,
-            warning=f"Gemini falhou, então usei análise local. Motivo: {_short_error(exc)}",
+            warning=(
+                "Gemini falhou, então usei análise local. "
+                f"Motivo: {diagnostic.summary}. "
+                f"Código: {diagnostic.code or 'não informado'}. "
+                "Provider usado: Análise local. Fallback usado: Sim."
+            ),
+            diagnostic=diagnostic,
         )

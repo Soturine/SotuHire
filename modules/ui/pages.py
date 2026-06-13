@@ -363,6 +363,18 @@ def _render_result_content(result: StructuredAnalysisResult, tailor: ResumeTailo
         st.caption(f"Provider solicitado: {provider_label(result.requested_provider)}")
         st.caption(f"Provider realmente usado: {provider_label(result.provider)}")
         st.caption(f"Fallback usado: {'sim' if result.fallback_used else 'não'}")
+        if result.diagnostic:
+            diagnostic = result.diagnostic
+            st.caption(f"Código: {diagnostic.code or 'não informado'}")
+            st.caption(f"Motivo resumido: {diagnostic.summary}")
+            st.caption(f"Modelo usado: {diagnostic.model}")
+            st.caption(f"SDK instalado: google-genai {diagnostic.sdk_version}")
+            st.caption(f"Variável encontrada: {diagnostic.key_source}")
+            st.caption(f"Tipo de chamada: {diagnostic.call_type}")
+            if diagnostic.suggestion:
+                st.info(diagnostic.suggestion)
+            if diagnostic.raw_error:
+                st.code(diagnostic.raw_error)
 
     tabs = st.tabs(
         [

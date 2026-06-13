@@ -41,13 +41,63 @@ class GeminiProvider(AIProvider):
             contents=self._build_prompt(resume_text, job_text, preferences, job_details),
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
-                response_schema=JobAnalysisSchema,
+                response_json_schema=self.structured_response_schema(),
                 temperature=0,
             ),
         )
         if response.parsed:
             return JobAnalysisSchema.model_validate(response.parsed)
         return JobAnalysisSchema.model_validate_json(response.text)
+
+    def ping(self) -> str:
+        """Run a minimal Gemini call without structured output."""
+        if not self.api_key:
+            raise ProviderUnavailableError("Gemini não configurado: informe GEMINI_API_KEY.")
+        try:
+            genai = importlib.import_module("google.genai")
+            types = importlib.import_module("google.genai.types")
+        except ImportError as exc:
+            raise ProviderUnavailableError("Instale requirements-ai.txt para usar Gemini.") from exc
+
+        client = genai.Client(api_key=self.api_key)
+        response = client.models.generate_content(
+            model=self.model,
+            contents="Responda apenas: ok",
+            config=types.GenerateContentConfig(temperature=0, max_output_tokens=8),
+        )
+        return (response.text or "").strip()
+
+    @staticmethod
+    def structured_response_schema() -> dict[str, object]:
+        """Return the small JSON Schema subset accepted by Gemini structured output."""
+        score = {"type": "integer", "minimum": 0, "maximum": 100}
+        string_list = {"type": "array", "items": {"type": "string"}}
+        return {
+            "type": "object",
+            "properties": {
+                "match_score": score,
+                "ats_score": score,
+                "opportunity_fit_score": score,
+                "risk_score": score,
+                "recommendation": {
+                    "type": "string",
+                    "enum": ["apply", "apply_with_adjustments", "save_for_later", "ignore"],
+                },
+                "strengths": string_list,
+                "gaps": string_list,
+                "missing_keywords": string_list,
+                "risk_flags": string_list,
+                "tailored_summary": {"type": "string"},
+                "recruiter_message": {"type": "string"},
+            },
+            "required": [
+                "match_score",
+                "ats_score",
+                "opportunity_fit_score",
+                "risk_score",
+                "recommendation",
+            ],
+        }
 
     @staticmethod
     def _build_prompt(

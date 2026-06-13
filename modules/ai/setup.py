@@ -9,7 +9,10 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from modules.ai.diagnostics import GeminiDiagnostic, diagnose_gemini_error, successful_diagnostic
+
 DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+SUPPORTED_GEMINI_MODELS = ["gemini-2.5-flash", "gemini-2.5-pro", "gemini-1.5-flash"]
 DEFAULT_SECRETS_PATH = Path(".streamlit/secrets.toml")
 
 
@@ -33,6 +36,19 @@ class GeminiTestResult(BaseModel):
     success: bool
     message: str
     detail: str = ""
+
+
+def gemini_key_source(explicit: str | None = None) -> str:
+    """Return which supported location supplied the key, without exposing it."""
+    if explicit is not None and explicit.strip():
+        return "campo seguro da interface"
+    if os.getenv("GEMINI_API_KEY", "").strip():
+        return "GEMINI_API_KEY"
+    if os.getenv("GOOGLE_API_KEY", "").strip():
+        return "GOOGLE_API_KEY (alias)"
+    if str(_read_local_secrets().get("GEMINI_API_KEY", "")).strip():
+        return ".streamlit/secrets.toml"
+    return "não encontrada"
 
 
 def _read_local_secrets(path: str | Path | None = None) -> dict[str, object]:
@@ -158,23 +174,87 @@ def save_local_ai_config(
     return target
 
 
-def test_gemini_connection(api_key: str) -> GeminiTestResult:
-    """Run a small explicit Gemini request and return a friendly result."""
+def test_gemini_simple(api_key: str, model: str | None = None) -> GeminiDiagnostic:
+    """Test key/model/SDK using a minimal call without structured output."""
     status = gemini_setup_status(api_key)
     if not status.available:
-        return GeminiTestResult(success=False, message=status.message, detail=status.reason)
+        return GeminiDiagnostic(
+            success=False,
+            test_type="simple",
+            summary=status.reason,
+            category=status.reason,
+            model=gemini_model(model),
+            sdk_version="não instalado" if not status.sdk_installed else "instalado",
+            key_source=gemini_key_source(api_key),
+            call_type="generate_content sem schema",
+        )
     try:
         from modules.ai.providers.gemini_provider import GeminiProvider
 
-        GeminiProvider(api_key=api_key).analyze(
+        provider = GeminiProvider(api_key=api_key, model=model)
+        provider.ping()
+    except Exception as exc:
+        return diagnose_gemini_error(
+            exc,
+            test_type="simple",
+            model=gemini_model(model),
+            key_source=gemini_key_source(api_key),
+            call_type="generate_content sem schema",
+        )
+    return successful_diagnostic(
+        test_type="simple",
+        model=gemini_model(model),
+        key_source=gemini_key_source(api_key),
+        call_type="generate_content sem schema",
+    )
+
+
+def test_gemini_structured(api_key: str, model: str | None = None) -> GeminiDiagnostic:
+    """Test the exact structured-output path used by SotuHire."""
+    status = gemini_setup_status(api_key)
+    if not status.available:
+        return GeminiDiagnostic(
+            success=False,
+            test_type="structured",
+            summary=status.reason,
+            category=status.reason,
+            model=gemini_model(model),
+            sdk_version="não instalado" if not status.sdk_installed else "instalado",
+            key_source=gemini_key_source(api_key),
+            call_type="generate_content com response_json_schema",
+        )
+    try:
+        from modules.ai.providers.gemini_provider import GeminiProvider
+
+        GeminiProvider(api_key=api_key, model=model).analyze(
             "Pessoa candidata com Python.",
             "Vaga júnior para Python.",
         )
     except Exception as exc:
-        detail = " ".join(str(exc).split())[:240] or exc.__class__.__name__
-        return GeminiTestResult(
-            success=False,
-            message="Não foi possível autenticar no Gemini.",
-            detail=detail,
+        return diagnose_gemini_error(
+            exc,
+            test_type="structured",
+            model=gemini_model(model),
+            key_source=gemini_key_source(api_key),
+            call_type="generate_content com response_json_schema",
         )
-    return GeminiTestResult(success=True, message="Gemini configurado e ativo.")
+    return successful_diagnostic(
+        test_type="structured",
+        model=gemini_model(model),
+        key_source=gemini_key_source(api_key),
+        call_type="generate_content com response_json_schema",
+    )
+
+
+def test_gemini_connection(api_key: str) -> GeminiTestResult:
+    """Backward-compatible wrapper around the structured Gemini test."""
+    diagnostic = test_gemini_structured(api_key)
+    return GeminiTestResult(
+        success=diagnostic.success,
+        message=(
+            "Gemini configurado e ativo."
+            if diagnostic.success
+            else "Não foi possível autenticar no Gemini."
+        ),
+        detail=diagnostic.raw_error or diagnostic.category,
+    )
