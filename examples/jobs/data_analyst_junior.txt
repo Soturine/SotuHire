@@ -1,0 +1,7 @@
+Vaga: Analista de Dados Júnior
+Empresa: Horizonte Analytics
+Localização: Belo Horizonte, MG
+Modalidade: Remota
+
+Requisitos: SQL, Excel, Power BI e comunicação clara.
+Desejável: Python e experiência com visualização de dados.

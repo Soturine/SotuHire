@@ -1,4 +1,5 @@
 from modules.ui.components import (
+    block_items,
     csv_items,
     display_value,
     line_items,
@@ -26,4 +27,8 @@ def test_ui_edit_helpers_remove_duplicates_and_blank_items():
     assert line_items("Experiência A\n\n- Experiência B\nExperiência A") == [
         "Experiência A",
         "Experiência B",
+    ]
+    assert block_items("Cargo A\nDescrição A\n\nCargo B\nDescrição B") == [
+        "Cargo A\nDescrição A",
+        "Cargo B\nDescrição B",
     ]

@@ -1,0 +1,25 @@
+Marina Lopes Ribeiro
+Belo Horizonte, MG | marina.lopes@example.com
+linkedin.com/in/marina-lopes-dados | github.com/marina-lopes-labs
+
+PERFIL PROFISSIONAL
+Analista de dados júnior com formação em Estatística e projetos de visualização.
+
+FORMAÇÃO ACADÊMICA E CURSOS
+Graduação em Estatística - Faculdade Metropolitana | 2025
+Curso de Power BI e modelagem de dados - Escola Aberta | 60 horas
+
+ATUAÇÃO PROFISSIONAL
+Cooperativa Horizonte - Estagiária de Dados | fev/2024 - dez/2024
+Tratamento de planilhas, validação de indicadores e atualização de dashboards.
+Documentação das regras usadas nos relatórios mensais.
+
+PROJETOS RELEVANTES
+Painel de Vendas: dashboard em Power BI com métricas de receita e retenção.
+Análise de Mobilidade: estudo exploratório em Python, SQL e pandas.
+
+TECNOLOGIAS
+Python, SQL, Power BI, Excel, Git
+
+SOFT SKILLS
+Comunicação, pensamento analítico, organização e curiosidade

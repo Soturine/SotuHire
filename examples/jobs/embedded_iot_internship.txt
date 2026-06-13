@@ -1,0 +1,8 @@
+Cargo: Estágio em Sistemas Embarcados e IoT
+Empresa: Circuito Escola
+Localização: São José dos Campos, SP
+Modalidade: Presencial
+Contrato: Estágio
+
+Atividades com ESP32, sensores, instrumentação, Python e documentação técnica.
+Desejável conhecimento de MQTT, Git e leitura de desenho técnico.

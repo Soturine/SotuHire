@@ -1,0 +1,37 @@
+Rafael Almeida Costa
+São José dos Campos, SP | +55 (12) 98888-1122 | rafael.almeida@example.com
+LinkedIn: linkedin.com/in/rafael-almeida-engenharia | GitHub: github.com/rafael-almeida-labs
+
+OBJETIVO PROFISSIONAL
+Atuar em posição júnior de engenharia, software embarcado ou automação.
+
+RESUMO PROFISSIONAL
+Técnico em Mecatrônica e estudante de Engenharia da Computação com prática em instrumentação e desenvolvimento de software.
+
+FORMAÇÃO E CURSOS
+Técnico em Mecatrônica - Escola Técnica Horizonte | concluído em 2021
+Engenharia da Computação - Universidade Vale Digital | previsão 2027
+Curso de Instrumentação Industrial - Instituto Aprender | 40 horas
+
+EXPERIÊNCIA PROFISSIONAL E TÉCNICA
+AeroVale S.A. - Eletricista de Montagem de Aeronaves | nov/2023 - jun/2025 | CLT
+Montagem e inspeção de cablagens conforme documentação técnica.
+Apoio à identificação de falhas e registro de não conformidades.
+AeroVale S.A. - Estagiário Técnico em Ensaios Estruturais | mar/2022 - nov/2023
+Preparação de sensores e acompanhamento de aquisição de dados.
+Criação de relatórios técnicos e organização dos resultados de ensaio.
+
+PROJETOS SELECIONADOS
+SotuRail: CLI local-first para organizar contexto de agentes de IA; TypeScript, Node.js e testes automatizados.
+Inclui comandos de histórico, busca e validação de contexto.
+Monitor IoT: sistema acadêmico de telemetria com ESP32, MQTT, Python e dashboard.
+O protótipo registra leituras e apresenta alertas para revisão humana.
+
+COMPETÊNCIAS TÉCNICAS
+Python, TypeScript, Node.js, Git, Docker, ESP32, MQTT, instrumentação, leitura de desenho técnico
+
+COMPETÊNCIAS COMPORTAMENTAIS
+Trabalho em equipe, comunicação técnica, organização, adaptabilidade e aprendizado rápido
+
+IDIOMAS
+Português nativo, Inglês intermediário

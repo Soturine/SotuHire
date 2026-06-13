@@ -1,0 +1,24 @@
+Lucas Ferreira Nunes
+Recife, PE | lucas.ferreira@example.com
+www.lucasferreira.dev | github.com/lucas-ferreira-web
+
+RESUMO
+Desenvolvedor web júnior focado em interfaces acessíveis e APIs simples.
+
+FORMAÇÃO
+Tecnologia em Análise e Desenvolvimento de Sistemas - Faculdade Litoral | 2025
+
+HISTÓRICO PROFISSIONAL
+Estúdio Aurora - Desenvolvedor Web Júnior | jan/2025 - atual
+Implementação de páginas responsivas e integração com APIs REST.
+Revisão de acessibilidade e correção de problemas reportados.
+
+PROJETOS DESTACADOS
+Agenda Comunitária: aplicação React para divulgar eventos locais.
+API de Biblioteca: serviço Node.js com PostgreSQL e testes.
+
+STACK TÉCNICA
+JavaScript, TypeScript, React, Node.js, PostgreSQL, Git, Docker
+
+SOFT SKILLS
+Colaboração; comunicação; organização; aprendizado contínuo

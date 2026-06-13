@@ -18,6 +18,7 @@ def test_structured_analysis_falls_back_when_gemini_has_no_key(monkeypatch):
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     result = analyze_structured("Python", "Vaga Python", provider=GeminiProvider(api_key=""))
 
-    assert result.provider == "mock"
+    assert result.provider == "local"
+    assert result.requested_provider == "gemini"
     assert result.fallback_used
     assert isinstance(result.analysis, JobAnalysisSchema)

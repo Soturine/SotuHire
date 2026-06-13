@@ -1,0 +1,8 @@
+Cargo: Engenheiro de Software Júnior
+Empresa: Nuvem Clara Tecnologia
+Localização: São Paulo, SP
+Modalidade: Híbrida
+Contrato: CLT
+
+Buscamos pessoa com prática em Python ou TypeScript, Git, APIs REST e testes.
+Conhecimento de Docker e SQL será considerado diferencial.
