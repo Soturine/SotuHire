@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Any, Protocol
 from urllib.parse import urljoin, urlparse
 
+from modules.scraping.browser_session import inspect_browser_session
 from modules.scraping.connectors.manual_url import opportunity_from_text
 from modules.scraping.dedupe import deduplicate_opportunities, normalize_url
 from modules.scraping.schemas import CollectionResult, ScrapingSource
@@ -95,6 +96,12 @@ class PlaywrightAuthenticatedCrawler:
             ) from exc
 
         selectors = selectors_for_source(source)
+        session = inspect_browser_session(source.browser_cdp_url)
+        if not session.available:
+            raise RuntimeError(
+                "Navegador autenticado desconectado. Clique em 'Abrir navegador para login' "
+                "e faça login manualmente antes de coletar."
+            )
         captures: list[BrowserCapture] = []
         links: list[str] = []
         seen_links: set[str] = set()

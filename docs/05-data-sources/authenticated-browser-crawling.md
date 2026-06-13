@@ -15,23 +15,32 @@ pip install -r requirements-scraping.txt
 playwright install chromium
 ```
 
-Inicie um perfil Chromium dedicado com CDP habilitado:
+Na tela **Navegador autenticado autorizado**, clique em **Abrir navegador para login**. O SotuHire
+localiza Chrome, Edge ou Chromium, abre um perfil persistente dedicado com CDP habilitado e mantém
+esse perfil para as próximas execuções.
+
+Faça login manualmente no navegador dedicado que abrir. Depois volte ao app, clique em
+**Testar conexão do navegador** e inicie a coleta.
+
+O Chrome que já estava aberto antes não serve automaticamente, pois uma instância comum não
+expõe a porta CDP. Para iniciar manualmente, use:
 
 ```powershell
 chrome.exe --remote-debugging-port=9222 --user-data-dir="$env:LOCALAPPDATA\SotuHire\chrome-profile"
 ```
 
-Na primeira execução, faça login manualmente no navegador aberto. Nas próximas execuções, inicie
-o mesmo perfil antes de clicar em **Coletar no navegador autenticado**.
+O botão do app executa o equivalente automaticamente e usa o perfil em
+`%LOCALAPPDATA%\SotuHire\authenticated-browser-profile`.
 
 ## Executar no app
 
 1. Abra **Modo avançado > Coletar vagas**.
 2. Selecione **Navegador autenticado autorizado**.
 3. Informe a URL inicial de uma lista de vagas, busca ou feed.
-4. Configure limite de itens, páginas/rolagens e intervalo.
-5. Registre a referência da autorização e confirme o uso autorizado.
-6. Inicie a coleta.
+4. Clique em **Abrir navegador para login** e faça login manualmente no navegador aberto.
+5. Clique em **Testar conexão do navegador**.
+6. Configure limites, registre a referência da autorização e confirme o uso autorizado.
+7. Inicie a coleta quando a tela mostrar **Conexão CDP pronta**.
 
 O conector possui presets para:
 

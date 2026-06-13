@@ -8,6 +8,10 @@ import streamlit as st
 
 from modules.opportunities import OpportunityStore, filter_opportunities, opportunity_to_job_posting
 from modules.scraping import ScrapingSource, inspect_source_safety
+from modules.scraping.browser_session import (
+    inspect_browser_session,
+    launch_authenticated_browser,
+)
 from modules.scraping.collection import (
     capture_user_assisted_opportunity,
     collect_authenticated_source,
@@ -245,7 +249,29 @@ def render_authenticated_browser_collection() -> None:
         key="authenticated_authorized_use",
     )
     source = authenticated_source_from_controls()
-    ready = bool(source.url and source.browser_cdp_url and source.authorized_use)
+    session = inspect_browser_session(source.browser_cdp_url)
+    if session.available:
+        st.success(f"Conexão CDP pronta: {session.browser}")
+    else:
+        st.warning(
+            "O Chrome aberto normalmente não expõe a conexão CDP. "
+            "Abra o navegador dedicado abaixo, faça login manualmente nele e teste a conexão."
+        )
+    ready = bool(
+        source.url and source.browser_cdp_url and source.authorized_use and session.available
+    )
+    browser_actions = st.columns(2)
+    if browser_actions[0].button("Abrir navegador para login", use_container_width=True):
+        try:
+            status = launch_authenticated_browser(source.url, source.browser_cdp_url)
+            (st.success if status.available else st.error)(status.message)
+            if status.available:
+                st.rerun()
+        except Exception as exc:
+            st.error(f"Não foi possível abrir o navegador: {exc}")
+    if browser_actions[1].button("Testar conexão do navegador", use_container_width=True):
+        status = inspect_browser_session(source.browser_cdp_url)
+        (st.success if status.available else st.error)(status.message)
     actions = st.columns(2)
     if actions[0].button(
         "Coletar no navegador autenticado",

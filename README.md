@@ -51,6 +51,8 @@ O app distingue quatro modos:
 - **AUTHENTICATED_BROWSER**: conecta via CDP a um Chromium já autenticado pela pessoa usuária e navega vagas ou publicações de uma fonte autorizada, com limites de itens, páginas/rolagens e intervalo.
 
 O modo autenticado abre abas próprias no contexto existente, não automatiza login, interrompe em checkpoint/CAPTCHA, exige confirmação e permite registrar a referência da autorização.
+Na própria tela, **Abrir navegador para login** inicia um perfil persistente com CDP habilitado;
+depois do login manual, **Testar conexão do navegador** confirma que a coleta está pronta.
 
 ## Screenshots v0.7.0
 

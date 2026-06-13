@@ -12,6 +12,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - roadmap dedicado para extensão de captura assistida;
 - crawling autorizado via sessão Chromium já autenticada, com presets para vagas e publicações do LinkedIn;
 - limites de itens, páginas/rolagens, intervalo e referência local de autorização;
+- inicialização automática de navegador dedicado com perfil persistente e diagnóstico da conexão CDP;
 
 ### Changed
 

@@ -27,16 +27,25 @@ def inspect_source_safety(url: str) -> SourceSafety:
     """Reject authenticated or non-public URLs before any request."""
     parsed = urlparse(url.strip())
     domain = parsed.netloc.lower()
+    is_linkedin = domain == "linkedin.com" or domain.endswith(".linkedin.com")
     authentication_required = any(marker in parsed.path.lower() for marker in AUTH_MARKERS)
-    allowed = parsed.scheme in {"http", "https"} and bool(domain) and not authentication_required
+    allowed = (
+        parsed.scheme in {"http", "https"}
+        and bool(domain)
+        and not authentication_required
+        and not is_linkedin
+    )
     warning = ""
     if authentication_required:
         warning = (
             "A URL parece exigir autenticação. A coleta pública não é permitida; "
             "use o modo Navegador autenticado autorizado quando aplicável."
         )
-    elif domain.endswith("linkedin.com") or domain.endswith("www.linkedin.com"):
-        warning = "URL pública do LinkedIn: a coleta só continuará se robots.txt permitir."
+    elif is_linkedin:
+        warning = (
+            "Para LinkedIn, selecione 'Navegador autenticado autorizado', abra o navegador "
+            "dedicado e faça login manualmente nele."
+        )
     elif not allowed:
         warning = "Informe uma URL pública HTTP ou HTTPS."
     return SourceSafety(

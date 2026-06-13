@@ -12,4 +12,6 @@ def test_authenticated_browser_ui_has_authorized_crawling_controls():
     assert not app.exception
     assert "Coletar no navegador autenticado" in labels
     assert "Salvar fonte autenticada" in labels
+    assert "Abrir navegador para login" in labels
+    assert "Testar conexão do navegador" in labels
     assert any("autorizadas para uso automatizado" in label for label in checkbox_labels)
