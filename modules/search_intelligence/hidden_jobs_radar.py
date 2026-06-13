@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 from modules.core.text_utils import normalize_text
-from modules.search_intelligence.schemas import HiddenJobsRadarPlan, SearchStrategyInput
+from modules.search_intelligence.schemas import (
+    HiddenJobsRadarPlan,
+    SearchStrategyInput,
+    SourceSuggestion,
+)
 
 ROLE_ALTERNATIVES = {
     "software": [
@@ -60,6 +64,20 @@ def build_hidden_jobs_radar(strategy: SearchStrategyInput) -> HiddenJobsRadarPla
         "fornecedores de empresas-alvo",
         "startups e consultorias especializadas",
     ]
+    actionable_sources = [
+        SourceSuggestion(
+            name=company,
+            url=(
+                company
+                if company.startswith(("http://", "https://"))
+                else f"https://{company}/careers"
+            ),
+            reason="Página pública de carreira indicada pelo radar.",
+            source_type="company_career_page",
+        )
+        for company in strategy.target_companies
+        if company.startswith(("http://", "https://")) or "." in company
+    ]
     return HiddenJobsRadarPlan(
         alternative_roles=_alternative_roles(strategy.target_role),
         target_company_ideas=companies,
@@ -73,5 +91,6 @@ def build_hidden_jobs_radar(strategy: SearchStrategyInput) -> HiddenJobsRadarPla
             "Post sem empresa, localização ou forma oficial de candidatura.",
             "Descrição genérica que pede muitas áreas sem prioridade.",
         ],
+        actionable_sources=actionable_sources,
         scraping_performed=False,
     )

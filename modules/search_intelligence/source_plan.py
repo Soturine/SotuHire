@@ -16,21 +16,25 @@ def build_source_suggestions(strategy: SearchStrategyInput) -> list[SourceSugges
             name="LinkedIn Posts",
             url="https://www.linkedin.com/search/results/content/",
             reason="Encontrar posts públicos com vagas, indicações e times crescendo.",
+            source_type="generic_public_page",
         ),
         SourceSuggestion(
             name="Gupy",
             url="https://portal.gupy.io/",
             reason="Buscar vagas corporativas brasileiras por cargo e senioridade.",
+            source_type="generic_public_page",
         ),
         SourceSuggestion(
             name="Google Jobs",
             url="https://www.google.com/search?q=jobs",
             reason="Executar manualmente as queries sugeridas e comparar fontes.",
+            source_type="generic_public_page",
         ),
         SourceSuggestion(
             name="Greenhouse",
             url="https://www.greenhouse.com/",
             reason="Pesquisar páginas públicas de carreira de empresas de tecnologia.",
+            source_type="company_career_page",
         ),
     ]
     if strategy.seniority in {"estagio", "internship", "trainee"}:
@@ -39,6 +43,7 @@ def build_source_suggestions(strategy: SearchStrategyInput) -> list[SourceSugges
                 name="CIEE",
                 url="https://portal.ciee.org.br/",
                 reason="Priorizar estágio e início de carreira.",
+                source_type="generic_public_page",
             )
         )
     if strategy.modality == "remote":
@@ -47,6 +52,7 @@ def build_source_suggestions(strategy: SearchStrategyInput) -> list[SourceSugges
                 name="Remotar",
                 url="https://remotar.com.br/",
                 reason="Priorizar oportunidades remotas no Brasil.",
+                source_type="generic_public_page",
             )
         )
     return sources

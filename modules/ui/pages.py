@@ -54,6 +54,7 @@ from modules.ui.layout import (
 )
 from modules.ui.quick_mode import QUICK_INPUT_HEIGHT, compact_status
 from modules.ui.scraping_page import render_scraping_page
+from modules.ui.search_intelligence_page import render_actionable_source
 from modules.ui.styles import inject_styles
 
 TRACKER = JobTracker()
@@ -686,12 +687,12 @@ def render_dashboard_step() -> None:
     )
 
 
-def render_search_intelligence_step() -> None:
-    """Render a manual-first search strategy without network automation."""
+def render_search_intelligence_step(provider_name: str) -> None:
+    """Render an actionable search strategy connected to public collection."""
     _section_heading(
         "SEARCH INTELLIGENCE",
-        "Plano seguro de busca",
-        "Gera estratégia e termos de busca. Esta etapa não faz scraping automático.",
+        "Estratégia e coleta pública",
+        "Gere estratégia, escolha uma fonte pública, colete oportunidades e analise.",
     )
     profile = st.session_state.resume_profile
     job = st.session_state.job_posting
@@ -717,7 +718,9 @@ def render_search_intelligence_step() -> None:
     )
     plan = build_search_intelligence_plan(strategy)
 
-    st.info("Nenhuma busca de rede foi executada. Copie as queries e pesquise manualmente.")
+    st.info(
+        "A estratégia não coleta sozinha. Use as ações das fontes para iniciar a coleta pública."
+    )
     sections = st.tabs(
         ["Queries sugeridas", "Cargos equivalentes", "Fontes", "Plano semanal", "Radar oculto"]
     )
@@ -727,8 +730,10 @@ def render_search_intelligence_step() -> None:
     with sections[1]:
         render_list(plan.radar.alternative_roles, "Nenhum cargo alternativo sugerido.")
     with sections[2]:
-        for source in plan.sources:
-            st.markdown(f"**[{source.name}]({source.url})** · {source.reason}")
+        for index, source in enumerate(plan.sources):
+            render_actionable_source(
+                source, key_prefix=f"search_source_{index}", provider_name=provider_name
+            )
     with sections[3]:
         render_list(plan.weekly_plan, "Nenhum plano gerado.")
     with sections[4]:
@@ -738,6 +743,16 @@ def render_search_intelligence_step() -> None:
         render_list(plan.radar.manual_alerts, "")
         st.markdown("**Riscos de vaga genérica**")
         render_list(plan.radar.generic_job_risks, "")
+        if plan.radar.actionable_sources:
+            st.markdown("**Páginas públicas acionáveis**")
+            for index, source in enumerate(plan.radar.actionable_sources):
+                render_actionable_source(
+                    source,
+                    key_prefix=f"radar_source_{index}",
+                    provider_name=provider_name,
+                )
+        else:
+            st.info("Nenhuma coleta executada ainda. Escolha uma fonte pública para iniciar.")
 
 
 def render_app() -> None:
@@ -776,7 +791,7 @@ def render_app() -> None:
     with tabs[4]:
         render_scraping_page(provider_name)
     with tabs[5]:
-        render_search_intelligence_step()
+        render_search_intelligence_step(provider_name)
     with tabs[6]:
         render_history_step()
     with tabs[7]:

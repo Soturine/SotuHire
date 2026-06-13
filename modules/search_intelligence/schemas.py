@@ -20,14 +20,15 @@ class SearchStrategyInput(BaseModel):
 
 
 class SourceSuggestion(BaseModel):
-    """A manual search source with an explicit safe access mode."""
+    """An actionable public source suggestion."""
 
     model_config = ConfigDict(extra="forbid")
 
     name: str
     url: str
     reason: str
-    access_mode: str = "manual"
+    source_type: str = "generic_public_page"
+    status: str = "pendente"
 
 
 class HiddenJobsRadarPlan(BaseModel):
@@ -39,6 +40,7 @@ class HiddenJobsRadarPlan(BaseModel):
     target_company_ideas: list[str] = Field(default_factory=list)
     manual_alerts: list[str] = Field(default_factory=list)
     generic_job_risks: list[str] = Field(default_factory=list)
+    actionable_sources: list[SourceSuggestion] = Field(default_factory=list)
     scraping_performed: bool = False
 
 
