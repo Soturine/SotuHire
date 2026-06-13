@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import hashlib
+
 import streamlit as st
 
 from modules.ai.setup import (
@@ -11,6 +13,9 @@ from modules.ai.setup import (
     test_gemini_connection,
 )
 from modules.ai.structured_analysis import analyze_structured, gemini_setup_warning, get_provider
+from modules.examples import load_default_job_example, load_default_resume_example
+from modules.parsers.job_description_parser import parse_job_description
+from modules.parsers.resume_parser import parse_resume_text
 from modules.resume_tailor.tailor_rules import build_safe_tailor_output
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
@@ -36,6 +41,7 @@ def initialize_state() -> None:
         "analysis_result": None,
         "tailor_output": None,
         "resume_upload_fingerprint": "",
+        "last_analysis_fingerprint": "",
         "ai_setup_test_result": None,
     }
     for key, value in defaults.items():
@@ -182,3 +188,38 @@ def run_analysis(provider_name: str) -> None:
         job_text=st.session_state.job_text,
         evidence_text=st.session_state.resume_text,
     )
+    st.session_state.last_analysis_fingerprint = analysis_fingerprint(provider_name)
+
+
+def analysis_fingerprint(provider_name: str) -> str:
+    """Return a stable fingerprint for automatic quick-mode analysis."""
+    payload = "\0".join(
+        [
+            st.session_state.resume_text,
+            st.session_state.job_text,
+            provider_name,
+            build_preferences().model_dump_json(),
+        ]
+    )
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
+
+def should_run_quick_analysis(mode: str, provider_name: str) -> bool:
+    """Return whether changed complete inputs need an automatic analysis."""
+    ready = bool(st.session_state.resume_text.strip() and st.session_state.job_text.strip())
+    return (
+        mode == "Modo rápido"
+        and ready
+        and analysis_fingerprint(provider_name) != st.session_state.last_analysis_fingerprint
+    )
+
+
+def load_example_flow() -> None:
+    """Load and parse the default fictitious resume and vacancy."""
+    resume_text = load_default_resume_example()
+    job_text = load_default_job_example()
+    st.session_state.resume_text = resume_text
+    st.session_state.resume_profile = parse_resume_text(resume_text)
+    st.session_state.job_text = job_text
+    st.session_state.job_posting = parse_job_description(job_text)
+    st.session_state.last_analysis_fingerprint = ""

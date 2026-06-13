@@ -7,6 +7,7 @@ import hashlib
 import streamlit as st
 
 from modules.ai.structured_analysis import StructuredAnalysisResult
+from modules.examples import load_default_job_example, load_default_resume_example
 from modules.exporters.analysis_exporter import (
     analysis_to_json,
     analysis_to_markdown,
@@ -40,9 +41,11 @@ from modules.ui.layout import (
     LEVELS,
     MODALITIES,
     initialize_state,
+    load_example_flow,
     render_header,
     render_sidebar,
     run_analysis,
+    should_run_quick_analysis,
 )
 from modules.ui.styles import inject_styles
 
@@ -144,6 +147,11 @@ def render_resume_step() -> None:
         height=170,
         placeholder="Cole aqui quando não quiser enviar um arquivo.",
     )
+    if not uploaded and not pasted_resume.strip() and st.button("Carregar exemplo de currículo"):
+        example = load_default_resume_example()
+        st.session_state.resume_text = example
+        st.session_state.resume_profile = parse_resume_text(example)
+        st.rerun()
 
     if uploaded:
         content = uploaded.getvalue()
@@ -154,14 +162,21 @@ def render_resume_step() -> None:
                 st.session_state.resume_profile = profile
                 st.session_state.resume_text = profile.raw_text
                 st.session_state.resume_upload_fingerprint = fingerprint
+                st.session_state.last_analysis_fingerprint = ""
                 st.success("Currículo processado automaticamente. Revise os dados abaixo.")
             except (RuntimeError, ValueError) as exc:
                 st.error(str(exc))
 
+    if not uploaded and pasted_resume.strip() and pasted_resume != st.session_state.resume_text:
+        st.session_state.resume_profile = parse_resume_text(pasted_resume)
+        st.session_state.resume_text = pasted_resume
+        st.session_state.last_analysis_fingerprint = ""
+        st.success("Currículo processado automaticamente. Revise apenas se quiser.")
+
     action_label = (
         "Reprocessar currículo" if st.session_state.resume_profile.raw_text else "Processar texto"
     )
-    if st.button(action_label, type="primary", disabled=not (uploaded or pasted_resume.strip())):
+    if st.button(action_label, disabled=not (uploaded or pasted_resume.strip())):
         try:
             profile = (
                 parse_resume_file(uploaded.name, uploaded.getvalue())
@@ -170,6 +185,7 @@ def render_resume_step() -> None:
             )
             st.session_state.resume_profile = profile
             st.session_state.resume_text = profile.raw_text
+            st.session_state.last_analysis_fingerprint = ""
             st.success("Currículo processado. Revise os dados abaixo.")
         except (RuntimeError, ValueError) as exc:
             st.error(str(exc))
@@ -272,13 +288,21 @@ def render_job_step() -> None:
         )
         or ""
     )
+    if not vacancy_text.strip() and st.button("Usar vaga fictícia de exemplo"):
+        example = load_default_job_example()
+        st.session_state.job_text = example
+        st.session_state.job_posting = parse_job_description(example)
+        st.session_state.last_analysis_fingerprint = ""
+        st.rerun()
     if vacancy_text.strip() and vacancy_text != st.session_state.job_text:
         st.session_state.job_text = vacancy_text
         st.session_state.job_posting = parse_job_description(vacancy_text)
+        st.session_state.last_analysis_fingerprint = ""
         st.success("Vaga processada automaticamente. Revise os dados abaixo.")
     if st.button("Reprocessar vaga", disabled=not vacancy_text.strip()):
         st.session_state.job_text = vacancy_text
         st.session_state.job_posting = parse_job_description(vacancy_text)
+        st.session_state.last_analysis_fingerprint = ""
     if st.session_state.job_posting.raw_text:
         _job_review(st.session_state.job_posting)
 
@@ -414,7 +438,7 @@ def _render_result_content(result: StructuredAnalysisResult, tailor: ResumeTailo
                 st.success(f"Análise salva: {record.id[:8]}")
 
 
-def render_results_step(provider_name: str) -> None:
+def render_results_step(mode: str, provider_name: str) -> None:
     """Render the analysis action and structured result."""
     _section_heading(
         "PASSO 4",
@@ -424,9 +448,15 @@ def render_results_step(provider_name: str) -> None:
     ready = bool(st.session_state.resume_text.strip() and st.session_state.job_text.strip())
     if not ready:
         st.info("Processe o currículo e a vaga para liberar a análise.")
+        if st.button("Rodar análise de exemplo", use_container_width=True):
+            load_example_flow()
+            st.rerun()
+    if should_run_quick_analysis(mode, provider_name):
+        with st.spinner("Currículo e vaga prontos. Preparando sua análise..."):
+            run_analysis(provider_name)
+        st.success("Análise atualizada automaticamente.")
     if st.button(
-        "Analisar oportunidade",
-        type="primary",
+        "Rodar análise novamente",
         use_container_width=True,
         disabled=not ready,
     ):
@@ -523,7 +553,7 @@ def render_app() -> None:
     with tabs[2]:
         render_preferences_step(mode)
     with tabs[3]:
-        render_results_step(provider_name)
+        render_results_step(mode, provider_name)
     with tabs[4]:
         render_history_step()
     with tabs[5]:
