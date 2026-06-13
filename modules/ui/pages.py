@@ -21,6 +21,7 @@ from modules.tracker.dashboard import calculate_dashboard_metrics
 from modules.tracker.job_tracker import JobTracker
 from modules.tracker.status import JobStatus
 from modules.ui.components import (
+    block_items,
     csv_items,
     display_value,
     line_items,
@@ -28,6 +29,7 @@ from modules.ui.components import (
     render_chips,
     render_data_card,
     render_item_cards,
+    render_links,
     render_list,
     render_score_card,
     seniority_label,
@@ -65,7 +67,7 @@ def _resume_review(profile: ResumeProfileSchema) -> None:
         render_data_card("Localização", profile.city)
 
     st.markdown("**Links**")
-    render_chips(profile.links, "Nenhum link detectado.")
+    render_links(profile.links)
     st.markdown("**Skills técnicas**")
     render_chips(profile.skills, "Nenhuma skill detectada.")
     if profile.soft_skills:
@@ -103,9 +105,12 @@ def _resume_review(profile: ResumeProfileSchema) -> None:
             skills = st.text_input("Skills, separadas por vírgula", ", ".join(profile.skills))
             education = st.text_area("Formação, uma por linha", "\n".join(profile.education))
             experiences = st.text_area(
-                "Experiências, uma por linha", "\n".join(profile.experiences)
+                "Experiências, separe blocos com uma linha vazia",
+                "\n\n".join(profile.experiences),
             )
-            projects = st.text_area("Projetos, um por linha", "\n".join(profile.projects))
+            projects = st.text_area(
+                "Projetos, separe blocos com uma linha vazia", "\n\n".join(profile.projects)
+            )
         if st.form_submit_button("Salvar revisão", type="primary"):
             st.session_state.resume_profile = profile.model_copy(
                 update={
@@ -117,8 +122,8 @@ def _resume_review(profile: ResumeProfileSchema) -> None:
                     "links": csv_items(links),
                     "skills": csv_items(skills),
                     "education": line_items(education),
-                    "experiences": line_items(experiences),
-                    "projects": line_items(projects),
+                    "experiences": block_items(experiences),
+                    "projects": block_items(projects),
                 }
             )
             st.success("Revisão do currículo salva.")
