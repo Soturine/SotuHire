@@ -704,7 +704,7 @@ def render_search_intelligence_step() -> None:
 
 def render_app() -> None:
     """Configure and render the complete guided application."""
-    st.set_page_config(page_title="SotuHire v0.5.0", page_icon="S", layout="wide")
+    st.set_page_config(page_title="SotuHire v0.6.0", page_icon="S", layout="wide")
     initialize_state()
     inject_styles()
     render_header()

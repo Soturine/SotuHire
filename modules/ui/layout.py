@@ -68,7 +68,7 @@ def render_header() -> None:
               <span class="product-badge">Sem auto-apply</span>
             </div>
           </div>
-          <span class="version-pill">v0.5.0</span>
+          <span class="version-pill">v0.6.0</span>
         </div>
         """,
         unsafe_allow_html=True,
