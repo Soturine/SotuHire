@@ -89,6 +89,11 @@ def render_chips(items: list[str], empty_message: str = "Nenhum item detectado."
     st.markdown(chips, unsafe_allow_html=True)
 
 
+def split_visible_items(items: list[str], visible_limit: int = 8) -> tuple[list[str], list[str]]:
+    """Split primary and secondary display items without changing their order."""
+    return items[:visible_limit], items[visible_limit:]
+
+
 def render_limited_chips(
     items: list[str],
     empty_message: str = "Nenhum item detectado.",
@@ -96,10 +101,11 @@ def render_limited_chips(
     expander_label: str = "Outras tecnologias detectadas",
 ) -> None:
     """Render a focused chip set and keep secondary items in an expander."""
-    render_chips(items[:visible_limit], empty_message)
-    if len(items) > visible_limit:
-        with st.expander(f"{expander_label} ({len(items) - visible_limit})"):
-            render_chips(items[visible_limit:])
+    primary, secondary = split_visible_items(items, visible_limit)
+    render_chips(primary, empty_message)
+    if secondary:
+        with st.expander(f"{expander_label} ({len(secondary)})"):
+            render_chips(secondary)
 
 
 def link_label(url: str) -> str:
