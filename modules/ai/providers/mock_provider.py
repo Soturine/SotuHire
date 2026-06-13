@@ -1,4 +1,4 @@
-"""Deterministic provider used by default and in automated tests."""
+"""Deterministic local provider used by default and in automated tests."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from modules.schemas.user_preferences import UserPreferences
 class MockProvider(AIProvider):
     """Use the local analyzer while preserving the provider interface."""
 
-    name = "mock"
+    name = "local"
 
     def analyze(
         self,

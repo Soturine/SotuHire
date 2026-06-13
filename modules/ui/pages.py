@@ -26,6 +26,7 @@ from modules.ui.components import (
     display_value,
     line_items,
     modality_label,
+    provider_label,
     render_chips,
     render_data_card,
     render_item_cards,
@@ -323,7 +324,12 @@ def _render_result_content(result: StructuredAnalysisResult, tailor: ResumeTailo
         "Compatibilidade com preferências.",
     )
     render_score_card(cards[3], "Risk Score", analysis.risk_score, "Sinais que pedem revisão.")
-    st.caption(f"Análise estruturada via {result.provider}.")
+    st.caption(f"Provider usado: {provider_label(result.provider)}.")
+    if result.fallback_used:
+        st.caption(
+            f"Solicitado: {provider_label(result.requested_provider)} · "
+            f"fallback: {provider_label(result.provider)}."
+        )
     if result.warning:
         st.warning(result.warning)
 

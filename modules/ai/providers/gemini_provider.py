@@ -17,7 +17,12 @@ class GeminiProvider(AIProvider):
 
     def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
         self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
-        self.model = model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+        self.model = (
+            model
+            or os.getenv("GEMINI_MODEL")
+            or os.getenv("LLM_MODEL")
+            or "gemini-2.5-flash"
+        )
 
     def analyze(
         self,
@@ -28,13 +33,13 @@ class GeminiProvider(AIProvider):
     ) -> JobAnalysisSchema:
         """Call Gemini with response_schema when configuration is available."""
         if not self.api_key:
-            raise ProviderUnavailableError("GEMINI_API_KEY nao configurada.")
+            raise ProviderUnavailableError("Gemini não configurado: informe GEMINI_API_KEY.")
         try:
             genai = importlib.import_module("google.genai")
             types = importlib.import_module("google.genai.types")
         except ImportError as exc:
             raise ProviderUnavailableError(
-                "Instale requirements-ai.txt para habilitar o Gemini."
+                "Instale requirements-ai.txt para usar Gemini."
             ) from exc
 
         client = genai.Client(api_key=self.api_key)

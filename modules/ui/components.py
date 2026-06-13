@@ -24,6 +24,11 @@ SENIORITY_LABELS = {
     "especialista": "Especialista",
     "": "Não informado",
 }
+PROVIDER_LABELS = {
+    "gemini": "Gemini",
+    "local": "Análise local",
+    "mock": "Análise local",
+}
 
 
 def csv_items(value: str) -> list[str]:
@@ -62,6 +67,11 @@ def modality_label(value: str) -> str:
 def seniority_label(value: str) -> str:
     """Translate the internal seniority value for presentation."""
     return SENIORITY_LABELS.get(value, display_value(value))
+
+
+def provider_label(value: str) -> str:
+    """Translate an internal provider name for presentation."""
+    return PROVIDER_LABELS.get(value, display_value(value))
 
 
 def render_chips(items: list[str], empty_message: str = "Nenhum item detectado.") -> None:

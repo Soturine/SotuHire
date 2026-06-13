@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from modules.ai.structured_analysis import analyze_structured, get_provider
+from modules.ai.structured_analysis import analyze_structured, gemini_setup_warning, get_provider
 from modules.resume_tailor.tailor_rules import build_safe_tailor_output
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
@@ -15,8 +15,8 @@ MODALITIES = ["remote", "hybrid", "onsite"]
 CONTRACTS = ["CLT", "PJ", "estagio", "trainee", "temporario", "freelance"]
 LEVELS = ["estagio", "trainee", "junior", "pleno", "senior", "lead"]
 PROVIDERS = {
-    "Análise local (sem API)": "mock",
-    "Gemini (opcional)": "gemini",
+    "Análise local": "local",
+    "Gemini": "gemini",
 }
 
 
@@ -63,8 +63,12 @@ def render_sidebar() -> tuple[str, str]:
             help="O modo rápido usa padrões. O avançado libera preferências opcionais.",
         )
         provider_label = st.selectbox("Como analisar", list(PROVIDERS))
-        if provider_label == "Gemini (opcional)":
-            st.caption("Só usa Gemini quando a configuração externa estiver disponível.")
+        if provider_label == "Gemini":
+            warning = gemini_setup_warning()
+            if warning:
+                st.warning(warning)
+            else:
+                st.caption("Gemini configurado. O currículo será enviado para análise externa.")
         else:
             st.caption("Análise determinística feita localmente, sem API.")
         st.divider()
