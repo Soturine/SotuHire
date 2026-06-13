@@ -1,2 +1,2 @@
-# Optional structured AI provider. The default mock/local provider needs no API SDK.
+# Optional structured AI provider. The default local analysis needs no API SDK.
 google-genai>=1.0.0

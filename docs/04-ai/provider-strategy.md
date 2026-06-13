@@ -107,11 +107,11 @@ Assim, Gemini pode ser o MVP e Claude/Groq/OpenRouter podem entrar depois sem re
 A camada atual usa `modules/ai/providers/`:
 
 - `base.py`: contrato `AIProvider`;
-- `mock_provider.py`: análise determinística usada por padrão e em testes;
+- `mock_provider.py`: implementação compatível da análise local determinística;
 - `gemini_provider.py`: integração opcional com Gemini Structured Outputs;
 - `structured_analysis.py`: roteamento e fallback local.
 
-`DEFAULT_AI_PROVIDER=mock` é a configuração segura. Quando `gemini` é selecionado sem chave ou SDK, o app não quebra: registra warning e usa o provider local.
+`DEFAULT_AI_PROVIDER=local` é a configuração segura. Quando `gemini` é selecionado sem chave ou SDK, o app não quebra: registra warning e usa o provider local.
 
 O provider não pode ignorar schemas Pydantic, inventar fatos ou contornar regras determinísticas. O SDK Gemini fica em `requirements-ai.txt`, fora das dependências obrigatórias.
 
@@ -119,9 +119,36 @@ O provider não pode ignorar schemas Pydantic, inventar fatos ou contornar regra
 flowchart LR
     A[UI] --> B[Structured Analysis]
     B --> C{Provider}
-    C --> D[Mock/local]
+    C --> D[Análise local]
     C --> E[Gemini opcional]
     E -->|Falha| D
     D --> F[JobAnalysisSchema]
     E --> F
 ```
+
+## Configuração canônica na v0.4.2
+
+```env
+DEFAULT_AI_PROVIDER=local
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Para usar Gemini, altere `DEFAULT_AI_PROVIDER=gemini`, informe a chave e instale:
+
+```bash
+pip install -r requirements-ai.txt
+```
+
+`LLM_PROVIDER` e `LLM_MODEL` continuam aceitos como aliases para instalações antigas. As variáveis novas têm precedência quando ambas estão configuradas.
+
+## Contrato de fallback
+
+O resultado estruturado registra:
+
+- `requested_provider`: provider solicitado;
+- `provider`: provider realmente usado;
+- `fallback_used`: confirmação explícita do fallback;
+- `warning`: motivo resumido e ação necessária.
+
+A interface nunca apresenta `mock` ao usuário. O nome exibido é `Análise local`. Quando Gemini não possui chave, o aviso é `Gemini não configurado. Usando análise local.`. Quando falta o SDK, a orientação é `Instale requirements-ai.txt para usar Gemini.`.

@@ -2,6 +2,35 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## [0.4.2] - 2026-06-13
+
+### Added
+
+- estrutura interna `ResumeSection` e agrupamento semântico de experiências e projetos;
+- aliases para headings técnicos, profissionais, projetos selecionados e formação com cursos;
+- fixtures fictícios realistas de currículos e vagas;
+- testes de blocos semânticos, aliases de ambiente, fallback e rótulos da UI;
+- links clicáveis com rótulos compactos e expansão para listas longas;
+
+### Changed
+
+- provider local passa a ser apresentado como `Análise local`, sem expor `mock` na UI;
+- `DEFAULT_AI_PROVIDER` e `GEMINI_MODEL` passam a ser as variáveis documentadas;
+- `LLM_PROVIDER` e `LLM_MODEL` permanecem como aliases compatíveis;
+- resumo local limitado a evidências curtas de formação, objetivo e skills;
+
+### Fixed
+
+- contagem de experiências e projetos baseada em linhas soltas;
+- soft skills longas exibidas como um único chip;
+- fallback do Gemini escondido ou pouco claro;
+- cards excessivos de experiências e projetos na revisão do currículo;
+
+### Documentation
+
+- semântica do parser e hotfix v0.4.2 documentados;
+- instalação e configuração do Gemini atualizadas;
+
 ## [0.4.1] - 2026-06-12
 
 ### Added

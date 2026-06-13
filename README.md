@@ -10,9 +10,9 @@ A ideia é ajudar uma pessoa candidata a responder uma pergunta simples, mas dif
 
 O projeto começou como um “achador de vagas”, mas o escopo correto é maior: um **copiloto de carreira**. Ele pode receber currículo, analisar vagas formais, interpretar posts de recrutadores, ranquear oportunidades, explicar aderência e preparar materiais de candidatura para revisão humana.
 
-## SotuHire v0.4.1 — UI/UX Hotfix + Parser Fixes
+## SotuHire v0.4.2 — Parser Semantics + AI Provider Fix
 
-A versão atual corrige o fluxo guiado da v0.4.0 para deixá-lo legível, automático e mais próximo de produto:
+A versão atual corrige a leitura semântica de currículos e deixa explícito quando a análise usa Gemini ou o fallback local:
 
 ```text
 Suba um currículo TXT/PDF/DOCX + cole a vaga -> revise os dados detectados -> analise -> exporte -> salve no tracker.
@@ -23,7 +23,7 @@ Suba um currículo TXT/PDF/DOCX + cole a vaga -> revise os dados detectados -> a
 - interface guiada com abas, cards, sidebar e modos rápido/avançado;
 - parser automático de currículo e descrição de vaga;
 - revisão assistida antes da análise;
-- análise estruturada com mock/local por padrão e Gemini opcional;
+- análise estruturada local por padrão e Gemini opcional;
 - fallback local quando chave ou SDK externo não estão disponíveis;
 - Resume Tailor com bullets, resumo, ordem, keywords, warnings e evidências;
 - downloads em JSON e Markdown;
@@ -33,6 +33,35 @@ Suba um currículo TXT/PDF/DOCX + cole a vaga -> revise os dados detectados -> a
 - dados detectados apresentados em cards e chips, com edição opcional;
 - primeiro upload de currículo processado automaticamente;
 - parsers realistas para contatos, links, formação, experiências, projetos, vaga e benefícios.
+- experiências e projetos agrupados em blocos semânticos, sem contar linhas de descrição;
+- headings como `PROJETOS SELECIONADOS`, `COMPETÊNCIAS TÉCNICAS` e `FORMAÇÃO E CURSOS`;
+- links clicáveis com rótulos compactos e listas longas atrás de expansores;
+- provider solicitado, provider usado e fallback visíveis no resultado;
+- variáveis `DEFAULT_AI_PROVIDER` e `GEMINI_MODEL` como padrão documentado.
+
+### Usar Gemini
+
+Instale o SDK opcional:
+
+```bash
+pip install -r requirements-ai.txt
+```
+
+Configure o `.env`:
+
+```env
+DEFAULT_AI_PROVIDER=gemini
+GEMINI_API_KEY=sua_chave
+GEMINI_MODEL=gemini-2.5-flash
+```
+
+Inicie a aplicação:
+
+```bash
+streamlit run app.py
+```
+
+Sem chave, sem SDK ou em caso de erro do Gemini, a interface informa o motivo e usa a análise local.
 
 O histórico não salva o texto bruto do currículo. A aplicação continua sem auto-apply, envio automático, scraping agressivo, PyTorch obrigatório ou Concurso Mode funcional.
 
@@ -361,7 +390,7 @@ Ele junta:
 
 ## Status
 
-**SotuHire v0.4.1 — hotfix de UI/UX, fluxo automático e parsers realistas.**
+**SotuHire v0.4.2 — parser semântico e roteamento de IA explícito.**
 
 O app atual executa análise local e explicável, extrai dados de currículos/vagas, permite revisão assistida, exporta resultados e mantém histórico local. Gemini é opcional; o fallback determinístico continua sendo o caminho seguro padrão.
 
@@ -415,7 +444,9 @@ O produto observa ferramentas de ATS, resume matching, trackers e assistentes de
 - [IA estruturada e exports v0.3](docs/07-development/v0.3-structured-ai-and-export.md)
 - [Tracker, histórico e dashboard v0.4](docs/07-development/v0.4-tracker-history-dashboard.md)
 - [Hotfix de UI e parsers v0.4.1](docs/07-development/v0.4.1-ui-parser-hotfix.md)
+- [Hotfix de parser e provider v0.4.2](docs/07-development/v0.4.2-parser-ai-provider-hotfix.md)
 - [Arquitetura de parsers](docs/02-architecture/parsers.md)
+- [Semântica do parser](docs/02-architecture/parser-semantics.md)
 - [Storage e histórico](docs/02-architecture/storage-and-history.md)
 - [Auditoria v0.4](docs/00-audit/v0.4-readiness-audit.md)
 
