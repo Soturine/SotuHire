@@ -81,10 +81,14 @@ def _resume_review(profile: ResumeProfileSchema) -> None:
         st.markdown("**Idiomas**")
         render_chips(profile.languages)
 
-    summary = st.columns(3)
-    summary[0].metric("Skills", len(profile.skills))
-    summary[1].metric("Experiências", len(profile.experiences))
-    summary[2].metric("Projetos", len(profile.projects))
+    first_summary = st.columns(3)
+    first_summary[0].metric("Skills técnicas", len(profile.skills))
+    first_summary[1].metric("Soft skills", len(profile.soft_skills))
+    first_summary[2].metric("Links", len(profile.links))
+    second_summary = st.columns(3)
+    second_summary[0].metric("Experiências", len(profile.experiences))
+    second_summary[1].metric("Projetos", len(profile.projects))
+    second_summary[2].metric("Formação", len(profile.education))
 
     sections = st.tabs(["Resumo", "Formação", "Experiências", "Projetos"])
     with sections[0]:

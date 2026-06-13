@@ -31,6 +31,14 @@ PERIOD_PATTERN = re.compile(
     flags=re.IGNORECASE,
 )
 LIST_SEPARATOR_PATTERN = re.compile(r"\s*(?:,|;|/|\||•|·)\s*")
+SKILL_CATEGORY_PREFIX_PATTERN = re.compile(
+    r"^\s*(?:"
+    r"linguagens?|web(?:\s*/\s*mobile)?|mobile|dados(?:\s*/\s*devops\s*/\s*ferramentas)?|"
+    r"devops|bancos?\s+de\s+dados?|hardware(?:\s*/\s*iot)?|iot|ferramentas?|tecnologias?|"
+    r"stack|compet[eê]ncias(?:\s+t[eé]cnicas)?|frameworks?"
+    r")\s*:\s*",
+    flags=re.IGNORECASE,
+)
 
 
 @dataclass
@@ -167,6 +175,24 @@ SOFT_SKILL_CATALOG = [
     "Trabalho em equipe",
 ]
 LANGUAGE_CATALOG = ["Português", "Inglês", "Espanhol", "Francês", "Alemão", "Italiano"]
+SKILL_CATEGORY_NAMES = {
+    "banco de dados",
+    "bancos de dados",
+    "competencias",
+    "competencias tecnicas",
+    "dados",
+    "devops",
+    "ferramentas",
+    "frameworks",
+    "hardware",
+    "iot",
+    "linguagem",
+    "linguagens",
+    "mobile",
+    "stack",
+    "tecnologias",
+    "web",
+}
 
 
 def _unique(items: list[str]) -> list[str]:
@@ -372,10 +398,30 @@ def _split_list_items(lines: list[str], *, split_and: bool = False) -> list[str]
     return _unique(items)
 
 
+def _strip_skill_category_prefix(line: str) -> str:
+    return SKILL_CATEGORY_PREFIX_PATTERN.sub("", line, count=1).strip()
+
+
+def _is_technical_skill_chip(item: str) -> bool:
+    normalized = normalize_text(item)
+    soft_skills = {normalize_text(skill) for skill in SOFT_SKILL_CATALOG}
+    languages = {normalize_text(language) for language in LANGUAGE_CATALOG}
+    return bool(
+        normalized
+        and normalized not in SKILL_CATEGORY_NAMES
+        and normalized not in soft_skills
+        and normalized not in languages
+        and len(item.split()) <= 4
+        and len(item) <= 40
+    )
+
+
 def _technical_skill_chips(lines: list[str], clean_text: str) -> list[str]:
     chips = []
-    for item in _split_list_items(lines):
-        if len(item.split()) <= 5 and len(item) <= 50:
+    cleaned_lines = [_strip_skill_category_prefix(line) for line in lines]
+    for item in _split_list_items(cleaned_lines):
+        item = _strip_skill_category_prefix(item)
+        if _is_technical_skill_chip(item):
             chips.append(item)
         else:
             chips.extend(_detect_skills(item, SKILL_CATALOG))
