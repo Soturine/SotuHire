@@ -24,6 +24,15 @@ def test_setup_saves_non_versioned_local_configuration(tmp_path, monkeypatch):
     assert setup.gemini_api_key() == "fake-secret"
 
 
+def test_saved_secrets_select_gemini_after_restart(tmp_path, monkeypatch):
+    target = tmp_path / ".streamlit" / "secrets.toml"
+    setup.save_local_ai_config("fake-secret", path=target)
+    monkeypatch.delenv("DEFAULT_AI_PROVIDER", raising=False)
+    monkeypatch.setattr(setup, "DEFAULT_SECRETS_PATH", target)
+
+    assert setup.default_ai_provider() == "gemini"
+
+
 def test_fake_key_failure_is_friendly(monkeypatch):
     monkeypatch.setattr(setup, "gemini_sdk_installed", lambda: True)
 

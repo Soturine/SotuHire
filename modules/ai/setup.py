@@ -35,8 +35,8 @@ class GeminiTestResult(BaseModel):
     detail: str = ""
 
 
-def _read_local_secrets(path: str | Path = DEFAULT_SECRETS_PATH) -> dict[str, object]:
-    target = Path(path)
+def _read_local_secrets(path: str | Path | None = None) -> dict[str, object]:
+    target = Path(path or DEFAULT_SECRETS_PATH)
     if not target.exists():
         return {}
     try:
@@ -56,6 +56,23 @@ def gemini_api_key(explicit: str | None = None) -> str:
         or os.getenv("GOOGLE_API_KEY")
         or str(secrets.get("GEMINI_API_KEY", ""))
     ).strip()
+
+
+def default_ai_provider(explicit: str | None = None) -> str:
+    """Resolve the selected provider from canonical config or legacy alias."""
+    if explicit:
+        return explicit.strip().lower()
+    secrets = _read_local_secrets()
+    return (
+        (
+            os.getenv("DEFAULT_AI_PROVIDER")
+            or os.getenv("LLM_PROVIDER")
+            or str(secrets.get("DEFAULT_AI_PROVIDER", ""))
+            or "local"
+        )
+        .strip()
+        .lower()
+    )
 
 
 def gemini_model(explicit: str | None = None) -> str:
@@ -103,7 +120,7 @@ def gemini_setup_status(api_key: str | None = None) -> GeminiSetupStatus:
         key_configured=True,
         sdk_installed=True,
         available=True,
-        message="Gemini configurado e ativo.",
+        message="Gemini configurado e pronto para uso.",
     )
 
 

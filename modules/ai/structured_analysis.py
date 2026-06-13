@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import os
-
 from pydantic import BaseModel, ConfigDict
 
 from modules.ai.providers import AIProvider, GeminiProvider, MockProvider
-from modules.ai.setup import gemini_setup_status
+from modules.ai.setup import default_ai_provider, gemini_setup_status
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
 
@@ -25,11 +23,7 @@ class StructuredAnalysisResult(BaseModel):
 
 
 def _configured_provider(name: str | None = None) -> str:
-    return (
-        (name or os.getenv("DEFAULT_AI_PROVIDER") or os.getenv("LLM_PROVIDER") or "local")
-        .strip()
-        .lower()
-    )
+    return default_ai_provider(name)
 
 
 def get_provider(name: str | None = None) -> AIProvider:

@@ -353,14 +353,16 @@ def _render_result_content(result: StructuredAnalysisResult, tailor: ResumeTailo
         "Compatibilidade com preferências.",
     )
     render_score_card(cards[3], "Risk Score", analysis.risk_score, "Sinais que pedem revisão.")
-    st.caption(f"Provider usado: {provider_label(result.provider)}.")
-    if result.fallback_used:
-        st.caption(
-            f"Solicitado: {provider_label(result.requested_provider)} · "
-            f"fallback: {provider_label(result.provider)}."
-        )
+    if result.provider == "gemini":
+        st.success("Usando Gemini para melhorar a análise.")
+    else:
+        st.info("Usando análise local no seu computador.")
     if result.warning:
         st.warning(result.warning)
+    with st.expander("Detalhes técnicos da análise"):
+        st.caption(f"Provider solicitado: {provider_label(result.requested_provider)}")
+        st.caption(f"Provider realmente usado: {provider_label(result.provider)}")
+        st.caption(f"Fallback usado: {'sim' if result.fallback_used else 'não'}")
 
     tabs = st.tabs(
         [
@@ -586,7 +588,7 @@ def render_dashboard_step() -> None:
 
 def render_app() -> None:
     """Configure and render the complete guided application."""
-    st.set_page_config(page_title="SotuHire v0.4.2", page_icon="S", layout="wide")
+    st.set_page_config(page_title="SotuHire v0.5.0", page_icon="S", layout="wide")
     initialize_state()
     inject_styles()
     render_header()

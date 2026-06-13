@@ -20,7 +20,7 @@ from modules.resume_tailor.tailor_rules import build_safe_tailor_output
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.user_preferences import UserPreferences
-from modules.ui.components import csv_items
+from modules.ui.components import csv_items, provider_label
 
 MODALITIES = ["remote", "hybrid", "onsite"]
 CONTRACTS = ["CLT", "PJ", "estagio", "trainee", "temporario", "freelance"]
@@ -58,7 +58,7 @@ def render_header() -> None:
             <h1>SotuHire</h1>
             <p>Currículo, vaga e decisão em um fluxo revisável.</p>
           </div>
-          <span class="version-pill">v0.4.2</span>
+          <span class="version-pill">v0.5.0</span>
         </div>
         """,
         unsafe_allow_html=True,
@@ -68,6 +68,8 @@ def render_header() -> None:
 def render_sidebar() -> tuple[str, str]:
     """Render friendly controls and return mode/provider selections."""
     with st.sidebar:
+        if st.session_state.pop("activate_gemini_after_save", False):
+            st.session_state.provider_selection = "Gemini"
         st.title("Sua análise")
         st.caption("Escolha o nível de detalhe. O processamento local é o padrão.")
         mode = st.radio(
@@ -85,8 +87,13 @@ def render_sidebar() -> tuple[str, str]:
             ),
             0,
         )
-        provider_label = st.selectbox("Como analisar", provider_options, index=default_index)
-        if provider_label == "Gemini":
+        provider_selection = st.selectbox(
+            "Como analisar",
+            provider_options,
+            index=default_index,
+            key="provider_selection",
+        )
+        if provider_selection == "Gemini":
             warning = gemini_setup_warning()
             if warning:
                 st.warning(warning)
@@ -96,9 +103,9 @@ def render_sidebar() -> tuple[str, str]:
             st.caption("Análise determinística feita localmente, sem API.")
         with st.expander("Configurar IA"):
             result = st.session_state.analysis_result
-            actual_provider = result.provider if result else "Ainda não executado"
+            actual_provider = provider_label(result.provider) if result else "Ainda não executado"
             status = gemini_setup_status()
-            st.caption(f"Selecionado: {provider_label}")
+            st.caption(f"Selecionado: {provider_selection}")
             st.caption(f"Usado na última análise: {actual_provider}")
             if result:
                 st.caption(
@@ -110,10 +117,15 @@ def render_sidebar() -> tuple[str, str]:
                 "Gemini key: configurada" if status.key_configured else "Gemini key: ausente"
             )
             st.caption("SDK Gemini: instalado" if status.sdk_installed else "SDK Gemini: ausente")
+            status_message = (
+                "Gemini configurado e ativo."
+                if status.available and provider_selection == "Gemini"
+                else status.message
+            )
             (st.success if status.available else st.warning)(
-                status.message
+                status_message
                 if not status.reason
-                else f"{status.message} Motivo: {status.reason}."
+                else f"{status_message} Motivo: {status.reason}."
             )
             st.link_button(
                 "Abrir Google AI Studio",
@@ -132,9 +144,16 @@ def render_sidebar() -> tuple[str, str]:
             if setup_actions[1].button("Salvar configuração local", use_container_width=True):
                 try:
                     target = save_local_ai_config(api_key)
-                    st.success(f"Configuração salva localmente em {target}.")
+                    st.session_state.activate_gemini_after_save = True
+                    st.session_state.ai_setup_saved_path = str(target)
+                    st.rerun()
                 except ValueError as exc:
                     st.error(str(exc))
+            if st.session_state.get("ai_setup_saved_path"):
+                st.success(
+                    "Gemini ativado. Configuração salva localmente em "
+                    f"{st.session_state.ai_setup_saved_path}."
+                )
             if st.session_state.ai_setup_test_result:
                 test_result = st.session_state.ai_setup_test_result
                 (st.success if test_result.success else st.error)(test_result.message)
@@ -146,7 +165,7 @@ def render_sidebar() -> tuple[str, str]:
         st.caption("Currículos não são enviados para IA externa sem configuração explícita.")
         st.caption("O histórico local só é salvo após sua confirmação.")
         st.caption("Revisão humana obrigatória. O SotuHire não inventa dados.")
-        return mode, PROVIDERS[provider_label]
+        return mode, PROVIDERS[provider_selection]
 
 
 def build_preferences() -> UserPreferences:
