@@ -334,3 +334,25 @@ detectar URL -> validar acesso público -> consultar robots.txt -> cache/rate li
 O cliente limita o tamanho da resposta, usa user-agent identificável e registra o domínio coletado. O cache local evita downloads repetidos e o store mantém oportunidades sem duplicação.
 
 URLs públicas de qualquer domínio podem ser testadas. Caminhos que exigem autenticação e fontes proibidas por `robots.txt` retornam erro claro, sem tentativa de bypass.
+
+## Três modos de coleta
+
+### PUBLIC_SCRAPING
+
+Para páginas abertas, RSS/Atom, páginas públicas de carreira e boards públicos. Usa cache, rate limit, limite de itens, logs e regras por fonte.
+
+### MANUAL_URL
+
+A pessoa usuária cola uma URL específica. O conector coleta somente aquela página e não segue links em massa sem uma nova ação explícita.
+
+### USER_ASSISTED_CAPTURE
+
+A pessoa usuária abre manualmente uma vaga ou publicação no navegador e envia o conteúdo visível da página atual ao SotuHire. Isso permite processar uma oportunidade vista dentro de uma sessão própria autenticada sem entregar cookies, credenciais ou controle de navegação ao app.
+
+Esse modo oferece ações explícitas para salvar a vaga atual, analisá-la e enviá-la ao tracker. Ele não percorre feeds autenticados, não burla CAPTCHA e não envia candidatura.
+
+## Plataformas com autorização específica
+
+O fato de uma sessão pertencer à pessoa usuária não significa, por si só, que crawling automatizado é autorizado pela plataforma. Quando uma fonte exige autorização formal, o SotuHire só deve criar um conector autenticado depois de obter essa permissão ou usar uma API oficial.
+
+No caso do LinkedIn, os [Crawling Terms](https://www.linkedin.com/legal/crawling-terms) exigem permissão expressa para crawling automatizado. Sem essa autorização, o modo indicado é `USER_ASSISTED_CAPTURE` para a página atual.

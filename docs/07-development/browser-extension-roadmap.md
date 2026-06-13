@@ -104,3 +104,19 @@ content script -> payload normalizado -> localhost -> tracker -> análise
 ```
 
 Referência técnica: [Chrome Extension Storage API](https://developer.chrome.com/docs/extensions/reference/api/storage).
+
+## Captura assistida da página atual
+
+O roadmap passa a priorizar três ações explícitas na página aberta:
+
+- Salvar vaga atual;
+- Analisar vaga atual;
+- Enviar para tracker.
+
+A página pode estar aberta em uma sessão própria autenticada. A extensão deve extrair somente o conteúdo visível da aba atual após clique da pessoa usuária, mostrar preview e enviar um payload normalizado ao SotuHire.
+
+Detalhes: [Browser Extension Assisted Capture](browser-extension-assisted-capture.md).
+
+## Integrações autenticadas autorizadas
+
+Uma integração autenticada futura exige API oficial ou permissão formal da plataforma. Ela deve ficar separada da captura assistida, documentar os limites concedidos e nunca reutilizar cookies da sessão para ampliar o escopo sem confirmação.

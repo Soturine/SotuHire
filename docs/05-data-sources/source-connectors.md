@@ -375,3 +375,15 @@ A implementação inicial usa um registry extensível com:
 Todos recebem `ScrapingSource`, retornam `CollectionResult` e dependem de um protocolo pequeno de cliente. Isso permite testes com fixtures sem rede e novas implementações sem acoplar o parser ao transporte HTTP.
 
 Fontes públicas compatíveis podem ser adicionadas em `config/sources.toml`. O dispatcher escolhe o conector pelo campo `type`.
+
+## Modos de acesso da fonte
+
+Além do tipo de conector, cada fonte declara um modo:
+
+```text
+PUBLIC_SCRAPING
+MANUAL_URL
+USER_ASSISTED_CAPTURE
+```
+
+`USER_ASSISTED_CAPTURE` não é um crawler HTTP. Ele recebe somente a vaga ou publicação atual que a pessoa usuária decidiu enviar a partir do navegador, mesmo quando essa página está dentro de uma sessão própria autenticada.

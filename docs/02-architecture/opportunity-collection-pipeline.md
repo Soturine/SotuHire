@@ -19,6 +19,16 @@ URL ou fonte configurada
 
 Cada coleta parte de uma ação explícita. O cliente usa user-agent identificável, limita bytes, respeita `robots.txt` e registra somente conteúdo necessário para a oportunidade.
 
+## Modos explícitos
+
+`ScrapingSource.collection_mode` diferencia:
+
+- `PUBLIC_SCRAPING`: cliente HTTP para páginas públicas e feeds;
+- `MANUAL_URL`: coleta uma única URL e não segue links em massa;
+- `USER_ASSISTED_CAPTURE`: processa somente o conteúdo visível da página atual fornecido pela pessoa usuária.
+
+Uma captura assistida pode vir de uma página aberta em uma sessão própria já autenticada. Nesse modo, o SotuHire não faz requisição à plataforma, não lê cookies e não percorre outras páginas.
+
 ## Contratos
 
 `ScrapingSource` descreve tipo, URL, limite, intervalo e seletores futuros. `ScrapedOpportunity` guarda origem, fatos detectados, descrição, hash e timestamp com timezone.
@@ -31,4 +41,4 @@ Respostas públicas ficam em `data/scraping-cache` por seis horas. Uma fonte com
 
 ## Limites
 
-A pipeline não autentica em plataformas, não contorna captcha ou bloqueios e não envia candidaturas. Fontes públicas compatíveis podem ser adicionadas pelo registry ou por `config/sources.toml`.
+A pipeline não autentica em plataformas, não contorna captcha ou bloqueios e não envia candidaturas. Páginas autenticadas abertas pela pessoa usuária podem ser processadas somente via captura assistida da página atual. Fontes públicas compatíveis podem ser adicionadas pelo registry ou por `config/sources.toml`.

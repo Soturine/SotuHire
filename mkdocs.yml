@@ -123,6 +123,7 @@ nav:
       - Follow-up assistant: 07-development/follow-up-assistant.md
       - Alerts roadmap: 07-development/alerts-roadmap.md
       - Browser extension roadmap: 07-development/browser-extension-roadmap.md
+      - Browser extension assisted capture: 07-development/browser-extension-assisted-capture.md
       - Profile analyzer roadmap: 07-development/profile-analyzer-roadmap.md
       - Resume Tailor DOCX: 07-development/resume-tailor-docx.md
       - MVP core implementation: 07-development/mvp-core-implementation.md

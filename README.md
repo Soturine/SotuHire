@@ -39,6 +39,16 @@ cp config/sources.example.toml config/sources.toml
 
 Coleta autenticada, bypass de bloqueios, auto-apply e spam permanecem fora do produto.
 
+### Modos de coleta
+
+O app distingue três modos:
+
+- **PUBLIC_SCRAPING**: coleta automática de páginas públicas, RSS, boards e páginas de carreira com cache, rate limit, limites e `robots.txt`.
+- **MANUAL_URL**: coleta somente a URL específica colada pela pessoa usuária, sem seguir links em massa.
+- **USER_ASSISTED_CAPTURE**: a pessoa usuária abre uma vaga ou publicação, inclusive em uma sessão própria já autenticada, e envia somente o conteúdo visível da página atual para salvar, analisar ou registrar no tracker.
+
+O modo assistido não lê cookies, não navega automaticamente pela conta, não burla CAPTCHA e não envia candidaturas.
+
 ## Screenshots v0.7.0
 
 Todos os screenshots usam a demo fictícia e oportunidades de fixture.

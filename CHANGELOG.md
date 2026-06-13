@@ -2,6 +2,25 @@
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
+## Unreleased
+
+### Added
+
+- modos explícitos `PUBLIC_SCRAPING`, `MANUAL_URL` e `USER_ASSISTED_CAPTURE`;
+- captura assistida da vaga ou publicação atualmente aberta pela pessoa usuária;
+- ações para salvar a vaga atual, analisar e enviar ao tracker;
+- roadmap dedicado para extensão de captura assistida;
+
+### Changed
+
+- a aba de coleta distingue coleta pública automática, URL única e captura assistida;
+- fontes configuradas persistem o modo de coleta;
+
+### Security
+
+- captura assistida processa somente o conteúdo visível explicitamente fornecido;
+- cookies, tokens, navegação autenticada em massa e auto-apply não são usados;
+
 ## [0.7.0] - 2026-06-13
 
 ### Added

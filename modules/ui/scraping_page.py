@@ -8,8 +8,9 @@ import streamlit as st
 
 from modules.opportunities import OpportunityStore, filter_opportunities, opportunity_to_job_posting
 from modules.scraping import ScrapingSource, inspect_source_safety
-from modules.scraping.collection import collect_public_source
+from modules.scraping.collection import capture_user_assisted_opportunity, collect_public_source
 from modules.scraping.connectors.configured_source import load_configured_sources
+from modules.scraping.schemas import CollectionMode, ScrapedOpportunity
 from modules.tracker.job_tracker import JobTracker
 from modules.ui.layout import run_analysis
 
@@ -18,6 +19,11 @@ SOURCE_TYPES = {
     "URL de listagem": "generic_public_page",
     "RSS/Atom": "rss",
     "Página de carreira de empresa": "company_career_page",
+}
+COLLECTION_MODES: dict[str, CollectionMode] = {
+    "Coleta pública automática": "PUBLIC_SCRAPING",
+    "Coleta por URL": "MANUAL_URL",
+    "Captura assistida pelo usuário": "USER_ASSISTED_CAPTURE",
 }
 OPPORTUNITY_STORE = OpportunityStore()
 TRACKER = JobTracker()
@@ -35,6 +41,7 @@ def save_source(source: ScrapingSource, path: str | Path = "config/sources.toml"
             f'name = "{escaped_name}"',
             f'type = "{source.type}"',
             f'url = "{escaped_url}"',
+            f'collection_mode = "{source.collection_mode}"',
             f"enabled = {str(source.enabled).lower()}",
             f"max_items = {source.max_items}",
             f"delay_seconds = {source.delay_seconds}",
@@ -49,6 +56,10 @@ def save_source(source: ScrapingSource, path: str | Path = "config/sources.toml"
 def source_from_controls() -> ScrapingSource:
     """Build the selected source from current Streamlit state."""
     configured = load_configured_sources()
+    mode = COLLECTION_MODES.get(
+        st.session_state.get("collection_mode_label", "Coleta pública automática"),
+        "PUBLIC_SCRAPING",
+    )
     input_type = st.session_state.get("collection_input_type", "URL de vaga")
     if input_type == "Fonte configurada" and configured:
         selected_name = st.session_state.get("configured_source_name", configured[0].name)
@@ -59,10 +70,15 @@ def source_from_controls() -> ScrapingSource:
         name=str(st.session_state.get("collection_source_name", "")).strip()
         or safety.domain
         or "Fonte pública",
-        type=SOURCE_TYPES.get(input_type, safety.detected_type),
+        type="manual_url"
+        if mode == "MANUAL_URL"
+        else SOURCE_TYPES.get(input_type, safety.detected_type),
         url=url,
+        collection_mode=mode,
         enabled=True,
-        max_items=int(st.session_state.get("collection_max_items", 20)),
+        max_items=1
+        if mode == "MANUAL_URL"
+        else int(st.session_state.get("collection_max_items", 20)),
         delay_seconds=float(st.session_state.get("collection_delay", 2.0)),
     )
 
@@ -77,15 +93,118 @@ def use_opportunity_for_analysis(index: int, provider_name: str) -> None:
         run_analysis(provider_name)
 
 
+def use_opportunity(opportunity: ScrapedOpportunity, provider_name: str) -> None:
+    """Load one explicit opportunity into the current analysis flow."""
+    st.session_state.job_text = opportunity.description
+    st.session_state.job_posting = opportunity_to_job_posting(opportunity)
+    st.session_state.last_analysis_fingerprint = ""
+    if st.session_state.resume_text.strip():
+        run_analysis(provider_name)
+
+
+def save_opportunity_to_tracker(opportunity: ScrapedOpportunity, provider_name: str) -> None:
+    """Analyze one opportunity and persist the reviewed result in the tracker."""
+    use_opportunity(opportunity, provider_name)
+    result = st.session_state.get("analysis_result")
+    if result is None:
+        raise ValueError("Carregue um currículo antes de enviar a vaga para o tracker.")
+    TRACKER.add_analysis(
+        result.analysis,
+        job_title=opportunity.title,
+        company=opportunity.company or "",
+        modality=opportunity.modality or "",
+        seniority=opportunity.seniority or "",
+        tailor=st.session_state.get("tailor_output"),
+        notes=f"Capturada de {opportunity.source_url}",
+        privacy_acknowledged=True,
+    )
+
+
+def render_user_assisted_capture(provider_name: str) -> None:
+    """Render single-page capture controlled entirely by the user."""
+    st.info(
+        "Abra a vaga ou publicação no navegador, revise o conteúdo visível e cole somente "
+        "a oportunidade atual. O SotuHire não acessa cookies, sessão ou outras páginas."
+    )
+    details = st.columns(2)
+    source_url = details[0].text_input(
+        "URL da página atual (opcional)",
+        key="assisted_capture_url",
+        placeholder="https://plataforma.example/vaga-atual",
+    )
+    title_hint = details[1].text_input("Título da vaga (opcional)", key="assisted_capture_title")
+    text = st.text_area(
+        "Conteúdo visível da vaga ou publicação atual",
+        key="assisted_capture_text",
+        height=220,
+        placeholder="Cole apenas o conteúdo da oportunidade que está aberta no navegador.",
+    )
+    preview = capture_user_assisted_opportunity(
+        text,
+        source_url=source_url,
+        title_hint=title_hint,
+        persist=False,
+    )
+    if preview.opportunities:
+        opportunity = preview.opportunities[0]
+        st.markdown(f"**Preview:** {opportunity.title}")
+        st.caption(
+            f"{opportunity.company or 'Empresa não informada'} · "
+            f"{opportunity.location or 'Local não informado'}"
+        )
+    actions = st.columns(3)
+    if actions[0].button("Salvar vaga atual no SotuHire", type="primary", use_container_width=True):
+        result = capture_user_assisted_opportunity(
+            text,
+            source_url=source_url,
+            title_hint=title_hint,
+        )
+        st.session_state.assisted_capture_result = result
+        (st.success if result.opportunities else st.error)(
+            "Vaga atual salva no SotuHire." if result.opportunities else result.failures[0]
+        )
+    if actions[1].button(
+        "Analisar vaga atual",
+        use_container_width=True,
+        disabled=not preview.opportunities,
+    ):
+        use_opportunity(preview.opportunities[0], provider_name)
+        st.success("Vaga atual carregada para análise.")
+    if actions[2].button(
+        "Enviar para tracker",
+        use_container_width=True,
+        disabled=not preview.opportunities or not st.session_state.resume_text.strip(),
+    ):
+        save_opportunity_to_tracker(preview.opportunities[0], provider_name)
+        st.success("Vaga atual analisada e enviada para o tracker.")
+
+
 def render_scraping_page(provider_name: str) -> None:
     """Render collection controls and locally stored opportunities."""
-    st.markdown("### Coletar vaga ou fonte pública")
-    st.caption("Coleta automática de páginas públicas com robots.txt, cache, limite e dedupe.")
+    st.markdown("### Coletar ou capturar oportunidade")
+    st.caption("Escolha explicitamente como o SotuHire deve receber oportunidades.")
+    st.radio(
+        "Modo de coleta",
+        list(COLLECTION_MODES),
+        horizontal=True,
+        key="collection_mode_label",
+    )
+    mode = COLLECTION_MODES[st.session_state.collection_mode_label]
+    if mode == "USER_ASSISTED_CAPTURE":
+        render_user_assisted_capture(provider_name)
+        return
+    if mode == "MANUAL_URL":
+        st.info("Cole uma URL específica. O sistema coleta somente essa página e não segue links.")
+    else:
+        st.info("Coleta pública automática com cache, rate limit, limite de itens e robots.txt.")
     configured = load_configured_sources()
     controls = st.columns(2)
-    controls[0].selectbox(
-        "Tipo de entrada", [*SOURCE_TYPES, "Fonte configurada"], key="collection_input_type"
+    input_options = (
+        ["URL de vaga"]
+        if mode == "MANUAL_URL"
+        else ["URL de listagem", "RSS/Atom", "Página de carreira de empresa", "Fonte configurada"]
     )
+    controls[0].selectbox("Tipo de entrada", input_options, key="collection_input_type")
     if st.session_state.collection_input_type == "Fonte configurada":
         if configured:
             controls[1].selectbox(
@@ -103,7 +222,14 @@ def render_scraping_page(provider_name: str) -> None:
             key="collection_url",
         )
     limits = st.columns(2)
-    limits[0].number_input("Limite por coleta", 1, 200, 20, key="collection_max_items")
+    limits[0].number_input(
+        "Limite por coleta",
+        1,
+        200,
+        1 if mode == "MANUAL_URL" else 20,
+        disabled=mode == "MANUAL_URL",
+        key="collection_max_items",
+    )
     limits[1].number_input("Intervalo por domínio", 0.2, 60.0, 2.0, key="collection_delay")
 
     source = source_from_controls()
@@ -175,16 +301,5 @@ def render_scraping_page(provider_name: str) -> None:
                 key=f"save_collected_{index}",
                 disabled=st.session_state.get("analysis_result") is None,
             ):
-                use_opportunity_for_analysis(index, provider_name)
-                result = st.session_state.analysis_result
-                TRACKER.add_analysis(
-                    result.analysis,
-                    job_title=opportunity.title,
-                    company=opportunity.company or "",
-                    modality=opportunity.modality or "",
-                    seniority=opportunity.seniority or "",
-                    tailor=st.session_state.get("tailor_output"),
-                    notes=f"Coletada de {opportunity.source_url}",
-                    privacy_acknowledged=True,
-                )
+                save_opportunity_to_tracker(opportunity, provider_name)
                 st.success("Oportunidade salva no tracker.")

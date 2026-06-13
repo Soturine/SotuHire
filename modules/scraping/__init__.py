@@ -5,6 +5,7 @@ from .client import ScrapingClient
 from .dedupe import deduplicate_opportunities, normalize_url
 from .robots import inspect_source_safety
 from .schemas import (
+    CollectionMode,
     CollectionResult,
     FetchResult,
     ScrapedOpportunity,
@@ -15,6 +16,7 @@ from .source_registry import SourceRegistry, default_source_registry
 
 __all__ = [
     "CollectionResult",
+    "CollectionMode",
     "FetchResult",
     "ScrapedOpportunity",
     "ScrapingClient",

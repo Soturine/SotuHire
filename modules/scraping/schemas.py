@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
+
+CollectionMode = Literal["PUBLIC_SCRAPING", "MANUAL_URL", "USER_ASSISTED_CAPTURE"]
 
 
 class ScrapedOpportunity(BaseModel):
@@ -31,13 +34,14 @@ class ScrapedOpportunity(BaseModel):
 
 
 class ScrapingSource(BaseModel):
-    """Configurable public collection source."""
+    """Configurable collection source with an explicit access mode."""
 
     model_config = ConfigDict(extra="forbid")
 
     name: str
     type: str
     url: str
+    collection_mode: CollectionMode = "PUBLIC_SCRAPING"
     enabled: bool = False
     max_items: int = Field(default=20, ge=1, le=200)
     delay_seconds: float = Field(default=2.0, ge=0.2, le=60)
@@ -83,3 +87,4 @@ class CollectionResult(BaseModel):
     updated_count: int = 0
     failures: list[str] = Field(default_factory=list)
     scraping_performed: bool = False
+    user_assisted_capture: bool = False

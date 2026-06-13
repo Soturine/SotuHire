@@ -399,3 +399,17 @@ A v0.7.0 transforma a estratégia em coleta pública acionável:
 - corrige o roteamento da chave Gemini da sessão para a análise real.
 
 Coleta autenticada, bypass de bloqueios, auto-apply e envio automático permanecem fora do roadmap entregue.
+
+# Ajuste de escopo: captura assistida
+
+A coleta da v0.7 passa a distinguir páginas públicas, URL única e captura assistida. A captura assistida permite que a pessoa usuária envie a vaga ou publicação atualmente aberta, inclusive dentro de sua própria sessão autenticada.
+
+Próximo marco:
+
+- extensão com ação **Salvar vaga atual**;
+- ação **Analisar vaga atual**;
+- ação **Enviar para tracker**;
+- preview do conteúdo antes do envio;
+- permissões mínimas por página.
+
+Crawling massivo autenticado, leitura de cookies e auto-apply continuam fora desse marco.
