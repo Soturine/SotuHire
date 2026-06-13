@@ -57,3 +57,18 @@ def test_other_heading_aliases_are_recognized():
     assert len(web_profile.experiences) == 1
     assert len(web_profile.projects) == 2
     assert "TypeScript" in web_profile.skills
+
+
+def test_project_detail_labels_stay_in_the_current_block():
+    profile = parse_resume_text(
+        """
+        Pessoa Exemplo
+        PROJETOS SELECIONADOS
+        Projeto Aurora: aplicação para organização de estudos.
+        Tecnologias: Python, FastAPI e SQL.
+        Projeto Farol: dashboard para acompanhamento de indicadores.
+        """
+    )
+
+    assert len(profile.projects) == 2
+    assert "Tecnologias: Python" in profile.projects[0]

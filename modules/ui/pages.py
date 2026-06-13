@@ -508,7 +508,7 @@ def render_dashboard_step() -> None:
 
 def render_app() -> None:
     """Configure and render the complete guided application."""
-    st.set_page_config(page_title="SotuHire v0.4.1", page_icon="S", layout="wide")
+    st.set_page_config(page_title="SotuHire v0.4.2", page_icon="S", layout="wide")
     initialize_state()
     inject_styles()
     render_header()

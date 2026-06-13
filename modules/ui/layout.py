@@ -45,7 +45,7 @@ def render_header() -> None:
             <h1>SotuHire</h1>
             <p>Currículo, vaga e decisão em um fluxo revisável.</p>
           </div>
-          <span class="version-pill">v0.4.1</span>
+          <span class="version-pill">v0.4.2</span>
         </div>
         """,
         unsafe_allow_html=True,
@@ -62,7 +62,17 @@ def render_sidebar() -> tuple[str, str]:
             ["Modo rápido", "Modo avançado"],
             help="O modo rápido usa padrões. O avançado libera preferências opcionais.",
         )
-        provider_label = st.selectbox("Como analisar", list(PROVIDERS))
+        provider_options = list(PROVIDERS)
+        default_provider = get_provider().name
+        default_index = next(
+            (
+                index
+                for index, label in enumerate(provider_options)
+                if PROVIDERS[label] == default_provider
+            ),
+            0,
+        )
+        provider_label = st.selectbox("Como analisar", provider_options, index=default_index)
         if provider_label == "Gemini":
             warning = gemini_setup_warning()
             if warning:

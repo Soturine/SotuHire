@@ -128,6 +128,18 @@ PROJECT_TERMS = {
     "projeto profissional",
     "sistema",
 }
+PROJECT_DETAIL_LABELS = {
+    "atividades",
+    "contexto",
+    "descricao",
+    "destaques",
+    "ferramentas",
+    "impacto",
+    "responsabilidades",
+    "resultados",
+    "stack",
+    "tecnologias",
+}
 EDUCATION_TERMS = {
     "bacharelado",
     "curso tecnico",
@@ -190,6 +202,14 @@ def _split_sections(lines: list[str]) -> list[ResumeSection]:
     sections = [ResumeSection(name="header", title="", lines=[])]
     for line in lines:
         detected, title, trailing = _section_marker(line)
+        if (
+            detected
+            and trailing
+            and sections[-1].name in {"experiences", "projects"}
+            and normalize_text(title) in PROJECT_DETAIL_LABELS
+        ):
+            sections[-1].lines.append(line)
+            continue
         if detected:
             sections.append(ResumeSection(name=detected, title=title, lines=[]))
             if trailing:
@@ -318,7 +338,12 @@ def _starts_experience(line: str) -> bool:
 def _starts_project(line: str) -> bool:
     normalized = normalize_text(line)
     prefix = line.split(":", 1)[0].strip()
-    named_project = ":" in line and 1 <= len(prefix.split()) <= 8
+    normalized_prefix = normalize_text(prefix)
+    named_project = (
+        ":" in line
+        and 1 <= len(prefix.split()) <= 8
+        and normalized_prefix not in PROJECT_DETAIL_LABELS
+    )
     explicit_project = any(term in normalized for term in PROJECT_TERMS)
     return named_project or (explicit_project and len(line.split()) <= 18)
 
@@ -366,11 +391,7 @@ def _combined_education_and_courses(
         _starts_education,
     )
     courses = _group_blocks(
-        [
-            line
-            for line in education_lines
-            if _starts_course(line) and not _starts_education(line)
-        ],
+        [line for line in education_lines if _starts_course(line) and not _starts_education(line)],
         _starts_course,
     )
     courses.extend(_group_blocks(_section_lines(sections, "courses"), _starts_course))
@@ -430,9 +451,7 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
         experiences=experiences,
         projects=projects,
         courses=courses,
-        certifications=_group_blocks(
-            _section_lines(sections, "certifications"), _starts_course
-        ),
+        certifications=_group_blocks(_section_lines(sections, "certifications"), _starts_course),
         skills=skills,
         soft_skills=soft_skills,
         languages=_unique(

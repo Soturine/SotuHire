@@ -90,7 +90,9 @@ def link_label(url: str) -> str:
         return "LinkedIn"
     if "github.com" in lowered:
         return "GitHub"
-    if any(domain in lowered for domain in ["behance.net", "vercel.app", "netlify.app", "github.io"]):
+    if any(
+        domain in lowered for domain in ["behance.net", "vercel.app", "netlify.app", "github.io"]
+    ):
         return "Portfólio"
     return "Site"
 

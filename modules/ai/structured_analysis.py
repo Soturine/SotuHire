@@ -26,11 +26,10 @@ class StructuredAnalysisResult(BaseModel):
 
 def _configured_provider(name: str | None = None) -> str:
     return (
-        name
-        or os.getenv("DEFAULT_AI_PROVIDER")
-        or os.getenv("LLM_PROVIDER")
-        or "local"
-    ).strip().lower()
+        (name or os.getenv("DEFAULT_AI_PROVIDER") or os.getenv("LLM_PROVIDER") or "local")
+        .strip()
+        .lower()
+    )
 
 
 def get_provider(name: str | None = None) -> AIProvider:
@@ -84,7 +83,6 @@ def analyze_structured(
             requested_provider=selected.name,
             fallback_used=True,
             warning=(
-                f"Gemini falhou: {_short_error(exc)} "
-                "Provider usado: Análise local. Fallback usado."
+                f"Gemini falhou: {_short_error(exc)} Provider usado: Análise local. Fallback usado."
             ),
         )

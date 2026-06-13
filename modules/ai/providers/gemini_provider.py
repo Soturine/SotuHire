@@ -18,10 +18,7 @@ class GeminiProvider(AIProvider):
     def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
         self.api_key = api_key or os.getenv("GEMINI_API_KEY", "")
         self.model = (
-            model
-            or os.getenv("GEMINI_MODEL")
-            or os.getenv("LLM_MODEL")
-            or "gemini-2.5-flash"
+            model or os.getenv("GEMINI_MODEL") or os.getenv("LLM_MODEL") or "gemini-2.5-flash"
         )
 
     def analyze(
@@ -38,9 +35,7 @@ class GeminiProvider(AIProvider):
             genai = importlib.import_module("google.genai")
             types = importlib.import_module("google.genai.types")
         except ImportError as exc:
-            raise ProviderUnavailableError(
-                "Instale requirements-ai.txt para usar Gemini."
-            ) from exc
+            raise ProviderUnavailableError("Instale requirements-ai.txt para usar Gemini.") from exc
 
         client = genai.Client(api_key=self.api_key)
         response = client.models.generate_content(
