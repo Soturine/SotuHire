@@ -93,3 +93,28 @@ Executado em 2026-06-14 após a implementação de Career Memory e RAG local:
 
 A validação cobre análise com e sem memória, opt-in do Gemini, feedback, export/import, perfil,
 Search Intelligence, Hidden Jobs Radar, tracker, dashboard, documentação e navegação Streamlit.
+
+---
+
+# Validação local da v0.9.0
+
+Executado em 14 de junho de 2026 após a implementação do Browser Companion, calibração de
+evidências, deduplicação multiportal e analisador GitHub/portfólio:
+
+| Verificação | Resultado |
+| --- | --- |
+| Pyright | indisponível no ambiente local: `No module named pyright` |
+| Ruff check | aprovado |
+| Ruff format check | 248 arquivos formatados |
+| Pytest | 200 testes aprovados |
+| MkDocs strict | build aprovado |
+| Streamlit health | HTTP 200, resposta `ok` |
+| Local Companion API | HTTP 200 em `127.0.0.1:8765/health` |
+| JavaScript | quatro arquivos aprovados por `node --check` |
+| Extensão | botão injetado, modal, modos standalone/conectado e pacote validados |
+| Chrome Web Store ZIP | `dist/sotuhire-extension-v0.9.0.zip`, sem segredos |
+| Capturas v0.9.0 | 16 PNGs fictícios gerados e principais superfícies inspecionadas |
+
+A validação cobre botão e modal injetados no GitHub, README, arquivos centrais, commits, deep
+analysis, chave Gemini standalone opcional, modo conectado, memória de evidências, pacote da loja,
+captura de vagas, importação paginada, deduplicação entre portais, tracker e dashboard.

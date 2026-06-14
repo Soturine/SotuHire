@@ -48,3 +48,11 @@ assistida não é convertida silenciosamente em crawler autenticado.
 ## Evolução
 
 Uma primeira versão pode usar um popup e uma API local. Depois, pode adicionar detecção de página de vaga, post de oportunidade e confirmação de envio ao tracker.
+
+## Implementação multiportal na v0.9.0
+
+O popup funciona com a aba atual em LinkedIn, Gupy, Indeed, InfoJobs, Nube, páginas de carreira e
+outros portais por meio de heurísticas genéricas. Listas paginadas podem ser acumuladas em lote.
+
+A deduplicação usa URL normalizada ou empresa+título semelhante, preservando todos os domínios e
+URLs no cartão consolidado do tracker.

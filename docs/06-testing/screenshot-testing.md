@@ -58,3 +58,12 @@ continuar intuitivo; as demais imagens apoiam a documentação e a validação v
 
 O script atual gera somente as quatro superfícies da v0.8.0. As capturas anteriores permanecem no
 repositório como registro visual histórico e não são sobrescritas.
+
+## Screenshots da v0.9.0
+
+A v0.9.0 registra a aba Extensão, popup, vaga capturada, feedback de evidência e perfil
+profissional. Todas as capturas usam dados fictícios. O README continua referenciando somente uma
+imagem atual para permanecer intuitivo; as demais ficam na documentação da versão.
+
+O complemento GitHub/Portfólio adiciona cinco capturas: análise no popup, relatório de repositório,
+GitHub Profile Score, análise de commits e evidência de projeto.

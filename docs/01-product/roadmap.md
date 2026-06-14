@@ -430,3 +430,21 @@ A v0.8.0 adiciona memória de carreira e inteligência personalizada:
 
 Próximos passos: embeddings locais opcionais, avaliação longitudinal das recomendações e extensão
 assistiva para capturar a vaga atual.
+
+# Marco entregue: v0.9.0
+
+A v0.9.0 entrega o Browser Companion assistivo e calibra a memória:
+
+- extensão multiportal para LinkedIn, Gupy, Indeed, InfoJobs, Nube, páginas de carreira e outros;
+- Local Companion API restrita a localhost;
+- captura, análise e tracker para a vaga atual;
+- importação paginada de centenas de candidaturas;
+- deduplicação entre portais com preservação de todas as fontes;
+- ranking de requisitos recorrentes no dashboard;
+- feedback útil/não útil e ranking calibrado de evidências;
+- extração opcional de currículo por Gemini com fallback local.
+- análise standalone/conectada de GitHub, repositórios, projetos e portfólios;
+- evidências de README, commits e stack técnica reutilizadas nas vagas.
+
+Próximos passos: edição visual do Kanban, export de ranking, provedores adicionais e embeddings
+locais opcionais.

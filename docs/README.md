@@ -19,6 +19,10 @@ currículos, matching de vagas, ATS, descoberta de oportunidades e acompanhament
 - [Crawling com navegador autenticado](05-data-sources/authenticated-browser-crawling.md)
 - [Search Intelligence](05-data-sources/search-intelligence.md)
 - [Career Memory e RAG local](04-ai/career-memory-rag.md)
+- [Browser Companion v0.9.0](07-development/v0.9.0-browser-extension-companion.md)
+- [Local Companion API](02-architecture/local-companion-api.md)
+- [Análise GitHub e portfólio](07-development/extension-github-portfolio-analysis.md)
+- [Publicar extensão na Chrome Web Store](07-development/chrome-web-store-extension.md)
 
 ## Entender O Sistema
 

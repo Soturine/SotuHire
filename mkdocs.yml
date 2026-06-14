@@ -60,6 +60,7 @@ nav:
       - Architecture decisions: 02-architecture/architecture-decisions.md
       - MVP core schemas: 02-architecture/mvp-core-schemas.md
       - Local companion app: 02-architecture/local-companion-app.md
+      - Local Companion API: 02-architecture/local-companion-api.md
       - Background jobs: 02-architecture/background-jobs.md
       - Parsers: 02-architecture/parsers.md
       - Semântica do parser: 02-architecture/parser-semantics.md
@@ -79,12 +80,14 @@ nav:
       - Opportunity fit rules v0.1: 03-business-rules/opportunity-fit-rules.md
       - Public exam rules: 03-business-rules/public-exam-rules.md
       - Privacidade da memória: 03-business-rules/memory-privacy-rules.md
+      - Regras de captura assistida: 03-business-rules/browser-assisted-capture-rules.md
   - IA:
       - Prompting: 04-ai/prompting.md
       - Structured output: 04-ai/structured-output-schema.md
       - Evaluation: 04-ai/evaluation.md
       - RAG memory: 04-ai/rag-memory-architecture.md
       - Career Memory e RAG local: 04-ai/career-memory-rag.md
+      - Calibração de evidências: 04-ai/evidence-calibration.md
       - Provider strategy: 04-ai/provider-strategy.md
       - Gemini structured output: 04-ai/gemini-structured-output.md
       - Setup local do Gemini: 04-ai/gemini-local-setup.md
@@ -120,6 +123,7 @@ nav:
       - Testes de regressão: 06-testing/regression-testing.md
       - Testes de screenshots: 06-testing/screenshot-testing.md
       - Regressões da memória: 06-testing/memory-regression-tests.md
+      - Extensão assistiva: 06-testing/browser-extension-testing.md
   - Desenvolvimento:
       - Setup: 07-development/setup.md
       - Commands: 07-development/commands.md
@@ -129,6 +133,8 @@ nav:
       - Alerts roadmap: 07-development/alerts-roadmap.md
       - Browser extension roadmap: 07-development/browser-extension-roadmap.md
       - Browser extension assisted capture: 07-development/browser-extension-assisted-capture.md
+      - Análise GitHub e portfólio: 07-development/extension-github-portfolio-analysis.md
+      - Chrome Web Store: 07-development/chrome-web-store-extension.md
       - Profile analyzer roadmap: 07-development/profile-analyzer-roadmap.md
       - Resume Tailor DOCX: 07-development/resume-tailor-docx.md
       - MVP core implementation: 07-development/mvp-core-implementation.md
@@ -142,6 +148,7 @@ nav:
       - v0.5.0 Usabilidade e validação: 07-development/v0.5.0-real-usability-validation.md
       - v0.6.0 UX, IA e busca: 07-development/v0.6.0-polished-ux-ai-search.md
       - v0.8.0 Career Memory e RAG: 07-development/v0.8.0-career-memory-rag.md
+      - v0.9.0 Browser Companion: 07-development/v0.9.0-browser-extension-companion.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md

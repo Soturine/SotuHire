@@ -4,6 +4,45 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [0.9.0] - 2026-06-14
+
+### Added
+
+- Assistive Browser Extension Companion em Manifest V3 para capturar, analisar e enviar a vaga
+  atual ao tracker;
+- Local Companion API restrita a `127.0.0.1:8765`, com token opcional, Pydantic e sanitização;
+- importação paginada de candidaturas já realizadas, com lote local de até 500 itens;
+- ranking no dashboard dos requisitos mais recorrentes nas vagas candidatas;
+- calibração de evidências com pesos, limites por tipo, penalidades e feedback útil/não útil;
+- aba avançada **Extensão**, perfil profissional ampliado e extração opcional de currículo por
+  Gemini com fallback local;
+- fixtures fictícias e regressões para extensão, API local, memória e deduplicação.
+- analisador de GitHub, repositórios, projetos e portfólios com dez scores;
+- amostragem inteligente de arquivos, análise de README e qualidade de commits;
+- modos standalone na extensão e conectado ao SotuHire, com evidências de projeto na memória.
+- botão **SotuHire AI** injetado em repositórios e perfis públicos do GitHub;
+- modal com score, grade, stack, README, commits, recomendações e ações conectadas;
+- pacote validado e documentação de publicação para a Chrome Web Store.
+
+### Changed
+
+- tracker, oportunidades, memória e capturas usam identidade estável por URL normalizada ou
+  empresa+título semelhante;
+- a mesma vaga encontrada em LinkedIn, Gupy, Indeed, InfoJobs, Nube ou outro portal mantém um
+  único cartão com todas as URLs e fontes;
+- repetir uma importação atualiza ou reutiliza registros existentes em vez de duplicá-los;
+- candidaturas antigas analisadas depois pelo SotuHire permanecem no mesmo cartão `applied`;
+- Search Intelligence permite abrir queries no navegador e orienta a captura pela extensão.
+
+### Security
+
+- extensão nunca recebe nem armazena a API Key configurada no SotuHire;
+- Local Companion API aceita somente clientes loopback e não faz login, não guarda senha e não
+  burla CAPTCHA;
+- uso de IA na extensão chama apenas o SotuHire local, que decide o provider configurado.
+- Gemini standalone é opcional, usa permissão de host opcional e mantém a chave somente no storage
+  local da extensão; a chave nunca é enviada ao SotuHire.
+
 ## [0.8.0] - 2026-06-14
 
 ### Added

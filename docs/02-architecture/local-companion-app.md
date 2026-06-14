@@ -52,3 +52,11 @@ Com ação explícita do usuário:
 ## Implementação futura
 
 O MVP não precisa de extensão. O primeiro passo pode ser uma caixa de texto onde o usuário cola a vaga. A extensão entra depois, quando o backend local estiver estável.
+
+## Implementação entregue na v0.9.0
+
+A extensão e a API local foram implementadas com Manifest V3, permissões mínimas, bind em
+`127.0.0.1:8765`, token opcional e deduplicação multiportal. O fluxo suporta captura da vaga atual,
+listas paginadas de candidaturas e preservação de todas as fontes do mesmo cartão.
+
+Detalhes: [Local Companion API](local-companion-api.md).

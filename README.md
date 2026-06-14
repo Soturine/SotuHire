@@ -17,7 +17,7 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 [Changelog](CHANGELOG.md) ·
 [Segurança e privacidade](docs/06-engineering/security-privacy.md)
 
-![Interface atual do SotuHire](docs/assets/screenshots/sotuhire-v0.8-memory-overview.png)
+![Interface atual do SotuHire](docs/assets/screenshots/sotuhire-v0.9-extension-tab.png)
 
 ## O Que O Projeto Faz
 
@@ -36,6 +36,13 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - normaliza, deduplica e salva oportunidades para análise;
 - mantém tracker, histórico e dashboard locais;
 - gera Search Intelligence e Hidden Jobs Radar.
+- captura a vaga atual com extensão assistiva e Local Companion API;
+- importa candidaturas paginadas sem duplicar vagas já registradas;
+- consolida a mesma vaga encontrada em LinkedIn, Gupy, Indeed, InfoJobs, Nube e outros portais;
+- mostra todas as fontes da candidatura e ranqueia requisitos recorrentes.
+- analisa perfis GitHub, repositórios, READMEs, commits, projetos e portfólios públicos;
+- transforma projetos em evidências reutilizáveis para vagas, memória e perfil profissional;
+- oferece análise standalone na extensão ou análise conectada ao SotuHire local.
 
 ## Como Usar
 
@@ -127,6 +134,42 @@ Por padrão, o Gemini não recebe a memória local. Para usá-la no aprimorament
 habilite explicitamente **Enviar contexto relevante para Gemini**. Somente as evidências
 recuperadas para a vaga atual são resumidas e enviadas, nunca a memória inteira.
 
+### Extensão assistiva
+
+1. Inicie o app com `streamlit run app.py`.
+2. Abra o modo avançado e a aba **Extensão**.
+3. Clique em **Iniciar Local API**.
+4. Em `chrome://extensions`, ative o modo desenvolvedor e carregue `browser-extension/`.
+5. Abra uma vaga e use **Salvar vaga atual**, **Analisar vaga atual** ou **Enviar para tracker**.
+
+Para importar muitas candidaturas já realizadas, percorra as páginas do tracker do portal e clique
+em **Adicionar página ao lote** em cada uma. Depois use **Enviar lote acumulado**. O SotuHire
+normaliza URLs e compara empresa+título para não criar duplicatas, inclusive quando um portal
+redireciona a candidatura para outro.
+
+A extensão pode pedir ao SotuHire local que use o Gemini configurado, mas nunca recebe ou armazena
+a API Key. Leia [Browser Companion v0.9.0](docs/07-development/v0.9.0-browser-extension-companion.md).
+
+Para GitHub e portfólios, a extensão possui dois modos:
+
+- **Standalone Extension Analysis**: relatório local no navegador, com Gemini standalone opcional;
+- **Connected SotuHire Analysis**: salva relatório, evidências, README e commits na memória local.
+
+Em repositórios e perfis públicos do GitHub, o botão **SotuHire AI** aparece diretamente na
+página e abre um modal com score, grade, stack, README, commits, arquitetura, recomendações e
+ações para salvar no SotuHire. Para gerar o ZIP validado da extensão:
+
+```bash
+python scripts/package_extension.py
+```
+
+O artefato é criado em `dist/sotuhire-extension-v0.9.0.zip`. Consulte o
+[guia da Chrome Web Store](docs/07-development/chrome-web-store-extension.md).
+
+A chave Gemini standalone, quando escolhida, fica somente no `chrome.storage.local` e nunca entra
+no payload da Local Companion API. O modo recomendado continua sendo usar Gemini pelo SotuHire
+local. Veja [Análise GitHub e portfólio](docs/07-development/extension-github-portfolio-analysis.md).
+
 ### Coleta autenticada opcional
 
 Instale as dependências de scraping:
@@ -165,6 +208,8 @@ automaticamente.
 | `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
 | `modules/tracker`, `modules/storage` | Histórico, Kanban, follow-up e persistência local. |
 | `modules/memory`, `modules/profile` | Career Memory, RAG local, evidências, perfil persistente e preferências inferidas. |
+| `modules/local_api`, `browser-extension` | API localhost e extensão assistiva multiportal. |
+| `modules/portfolio` | Amostragem, commits, scores e evidências de GitHub/projetos/portfólio. |
 | `modules/portfolio` | Análise e sinais de portfólio. |
 | `modules/ui` | Fluxos Streamlit rápido e avançado. |
 
@@ -193,6 +238,7 @@ Veja a [documentação de arquitetura](docs/02-architecture/overview.md) e o
 SotuHire/
 ├── app.py                  # entrada Streamlit
 ├── modules/                # domínio, serviços, conectores e UI
+├── browser-extension/      # extensão assistiva Manifest V3
 ├── tests/                  # testes unitários, integração e regressão
 ├── examples/               # currículos, vagas e resultados fictícios
 ├── config/                 # exemplos de fontes configuráveis
@@ -237,10 +283,12 @@ mkdocs serve
 - tracker, histórico e dashboard;
 - Search Intelligence e Hidden Jobs Radar;
 - coleta pública, URL manual, captura assistida e navegador autenticado autorizado.
+- extensão assistiva multiportal, Local Companion API e importação paginada deduplicada;
+- calibração da memória, feedback de evidência e ranking de requisitos.
+- análise de GitHub, portfólio, READMEs e commits com evidências de projeto.
 
 ### Próximas evoluções
 
-- extensão de navegador para salvar e analisar a página atual;
 - Resume Tailor exportável em DOCX/PDF;
 - alertas configuráveis e follow-up;
 - análise expandida de GitHub, portfólio, LinkedIn e Lattes;
@@ -256,6 +304,8 @@ O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).
 - o histórico não precisa armazenar o texto bruto do currículo;
 - a memória de carreira fica em `data/memory/`, pode ser exportada/importada e pode ser apagada;
 - Gemini recebe apenas contexto relevante quando a opção explícita estiver habilitada;
+- a extensão não recebe API Key, cookie, senha ou conteúdo de outras abas;
+- capturas e fontes ficam em stores locais ignorados pelo Git;
 - sugestões devem permanecer apoiadas por evidências fornecidas pela pessoa usuária;
 - integrações externas e coletas devem ser habilitadas conscientemente.
 
