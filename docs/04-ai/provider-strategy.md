@@ -181,3 +181,12 @@ O wizard separa duas perguntas:
 Se o teste simples passa e o estruturado falha, o problema está no schema ou payload. Se ambos falham, a causa provável é chave, modelo, quota, região ou projeto.
 
 O payload estruturado usa somente o subconjunto necessário de JSON Schema, sem metadados Pydantic incompatíveis. O diagnóstico registra código, categoria, modelo, versão do SDK, origem da variável e tipo de chamada, mas nunca mostra a chave.
+
+## Memória relevante na v0.8.0
+
+O contrato `AIProvider.analyze` aceita `memory_context`, mas providers externos não o recebem por
+padrão. A UI mantém **Enviar contexto relevante para Gemini** desabilitado até uma ação explícita.
+
+Quando habilitado, `structured_analysis.py` resume apenas as evidências recuperadas para a vaga
+atual. O arquivo completo de memória, itens não relacionados e dados fora do top-k não entram no
+prompt. Se Gemini falhar, o fallback local ainda pode usar as evidências recuperadas.

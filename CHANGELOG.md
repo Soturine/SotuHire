@@ -4,7 +4,33 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [0.8.0] - 2026-06-14
+
 ### Added
+
+- Career Memory local em JSONL para currículo, projetos, preferências, análises, feedbacks,
+  oportunidades e eventos do tracker;
+- RAG lexical local com score por keywords, tags, tipo e recência;
+- evidências rastreáveis na análise e contexto relevante opcional para Gemini;
+- perfil profissional persistente, score de completude e preferências inferidas editáveis;
+- aba avançada de memória com busca, export/import, feedback e limpeza;
+- personalização de Search Intelligence e Hidden Jobs Radar pela memória;
+- registro de vagas às quais a pessoa já se candidatou;
+- fixtures, exemplos e regressões de memória/RAG.
+
+### Changed
+
+- modo rápido usa memória relevante automaticamente sem expor painéis complexos;
+- dashboard mostra métricas de memória e eventos do tracker;
+- Gemini pode aprimorar a análise com um resumo relevante somente mediante opt-in explícito.
+
+### Security
+
+- memória permanece local por padrão em `data/memory/`;
+- envio de contexto relevante ao Gemini permanece desativado por padrão;
+- exportações privadas permanecem ignoradas pelo Git.
+
+### Authenticated collection
 
 - modos explícitos `PUBLIC_SCRAPING`, `MANUAL_URL`, `USER_ASSISTED_CAPTURE` e `AUTHENTICATED_BROWSER`;
 - captura assistida da vaga ou publicação atualmente aberta pela pessoa usuária;
@@ -14,12 +40,12 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - limites de itens, páginas/rolagens, intervalo e referência local de autorização;
 - inicialização automática de navegador dedicado com perfil persistente e diagnóstico da conexão CDP;
 
-### Changed
+### Authenticated collection changes
 
 - a aba de coleta distingue coleta pública automática, URL única, captura assistida e navegador autenticado;
 - fontes configuradas persistem o modo de coleta;
 
-### Security
+### Authenticated collection security
 
 - captura assistida processa somente o conteúdo visível explicitamente fornecido;
 - login, CAPTCHA, checkpoints, auto-apply e envio automático não são automatizados;

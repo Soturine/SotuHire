@@ -67,6 +67,7 @@ nav:
       - Storage e histórico: 02-architecture/storage-and-history.md
       - Pipeline de coleta de oportunidades: 02-architecture/opportunity-collection-pipeline.md
       - Modo rápido vs avançado: 02-architecture/quick-vs-advanced-mode.md
+      - Career Memory Store: 02-architecture/career-memory-store.md
   - Regras de negócio:
       - ATS rules: 03-business-rules/ats-rules.md
       - Matching rules: 03-business-rules/matching-rules.md
@@ -77,11 +78,13 @@ nav:
       - Opportunity fit score: 03-business-rules/opportunity-fit-score.md
       - Opportunity fit rules v0.1: 03-business-rules/opportunity-fit-rules.md
       - Public exam rules: 03-business-rules/public-exam-rules.md
+      - Privacidade da memória: 03-business-rules/memory-privacy-rules.md
   - IA:
       - Prompting: 04-ai/prompting.md
       - Structured output: 04-ai/structured-output-schema.md
       - Evaluation: 04-ai/evaluation.md
       - RAG memory: 04-ai/rag-memory-architecture.md
+      - Career Memory e RAG local: 04-ai/career-memory-rag.md
       - Provider strategy: 04-ai/provider-strategy.md
       - Gemini structured output: 04-ai/gemini-structured-output.md
       - Setup local do Gemini: 04-ai/gemini-local-setup.md
@@ -116,6 +119,7 @@ nav:
       - Fixtures realistas: 06-testing/realistic-fixtures.md
       - Testes de regressão: 06-testing/regression-testing.md
       - Testes de screenshots: 06-testing/screenshot-testing.md
+      - Regressões da memória: 06-testing/memory-regression-tests.md
   - Desenvolvimento:
       - Setup: 07-development/setup.md
       - Commands: 07-development/commands.md
@@ -137,6 +141,7 @@ nav:
       - v0.4.2 Hotfix parser e provider: 07-development/v0.4.2-parser-ai-provider-hotfix.md
       - v0.5.0 Usabilidade e validação: 07-development/v0.5.0-real-usability-validation.md
       - v0.6.0 UX, IA e busca: 07-development/v0.6.0-polished-ux-ai-search.md
+      - v0.8.0 Career Memory e RAG: 07-development/v0.8.0-career-memory-rag.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md

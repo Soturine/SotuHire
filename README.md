@@ -17,7 +17,7 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 [Changelog](CHANGELOG.md) ·
 [Segurança e privacidade](docs/06-engineering/security-privacy.md)
 
-![Interface atual do SotuHire](docs/assets/screenshots/sotuhire-v0.7-advanced-mode.png)
+![Interface atual do SotuHire](docs/assets/screenshots/sotuhire-v0.8-memory-overview.png)
 
 ## O Que O Projeto Faz
 
@@ -28,6 +28,9 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - explica pontos fortes, gaps, riscos e palavras-chave ausentes;
 - sugere adaptações de currículo sem inventar experiências;
 - oferece análise local por padrão e Gemini opcional;
+- aprende localmente com currículos, projetos, análises, feedbacks e candidaturas;
+- recupera evidências relevantes com RAG local e explica por que recomendou uma vaga;
+- consolida perfil profissional e preferências inferidas, editáveis pela pessoa usuária;
 - coleta oportunidades públicas, URLs específicas, conteúdo assistido e fontes autenticadas
   autorizadas;
 - normaliza, deduplica e salva oportunidades para análise;
@@ -47,7 +50,7 @@ Carregar currículo -> colar vaga -> receber análise -> revisar sugestões
 ### Modo avançado
 
 Use para revisar dados detectados, configurar IA, coletar oportunidades, comparar vagas, exportar
-resultados e acompanhar candidaturas no tracker.
+resultados, consultar a **Memória de carreira** e acompanhar candidaturas no tracker.
 
 Também é possível clicar em **Rodar análise de exemplo** para conhecer o fluxo sem usar dados
 pessoais.
@@ -120,6 +123,10 @@ GEMINI_MODEL=gemini-2.5-flash
 
 Também é possível configurar e testar a chave pela seção **Configurar IA** dentro do app.
 
+Por padrão, o Gemini não recebe a memória local. Para usá-la no aprimoramento da análise,
+habilite explicitamente **Enviar contexto relevante para Gemini**. Somente as evidências
+recuperadas para a vaga atual são resumidas e enviadas, nunca a memória inteira.
+
 ### Coleta autenticada opcional
 
 Instale as dependências de scraping:
@@ -157,7 +164,8 @@ automaticamente.
 | `modules/scraping`, `modules/opportunities` | Conectores, coleta, deduplicação e armazenamento de oportunidades. |
 | `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
 | `modules/tracker`, `modules/storage` | Histórico, Kanban, follow-up e persistência local. |
-| `modules/profile`, `modules/portfolio`, `modules/rag` | Perfil profissional, portfólio e memória de carreira. |
+| `modules/memory`, `modules/profile` | Career Memory, RAG local, evidências, perfil persistente e preferências inferidas. |
+| `modules/portfolio` | Análise e sinais de portfólio. |
 | `modules/ui` | Fluxos Streamlit rápido e avançado. |
 
 Arquitetura resumida:
@@ -165,6 +173,7 @@ Arquitetura resumida:
 ```text
 currículo + vaga + preferências
         -> parsers e schemas
+        -> recuperação de evidências da memória local
         -> regras, scores e IA opcional
         -> análise explicável e Resume Tailor
         -> tracker, histórico e dashboard
@@ -220,6 +229,9 @@ mkdocs serve
 ### Disponível atualmente
 
 - análise local e Gemini opcional;
+- Career Memory local, RAG lexical e análise baseada em evidências;
+- perfil profissional persistente, feedback learning e preferências inferidas;
+- export/import de memória e flags explícitas de privacidade;
 - parsers de currículo e vaga;
 - scores explicáveis e Resume Tailor;
 - tracker, histórico e dashboard;
@@ -232,7 +244,7 @@ mkdocs serve
 - Resume Tailor exportável em DOCX/PDF;
 - alertas configuráveis e follow-up;
 - análise expandida de GitHub, portfólio, LinkedIn e Lattes;
-- memória de carreira com RAG e evidências;
+- embeddings locais opcionais e reranking semântico;
 - conectores adicionais por fonte.
 
 O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).
@@ -242,6 +254,8 @@ O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).
 - a análise local é o padrão;
 - currículos reais, segredos, bancos locais e exports privados não devem ser versionados;
 - o histórico não precisa armazenar o texto bruto do currículo;
+- a memória de carreira fica em `data/memory/`, pode ser exportada/importada e pode ser apagada;
+- Gemini recebe apenas contexto relevante quando a opção explícita estiver habilitada;
 - sugestões devem permanecer apoiadas por evidências fornecidas pela pessoa usuária;
 - integrações externas e coletas devem ser habilitadas conscientemente.
 

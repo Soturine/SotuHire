@@ -163,3 +163,21 @@ flowchart TD
 ```
 
 Esse fluxo mantém o usuário no controle e separa análise, decisão e geração de currículo.
+
+## Fluxo com Career Memory na v0.8.0
+
+```mermaid
+flowchart LR
+    A[Currículo, vaga e preferências] --> B[Career Memory]
+    B --> C[Retriever lexical local]
+    C --> D[Evidências relevantes]
+    D --> E[Análise local]
+    D --> F[Gemini com opt-in]
+    E --> G[Resultado explicado]
+    F --> G
+    G --> H[Feedback e tracker]
+    H --> B
+```
+
+Gemini recebe somente o resumo relevante quando a flag explícita estiver habilitada. Sem essa
+autorização, a memória continua disponível apenas para o fluxo local.

@@ -38,46 +38,84 @@ def _seed_fictitious_opportunities() -> None:
     OpportunityStore().save_many([opportunity])
 
 
+def _seed_fictitious_memory() -> None:
+    """Populate ignored local memory with reproducible fictitious career facts."""
+    from modules.memory import CareerMemoryItem, MemoryStore
+
+    store = MemoryStore()
+    store.clear()
+    items = [
+        CareerMemoryItem(
+            kind="project",
+            title="Projeto Atlas IoT",
+            content="Monitoramento industrial fictício com ESP32, Python e MQTT.",
+            source="demo",
+            tags=["ESP32", "Python", "MQTT", "IoT"],
+        ),
+        CareerMemoryItem(
+            kind="experience",
+            title="Experiência técnica industrial",
+            content="Apoio fictício a processos técnicos e documentação industrial.",
+            source="demo",
+            tags=["processos", "indústria", "documentação"],
+        ),
+        CareerMemoryItem(
+            kind="job_analysis",
+            title="Análise: Desenvolvedor Python Júnior · Example Tech",
+            content=(
+                "Recomendação: apply_with_adjustments. Match: 78. ATS: 74. Fit: 85. "
+                "Fortes: Python, SQL. Gaps: Docker."
+            ),
+            source="demo",
+            tags=["Python", "SQL", "apply_with_adjustments"],
+        ),
+        CareerMemoryItem(
+            kind="preference",
+            title="Modalidades preferidas",
+            content="remote, hybrid",
+            source="demo",
+            tags=["remote", "hybrid"],
+        ),
+    ]
+    for item in items:
+        store.add_memory_item(item)
+
+
 def capture(base_url: str) -> None:
-    """Capture v0.7 quick, advanced, collection, search, result, and dashboard surfaces."""
+    """Capture current app surfaces using only fictitious local data."""
     _seed_fictitious_opportunities()
+    _seed_fictitious_memory()
     with sync_playwright() as playwright:
         browser = playwright.chromium.launch(headless=True)
         page = browser.new_page(viewport={"width": 1440, "height": 980}, device_scale_factor=1)
         page.goto(base_url, wait_until="networkidle")
         _wait(page)
-        _screenshot(page, "sotuhire-v0.7-quick-mode.png")
 
         page.get_by_role("button", name="Rodar demo completa").first.click()
         _wait(page)
-        page.get_by_text("Resultado", exact=True).last.scroll_into_view_if_needed()
-        _screenshot(page, "sotuhire-v0.7-result.png")
 
         page.get_by_text("Modo avançado", exact=True).first.click()
         _wait(page)
-        _screenshot(page, "sotuhire-v0.7-advanced-mode.png")
 
-        page.get_by_role("tab", name="Coletar vagas").click()
+        page.get_by_role("tab", name="Memória de carreira").click()
         _wait(page)
-        _screenshot(page, "sotuhire-v0.7-collect-jobs.png")
-        page.get_by_text("Oportunidades coletadas", exact=True).scroll_into_view_if_needed()
-        _screenshot(page, "sotuhire-v0.7-collected-opportunities.png")
+        _screenshot(page, "sotuhire-v0.8-memory-overview.png")
 
-        page.get_by_role("tab", name="Search Intelligence").click()
+        page.get_by_role("tab", name="Perfil profissional").click()
         _wait(page)
-        page.get_by_role("tab", name="Fontes").click()
-        _wait(page)
-        _screenshot(page, "sotuhire-v0.7-search-intelligence.png")
-        page.get_by_role("tab", name="Radar oculto").click()
-        _wait(page)
-        _screenshot(page, "sotuhire-v0.7-hidden-radar.png")
+        _screenshot(page, "sotuhire-v0.8-career-profile.png")
 
-        page.get_by_role("tab", name="Resultado").click()
+        page.get_by_role("tab", name="Buscar").click()
+        page.get_by_label("Buscar na memória").fill("Python")
+        page.get_by_label("Buscar na memória").press("Enter")
         _wait(page)
-        _screenshot(page, "sotuhire-v0.7-result.png")
-        page.get_by_role("tab", name="Dashboard").click()
+        _screenshot(page, "sotuhire-v0.8-memory-search.png")
+
+        page.get_by_role("tab", name="Resultado").first.click()
         _wait(page)
-        _screenshot(page, "sotuhire-v0.7-dashboard.png")
+        page.get_by_role("tab", name="Evidências").click()
+        _wait(page)
+        _screenshot(page, "sotuhire-v0.8-evidence-analysis.png")
         browser.close()
 
 

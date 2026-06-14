@@ -415,3 +415,18 @@ Próximo marco:
 
 Crawling autenticado autorizado foi implementado como modo separado, conectado via CDP a uma
 sessão iniciada pela pessoa usuária. Auto-apply e bypass continuam fora desse marco.
+
+# Marco entregue: v0.8.0
+
+A v0.8.0 adiciona memória de carreira e inteligência personalizada:
+
+- memória local de currículos, projetos, análises, feedbacks, oportunidades e tracker;
+- RAG lexical com evidências usadas na recomendação;
+- perfil profissional persistente e preferências inferidas;
+- export/import e controles explícitos de privacidade;
+- contexto relevante opcional para Gemini, desativado por padrão;
+- Search Intelligence e Hidden Jobs Radar personalizados pelo histórico;
+- registro de vagas às quais a pessoa já se candidatou.
+
+Próximos passos: embeddings locais opcionais, avaliação longitudinal das recomendações e extensão
+assistiva para capturar a vaga atual.

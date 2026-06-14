@@ -49,3 +49,12 @@ Antes de publicar uma versão, recapture as imagens depois de atualizar o badge 
 A v0.7.0 amplia a captura para oito superfícies: modo rápido, modo avançado, coleta, oportunidades coletadas, Search Intelligence, Hidden Jobs Radar, resultado e dashboard.
 
 Antes de abrir o navegador, o script grava uma oportunidade fictícia no store local ignorado pelo Git. Assim, a tela de oportunidades coletadas é reproduzível sem depender de rede nem de dados pessoais.
+
+## Screenshots da v0.8.0
+
+A v0.8.0 adiciona capturas com dados fictícios para visão geral da memória, perfil profissional,
+evidências da análise e busca na memória. O README referencia apenas a visão geral atual para
+continuar intuitivo; as demais imagens apoiam a documentação e a validação visual.
+
+O script atual gera somente as quatro superfícies da v0.8.0. As capturas anteriores permanecem no
+repositório como registro visual histórico e não são sobrescritas.

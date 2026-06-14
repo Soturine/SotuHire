@@ -223,3 +223,13 @@ currículo mestre -> chunks -> busca por termos -> evidências -> análise estru
 ```
 
 Depois, quando houver dados reais, a camada pode evoluir para embeddings locais e reranking. PyTorch e modelos próprios ficam como futuro opcional, não como requisito atual.
+
+## Implementação entregue na v0.8.0
+
+A primeira camada funcional usa `modules/memory/`, JSONL local e retrieval lexical. Ela indexa
+fatos de currículo, projetos, preferências, análises, feedbacks, oportunidades e tracker. O
+resultado é convertido em `CareerEvidence` com fonte, trecho e score.
+
+O fluxo local usa essas evidências para personalizar a análise. Gemini só recebe um resumo das
+evidências recuperadas quando a pessoa habilita explicitamente o compartilhamento relevante.
+Consulte [Career Memory e RAG local](career-memory-rag.md).

@@ -54,3 +54,13 @@ Search Intelligence mantém queries, cargos alternativos e plano semanal, mas ag
 - abrir uma oportunidade coletada na análise.
 
 A geração da estratégia continua sem rede. A coleta é uma etapa explícita, separada e rastreável, executada somente quando a pessoa usuária escolhe uma fonte.
+
+## Personalização com memória na v0.8.0
+
+Search Intelligence combina a intenção digitada com o perfil profissional local: cargos alvo,
+skills fortes, senioridade provável, modalidade, localização e empresas alvo. Consultas explícitas
+continuam tendo precedência.
+
+Hidden Jobs Radar usa sinais de projetos, experiências e skills para sugerir setores e tipos de
+empresa relacionados. As sugestões continuam acionáveis por meio das fontes e conectores
+existentes e sempre podem ser revisadas antes da coleta.

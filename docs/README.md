@@ -18,6 +18,7 @@ currículos, matching de vagas, ATS, descoberta de oportunidades e acompanhament
 - [Pipeline de coleta de oportunidades](02-architecture/opportunity-collection-pipeline.md)
 - [Crawling com navegador autenticado](05-data-sources/authenticated-browser-crawling.md)
 - [Search Intelligence](05-data-sources/search-intelligence.md)
+- [Career Memory e RAG local](04-ai/career-memory-rag.md)
 
 ## Entender O Sistema
 
@@ -27,6 +28,7 @@ currículos, matching de vagas, ATS, descoberta de oportunidades e acompanhament
 - [Opportunity Fit Score](03-business-rules/opportunity-fit-score.md)
 - [Resume Tailor rules](03-business-rules/resume-tailor-rules.md)
 - [Storage e histórico](02-architecture/storage-and-history.md)
+- [Career Memory Store](02-architecture/career-memory-store.md)
 
 ## Segurança E Qualidade
 
