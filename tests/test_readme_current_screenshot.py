@@ -3,7 +3,7 @@ from pathlib import Path
 
 def test_readme_references_one_current_screenshot_and_changelog():
     readme = Path("README.md").read_text(encoding="utf-8")
-    screenshot = Path("docs/assets/screenshots/sotuhire-v0.8-memory-overview.png")
+    screenshot = Path("docs/assets/screenshots/sotuhire-v0.9-extension-tab.png")
 
     assert str(screenshot).replace("\\", "/") in readme
     assert readme.count("docs/assets/screenshots/") == 1

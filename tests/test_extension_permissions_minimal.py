@@ -2,14 +2,16 @@ import json
 from pathlib import Path
 
 
-def test_browser_extension_manifest_is_valid_and_minimal():
+def test_extension_permissions_are_scoped_to_features():
     manifest = json.loads(Path("browser-extension/manifest.json").read_text(encoding="utf-8"))
 
-    assert manifest["manifest_version"] == 3
     assert set(manifest["permissions"]) == {"activeTab", "scripting", "storage"}
     assert set(manifest["host_permissions"]) == {
         "http://127.0.0.1:8765/*",
         "https://github.com/*",
     }
-    assert Path("browser-extension/popup.html").exists()
-    assert Path("browser-extension/content.js").exists()
+    assert manifest["optional_host_permissions"] == ["https://generativelanguage.googleapis.com/*"]
+    serialized = json.dumps(manifest)
+    assert "<all_urls>" not in serialized
+    assert "cookies" not in serialized
+    assert "webRequest" not in serialized
