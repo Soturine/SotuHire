@@ -13,6 +13,7 @@ class CareerProfile(BaseModel):
     target_roles: list[str] = Field(default_factory=list)
     likely_seniority: str | None = None
     technical_skills: list[str] = Field(default_factory=list)
+    medium_skills: list[str] = Field(default_factory=list)
     soft_skills: list[str] = Field(default_factory=list)
     education_summary: list[str] = Field(default_factory=list)
     experience_summary: list[str] = Field(default_factory=list)
@@ -22,6 +23,7 @@ class CareerProfile(BaseModel):
     preferred_locations: list[str] = Field(default_factory=list)
     preferred_contracts: list[str] = Field(default_factory=list)
     target_companies: list[str] = Field(default_factory=list)
+    recommended_sectors: list[str] = Field(default_factory=list)
     recurring_gaps: list[str] = Field(default_factory=list)
     strengths: list[str] = Field(default_factory=list)
 

@@ -97,10 +97,26 @@ def build_career_profile(
         if strength.strip()
     ]
     likely_seniority = inferred.seniorities[0] if inferred.seniorities else None
+    frequent_tags = _frequent_tags(items, 30)
+    strong_skills = _unique([*resume.skills, *frequent_tags[:10]])
+    medium_skills = [tag for tag in frequent_tags[10:20] if tag not in strong_skills]
+    corpus = normalize_text(" ".join([*resume.projects, *resume.experiences, *strong_skills]))
+    sectors = [
+        sector
+        for signal, sector in [
+            ("iot", "Internet das Coisas"),
+            ("esp32", "Sistemas embarcados"),
+            ("industrial", "Automação industrial"),
+            ("dados", "Dados e Analytics"),
+            ("python", "Software e serviços Python"),
+        ]
+        if signal in corpus
+    ]
     return CareerProfile(
         target_roles=inferred.target_roles,
         likely_seniority=likely_seniority,
-        technical_skills=_unique([*resume.skills, *inferred.relevant_skills]),
+        technical_skills=strong_skills,
+        medium_skills=medium_skills,
         soft_skills=_unique(resume.soft_skills),
         education_summary=_unique(resume.education),
         experience_summary=_unique(resume.experiences),
@@ -110,6 +126,7 @@ def build_career_profile(
         preferred_locations=_unique([*explicit.preferred_locations, *inferred.locations]),
         preferred_contracts=_unique([*explicit.accepted_contracts, *inferred.contracts]),
         target_companies=inferred.target_companies,
+        recommended_sectors=_unique(sectors, 8),
         recurring_gaps=_unique(gaps, 12),
         strengths=_unique(strengths, 12),
     )

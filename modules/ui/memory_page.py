@@ -9,9 +9,13 @@ import streamlit as st
 from modules.memory import CareerMemory, CareerMemoryQuery
 from modules.memory.memory_summarizer import memory_markdown_summary
 from modules.profile import (
+    CareerProfile,
     CareerProfileStore,
     build_career_profile,
+    edit_career_profile,
+    export_career_profile,
     infer_preferences,
+    profile_analysis_defaults,
     profile_completeness_score,
 )
 from modules.ui.components import render_chips, render_item_cards, render_list
@@ -19,6 +23,11 @@ from modules.ui.layout import build_preferences
 
 MEMORY = CareerMemory()
 PROFILE_STORE = CareerProfileStore()
+
+
+def _apply_profile(profile: CareerProfile) -> None:
+    for key, value in profile_analysis_defaults(profile).items():
+        st.session_state[key] = value
 
 
 def _apply_inferred_preferences() -> None:
@@ -119,12 +128,57 @@ def render_memory_page() -> None:
         render_chips(profile.target_roles, "Ainda não inferidos.")
         st.markdown("**Skills técnicas**")
         render_chips(profile.technical_skills, "Nenhuma skill consolidada.")
+        st.markdown("**Skills medianas**")
+        render_chips(profile.medium_skills, "Nenhuma skill mediana consolidada.")
         st.markdown("**Pontos fortes**")
         render_list(profile.strengths, "Ainda não há pontos fortes recorrentes.")
         st.markdown("**Lacunas recorrentes**")
         render_list(profile.recurring_gaps, "Ainda não há lacunas recorrentes.")
         st.markdown("**Projetos em destaque**")
         render_item_cards(profile.project_highlights, "Nenhum projeto consolidado.")
+        st.markdown("**Experiências relevantes**")
+        render_item_cards(profile.experience_summary, "Nenhuma experiência consolidada.")
+        st.markdown("**Setores e empresas sugeridas**")
+        render_chips(
+            [*profile.recommended_sectors, *profile.target_companies],
+            "Nenhum setor ou empresa sugerido.",
+        )
+        actions = st.columns(5)
+        if actions[0].button("Aplicar perfil à análise", use_container_width=True):
+            _apply_profile(profile)
+            st.success("Perfil aplicado às preferências e à busca.")
+        if actions[1].button("Editar perfil", use_container_width=True):
+            st.session_state.edit_career_profile = not st.session_state.get(
+                "edit_career_profile", False
+            )
+        if actions[2].button("Recalcular perfil", use_container_width=True):
+            PROFILE_STORE.save(profile)
+            st.success("Perfil recalculado com as memórias atuais.")
+        actions[3].download_button(
+            "Exportar perfil",
+            export_career_profile(profile),
+            "sotuhire-career-profile.json",
+            "application/json",
+            use_container_width=True,
+        )
+        if actions[4].button("Limpar perfil", use_container_width=True):
+            PROFILE_STORE.clear()
+            st.success("Perfil persistente removido.")
+        if st.session_state.get("edit_career_profile", False):
+            roles = st.text_input("Cargos-alvo do perfil", value=", ".join(profile.target_roles))
+            skills = st.text_input(
+                "Skills fortes do perfil", value=", ".join(profile.technical_skills)
+            )
+            if st.button("Salvar edição do perfil"):
+                edited = edit_career_profile(
+                    profile,
+                    target_roles=[value.strip() for value in roles.split(",") if value.strip()],
+                    technical_skills=[
+                        value.strip() for value in skills.split(",") if value.strip()
+                    ],
+                )
+                PROFILE_STORE.save(edited)
+                st.success("Perfil editado e salvo localmente.")
     with tabs[4]:
         inferred = infer_preferences(items)
         st.markdown("**Cargos e empresas**")

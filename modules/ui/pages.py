@@ -15,7 +15,7 @@ from modules.exporters.analysis_exporter import (
     analysis_to_markdown,
     tailor_to_markdown,
 )
-from modules.memory import CareerFeedback
+from modules.memory import CareerFeedback, EvidenceFeedback
 from modules.parsers.job_description_parser import parse_job_description
 from modules.parsers.resume_parser import parse_resume_file, parse_resume_text
 from modules.profile import build_career_profile
@@ -453,11 +453,11 @@ def _render_result_content(
             render_list(analysis.gaps, "Nenhum ajuste prioritário.")
         st.markdown("**Keywords prioritárias**")
         render_limited_chips(analysis.missing_keywords, "Nenhuma keyword prioritária ausente.")
-        if result.evidence:
-            with st.expander("Por que o SotuHire chegou nessa recomendação?"):
-                for evidence in result.evidence:
-                    st.markdown(f"**{evidence.title}** · {evidence.source}")
-                    st.caption(evidence.excerpt)
+        if result.memory_used:
+            st.info(
+                "Análise personalizada com memória local · "
+                f"Evidências principais usadas: {min(3, len(result.evidence))}"
+            )
         return
 
     tabs = st.tabs(
@@ -535,14 +535,42 @@ def _render_result_content(
             "",
         )
     with tabs[7]:
-        st.markdown("**Por que o SotuHire chegou nessa recomendação?**")
+        st.markdown("**Por que o SotuHire recomendou isso?**")
         if not result.evidence:
             st.info("Nenhuma evidência de memória local foi usada.")
         for evidence in result.evidence:
             with st.container(border=True):
-                st.markdown(f"**{evidence.title}** · {evidence.source}")
+                st.markdown(f"**{evidence.title}** · `{evidence.kind or 'memória'}`")
+                st.caption(f"Origem: {evidence.source}")
                 st.write(evidence.excerpt)
                 st.caption(f"Relevância local: {evidence.relevance_score:.0%}")
+                st.info(evidence.selection_reason or "Selecionada pelo ranking local calibrado.")
+                actions = st.columns(3)
+                if actions[0].button("Ver memória", key=f"view_evidence_{evidence.memory_id}"):
+                    st.session_state.memory_focus_id = evidence.memory_id
+                if actions[1].button("Útil", key=f"useful_evidence_{evidence.memory_id}"):
+                    CAREER_MEMORY.remember_evidence_feedback(
+                        EvidenceFeedback(
+                            memory_id=evidence.memory_id,
+                            useful=True,
+                            query=st.session_state.job_text,
+                            analysis_id=st.session_state.last_analysis_fingerprint or None,
+                        )
+                    )
+                    st.success("Feedback útil salvo.")
+                if actions[2].button("Não útil", key=f"not_useful_evidence_{evidence.memory_id}"):
+                    CAREER_MEMORY.remember_evidence_feedback(
+                        EvidenceFeedback(
+                            memory_id=evidence.memory_id,
+                            useful=False,
+                            query=st.session_state.job_text,
+                            analysis_id=st.session_state.last_analysis_fingerprint or None,
+                        )
+                    )
+                    st.success("Feedback não útil salvo.")
+                if st.session_state.get("memory_focus_id") == evidence.memory_id:
+                    with st.expander("Detalhes da memória", expanded=True):
+                        st.json(evidence.score_breakdown)
     with tabs[8]:
         exports = st.columns(3)
         exports[0].download_button(
