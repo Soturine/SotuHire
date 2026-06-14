@@ -15,5 +15,6 @@ def test_extension_payload_contract_and_no_api_key_storage():
     assert payload.collection_method == "browser_assisted_capture"
     assert "captured_at" in content
     assert "applications" in content
-    assert "API_KEY" not in popup.upper()
-    assert "GEMINI" not in popup.upper()
+    assert "standaloneGeminiKey" in popup
+    assert "standaloneGeminiKey" not in content
+    assert "SOTUHIRE_PROJECT" in content

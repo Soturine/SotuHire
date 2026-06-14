@@ -9,6 +9,7 @@ def test_advanced_mode_contains_complete_workflow():
         "Resultado",
         "Coletar vagas",
         "Extensão",
+        "GitHub / Portfólio / Projetos",
         "Search Intelligence",
         "Memória de carreira",
         "Histórico",
