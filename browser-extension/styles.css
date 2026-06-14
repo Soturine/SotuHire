@@ -1,0 +1,70 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, system-ui, sans-serif;
+  background: #071425;
+  color: #f6f8fc;
+}
+
+body {
+  width: 340px;
+  margin: 0;
+  padding: 16px;
+}
+
+header,
+.option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+header div {
+  display: grid;
+}
+
+header span,
+small,
+a {
+  color: #9fb0c8;
+}
+
+.badge {
+  border: 1px solid #ff5369;
+  border-radius: 999px;
+  padding: 4px 8px;
+}
+
+.option {
+  justify-content: flex-start;
+  margin-top: 16px;
+}
+
+.actions {
+  display: grid;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+button {
+  cursor: pointer;
+  border: 1px solid #344b68;
+  border-radius: 8px;
+  padding: 10px;
+  background: #14263e;
+  color: inherit;
+}
+
+button.primary {
+  border-color: #ff5369;
+  background: #e83e5d;
+}
+
+#result {
+  min-height: 48px;
+  margin: 12px 0;
+  border-radius: 8px;
+  padding: 10px;
+  background: #0d2037;
+  white-space: pre-wrap;
+}

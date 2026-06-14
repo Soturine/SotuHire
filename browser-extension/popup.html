@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SotuHire</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header>
+      <div>
+        <strong>SotuHire</strong>
+        <span>Browser Companion</span>
+      </div>
+      <span class="badge">v0.9</span>
+    </header>
+    <label class="option">
+      <input id="use-ai" type="checkbox">
+      Usar IA configurada no SotuHire
+    </label>
+    <small>A chave permanece no SotuHire local e nunca é salva na extensão.</small>
+    <div class="actions">
+      <button data-action="capture">Salvar vaga atual</button>
+      <button data-action="analyze" class="primary">Analisar vaga atual</button>
+      <button data-action="tracker">Enviar para tracker</button>
+      <button data-action="applications">Importar candidaturas visíveis</button>
+      <button data-action="copy">Copiar texto extraído</button>
+      <button data-action="health">Testar conexão com SotuHire</button>
+    </div>
+    <section id="result" aria-live="polite">Pronto para capturar a página atual.</section>
+    <a href="http://127.0.0.1:8501" target="_blank" rel="noreferrer">Abrir SotuHire</a>
+    <script src="popup.js"></script>
+  </body>
+</html>

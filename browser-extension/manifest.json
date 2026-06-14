@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "SotuHire Assistive Browser Companion",
+  "version": "0.9.0",
+  "description": "Captura a vaga atual ou candidaturas visíveis e envia para o SotuHire local.",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": ["http://127.0.0.1:8765/*"],
+  "action": {
+    "default_title": "SotuHire",
+    "default_popup": "popup.html",
+    "default_icon": "assets/icon.svg"
+  },
+  "icons": {
+    "16": "assets/icon.svg",
+    "48": "assets/icon.svg",
+    "128": "assets/icon.svg"
+  }
+}
