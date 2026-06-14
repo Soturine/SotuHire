@@ -31,6 +31,8 @@ class StoredAnalysis(BaseModel):
     modality: str = ""
     seniority: str = ""
     source_url: str = ""
+    source_urls: list[str] = Field(default_factory=list)
+    source_domains: list[str] = Field(default_factory=list)
     collection_method: CollectionMethod = "manual_url"
     requirements: list[str] = Field(default_factory=list)
     status: JobStatus = JobStatus.ANALYZED

@@ -60,6 +60,8 @@ class CompanionCaptureRecord(BaseModel):
 
     id: str = Field(default_factory=lambda: uuid4().hex)
     capture: BrowserCapturePayload
+    source_urls: list[str] = Field(default_factory=list)
+    source_domains: list[str] = Field(default_factory=list)
     status: Literal["captured", "analyzed", "tracked"] = "captured"
     analysis_summary: dict[str, object] = Field(default_factory=dict)
     tracker_id: str = ""

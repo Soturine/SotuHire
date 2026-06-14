@@ -45,10 +45,15 @@
   const applicationRows = () => {
     const selectors = [
       "[data-job-id]",
+      "[data-testid*='job']",
+      "[data-testid*='vaga']",
       "li.jobs-job-tracker-list-item",
       "[class*='job-tracker'] li",
       "[class*='application'] li",
-      "[class*='job-card']"
+      "[class*='job-card']",
+      "[class*='vacancy']",
+      "[class*='vaga']",
+      "[class*='opportunity']"
     ];
     const rows = [...document.querySelectorAll(selectors.join(","))];
     const seen = new Set();
@@ -56,9 +61,9 @@
       .map((row) => {
         const rowText = text(row);
         const anchor = row.querySelector("a[href]");
-        const title = text(row.querySelector("h1,h2,h3,[class*='title']")) || text(anchor);
-        const rowCompany = text(row.querySelector("[class*='company']"));
-        const rowLocation = text(row.querySelector("[class*='location']"));
+        const title = text(row.querySelector("h1,h2,h3,[class*='title'],[data-testid*='title']")) || text(anchor);
+        const rowCompany = text(row.querySelector("[class*='company'],[class*='employer'],[data-testid*='company']"));
+        const rowLocation = text(row.querySelector("[class*='location'],[data-testid*='location']"));
         const url = anchor?.href || window.location.href;
         return {
           page_title: title || document.title,

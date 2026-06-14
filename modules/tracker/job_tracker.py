@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 from modules.core.collection_method import CollectionMethod
-from modules.core.opportunity_identity import normalize_opportunity_url
-from modules.core.text_utils import normalize_text
+from modules.core.opportunity_identity import same_opportunity, source_domain
 from modules.memory import CareerMemory, MemoryStore
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput
@@ -47,6 +46,12 @@ class JobTracker:
                         "modality": modality or existing.modality,
                         "seniority": seniority or existing.seniority,
                         "source_url": source_url or existing.source_url,
+                        "source_urls": _merge_sources(
+                            existing.source_urls or [existing.source_url], source_url
+                        ),
+                        "source_domains": _merge_domains(
+                            existing.source_domains, existing.source_url, source_url
+                        ),
                         "collection_method": collection_method,
                         "requirements": requirements
                         or list(analysis.missing_keywords)
@@ -94,6 +99,8 @@ class JobTracker:
             notes=notes,
             privacy_acknowledged=privacy_acknowledged,
             source_url=source_url,
+            source_urls=_merge_sources([], source_url),
+            source_domains=_merge_domains([], source_url),
             collection_method=collection_method,
             requirements=requirements or list(analysis.missing_keywords),
         )
@@ -157,9 +164,33 @@ class JobTracker:
         )
         existing = self._find_duplicate(job_title, company, source_url)
         if existing is not None:
-            if existing.status != JobStatus.APPLIED:
-                return self.change_status(existing.id, JobStatus.APPLIED)
-            return existing
+            status_changed = existing.status != JobStatus.APPLIED
+            saved = self.store.save(
+                existing.model_copy(
+                    update={
+                        "status": JobStatus.APPLIED,
+                        "source_url": existing.source_url or source_url,
+                        "source_urls": _merge_sources(
+                            existing.source_urls or [existing.source_url], source_url
+                        ),
+                        "source_domains": _merge_domains(
+                            existing.source_domains, existing.source_url, source_url
+                        ),
+                        "requirements": _merge_unique(existing.requirements, requirements or []),
+                        "modality": existing.modality or modality,
+                        "seniority": existing.seniority or seniority,
+                        "updated_at": utc_now(),
+                    }
+                )
+            )
+            if status_changed:
+                self.memory.remember_tracker_event(
+                    record_id=saved.id,
+                    status=saved.status.value,
+                    job_title=saved.job_title,
+                    company=saved.company,
+                )
+            return saved
         record = StoredAnalysis(
             job_title=job_title,
             company=company,
@@ -168,6 +199,8 @@ class JobTracker:
             notes=notes or f"Candidatura já realizada. Fonte: {source_url}",
             privacy_acknowledged=True,
             source_url=source_url,
+            source_urls=_merge_sources([], source_url),
+            source_domains=_merge_domains([], source_url),
             collection_method=collection_method,
             requirements=requirements or [],
             modality=modality,
@@ -200,14 +233,29 @@ class JobTracker:
         company: str,
         source_url: str,
     ) -> StoredAnalysis | None:
-        normalized_url = normalize_opportunity_url(source_url)
-        identity = (normalize_text(job_title), normalize_text(company))
         for record in self.store.list_analyses():
-            if normalized_url and normalize_opportunity_url(record.source_url) == normalized_url:
-                return record
-            if identity != ("", "") and identity == (
-                normalize_text(record.job_title),
-                normalize_text(record.company),
+            record_urls = record.source_urls or ([record.source_url] if record.source_url else [])
+            if same_opportunity(
+                left_title=record.job_title,
+                left_company=record.company,
+                left_urls=record_urls,
+                right_title=job_title,
+                right_company=company,
+                right_url=source_url,
             ):
                 return record
         return None
+
+
+def _merge_unique(current: list[str], incoming: list[str]) -> list[str]:
+    return list(
+        dict.fromkeys([*(item for item in current if item), *(item for item in incoming if item)])
+    )
+
+
+def _merge_sources(current: list[str], source_url: str) -> list[str]:
+    return _merge_unique(current, [source_url])
+
+
+def _merge_domains(current: list[str], *source_urls: str) -> list[str]:
+    return _merge_unique(current, [source_domain(url) for url in source_urls])

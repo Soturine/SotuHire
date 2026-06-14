@@ -73,3 +73,40 @@ def test_extension_capture_can_be_analyzed_and_sent_to_tracker_memory(tmp_path):
     assert len(tracker.list_analyses()) == 1
     kinds = {item.kind for item in memory.store.list_memory_items()}
     assert {"opportunity", "job_analysis", "tracker_event"} <= kinds
+
+
+def test_extension_capture_deduplicates_same_job_across_portals(tmp_path):
+    memory = CareerMemory(MemoryStore(tmp_path / "memory.jsonl"))
+    service = LocalCompanionService(
+        capture_store=CompanionCaptureStore(tmp_path / "captures.jsonl"),
+        opportunity_store=OpportunityStore(tmp_path / "opportunities.json"),
+        memory=memory,
+        tracker=JobTracker(LocalStore(tmp_path / "history.json")),
+        context_path=tmp_path / "context.json",
+    )
+
+    first = service.capture_job(
+        BrowserCapturePayload(
+            job_title="Analista Python Jr",
+            company="Example Tech",
+            url="https://linkedin.example/jobs/view/123",
+            description="Python e SQL",
+        )
+    )
+    second = service.capture_job(
+        BrowserCapturePayload(
+            job_title="Analista de Python Junior",
+            company="Example Tech",
+            url="https://example.gupy.test/jobs/abc",
+            description="Python, SQL e APIs",
+        )
+    )
+
+    assert first.capture_id == second.capture_id
+    assert len(service.capture_store.list()) == 1
+    assert len(service.opportunity_store.list()) == 1
+    assert len(memory.store.list_memory_items(kind="opportunity")) == 1
+    assert service.capture_store.list()[0].source_domains == [
+        "linkedin.example",
+        "example.gupy.test",
+    ]

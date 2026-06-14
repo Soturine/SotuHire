@@ -81,6 +81,8 @@ def render_extension_page(provider_name: str) -> None:
                 f"{capture.company or 'Empresa não detectada'} · {record.status} · "
                 f"{capture.collection_method}"
             )
+            if record.source_domains:
+                st.caption("Fontes: " + ", ".join(record.source_domains))
             st.caption(capture.url)
             buttons = st.columns(3)
             if buttons[0].button("Usar na análise", key=f"use_capture_{record.id}"):

@@ -9,7 +9,11 @@ from typing import cast
 from pydantic import ValidationError
 
 from modules.ai.structured_analysis import analyze_structured, get_provider
-from modules.core.opportunity_identity import opportunity_identity_hash
+from modules.core.opportunity_identity import (
+    opportunity_identity_hash,
+    same_opportunity,
+    source_domain,
+)
 from modules.local_api.schemas import (
     ApplicationBatchPayload,
     BrowserCapturePayload,
@@ -131,10 +135,47 @@ class LocalCompanionService:
             clean.company,
             clean.url,
         )
-        current = self.capture_store.get(capture_id)
+        current = next(
+            (
+                record
+                for record in self.capture_store.list()
+                if same_opportunity(
+                    left_title=record.capture.job_title or record.capture.page_title,
+                    left_company=record.capture.company,
+                    left_urls=record.source_urls or [record.capture.url],
+                    right_title=clean.job_title or clean.page_title,
+                    right_company=clean.company,
+                    right_url=clean.url,
+                )
+            ),
+            None,
+        )
+        if current is not None:
+            capture_id = current.id
         record = self.capture_store.save(
-            (current or CompanionCaptureRecord(id=capture_id, capture=clean)).model_copy(
-                update={"capture": clean}
+            (
+                current
+                or CompanionCaptureRecord(
+                    id=capture_id,
+                    capture=clean,
+                    source_urls=[clean.url],
+                    source_domains=[source_domain(clean.url)],
+                )
+            ).model_copy(
+                update={
+                    "capture": clean,
+                    "source_urls": list(
+                        dict.fromkeys([*(current.source_urls if current else []), clean.url])
+                    ),
+                    "source_domains": list(
+                        dict.fromkeys(
+                            [
+                                *(current.source_domains if current else []),
+                                source_domain(clean.url),
+                            ]
+                        )
+                    ),
+                }
             )
         )
         text = clean.description or clean.visible_text

@@ -137,7 +137,14 @@ class CareerMemory:
         )
         return self.store.add_memory_item(
             item.model_copy(
-                update={"id": self._stable_id(item.kind, item.title, item.content, source_id)}
+                update={
+                    "id": self._stable_id(
+                        item.kind,
+                        "" if source_id else item.title,
+                        "" if source_id else item.content,
+                        source_id,
+                    )
+                }
             )
         )
 
@@ -199,7 +206,14 @@ class CareerMemory:
         )
         return self.store.add_memory_item(
             item.model_copy(
-                update={"id": self._stable_id(item.kind, item.title, item.content, source_id)}
+                update={
+                    "id": self._stable_id(
+                        item.kind,
+                        "" if source_id else item.title,
+                        "" if source_id else item.content,
+                        source_id,
+                    )
+                }
             )
         )
 

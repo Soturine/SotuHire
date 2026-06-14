@@ -7,6 +7,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict
 
+from modules.core.opportunity_identity import same_opportunity
 from modules.scraping.dedupe import opportunity_identity
 from modules.scraping.schemas import ScrapedOpportunity
 
@@ -46,6 +47,22 @@ class OpportunityStore:
                 (indexes[key] for key in opportunity_identity(opportunity) if key in indexes),
                 None,
             )
+            if existing_index is None:
+                existing_index = next(
+                    (
+                        index
+                        for index, current_opportunity in enumerate(current)
+                        if same_opportunity(
+                            left_title=current_opportunity.title,
+                            left_company=current_opportunity.company or "",
+                            left_urls=[current_opportunity.source_url],
+                            right_title=opportunity.title,
+                            right_company=opportunity.company or "",
+                            right_url=opportunity.source_url,
+                        )
+                    ),
+                    None,
+                )
             if existing_index is None:
                 current.append(opportunity)
                 new_index = len(current) - 1

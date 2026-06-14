@@ -26,6 +26,7 @@ def test_tracker_saves_collection_method_and_deduplicates_existing_applications(
     assert len(tracker.list_analyses()) == 1
     assert first.collection_method == "browser_assisted_capture"
     assert first.requirements == ["Python", "SQL"]
+    assert first.source_domains == ["jobs.example"]
 
 
 def test_tracker_merges_prior_application_with_later_sotuhire_analysis(tmp_path):
@@ -56,6 +57,28 @@ def test_tracker_merges_prior_application_with_later_sotuhire_analysis(tmp_path)
     assert later.status.value == "applied"
     assert later.analysis.match_score == 80
     assert len(tracker.list_analyses()) == 1
+
+
+def test_tracker_merges_same_job_across_linkedin_and_gupy_like_portals(tmp_path):
+    tracker = JobTracker(LocalStore(tmp_path / "history.json"))
+
+    linkedin = tracker.add_existing_application(
+        job_title="Analista Python Jr",
+        company="Example Tech",
+        source_url="https://linkedin.example/jobs/view/123",
+    )
+    gupy = tracker.add_existing_application(
+        job_title="Analista de Python Junior",
+        company="Example Tech",
+        source_url="https://example.gupy.test/jobs/abc",
+        requirements=["Python", "SQL"],
+    )
+
+    assert linkedin.id == gupy.id
+    assert len(tracker.list_analyses()) == 1
+    assert gupy.source_domains == ["linkedin.example", "example.gupy.test"]
+    assert len(gupy.source_urls) == 2
+    assert gupy.requirements == ["Python", "SQL"]
 
 
 def test_rank_applied_requirements_counts_only_applied_jobs(tmp_path):

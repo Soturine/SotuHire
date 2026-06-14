@@ -720,6 +720,14 @@ def render_history_step() -> None:
         return
     selected = next(record for record in records if record.id == selected_id)
     st.caption(f"Origem: {collection_method_label(selected.collection_method)}")
+    st.caption(
+        "Portais/fontes: "
+        + (", ".join(selected.source_domains) if selected.source_domains else "não informado")
+    )
+    if selected.source_urls:
+        with st.expander("URLs de origem"):
+            for source_url in selected.source_urls:
+                st.link_button(source_url, source_url)
     scores = st.columns(4)
     scores[0].metric("Match", selected.analysis.match_score)
     scores[1].metric("ATS", selected.analysis.ats_score)
@@ -803,6 +811,7 @@ def render_dashboard_step() -> None:
                 "Cargo": item.job_title,
                 "Empresa": item.company,
                 "Origem": collection_method_label(item.collection_method),
+                "Portais/fontes": ", ".join(item.source_domains),
                 "Status": item.status.value,
                 "Recomendação": item.analysis.recommendation,
                 "Modalidade": modality_label(item.modality),
@@ -914,7 +923,7 @@ def render_search_intelligence_step(provider_name: str) -> None:
 
 def render_app() -> None:
     """Configure and render the complete guided application."""
-    st.set_page_config(page_title="SotuHire v0.8.0", page_icon="S", layout="wide")
+    st.set_page_config(page_title="SotuHire v0.9.0", page_icon="S", layout="wide")
     initialize_state()
     inject_styles()
     render_header()
