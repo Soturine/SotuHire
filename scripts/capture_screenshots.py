@@ -6,8 +6,10 @@ import argparse
 import sys
 from pathlib import Path
 from time import sleep
+from typing import TYPE_CHECKING
 
-from playwright.sync_api import Page, sync_playwright
+if TYPE_CHECKING:
+    from playwright.sync_api import Page
 
 OUTPUT_DIR = Path("docs/assets/screenshots")
 LOCAL_STATE_PATHS = (
@@ -106,6 +108,8 @@ def _seed_fictitious_memory() -> None:
 
 def capture(base_url: str) -> None:
     """Capture current app surfaces using only fictitious local data."""
+    from playwright.sync_api import sync_playwright
+
     snapshot = _snapshot_local_state()
     try:
         _seed_fictitious_opportunities()
