@@ -9,6 +9,7 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from modules.core.collection_method import CollectionMethod
+from modules.portfolio.schemas import ProjectAnalysisReport
 
 
 def utc_now() -> datetime:
@@ -111,4 +112,16 @@ class CompanionResponse(BaseModel):
     recommendation: str = ""
     provider: str = ""
     tracker_id: str = ""
+    app_url: str = "http://127.0.0.1:8501"
+
+
+class ProjectCompanionResponse(BaseModel):
+    """Project analysis response safe for the extension report."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ok: bool = True
+    message: str
+    report: ProjectAnalysisReport
+    saved_to_memory: bool = False
     app_url: str = "http://127.0.0.1:8501"

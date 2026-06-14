@@ -10,6 +10,12 @@ from modules.memory.schemas import CareerMemoryItem
 
 DEFAULT_LIMITS_BY_KIND = {
     "project": 2,
+    "project_evidence": 2,
+    "github_repo": 2,
+    "github_profile": 1,
+    "portfolio": 2,
+    "commit_analysis": 1,
+    "readme_analysis": 1,
     "experience": 2,
     "skill": 2,
     "job_analysis": 2,

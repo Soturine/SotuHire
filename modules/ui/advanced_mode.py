@@ -9,6 +9,7 @@ ADVANCED_TABS = [
     "Resultado",
     "Coletar vagas",
     "Extensão",
+    "GitHub / Portfólio / Projetos",
     "Search Intelligence",
     "Memória de carreira",
     "Histórico",

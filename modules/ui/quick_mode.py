@@ -12,6 +12,7 @@ QUICK_HIDDEN_SECTIONS = {
     "Preferências",
     "Coletar vagas",
     "Extensão",
+    "GitHub / Portfólio / Projetos",
     "Search Intelligence",
     "Memória de carreira",
     "Histórico",

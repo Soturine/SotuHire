@@ -21,6 +21,7 @@ from modules.local_api.schemas import (
     CompanionAnalysisContext,
     CompanionCaptureRecord,
     CompanionResponse,
+    ProjectCompanionResponse,
     utc_now,
 )
 from modules.local_api.security import (
@@ -32,6 +33,13 @@ from modules.local_api.security import (
 from modules.memory import CareerMemory
 from modules.opportunities import OpportunityStore
 from modules.parsers.job_description_parser import parse_job_description
+from modules.portfolio import (
+    ProjectAnalysisPayload,
+    ProjectAnalysisRecord,
+    ProjectAnalysisStore,
+    analyze_project,
+    enhance_project_report,
+)
 from modules.schemas.job_analysis import JobAnalysisSchema, Recommendation
 from modules.schemas.user_preferences import UserPreferences
 from modules.scraping.connectors.manual_url import opportunity_from_text
@@ -111,12 +119,14 @@ class LocalCompanionService:
         memory: CareerMemory | None = None,
         tracker: JobTracker | None = None,
         context_path: str | Path = "data/companion/active-context.json",
+        project_store: ProjectAnalysisStore | None = None,
     ) -> None:
         self.capture_store = capture_store or CompanionCaptureStore()
         self.opportunity_store = opportunity_store or OpportunityStore()
         self.memory = memory or CareerMemory()
         self.tracker = tracker or JobTracker()
         self.context_path = Path(context_path)
+        self.project_store = project_store or ProjectAnalysisStore()
 
     def health(self) -> CompanionResponse:
         return CompanionResponse(message="SotuHire Local Companion disponível.")
@@ -316,6 +326,22 @@ class LocalCompanionService:
             tracker_id=tracker_ids[-1],
         )
 
+    def analyze_project_capture(
+        self, payload: ProjectAnalysisPayload, *, save_to_memory: bool = True
+    ) -> ProjectCompanionResponse:
+        """Analyze and optionally persist a public GitHub/project/portfolio capture."""
+        report = analyze_project(payload.model_copy(update={"provider_used": "local"}))
+        if payload.provider_used == "gemini":
+            report = enhance_project_report(payload, report)
+        self.project_store.save(ProjectAnalysisRecord(payload=payload, report=report))
+        if save_to_memory:
+            self.memory.remember_project_analysis(report)
+        return ProjectCompanionResponse(
+            message="Projeto analisado e salvo no SotuHire.",
+            report=report,
+            saved_to_memory=save_to_memory,
+        )
+
     def _resolve_record(self, request: CaptureActionRequest) -> CompanionCaptureRecord:
         if request.capture is not None:
             response = self.capture_job(request.capture)
@@ -374,6 +400,17 @@ class LocalCompanionApp:
             elif method == "POST" and path == "/capture/applications":
                 response = self.service.import_applications(
                     ApplicationBatchPayload.model_validate(payload)
+                )
+            elif method == "POST" and path in {
+                "/capture/github-profile",
+                "/capture/github-repo",
+                "/capture/portfolio",
+                "/capture/project",
+                "/capture/repo-analysis",
+                "/capture/commit-analysis",
+            }:
+                response = self.service.analyze_project_capture(
+                    ProjectAnalysisPayload.model_validate(payload)
                 )
             else:
                 return 404, {"ok": False, "message": "Endpoint não encontrado."}

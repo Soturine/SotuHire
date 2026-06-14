@@ -13,6 +13,12 @@ from modules.memory.schemas import CareerMemoryItem
 KIND_BOOSTS = {
     "skill": 0.16,
     "project": 0.14,
+    "project_evidence": 0.16,
+    "github_repo": 0.14,
+    "github_profile": 0.1,
+    "portfolio": 0.14,
+    "commit_analysis": 0.06,
+    "readme_analysis": 0.06,
     "experience": 0.14,
     "preference": 0.1,
     "job_analysis": 0.08,

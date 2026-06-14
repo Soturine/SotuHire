@@ -10,6 +10,7 @@ from modules.memory.memory_retriever import MemoryRetriever
 from modules.memory.memory_store import MemoryStore
 from modules.memory.memory_summarizer import memory_markdown_summary
 from modules.memory.schemas import CareerFeedback, CareerMemoryItem, EvidenceFeedback, MemoryKind
+from modules.portfolio.schemas import ProjectAnalysisReport
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.user_preferences import UserPreferences
@@ -236,6 +237,74 @@ class CareerMemory:
                 tags=[status],
             )
         )
+
+    def remember_project_analysis(self, report: ProjectAnalysisReport) -> list[CareerMemoryItem]:
+        """Persist a project report as reusable, traceable career evidence."""
+        kind_map: dict[str, MemoryKind] = {
+            "github_profile": "github_profile",
+            "github_repo": "github_repo",
+            "portfolio": "portfolio",
+            "project": "project",
+        }
+        items = [
+            CareerMemoryItem(
+                kind=kind_map[report.page_type],
+                title=report.title,
+                content=report.summary,
+                source=report.url,
+                source_id=report.id,
+                confidence=0.85,
+                tags=report.technical_keywords,
+            ),
+            CareerMemoryItem(
+                kind="project_evidence",
+                title=f"Evidências: {report.title}",
+                content=" ".join([*report.strengths, *report.resume_highlights]),
+                source=report.url,
+                source_id=report.id,
+                confidence=0.9,
+                tags=report.technical_keywords,
+            ),
+            CareerMemoryItem(
+                kind="commit_analysis",
+                title=f"Commits: {report.title}",
+                content=(
+                    f"Commit Quality: {report.commit_quality_score}. "
+                    f"Mensagens relevantes: {', '.join(report.commit_analysis.relevant_messages)}"
+                ),
+                source=report.url,
+                source_id=report.id,
+                confidence=0.75,
+                tags=["commits", *report.technical_keywords[:8]],
+            ),
+            CareerMemoryItem(
+                kind="readme_analysis",
+                title=f"README: {report.title}",
+                content=(
+                    f"Documentation Score: {report.documentation_score}. "
+                    f"Recomendações: {', '.join(report.priority_recommendations[:3])}"
+                ),
+                source=report.url,
+                source_id=report.id,
+                confidence=0.75,
+                tags=["documentation", *report.technical_keywords[:8]],
+            ),
+        ]
+        return [
+            self.store.add_memory_item(
+                item.model_copy(
+                    update={
+                        "id": self._stable_id(
+                            item.kind,
+                            "",
+                            "",
+                            f"{report.id}:{item.kind}",
+                        )
+                    }
+                )
+            )
+            for item in items
+        ]
 
     def export_all(self, directory: str | Path = "exports/memory") -> dict[str, Path]:
         """Export JSON, JSONL, and Markdown summary."""

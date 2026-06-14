@@ -67,6 +67,7 @@ from modules.ui.layout import (
     should_run_quick_analysis,
 )
 from modules.ui.memory_page import render_memory_page
+from modules.ui.project_page import render_project_page
 from modules.ui.quick_mode import QUICK_INPUT_HEIGHT, compact_status
 from modules.ui.scraping_page import render_scraping_page
 from modules.ui.search_intelligence_page import render_actionable_source
@@ -959,16 +960,18 @@ def render_app() -> None:
     with tabs[5]:
         render_extension_page(provider_name)
     with tabs[6]:
-        render_search_intelligence_step(provider_name)
+        render_project_page()
     with tabs[7]:
-        render_memory_page()
+        render_search_intelligence_step(provider_name)
     with tabs[8]:
-        render_history_step()
+        render_memory_page()
     with tabs[9]:
-        render_dashboard_step()
+        render_history_step()
     with tabs[10]:
-        st.info("Os exports completos ficam disponíveis no resultado analisado.")
+        render_dashboard_step()
     with tabs[11]:
+        st.info("Os exports completos ficam disponíveis no resultado analisado.")
+    with tabs[12]:
         st.info("Diagnósticos técnicos ficam recolhidos e visíveis somente no modo avançado.")
     st.caption(
         "Processamento local por padrão · revisão humana obrigatória · sem auto-apply · "

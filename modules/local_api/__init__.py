@@ -10,6 +10,7 @@ from .schemas import (
     CompanionAnalysisContext,
     CompanionCaptureRecord,
     CompanionResponse,
+    ProjectCompanionResponse,
 )
 from .server import server_status, start_server, stop_server
 
@@ -22,6 +23,7 @@ __all__ = [
     "CompanionCaptureRecord",
     "CompanionCaptureStore",
     "CompanionResponse",
+    "ProjectCompanionResponse",
     "LocalCompanionApp",
     "LocalCompanionService",
     "server_status",

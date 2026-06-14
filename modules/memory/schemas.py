@@ -19,6 +19,12 @@ MemoryKind = Literal[
     "opportunity",
     "feedback",
     "tracker_event",
+    "github_profile",
+    "github_repo",
+    "portfolio",
+    "commit_analysis",
+    "readme_analysis",
+    "project_evidence",
 ]
 
 
