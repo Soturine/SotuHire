@@ -23,6 +23,14 @@
       Token local opcional
       <input id="local-token" type="password" autocomplete="off">
     </label>
+    <details>
+      <summary>IA standalone opcional</summary>
+      <label class="option">
+        Gemini API Key da extensão
+        <input id="standalone-gemini-key" type="password" autocomplete="off">
+      </label>
+      <small>Fica somente no chrome.storage.local. Prefira o Gemini via SotuHire local.</small>
+    </details>
     <div class="actions">
       <button data-action="capture">Salvar vaga atual</button>
       <button data-action="analyze" class="primary">Analisar vaga atual</button>
@@ -32,9 +40,16 @@
       <button data-action="send-batch">Enviar lote acumulado</button>
       <button data-action="copy">Copiar texto extraído</button>
       <button data-action="health">Testar conexão com SotuHire</button>
+      <button data-action="project-standalone" class="primary">Analisar projeto no navegador</button>
+      <button data-action="project-connected">Salvar projeto no SotuHire</button>
+      <button data-action="project-evidence">Usar projeto como evidência</button>
+      <button data-action="project-compare">Comparar projeto com vaga atual</button>
+      <button data-action="project-memory">Enviar projeto para memória</button>
+      <button data-action="project-profile">Enviar projeto para perfil profissional</button>
     </div>
     <section id="result" aria-live="polite">Pronto para capturar a página atual.</section>
     <a href="http://127.0.0.1:8501" target="_blank" rel="noreferrer">Abrir SotuHire</a>
+    <script src="project_analysis.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

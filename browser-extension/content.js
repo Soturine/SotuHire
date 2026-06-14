@@ -86,10 +86,50 @@
       })
       .slice(0, 500);
   };
+  const projectCapture = () => {
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    const github = window.location.hostname.toLowerCase() === "github.com";
+    const pageType = github
+      ? (parts.length >= 2 ? "github_repo" : "github_profile")
+      : "portfolio";
+    const links = [...document.querySelectorAll("a[href]")];
+    const files = links
+      .map((anchor) => anchor.getAttribute("title") || anchor.getAttribute("href") || "")
+      .filter((value) => /(^|\/)(README|src|app|modules|tests|docs|\.github|package\.json|pyproject\.toml|requirements\.txt|Dockerfile)/i.test(value))
+      .slice(0, 200);
+    const commitMessages = [...document.querySelectorAll(
+      "[data-testid*='commit'] a, [class*='commit'] a, a[href*='/commit/']"
+    )].map(text).filter(Boolean).slice(0, 200);
+    const topics = [...document.querySelectorAll("[data-octo-click*='topic'], [class*='topic']")]
+      .map(text).filter(Boolean).slice(0, 100);
+    const languages = [...document.querySelectorAll("[aria-label*='language'], [class*='language']")]
+      .map(text).filter(Boolean).slice(0, 100);
+    const readme = firstText([
+      "#readme",
+      "article.markdown-body",
+      "[data-testid='readme']",
+      "[class*='readme']"
+    ]);
+    return {
+      url: window.location.href,
+      owner: github ? (parts[0] || "") : "",
+      repo: github ? (parts[1] || "") : "",
+      title: firstText(["h1", "title"]) || document.title,
+      page_type: pageType,
+      visible_text: pageText(),
+      readme_text: readme.slice(0, 100000),
+      files_sampled: [...new Set(files)],
+      commit_messages: [...new Set(commitMessages)],
+      languages: [...new Set(languages)],
+      topics: [...new Set(topics)],
+      provider_used: "local"
+    };
+  };
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.type === "SOTUHIRE_CAPTURE") sendResponse({ capture: capture() });
     if (message.type === "SOTUHIRE_APPLICATIONS") sendResponse({ applications: applicationRows() });
+    if (message.type === "SOTUHIRE_PROJECT") sendResponse({ project: projectCapture() });
     return true;
   });
 })();

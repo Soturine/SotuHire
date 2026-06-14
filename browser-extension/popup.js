@@ -2,13 +2,18 @@ const API = "http://127.0.0.1:8765";
 const result = document.querySelector("#result");
 const useAI = document.querySelector("#use-ai");
 const localToken = document.querySelector("#local-token");
+const standaloneGeminiKey = document.querySelector("#standalone-gemini-key");
 
-chrome.storage.local.get(["useAI", "localToken"], (saved) => {
+chrome.storage.local.get(["useAI", "localToken", "standaloneGeminiKey"], (saved) => {
   useAI.checked = Boolean(saved.useAI);
   localToken.value = saved.localToken || "";
+  standaloneGeminiKey.value = saved.standaloneGeminiKey || "";
 });
 useAI.addEventListener("change", () => chrome.storage.local.set({ useAI: useAI.checked }));
 localToken.addEventListener("change", () => chrome.storage.local.set({ localToken: localToken.value }));
+standaloneGeminiKey.addEventListener("change", () => chrome.storage.local.set({
+  standaloneGeminiKey: standaloneGeminiKey.value
+}));
 
 const currentTab = async () => (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
 
@@ -31,10 +36,43 @@ const request = async (path, body) => {
 };
 
 const display = (payload) => {
+  if (payload.report) {
+    const report = payload.report;
+    result.textContent = `${payload.message || "Relatório concluído."}\nNota: ${report.overall_score}/100 · Grade ${report.grade}\n${report.summary}`;
+    return;
+  }
   const scores = payload.match_score == null
     ? ""
     : `\nMatch: ${payload.match_score} · ATS: ${payload.ats_score}`;
   result.textContent = `${payload.message || "Concluído."}${scores}`;
+};
+
+const analyzeWithStandaloneGemini = async (project, localReport) => {
+  if (!standaloneGeminiKey.value) return localReport;
+  const granted = await chrome.permissions.request({
+    origins: ["https://generativelanguage.googleapis.com/*"]
+  });
+  if (!granted) throw new Error("Permissão do Gemini standalone não concedida.");
+  const prompt = [
+    "Avalie este projeto público sem inventar fatos. Responda em português com resumo,",
+    "pontos fortes, pontos fracos e prioridades.",
+    JSON.stringify({ project, local_report: localReport })
+  ].join("\n");
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-goog-api-key": standaloneGeminiKey.value
+      },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+    }
+  );
+  if (!response.ok) throw new Error(`Gemini standalone falhou: HTTP ${response.status}`);
+  const payload = await response.json();
+  localReport.gemini_summary = payload.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  return localReport;
 };
 
 const applicationIdentity = (item) => {
@@ -80,6 +118,26 @@ const act = async (action) => {
       const response = await request("/capture/applications", { applications });
       await chrome.storage.local.remove(["applicationBatch"]);
       return display(response);
+    }
+    if (action.startsWith("project-")) {
+      const { project } = await extract("SOTUHIRE_PROJECT");
+      if (action === "project-standalone") {
+        const report = await analyzeWithStandaloneGemini(
+          project,
+          SotuHireProjectAnalyzer.analyze(project)
+        );
+        result.textContent = `${report.summary}\nStack: ${(report.stack || []).join(", ")}\n${report.gemini_summary || ""}`;
+        return;
+      }
+      const paths = {
+        "project-connected": "/capture/repo-analysis",
+        "project-evidence": "/capture/project",
+        "project-compare": "/capture/repo-analysis",
+        "project-memory": "/capture/project",
+        "project-profile": "/capture/project"
+      };
+      project.provider_used = useAI.checked ? "gemini" : "local";
+      return display(await request(paths[action], project));
     }
     const { capture } = await extract();
     if (action === "copy") {

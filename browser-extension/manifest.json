@@ -5,6 +5,7 @@
   "description": "Captura a vaga atual ou candidaturas visíveis e envia para o SotuHire local.",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["http://127.0.0.1:8765/*"],
+  "optional_host_permissions": ["https://generativelanguage.googleapis.com/*"],
   "action": {
     "default_title": "SotuHire",
     "default_popup": "popup.html",
