@@ -8,7 +8,12 @@ import streamlit as st
 
 from modules.memory import CareerMemory, CareerMemoryQuery
 from modules.memory.memory_summarizer import memory_markdown_summary
-from modules.profile import CareerProfileStore, build_career_profile, infer_preferences
+from modules.profile import (
+    CareerProfileStore,
+    build_career_profile,
+    infer_preferences,
+    profile_completeness_score,
+)
 from modules.ui.components import render_chips, render_item_cards, render_list
 from modules.ui.layout import build_preferences
 
@@ -107,6 +112,9 @@ def render_memory_page() -> None:
                     st.write(item.excerpt)
                     st.caption(f"Relevância local: {item.relevance_score:.0%}")
     with tabs[3]:
+        score = profile_completeness_score(profile)
+        st.metric("Completude do perfil", f"{score}%")
+        st.progress(score)
         st.markdown("**Cargos alvo**")
         render_chips(profile.target_roles, "Ainda não inferidos.")
         st.markdown("**Skills técnicas**")

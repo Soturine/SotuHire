@@ -1,0 +1,7 @@
+{
+  "memory_used": true,
+  "memory_shared_with_provider": false,
+  "minimum_match_score": 40,
+  "expected_evidence_titles": ["Projeto Atlas IoT", "Skill: FastAPI"],
+  "expected_memory_ids": ["fixture-project-iot", "fixture-skill-fastapi"]
+}

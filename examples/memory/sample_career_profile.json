@@ -1,0 +1,16 @@
+{
+  "target_roles": ["Analista de Dados Junior"],
+  "likely_seniority": "junior",
+  "technical_skills": ["Python", "SQL", "Power BI"],
+  "soft_skills": ["comunicacao"],
+  "education_summary": ["Curso ficticio de Analise de Dados"],
+  "experience_summary": ["Projeto academico de indicadores"],
+  "project_highlights": ["Painel de indicadores ficticio"],
+  "links": ["https://github.com/example/data-portfolio"],
+  "preferred_modalities": ["remote", "hybrid"],
+  "preferred_locations": ["Brasil"],
+  "preferred_contracts": ["CLT"],
+  "target_companies": ["example.org"],
+  "recurring_gaps": ["dbt"],
+  "strengths": ["Python", "SQL"]
+}

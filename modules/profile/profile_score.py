@@ -1,28 +1,28 @@
-"""Profile score helpers for LinkedIn, Lattes and portfolio signals."""
+"""Deterministic completeness score for the local career profile."""
 
 from __future__ import annotations
 
-from modules.core.scoring import weighted_score
+from modules.profile.schemas import CareerProfile
 
 
-def calculate_readiness_score(
-    ats_score: int | None,
-    match_score: int | None,
-    linkedin_score: int | None = None,
-    portfolio_score: int | None = None,
-) -> int | None:
-    """Combine core scores into a readiness score."""
-    return weighted_score(
-        {
-            "ats": ats_score,
-            "match": match_score,
-            "linkedin": linkedin_score,
-            "portfolio": portfolio_score,
-        },
-        {
-            "ats": 0.25,
-            "match": 0.45,
-            "linkedin": 0.15,
-            "portfolio": 0.15,
-        },
-    )
+def profile_completeness_score(profile: CareerProfile) -> int:
+    """Return a 0-100 score based on useful, evidence-backed profile sections."""
+    sections: list[tuple[bool, int]] = [
+        (bool(profile.target_roles), 15),
+        (bool(profile.technical_skills), 20),
+        (bool(profile.soft_skills), 5),
+        (bool(profile.education_summary), 10),
+        (bool(profile.experience_summary), 15),
+        (bool(profile.project_highlights), 15),
+        (bool(profile.links), 5),
+        (
+            bool(
+                profile.preferred_modalities
+                or profile.preferred_locations
+                or profile.preferred_contracts
+            ),
+            10,
+        ),
+        (bool(profile.strengths or profile.recurring_gaps), 5),
+    ]
+    return sum(weight for present, weight in sections if present)

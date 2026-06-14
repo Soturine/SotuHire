@@ -1,0 +1,16 @@
+{
+  "target_roles": ["Desenvolvedor Backend Junior", "Desenvolvedor IoT Junior"],
+  "likely_seniority": "junior",
+  "technical_skills": ["Python", "FastAPI", "ESP32", "MQTT"],
+  "soft_skills": ["comunicacao", "organizacao"],
+  "education_summary": ["Tecnologia em Sistemas para Internet"],
+  "experience_summary": ["Suporte a processos tecnicos industriais"],
+  "project_highlights": ["Projeto Atlas IoT com ESP32 e MQTT"],
+  "links": ["https://github.com/example/career-lab"],
+  "preferred_modalities": ["remote", "hybrid"],
+  "preferred_locations": ["Sao Paulo"],
+  "preferred_contracts": ["CLT"],
+  "target_companies": ["example.com"],
+  "recurring_gaps": ["Docker"],
+  "strengths": ["Python", "automacao industrial"]
+}

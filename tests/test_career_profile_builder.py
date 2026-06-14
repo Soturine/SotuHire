@@ -1,5 +1,5 @@
 from modules.memory import CareerMemoryItem
-from modules.profile import build_career_profile, infer_preferences
+from modules.profile import build_career_profile, infer_preferences, profile_completeness_score
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.user_preferences import UserPreferences
 
@@ -41,6 +41,7 @@ def test_career_profile_is_built_from_resume_memory_and_preferences():
     assert "remote" in profile.preferred_modalities
     assert "Docker" in profile.recurring_gaps
     assert profile.target_companies == ["Example"]
+    assert profile_completeness_score(profile) >= 80
 
 
 def test_preferences_are_inferred_from_history():
@@ -60,3 +61,7 @@ def test_preferences_are_inferred_from_history():
     assert "remote" in inferred.modalities
     assert "clt" in inferred.contracts
     assert "Python" in inferred.relevant_skills
+
+
+def test_empty_career_profile_has_zero_completeness():
+    assert profile_completeness_score(build_career_profile(ResumeProfileSchema(), [])) == 0
