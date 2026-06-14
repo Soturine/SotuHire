@@ -60,7 +60,7 @@ def render_project_page() -> None:
     """Render manual and extension-connected project analysis workflows."""
     st.subheader("GitHub / Portfólio / Projetos")
     st.caption("Analise páginas públicas, salve evidências e reutilize sinais técnicos nas vagas.")
-    with st.form("project_analysis_form"):
+    with st.expander("Analisar novo projeto"), st.form("project_analysis_form"):
         top = st.columns(2)
         url = top[0].text_input("URL pública do perfil, repositório ou portfólio")
         page_type = top[1].selectbox(

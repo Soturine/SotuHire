@@ -18,7 +18,8 @@ details {
   padding: 8px;
 }
 
-input[type="password"] {
+input[type="password"],
+input[type="text"] {
   min-width: 150px;
   border: 1px solid #344b68;
   border-radius: 6px;

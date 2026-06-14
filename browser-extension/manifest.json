@@ -4,16 +4,23 @@
   "version": "0.9.0",
   "description": "Captura a vaga atual ou candidaturas visíveis e envia para o SotuHire local.",
   "permissions": ["activeTab", "scripting", "storage"],
-  "host_permissions": ["http://127.0.0.1:8765/*"],
+  "host_permissions": ["http://127.0.0.1:8765/*", "https://github.com/*"],
   "optional_host_permissions": ["https://generativelanguage.googleapis.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["project_analysis.js", "github_injected.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "action": {
     "default_title": "SotuHire",
     "default_popup": "popup.html",
-    "default_icon": "assets/icon.svg"
+    "default_icon": "assets/icon48.png"
   },
   "icons": {
-    "16": "assets/icon.svg",
-    "48": "assets/icon.svg",
-    "128": "assets/icon.svg"
+    "16": "assets/icon16.png",
+    "48": "assets/icon48.png",
+    "128": "assets/icon128.png"
   }
 }

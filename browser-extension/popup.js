@@ -3,16 +3,32 @@ const result = document.querySelector("#result");
 const useAI = document.querySelector("#use-ai");
 const localToken = document.querySelector("#local-token");
 const standaloneGeminiKey = document.querySelector("#standalone-gemini-key");
+const standaloneGeminiModel = document.querySelector("#standalone-gemini-model");
+const deepProjectAnalysis = document.querySelector("#deep-project-analysis");
 
-chrome.storage.local.get(["useAI", "localToken", "standaloneGeminiKey"], (saved) => {
+chrome.storage.local.get([
+  "useAI",
+  "localToken",
+  "standaloneGeminiKey",
+  "standaloneGeminiModel",
+  "deepProjectAnalysis"
+], (saved) => {
   useAI.checked = Boolean(saved.useAI);
   localToken.value = saved.localToken || "";
   standaloneGeminiKey.value = saved.standaloneGeminiKey || "";
+  standaloneGeminiModel.value = saved.standaloneGeminiModel || "gemini-2.5-flash";
+  deepProjectAnalysis.checked = Boolean(saved.deepProjectAnalysis);
 });
 useAI.addEventListener("change", () => chrome.storage.local.set({ useAI: useAI.checked }));
 localToken.addEventListener("change", () => chrome.storage.local.set({ localToken: localToken.value }));
 standaloneGeminiKey.addEventListener("change", () => chrome.storage.local.set({
   standaloneGeminiKey: standaloneGeminiKey.value
+}));
+standaloneGeminiModel.addEventListener("change", () => chrome.storage.local.set({
+  standaloneGeminiModel: standaloneGeminiModel.value
+}));
+deepProjectAnalysis.addEventListener("change", () => chrome.storage.local.set({
+  deepProjectAnalysis: deepProjectAnalysis.checked
 }));
 
 const currentTab = async () => (await chrome.tabs.query({ active: true, currentWindow: true }))[0];
@@ -20,7 +36,7 @@ const currentTab = async () => (await chrome.tabs.query({ active: true, currentW
 const extract = async (type = "SOTUHIRE_CAPTURE") => {
   const tab = await currentTab();
   await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ["content.js"] });
-  return chrome.tabs.sendMessage(tab.id, { type });
+  return chrome.tabs.sendMessage(tab.id, { type, deep: deepProjectAnalysis.checked });
 };
 
 const request = async (path, body) => {
@@ -59,7 +75,7 @@ const analyzeWithStandaloneGemini = async (project, localReport) => {
     JSON.stringify({ project, local_report: localReport })
   ].join("\n");
   const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(standaloneGeminiModel.value || "gemini-2.5-flash")}:generateContent`,
     {
       method: "POST",
       headers: {

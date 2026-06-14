@@ -86,7 +86,7 @@
       })
       .slice(0, 500);
   };
-  const projectCapture = () => {
+  const projectCapture = (deep = false) => {
     const parts = window.location.pathname.split("/").filter(Boolean);
     const github = window.location.hostname.toLowerCase() === "github.com";
     const pageType = github
@@ -96,10 +96,10 @@
     const files = links
       .map((anchor) => anchor.getAttribute("title") || anchor.getAttribute("href") || "")
       .filter((value) => /(^|\/)(README|src|app|modules|tests|docs|\.github|package\.json|pyproject\.toml|requirements\.txt|Dockerfile)/i.test(value))
-      .slice(0, 200);
+      .slice(0, deep ? 200 : 80);
     const commitMessages = [...document.querySelectorAll(
       "[data-testid*='commit'] a, [class*='commit'] a, a[href*='/commit/']"
-    )].map(text).filter(Boolean).slice(0, 200);
+    )].map(text).filter(Boolean).slice(0, deep ? 200 : 30);
     const topics = [...document.querySelectorAll("[data-octo-click*='topic'], [class*='topic']")]
       .map(text).filter(Boolean).slice(0, 100);
     const languages = [...document.querySelectorAll("[aria-label*='language'], [class*='language']")]
@@ -129,7 +129,9 @@
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message.type === "SOTUHIRE_CAPTURE") sendResponse({ capture: capture() });
     if (message.type === "SOTUHIRE_APPLICATIONS") sendResponse({ applications: applicationRows() });
-    if (message.type === "SOTUHIRE_PROJECT") sendResponse({ project: projectCapture() });
+    if (message.type === "SOTUHIRE_PROJECT") {
+      sendResponse({ project: projectCapture(Boolean(message.deep)) });
+    }
     return true;
   });
 })();
