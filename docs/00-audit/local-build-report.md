@@ -85,8 +85,8 @@ Executado em 2026-06-14 após a implementação de Career Memory e RAG local:
 | --- | --- |
 | Pyright | 0 erros, 0 warnings |
 | Ruff check | aprovado |
-| Ruff format check | 195 arquivos formatados |
-| Pytest | 156 testes aprovados |
+| Ruff format check | 196 arquivos formatados |
+| Pytest | 157 testes aprovados |
 | MkDocs strict | build aprovado |
 | Streamlit health | HTTP 200, resposta `ok` |
 | Capturas v0.8.0 | quatro PNGs fictícios inspecionados |
