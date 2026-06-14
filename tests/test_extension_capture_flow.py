@@ -41,6 +41,13 @@ def test_previously_applied_jobs_are_imported_to_tracker_and_memory(tmp_path):
 
     response = service.import_applications(payload)
 
-    assert "2 candidaturas" in response.message
+    assert "2 candidaturas processadas: 2 novas" in response.message
     assert len(tracker.list_analyses()) == 2
+    assert len(memory.store.list_memory_items(kind="opportunity")) == 2
+
+    repeated = service.import_applications(payload)
+
+    assert "2 candidaturas processadas: 0 novas e 2 já existentes" in repeated.message
+    assert len(tracker.list_analyses()) == 2
+    assert len(service.capture_store.list()) == 2
     assert len(memory.store.list_memory_items(kind="opportunity")) == 2

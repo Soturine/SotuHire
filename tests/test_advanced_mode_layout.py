@@ -8,6 +8,7 @@ def test_advanced_mode_contains_complete_workflow():
         "Preferências",
         "Resultado",
         "Coletar vagas",
+        "Extensão",
         "Search Intelligence",
         "Memória de carreira",
         "Histórico",

@@ -1,0 +1,15 @@
+{
+  "required_fields": [
+    "page_title",
+    "url",
+    "domain",
+    "visible_text",
+    "job_title",
+    "company",
+    "location",
+    "description",
+    "collection_method"
+  ],
+  "collection_method": "browser_assisted_capture",
+  "max_batch_size": 500
+}

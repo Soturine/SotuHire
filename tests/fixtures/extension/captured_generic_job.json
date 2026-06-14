@@ -1,0 +1,11 @@
+{
+  "page_title": "Oportunidade de Software",
+  "url": "https://jobs.example.net/opportunity",
+  "domain": "jobs.example.net",
+  "visible_text": "Oportunidade fictícia de software com requisitos a confirmar.",
+  "job_title": "Oportunidade de Software",
+  "company": "Example Company",
+  "location": "",
+  "description": "Descrição genérica fictícia para validar a captura.",
+  "collection_method": "browser_assisted_capture"
+}
