@@ -409,6 +409,13 @@ def _render_result_content(
         st.caption(f"Motivo do fallback: {result.diagnostic.summary}")
     if result.warning:
         st.warning(result.warning)
+    if result.memory_used:
+        shared = (
+            " e enviado ao Gemini com sua autorização" if result.memory_shared_with_provider else ""
+        )
+        st.info(f"Análise personalizada com base no seu histórico local{shared}.")
+    else:
+        st.caption("Nenhuma memória local relevante foi usada nesta análise.")
     if advanced:
         with st.expander("Detalhes técnicos da análise"):
             st.caption(f"Provider solicitado: {provider_label(result.requested_provider)}")
@@ -439,6 +446,11 @@ def _render_result_content(
             render_list(analysis.gaps, "Nenhum ajuste prioritário.")
         st.markdown("**Keywords prioritárias**")
         render_limited_chips(analysis.missing_keywords, "Nenhuma keyword prioritária ausente.")
+        if result.evidence:
+            with st.expander("Por que o SotuHire chegou nessa recomendação?"):
+                for evidence in result.evidence:
+                    st.markdown(f"**{evidence.title}** · {evidence.source}")
+                    st.caption(evidence.excerpt)
         return
 
     tabs = st.tabs(
@@ -450,6 +462,7 @@ def _render_result_content(
             "Resume Tailor",
             "Mensagem",
             "Próximos passos",
+            "Evidências",
             "Exportar",
         ]
     )
@@ -484,6 +497,15 @@ def _render_result_content(
             "",
         )
     with tabs[7]:
+        st.markdown("**Por que o SotuHire chegou nessa recomendação?**")
+        if not result.evidence:
+            st.info("Nenhuma evidência de memória local foi usada.")
+        for evidence in result.evidence:
+            with st.container(border=True):
+                st.markdown(f"**{evidence.title}** · {evidence.source}")
+                st.write(evidence.excerpt)
+                st.caption(f"Relevância local: {evidence.relevance_score:.0%}")
+    with tabs[8]:
         exports = st.columns(3)
         exports[0].download_button(
             "Análise JSON",

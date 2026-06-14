@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 from modules.ai.diagnostics import GeminiDiagnostic, diagnose_gemini_error
 from modules.ai.providers import AIProvider, GeminiProvider, MockProvider
@@ -12,6 +12,8 @@ from modules.ai.setup import (
     gemini_model,
     gemini_setup_status,
 )
+from modules.memory.memory_summarizer import summarize_evidence
+from modules.memory.schemas import CareerEvidence
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
 
@@ -28,6 +30,9 @@ class StructuredAnalysisResult(BaseModel):
     model: str = ""
     warning: str = ""
     diagnostic: GeminiDiagnostic | None = None
+    evidence: list[CareerEvidence] = Field(default_factory=list)
+    memory_used: bool = False
+    memory_shared_with_provider: bool = False
 
 
 def _configured_provider(name: str | None = None) -> str:
@@ -59,20 +64,46 @@ def analyze_structured(
     preferences: UserPreferences | None = None,
     job_details: dict[str, object] | None = None,
     provider: AIProvider | None = None,
+    memory_evidence: list[CareerEvidence] | None = None,
+    share_memory_with_provider: bool = False,
 ) -> StructuredAnalysisResult:
     """Run structured analysis and fall back locally if an optional provider fails."""
     selected = provider or get_provider()
+    evidence = memory_evidence or []
+    memory_context = summarize_evidence(evidence)
+    provider_memory_context = (
+        memory_context
+        if selected.name == "local" or (selected.name == "gemini" and share_memory_with_provider)
+        else ""
+    )
     try:
-        analysis = selected.analyze(resume_text, job_text, preferences, job_details)
+        analysis = selected.analyze(
+            resume_text,
+            job_text,
+            preferences,
+            job_details,
+            memory_context=provider_memory_context,
+        )
         return StructuredAnalysisResult(
             analysis=analysis,
             provider=selected.name,
             requested_provider=selected.name,
             model=getattr(selected, "model", ""),
+            evidence=evidence,
+            memory_used=bool(evidence),
+            memory_shared_with_provider=bool(
+                evidence and selected.name == "gemini" and share_memory_with_provider
+            ),
         )
     except Exception as exc:
         fallback = MockProvider()
-        analysis = fallback.analyze(resume_text, job_text, preferences, job_details)
+        analysis = fallback.analyze(
+            resume_text,
+            job_text,
+            preferences,
+            job_details,
+            memory_context=memory_context,
+        )
         diagnostic = diagnose_gemini_error(
             exc,
             test_type="analysis",
@@ -93,4 +124,7 @@ def analyze_structured(
                 "Provider usado: Análise local. Fallback usado: Sim."
             ),
             diagnostic=diagnostic,
+            evidence=evidence,
+            memory_used=bool(evidence),
+            memory_shared_with_provider=False,
         )

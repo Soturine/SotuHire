@@ -19,6 +19,12 @@ class MockProvider(AIProvider):
         job_text: str,
         preferences: UserPreferences | None = None,
         job_details: dict[str, object] | None = None,
+        memory_context: str = "",
     ) -> JobAnalysisSchema:
         """Return deterministic output with the production schema."""
-        return analyze_job(resume_text, job_text, preferences, job_details)
+        evidence_backed_resume = (
+            f"{resume_text}\n\nEVIDÊNCIAS DA MEMÓRIA LOCAL:\n{memory_context}"
+            if memory_context.strip()
+            else resume_text
+        )
+        return analyze_job(evidence_backed_resume, job_text, preferences, job_details)

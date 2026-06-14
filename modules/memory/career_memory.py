@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 from modules.memory.memory_retriever import MemoryRetriever
@@ -20,21 +21,29 @@ class CareerMemory:
         self.store = store or MemoryStore()
         self.retriever = MemoryRetriever(self.store)
 
+    @staticmethod
+    def _stable_id(kind: str, title: str, content: str, source_id: str | None) -> str:
+        payload = "\0".join([kind, title, content, source_id or ""])
+        return hashlib.sha256(payload.encode("utf-8")).hexdigest()
+
     def remember_resume(self, profile: ResumeProfileSchema, source_id: str | None = None) -> int:
         """Persist structured resume facts without requiring external AI."""
         items: list[CareerMemoryItem] = []
         if profile.summary:
+            item = CareerMemoryItem(
+                kind="resume",
+                title="Resumo profissional",
+                content=profile.summary,
+                source="resume",
+                source_id=source_id,
+                tags=profile.skills[:12],
+            )
             items.append(
-                CareerMemoryItem(
-                    kind="resume",
-                    title="Resumo profissional",
-                    content=profile.summary,
-                    source="resume",
-                    source_id=source_id,
-                    tags=profile.skills[:12],
+                item.model_copy(
+                    update={"id": self._stable_id(item.kind, item.title, item.content, source_id)}
                 )
             )
-        items.extend(
+        skill_items = [
             CareerMemoryItem(
                 kind="skill",
                 title=f"Skill: {skill}",
@@ -44,6 +53,12 @@ class CareerMemory:
                 tags=[skill],
             )
             for skill in profile.skills
+        ]
+        items.extend(
+            item.model_copy(
+                update={"id": self._stable_id(item.kind, item.title, item.content, source_id)}
+            )
+            for item in skill_items
         )
         structured_sections: list[tuple[MemoryKind, list[str]]] = [
             ("experience", profile.experiences),
@@ -51,7 +66,7 @@ class CareerMemory:
             ("education", profile.education),
         ]
         for kind, values in structured_sections:
-            items.extend(
+            section_items = [
                 CareerMemoryItem(
                     kind=kind,
                     title=value.splitlines()[0][:160],
@@ -61,6 +76,12 @@ class CareerMemory:
                     tags=profile.skills[:8],
                 )
                 for value in values
+            ]
+            items.extend(
+                item.model_copy(
+                    update={"id": self._stable_id(item.kind, item.title, item.content, source_id)}
+                )
+                for item in section_items
             )
         for item in items:
             self.store.add_memory_item(item)

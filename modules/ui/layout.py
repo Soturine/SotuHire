@@ -19,6 +19,7 @@ from modules.ai.setup import (
 )
 from modules.ai.structured_analysis import analyze_structured, gemini_setup_warning, get_provider
 from modules.examples import load_default_job_example, load_default_resume_example
+from modules.memory import CareerMemory
 from modules.parsers.job_description_parser import parse_job_description
 from modules.parsers.resume_parser import parse_resume_text
 from modules.resume_tailor.tailor_rules import build_safe_tailor_output
@@ -34,6 +35,7 @@ PROVIDERS = {
     "Análise local": "local",
     "Gemini": "gemini",
 }
+CAREER_MEMORY = CareerMemory()
 
 
 def initialize_state() -> None:
@@ -50,6 +52,8 @@ def initialize_state() -> None:
         "ai_setup_test_result": None,
         "gemini_session_key": gemini_api_key(),
         "gemini_session_model": gemini_model(),
+        "use_memory_this_analysis": True,
+        "share_memory_with_gemini": False,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
@@ -213,6 +217,20 @@ def render_sidebar() -> tuple[str, str]:
         with st.expander("Privacidade"):
             st.caption("Currículos não são enviados para IA externa sem configuração explícita.")
             st.caption("O histórico local só é salvo após sua confirmação.")
+            st.checkbox(
+                "Usar memória local nesta análise",
+                key="use_memory_this_analysis",
+                help="Busca apenas evidências relevantes no histórico local.",
+            )
+            st.checkbox(
+                "Enviar contexto relevante para Gemini",
+                key="share_memory_with_gemini",
+                disabled=provider_selection != "Gemini",
+                help=(
+                    "Envia somente um resumo das evidências recuperadas para esta vaga, "
+                    "nunca a memória inteira."
+                ),
+            )
             st.caption("Revisão humana obrigatória. O SotuHire não inventa dados.")
         return mode, PROVIDERS[provider_selection]
 
@@ -243,6 +261,12 @@ def job_details(job: JobPostingSchema) -> dict[str, object]:
 def run_analysis(provider_name: str) -> None:
     """Run structured analysis and safe tailoring from reviewed inputs."""
     job = st.session_state.job_posting
+    memory_evidence = []
+    if st.session_state.get("use_memory_this_analysis", True):
+        resume_source_id = hashlib.sha256(st.session_state.resume_text.encode("utf-8")).hexdigest()
+        CAREER_MEMORY.remember_resume(st.session_state.resume_profile, source_id=resume_source_id)
+        CAREER_MEMORY.remember_preferences(build_preferences())
+        memory_evidence = CAREER_MEMORY.retriever.retrieve(st.session_state.job_text, top_k=6)
     st.session_state.analysis_result = analyze_structured(
         st.session_state.resume_text,
         st.session_state.job_text,
@@ -252,6 +276,10 @@ def run_analysis(provider_name: str) -> None:
             provider_name,
             api_key=st.session_state.get("gemini_session_key", ""),
             model=st.session_state.get("gemini_session_model", gemini_model()),
+        ),
+        memory_evidence=memory_evidence,
+        share_memory_with_provider=bool(
+            provider_name == "gemini" and st.session_state.get("share_memory_with_gemini", False)
         ),
     )
     st.session_state.tailor_output = build_safe_tailor_output(
@@ -273,6 +301,8 @@ def analysis_fingerprint(provider_name: str) -> str:
             str(st.session_state.get("gemini_session_model", "")),
             "key-present" if st.session_state.get("gemini_session_key", "") else "key-absent",
             build_preferences().model_dump_json(),
+            str(st.session_state.get("use_memory_this_analysis", True)),
+            str(st.session_state.get("share_memory_with_gemini", False)),
         ]
     )
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()

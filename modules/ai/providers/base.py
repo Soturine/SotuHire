@@ -24,5 +24,6 @@ class AIProvider(ABC):
         job_text: str,
         preferences: UserPreferences | None = None,
         job_details: dict[str, object] | None = None,
+        memory_context: str = "",
     ) -> JobAnalysisSchema:
         """Return a validated structured analysis."""

@@ -25,6 +25,7 @@ class GeminiProvider(AIProvider):
         job_text: str,
         preferences: UserPreferences | None = None,
         job_details: dict[str, object] | None = None,
+        memory_context: str = "",
     ) -> JobAnalysisSchema:
         """Call Gemini with response_schema when configuration is available."""
         if not self.api_key:
@@ -38,7 +39,13 @@ class GeminiProvider(AIProvider):
         client = genai.Client(api_key=self.api_key)
         response = client.models.generate_content(
             model=self.model,
-            contents=self._build_prompt(resume_text, job_text, preferences, job_details),
+            contents=self._build_prompt(
+                resume_text,
+                job_text,
+                preferences,
+                job_details,
+                memory_context=memory_context,
+            ),
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 response_json_schema=self.structured_response_schema(),
@@ -105,8 +112,14 @@ class GeminiProvider(AIProvider):
         job_text: str,
         preferences: UserPreferences | None,
         job_details: dict[str, object] | None,
+        memory_context: str = "",
     ) -> str:
         preference_json = (preferences or UserPreferences()).model_dump_json()
+        relevant_memory = (
+            f"\n\nCONTEXTO RELEVANTE DA MEMORIA AUTORIZADO PELO USUARIO:\n{memory_context}"
+            if memory_context.strip()
+            else ""
+        )
         return (
             "Analise o curriculo e a vaga. Nao invente fatos. Use apenas evidencias fornecidas. "
             "Retorne scores explicaveis entre 0 e 100 e uma recomendacao permitida.\n\n"
@@ -114,4 +127,5 @@ class GeminiProvider(AIProvider):
             f"DADOS DA VAGA:\n{job_details or {}}\n\n"
             f"CURRICULO:\n{resume_text}\n\n"
             f"VAGA:\n{job_text}"
+            f"{relevant_memory}"
         )
