@@ -11,6 +11,7 @@ QUICK_VISIBLE_SECTIONS = {
 QUICK_HIDDEN_SECTIONS = {
     "Preferências",
     "Coletar vagas",
+    "Extensão",
     "Search Intelligence",
     "Memória de carreira",
     "Histórico",

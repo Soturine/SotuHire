@@ -8,6 +8,7 @@ ADVANCED_TABS = [
     "Preferências",
     "Resultado",
     "Coletar vagas",
+    "Extensão",
     "Search Intelligence",
     "Memória de carreira",
     "Histórico",

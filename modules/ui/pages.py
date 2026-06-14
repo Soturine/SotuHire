@@ -5,9 +5,11 @@ from __future__ import annotations
 import hashlib
 from collections import Counter
 from typing import Literal, cast
+from urllib.parse import quote_plus
 
 import streamlit as st
 
+from modules.ai.resume_extraction import extract_resume_profile
 from modules.ai.structured_analysis import StructuredAnalysisResult
 from modules.examples import load_default_job_example, load_default_resume_example
 from modules.exporters.analysis_exporter import (
@@ -23,12 +25,17 @@ from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput
 from modules.search_intelligence import SearchStrategyInput, build_memory_search_plan
-from modules.tracker.dashboard import calculate_dashboard_metrics, filter_dashboard_records
+from modules.tracker.dashboard import (
+    calculate_dashboard_metrics,
+    filter_dashboard_records,
+    rank_applied_requirements,
+)
 from modules.tracker.job_tracker import JobTracker
 from modules.tracker.status import JobStatus
 from modules.ui.advanced_mode import ADVANCED_TABS
 from modules.ui.components import (
     block_items,
+    collection_method_label,
     csv_items,
     display_value,
     line_items,
@@ -44,6 +51,7 @@ from modules.ui.components import (
     risk_label,
     seniority_label,
 )
+from modules.ui.extension_page import render_extension_page
 from modules.ui.layout import (
     CAREER_MEMORY,
     CONTRACTS,
@@ -155,7 +163,7 @@ def _resume_review(profile: ResumeProfileSchema, *, advanced: bool = True) -> No
             st.success("Revisão do currículo salva.")
 
 
-def render_resume_step(*, advanced: bool = True) -> None:
+def render_resume_step(*, advanced: bool = True, provider_name: str = "local") -> None:
     """Render upload/paste and automatically process the first upload."""
     _section_heading(
         "PASSO 1",
@@ -214,6 +222,32 @@ def render_resume_step(*, advanced: bool = True) -> None:
 
     if st.session_state.resume_profile.raw_text:
         if advanced:
+            with st.expander("Aprimorar extração com IA configurada"):
+                st.caption(
+                    "Opcional. O currículo só é enviado ao Gemini após sua confirmação; "
+                    "o parser local continua como fallback."
+                )
+                consent = st.checkbox(
+                    "Permitir o envio deste currículo ao provider selecionado",
+                    key="resume_ai_extraction_consent",
+                    disabled=provider_name != "gemini",
+                )
+                if st.button(
+                    "Aprimorar extração",
+                    disabled=provider_name != "gemini" or not consent,
+                    key="improve_resume_extraction",
+                ):
+                    result = extract_resume_profile(
+                        st.session_state.resume_text,
+                        provider=provider_name,
+                        api_key=st.session_state.get("gemini_session_key", ""),
+                        model=st.session_state.get("gemini_session_model", ""),
+                    )
+                    st.session_state.resume_profile = result.profile
+                    if result.fallback_used:
+                        st.warning(result.warning)
+                    else:
+                        st.success("Extração aprimorada com Gemini e pronta para revisão.")
             _resume_review(st.session_state.resume_profile, advanced=True)
         else:
             profile = st.session_state.resume_profile
@@ -658,9 +692,10 @@ def render_quick_mode(provider_name: str) -> None:
         st.rerun()
     inputs = st.columns(2, gap="large")
     with inputs[0]:
-        render_resume_step(advanced=False)
+        render_resume_step(advanced=False, provider_name=provider_name)
     with inputs[1]:
         render_job_step(advanced=False)
+    st.caption("Extensão assistiva disponível no modo avançado.")
     render_results_step("Modo rápido", provider_name)
 
 
@@ -684,6 +719,7 @@ def render_history_step() -> None:
     if selected_id is None:
         return
     selected = next(record for record in records if record.id == selected_id)
+    st.caption(f"Origem: {collection_method_label(selected.collection_method)}")
     scores = st.columns(4)
     scores[0].metric("Match", selected.analysis.match_score)
     scores[1].metric("ATS", selected.analysis.ats_score)
@@ -766,6 +802,7 @@ def render_dashboard_step() -> None:
             {
                 "Cargo": item.job_title,
                 "Empresa": item.company,
+                "Origem": collection_method_label(item.collection_method),
                 "Status": item.status.value,
                 "Recomendação": item.analysis.recommendation,
                 "Modalidade": modality_label(item.modality),
@@ -781,6 +818,19 @@ def render_dashboard_step() -> None:
         use_container_width=True,
         hide_index=True,
     )
+    applied_requirements = rank_applied_requirements(records)
+    st.markdown("**Requisitos mais recorrentes nas vagas candidatas**")
+    if applied_requirements:
+        st.dataframe(
+            [
+                {"Requisito": requirement, "Vagas": count}
+                for requirement, count in applied_requirements
+            ],
+            hide_index=True,
+            use_container_width=True,
+        )
+    else:
+        st.caption("Importe ou registre candidaturas para montar o ranking.")
 
 
 def render_search_intelligence_step(provider_name: str) -> None:
@@ -824,8 +874,16 @@ def render_search_intelligence_step(provider_name: str) -> None:
         ["Queries sugeridas", "Cargos equivalentes", "Fontes", "Plano semanal", "Radar oculto"]
     )
     with sections[0]:
-        for query in plan.queries:
-            st.code(query)
+        for index, query in enumerate(plan.queries):
+            query_row = st.columns([4, 1])
+            query_row[0].code(query)
+            query_row[1].link_button(
+                "Abrir query no navegador",
+                f"https://www.google.com/search?q={quote_plus(query)}",
+                key=f"open_search_query_{index}",
+                use_container_width=True,
+            )
+        st.caption("Depois de abrir uma vaga, use a extensão para capturar a vaga atual.")
     with sections[1]:
         render_list(plan.radar.alternative_roles, "Nenhum cargo alternativo sugerido.")
     with sections[2]:
@@ -880,7 +938,7 @@ def render_app() -> None:
         st.rerun()
     tabs = st.tabs(ADVANCED_TABS)
     with tabs[0]:
-        render_resume_step(advanced=True)
+        render_resume_step(advanced=True, provider_name=provider_name)
     with tabs[1]:
         render_job_step(advanced=True)
     with tabs[2]:
@@ -890,16 +948,18 @@ def render_app() -> None:
     with tabs[4]:
         render_scraping_page(provider_name)
     with tabs[5]:
-        render_search_intelligence_step(provider_name)
+        render_extension_page(provider_name)
     with tabs[6]:
-        render_memory_page()
+        render_search_intelligence_step(provider_name)
     with tabs[7]:
-        render_history_step()
+        render_memory_page()
     with tabs[8]:
-        render_dashboard_step()
+        render_history_step()
     with tabs[9]:
-        st.info("Os exports completos ficam disponíveis no resultado analisado.")
+        render_dashboard_step()
     with tabs[10]:
+        st.info("Os exports completos ficam disponíveis no resultado analisado.")
+    with tabs[11]:
         st.info("Diagnósticos técnicos ficam recolhidos e visíveis somente no modo avançado.")
     st.caption(
         "Processamento local por padrão · revisão humana obrigatória · sem auto-apply · "

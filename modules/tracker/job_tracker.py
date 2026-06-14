@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from modules.core.collection_method import CollectionMethod
+from modules.core.opportunity_identity import normalize_opportunity_url
+from modules.core.text_utils import normalize_text
 from modules.memory import CareerMemory, MemoryStore
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput
@@ -28,8 +31,58 @@ class JobTracker:
         tailor: ResumeTailorOutput | None = None,
         notes: str = "",
         privacy_acknowledged: bool = False,
+        source_url: str = "",
+        collection_method: CollectionMethod = "manual_url",
+        requirements: list[str] | None = None,
     ) -> StoredAnalysis:
         """Store a reviewed analysis without raw resume or vacancy text."""
+        existing = self._find_duplicate(job_title, company, source_url)
+        if existing is not None:
+            previous_status = existing.status
+            saved = self.store.save(
+                existing.model_copy(
+                    update={
+                        "job_title": job_title or existing.job_title,
+                        "company": company or existing.company,
+                        "modality": modality or existing.modality,
+                        "seniority": seniority or existing.seniority,
+                        "source_url": source_url or existing.source_url,
+                        "collection_method": collection_method,
+                        "requirements": requirements
+                        or list(analysis.missing_keywords)
+                        or existing.requirements,
+                        "analysis": analysis,
+                        "tailor": tailor or existing.tailor,
+                        "notes": notes or existing.notes,
+                        "privacy_acknowledged": privacy_acknowledged
+                        or existing.privacy_acknowledged,
+                        "status": (
+                            JobStatus.APPLIED
+                            if existing.status == JobStatus.APPLIED
+                            else (
+                                JobStatus.GOOD_FIT
+                                if analysis.should_apply()
+                                else JobStatus.ANALYZED
+                            )
+                        ),
+                        "updated_at": utc_now(),
+                    }
+                )
+            )
+            self.memory.remember_analysis(
+                analysis,
+                job_title=saved.job_title,
+                company=saved.company,
+                source_id=saved.id,
+            )
+            if saved.status != previous_status:
+                self.memory.remember_tracker_event(
+                    record_id=saved.id,
+                    status=saved.status.value,
+                    job_title=saved.job_title,
+                    company=saved.company,
+                )
+            return saved
         record = StoredAnalysis(
             job_title=job_title,
             company=company,
@@ -40,6 +93,9 @@ class JobTracker:
             tailor=tailor,
             notes=notes,
             privacy_acknowledged=privacy_acknowledged,
+            source_url=source_url,
+            collection_method=collection_method,
+            requirements=requirements or list(analysis.missing_keywords),
         )
         saved = self.store.save(record)
         self.memory.remember_analysis(
@@ -86,6 +142,10 @@ class JobTracker:
         company: str = "",
         source_url: str = "",
         notes: str = "",
+        collection_method: CollectionMethod = "browser_assisted_capture",
+        requirements: list[str] | None = None,
+        modality: str = "",
+        seniority: str = "",
     ) -> StoredAnalysis:
         """Save a vacancy the user already applied to, including LinkedIn applications."""
         analysis = JobAnalysisSchema(
@@ -95,6 +155,11 @@ class JobTracker:
             risk_score=0,
             recommendation="save_for_later",
         )
+        existing = self._find_duplicate(job_title, company, source_url)
+        if existing is not None:
+            if existing.status != JobStatus.APPLIED:
+                return self.change_status(existing.id, JobStatus.APPLIED)
+            return existing
         record = StoredAnalysis(
             job_title=job_title,
             company=company,
@@ -102,6 +167,11 @@ class JobTracker:
             analysis=analysis,
             notes=notes or f"Candidatura já realizada. Fonte: {source_url}",
             privacy_acknowledged=True,
+            source_url=source_url,
+            collection_method=collection_method,
+            requirements=requirements or [],
+            modality=modality,
+            seniority=seniority,
         )
         saved = self.store.save(record)
         self.memory.remember_opportunity(
@@ -123,3 +193,21 @@ class JobTracker:
     def list_analyses(self) -> list[StoredAnalysis]:
         """Return the stored history."""
         return self.store.list_analyses()
+
+    def _find_duplicate(
+        self,
+        job_title: str,
+        company: str,
+        source_url: str,
+    ) -> StoredAnalysis | None:
+        normalized_url = normalize_opportunity_url(source_url)
+        identity = (normalize_text(job_title), normalize_text(company))
+        for record in self.store.list_analyses():
+            if normalized_url and normalize_opportunity_url(record.source_url) == normalized_url:
+                return record
+            if identity != ("", "") and identity == (
+                normalize_text(record.job_title),
+                normalize_text(record.company),
+            ):
+                return record
+        return None

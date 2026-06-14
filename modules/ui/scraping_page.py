@@ -132,6 +132,9 @@ def save_opportunity_to_tracker(opportunity: ScrapedOpportunity, provider_name: 
         tailor=st.session_state.get("tailor_output"),
         notes=f"Capturada de {opportunity.source_url}",
         privacy_acknowledged=True,
+        source_url=opportunity.source_url,
+        collection_method=opportunity.collection_method,
+        requirements=opportunity.requirements,
     )
 
 
@@ -340,6 +343,10 @@ def render_collection_results(provider_name: str) -> None:
                     company=opportunity.company or "",
                     source_url=opportunity.source_url,
                     notes=f"Candidatura informada manualmente. Fonte: {opportunity.source_url}",
+                    collection_method=opportunity.collection_method,
+                    requirements=opportunity.requirements,
+                    modality=opportunity.modality or "",
+                    seniority=opportunity.seniority or "",
                 )
                 st.success("Vaga registrada como candidatura já realizada.")
 

@@ -7,6 +7,23 @@ from typing import Any
 
 import streamlit as st
 
+from modules.core.collection_method import CollectionMethod
+
+COLLECTION_METHOD_LABELS: dict[CollectionMethod, str] = {
+    "public_scraping": "Coleta pública",
+    "manual_url": "URL manual",
+    "rss": "RSS",
+    "company_career_page": "Página de carreiras",
+    "browser_assisted_capture": "Extensão / captura assistida",
+    "demo_fixture": "Demonstração",
+}
+
+
+def collection_method_label(value: CollectionMethod) -> str:
+    """Return a friendly collection origin label."""
+    return COLLECTION_METHOD_LABELS.get(value, value.replace("_", " ").title())
+
+
 MODALITY_LABELS = {
     "remote": "Remoto",
     "hybrid": "Híbrido",

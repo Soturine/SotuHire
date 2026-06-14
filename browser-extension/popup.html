@@ -19,11 +19,17 @@
       Usar IA configurada no SotuHire
     </label>
     <small>A chave permanece no SotuHire local e nunca é salva na extensão.</small>
+    <label class="option">
+      Token local opcional
+      <input id="local-token" type="password" autocomplete="off">
+    </label>
     <div class="actions">
       <button data-action="capture">Salvar vaga atual</button>
       <button data-action="analyze" class="primary">Analisar vaga atual</button>
       <button data-action="tracker">Enviar para tracker</button>
       <button data-action="applications">Importar candidaturas visíveis</button>
+      <button data-action="collect-page">Adicionar página ao lote</button>
+      <button data-action="send-batch">Enviar lote acumulado</button>
       <button data-action="copy">Copiar texto extraído</button>
       <button data-action="health">Testar conexão com SotuHire</button>
     </div>

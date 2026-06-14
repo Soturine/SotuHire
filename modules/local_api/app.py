@@ -9,6 +9,7 @@ from typing import cast
 from pydantic import ValidationError
 
 from modules.ai.structured_analysis import analyze_structured, get_provider
+from modules.core.opportunity_identity import opportunity_identity_hash
 from modules.local_api.schemas import (
     ApplicationBatchPayload,
     BrowserCapturePayload,
@@ -18,7 +19,12 @@ from modules.local_api.schemas import (
     CompanionResponse,
     utc_now,
 )
-from modules.local_api.security import is_local_client, sanitize_text, token_is_valid
+from modules.local_api.security import (
+    configured_token,
+    is_local_client,
+    sanitize_text,
+    token_is_valid,
+)
 from modules.memory import CareerMemory
 from modules.opportunities import OpportunityStore
 from modules.parsers.job_description_parser import parse_job_description
@@ -120,12 +126,23 @@ class LocalCompanionService:
 
     def capture_job(self, payload: BrowserCapturePayload) -> CompanionResponse:
         clean = sanitize_capture(payload)
-        record = self.capture_store.save(CompanionCaptureRecord(capture=clean))
+        capture_id = opportunity_identity_hash(
+            clean.job_title or clean.page_title,
+            clean.company,
+            clean.url,
+        )
+        current = self.capture_store.get(capture_id)
+        record = self.capture_store.save(
+            (current or CompanionCaptureRecord(id=capture_id, capture=clean)).model_copy(
+                update={"capture": clean}
+            )
+        )
         text = clean.description or clean.visible_text
         opportunity = opportunity_from_text(
             text,
             source="Extensão assistiva SotuHire",
             source_url=clean.url,
+            collection_method="browser_assisted_capture",
         ).model_copy(
             update={
                 "title": clean.job_title or clean.page_title,
@@ -203,6 +220,11 @@ class LocalCompanionService:
             company=record.capture.company,
             notes=f"Capturada pela extensão: {record.capture.url}",
             privacy_acknowledged=True,
+            source_url=record.capture.url,
+            collection_method=record.capture.collection_method,
+            requirements=parse_job_description(
+                record.capture.description or record.capture.visible_text
+            ).required_skills,
         )
         self.capture_store.save(
             record.model_copy(update={"status": "tracked", "tracker_id": tracked.id})
@@ -220,23 +242,36 @@ class LocalCompanionService:
     def import_applications(self, payload: ApplicationBatchPayload) -> CompanionResponse:
         """Import jobs already applied to from a manually opened tracker page."""
         tracker_ids: list[str] = []
+        known_ids = {record.id for record in self.tracker.list_analyses()}
+        new_count = 0
         for capture in payload.applications:
             clean = sanitize_capture(capture)
             response = self.capture_job(clean)
+            parsed = parse_job_description(clean.description or clean.visible_text)
             saved = self.tracker.add_existing_application(
                 job_title=clean.job_title or clean.page_title,
                 company=clean.company,
                 source_url=clean.url,
                 notes="Importada de uma lista de candidaturas pela extensão assistiva.",
+                collection_method="browser_assisted_capture",
+                requirements=parsed.required_skills,
+                modality="" if parsed.modality == "unknown" else parsed.modality,
+                seniority=parsed.seniority,
             )
             tracker_ids.append(saved.id)
+            if saved.id not in known_ids:
+                known_ids.add(saved.id)
+                new_count += 1
             record = self.capture_store.get(response.capture_id)
             if record is not None:
                 self.capture_store.save(
                     record.model_copy(update={"status": "tracked", "tracker_id": saved.id})
                 )
         return CompanionResponse(
-            message=f"{len(tracker_ids)} candidaturas importadas para o tracker.",
+            message=(
+                f"{len(tracker_ids)} candidaturas processadas: {new_count} novas e "
+                f"{len(tracker_ids) - new_count} já existentes."
+            ),
             tracker_id=tracker_ids[-1],
         )
 
@@ -264,9 +299,11 @@ class LocalCompanionService:
 class LocalCompanionApp:
     """Minimal request router shared by HTTP and unit tests."""
 
-    def __init__(self, service: LocalCompanionService | None = None, *, token: str = "") -> None:
+    def __init__(
+        self, service: LocalCompanionService | None = None, *, token: str | None = None
+    ) -> None:
         self.service = service or LocalCompanionService()
-        self.token = token
+        self.token = configured_token() if token is None else token
 
     def handle(
         self,

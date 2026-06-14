@@ -8,14 +8,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-CollectionMethod = Literal[
-    "public_scraping",
-    "manual_url",
-    "rss",
-    "company_career_page",
-    "browser_assisted_capture",
-    "demo_fixture",
-]
+from modules.core.collection_method import CollectionMethod
 
 
 def utc_now() -> datetime:

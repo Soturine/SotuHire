@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from modules.core.collection_method import CollectionMethod
+
 CollectionMode = Literal[
     "PUBLIC_SCRAPING",
     "MANUAL_URL",
@@ -36,6 +38,7 @@ class ScrapedOpportunity(BaseModel):
     collected_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
     content_hash: str
     confidence: float = Field(default=0.5, ge=0, le=1)
+    collection_method: CollectionMethod = "public_scraping"
 
 
 class ScrapingSource(BaseModel):

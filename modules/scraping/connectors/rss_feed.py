@@ -51,6 +51,7 @@ class RssFeedConnector(PublicSourceConnector):
                     source_url=link or response.url,
                     title_hint=title,
                     confidence=0.75,
+                    collection_method="rss",
                 )
                 for title, link, description in parse_feed_items(response.text)[: source.max_items]
             ]

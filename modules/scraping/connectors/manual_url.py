@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 from urllib.parse import urlparse
 
+from modules.core.collection_method import CollectionMethod
 from modules.parsers.job_description_parser import parse_job_description
 from modules.scraping.connectors.base import PublicSourceConnector
 from modules.scraping.html_utils import parse_public_html
@@ -18,6 +19,7 @@ def opportunity_from_text(
     source_url: str,
     title_hint: str = "",
     confidence: float = 0.8,
+    collection_method: CollectionMethod = "manual_url",
 ) -> ScrapedOpportunity:
     """Normalize extracted public text into a scraped opportunity."""
     parsed = parse_job_description(text)
@@ -44,6 +46,7 @@ def opportunity_from_text(
         tags=parsed.ats_keywords[:12],
         content_hash=content_hash,
         confidence=confidence,
+        collection_method=collection_method,
     )
 
 

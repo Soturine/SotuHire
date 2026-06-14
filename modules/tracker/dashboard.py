@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from datetime import date
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from modules.storage.models import StoredAnalysis
+from modules.tracker.status import JobStatus
 
 
 class DashboardMetrics(BaseModel):
@@ -75,3 +77,23 @@ def filter_dashboard_records(
         and (date_from is None or record.created_at.date() >= date_from)
         and (date_to is None or record.created_at.date() <= date_to)
     ]
+
+
+def rank_applied_requirements(
+    records: list[StoredAnalysis], *, limit: int = 20
+) -> list[tuple[str, int]]:
+    """Rank requirements found in jobs marked as applied."""
+    counts: Counter[str] = Counter()
+    labels: dict[str, str] = {}
+    for record in records:
+        if record.status != JobStatus.APPLIED:
+            continue
+        for requirement in record.requirements:
+            cleaned = requirement.strip()
+            key = cleaned.casefold()
+            if cleaned and key:
+                if key not in labels or (labels[key].islower() and not cleaned.islower()):
+                    labels[key] = cleaned
+                counts[key] += 1
+    ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:limit]
+    return [(labels[key], count) for key, count in ranked]
