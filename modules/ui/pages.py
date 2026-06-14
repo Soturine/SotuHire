@@ -18,10 +18,11 @@ from modules.exporters.analysis_exporter import (
 from modules.memory import CareerFeedback
 from modules.parsers.job_description_parser import parse_job_description
 from modules.parsers.resume_parser import parse_resume_file, parse_resume_text
+from modules.profile import build_career_profile
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput
-from modules.search_intelligence import SearchStrategyInput, build_search_intelligence_plan
+from modules.search_intelligence import SearchStrategyInput, build_memory_search_plan
 from modules.tracker.dashboard import calculate_dashboard_metrics, filter_dashboard_records
 from modules.tracker.job_tracker import JobTracker
 from modules.tracker.status import JobStatus
@@ -48,6 +49,7 @@ from modules.ui.layout import (
     CONTRACTS,
     LEVELS,
     MODALITIES,
+    build_preferences,
     initialize_state,
     load_example_flow,
     render_header,
@@ -782,10 +784,13 @@ def render_search_intelligence_step(provider_name: str) -> None:
         target_companies=csv_items(target_companies_text),
         contract=job.contract,
     )
-    plan = build_search_intelligence_plan(strategy)
+    memory_items = CAREER_MEMORY.store.list_memory_items()
+    career_profile = build_career_profile(profile, memory_items, build_preferences())
+    plan = build_memory_search_plan(strategy, career_profile)
 
     st.info(
-        "A estratégia não coleta sozinha. Use as ações das fontes para iniciar a coleta pública."
+        "Buscas recomendadas com base na sua memória local. "
+        "Use as ações das fontes para iniciar a coleta."
     )
     sections = st.tabs(
         ["Queries sugeridas", "Cargos equivalentes", "Fontes", "Plano semanal", "Radar oculto"]
