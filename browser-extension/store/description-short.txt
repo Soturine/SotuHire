@@ -1,0 +1,1 @@
+Analise projetos públicos do GitHub e capture vagas no seu SotuHire local.
