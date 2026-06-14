@@ -74,3 +74,22 @@ Garantia aplicada nesta geração:
 - novos docs foram adicionados em subdiretórios existentes;
 - módulos Python foram adicionados como base inicial testável;
 - novos links e diagramas Mermaid foram incluídos.
+
+---
+
+# Validação local da v0.8.0
+
+Executado em 2026-06-14 após a implementação de Career Memory e RAG local:
+
+| Verificação | Resultado |
+| --- | --- |
+| Pyright | 0 erros, 0 warnings |
+| Ruff check | aprovado |
+| Ruff format check | 195 arquivos formatados |
+| Pytest | 156 testes aprovados |
+| MkDocs strict | build aprovado |
+| Streamlit health | HTTP 200, resposta `ok` |
+| Capturas v0.8.0 | quatro PNGs fictícios inspecionados |
+
+A validação cobre análise com e sem memória, opt-in do Gemini, feedback, export/import, perfil,
+Search Intelligence, Hidden Jobs Radar, tracker, dashboard, documentação e navegação Streamlit.
