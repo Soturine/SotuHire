@@ -282,6 +282,12 @@ def run_analysis(provider_name: str) -> None:
             provider_name == "gemini" and st.session_state.get("share_memory_with_gemini", False)
         ),
     )
+    CAREER_MEMORY.remember_analysis(
+        st.session_state.analysis_result.analysis,
+        job_title=job.title,
+        company=job.company,
+        source_id=analysis_fingerprint(provider_name),
+    )
     st.session_state.tailor_output = build_safe_tailor_output(
         target_role=job.title or "Cargo alvo",
         target_company=job.company or None,

@@ -37,3 +37,20 @@ def test_tracker_rejects_unknown_status(tmp_path):
 
     with pytest.raises(ValueError):
         tracker.change_status(record.id, "unknown")
+
+
+def test_tracker_records_existing_linkedin_application_in_memory(tmp_path):
+    tracker = JobTracker(LocalStore(tmp_path / "history.json"))
+
+    record = tracker.add_existing_application(
+        job_title="Backend",
+        company="Acme",
+        source_url="https://www.linkedin.com/jobs/view/123",
+    )
+
+    assert record.status == JobStatus.APPLIED
+    assert any(item.kind == "opportunity" for item in tracker.memory.store.list_memory_items())
+    assert any(
+        item.kind == "tracker_event" and "applied" in item.tags
+        for item in tracker.memory.store.list_memory_items()
+    )

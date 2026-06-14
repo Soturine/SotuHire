@@ -319,7 +319,7 @@ def render_collection_results(provider_name: str) -> None:
             )
             st.caption(f"{opportunity.source} · {opportunity.location or 'Local não informado'}")
             st.write(opportunity.description[:500])
-            item_actions = st.columns(4)
+            item_actions = st.columns(5)
             if item_actions[0].button("Analisar esta vaga", key=f"analyze_{index}"):
                 use_opportunity_for_analysis(index, provider_name)
                 st.success("Vaga carregada e análise preparada.")
@@ -334,6 +334,14 @@ def render_collection_results(provider_name: str) -> None:
             ):
                 save_opportunity_to_tracker(opportunity, provider_name)
                 st.success("Oportunidade salva no tracker.")
+            if item_actions[4].button("Já me candidatei", key=f"applied_{index}"):
+                TRACKER.add_existing_application(
+                    job_title=opportunity.title,
+                    company=opportunity.company or "",
+                    source_url=opportunity.source_url,
+                    notes=f"Candidatura informada manualmente. Fonte: {opportunity.source_url}",
+                )
+                st.success("Vaga registrada como candidatura já realizada.")
 
 
 def render_scraping_page(provider_name: str) -> None:

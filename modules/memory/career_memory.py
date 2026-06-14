@@ -126,14 +126,17 @@ class CareerMemory:
             f"Fortes: {', '.join(analysis.strengths[:5])}. "
             f"Gaps: {', '.join(analysis.gaps[:5])}."
         )
+        item = CareerMemoryItem(
+            kind="job_analysis",
+            title=f"Análise: {job_title or 'Vaga'}{f' · {company}' if company else ''}",
+            content=content,
+            source="analysis",
+            source_id=source_id,
+            tags=[analysis.recommendation, *analysis.missing_keywords[:8]],
+        )
         return self.store.add_memory_item(
-            CareerMemoryItem(
-                kind="job_analysis",
-                title=f"Análise: {job_title or 'Vaga'}{f' · {company}' if company else ''}",
-                content=content,
-                source="analysis",
-                source_id=source_id,
-                tags=[analysis.recommendation, *analysis.missing_keywords[:8]],
+            item.model_copy(
+                update={"id": self._stable_id(item.kind, item.title, item.content, source_id)}
             )
         )
 
@@ -152,6 +155,52 @@ class CareerMemory:
                 source="manual_feedback",
                 source_id=feedback.analysis_id,
                 tags=[feedback.rating],
+            )
+        )
+
+    def remember_opportunity(
+        self,
+        *,
+        title: str,
+        company: str = "",
+        source: str = "tracker",
+        source_id: str | None = None,
+        details: str = "",
+        tags: list[str] | None = None,
+    ) -> CareerMemoryItem:
+        """Persist a saved or previously applied opportunity."""
+        item = CareerMemoryItem(
+            kind="opportunity",
+            title=f"{title or 'Vaga'}{f' · {company}' if company else ''}",
+            content=details
+            or f"Oportunidade salva: {title}. Empresa: {company or 'não informada'}.",
+            source=source,
+            source_id=source_id,
+            tags=tags or [],
+        )
+        return self.store.add_memory_item(
+            item.model_copy(
+                update={"id": self._stable_id(item.kind, item.title, item.content, source_id)}
+            )
+        )
+
+    def remember_tracker_event(
+        self,
+        *,
+        record_id: str,
+        status: str,
+        job_title: str = "",
+        company: str = "",
+    ) -> CareerMemoryItem:
+        """Persist one tracker status transition."""
+        return self.store.add_memory_item(
+            CareerMemoryItem(
+                kind="tracker_event",
+                title=f"Análise: {job_title or 'Vaga'}{f' · {company}' if company else ''}",
+                content=f"Status do tracker: {status}.",
+                source="tracker",
+                source_id=record_id,
+                tags=[status],
             )
         )
 

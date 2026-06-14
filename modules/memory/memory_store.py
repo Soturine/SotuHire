@@ -103,8 +103,11 @@ class MemoryStore:
     def import_file(self, path: str | Path) -> int:
         """Import JSON or JSONL memory and return inserted item count."""
         source = Path(path)
-        text = source.read_text(encoding="utf-8")
-        if source.suffix.lower() == ".jsonl":
+        return self.import_text(source.read_text(encoding="utf-8"), suffix=source.suffix)
+
+    def import_text(self, text: str, *, suffix: str = ".json") -> int:
+        """Import a JSON or JSONL string and return inserted item count."""
+        if suffix.lower() == ".jsonl":
             items = [
                 CareerMemoryItem.model_validate_json(line)
                 for line in text.splitlines()

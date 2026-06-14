@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from modules.memory import CareerMemory, MemoryStore
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput
 from modules.storage.local_store import LocalStore
@@ -14,6 +15,8 @@ class JobTracker:
 
     def __init__(self, store: LocalStore | None = None) -> None:
         self.store = store or LocalStore()
+        memory_path = self.store.path.parent / "memory" / "career-memory.jsonl"
+        self.memory = CareerMemory(MemoryStore(memory_path))
 
     def add_analysis(
         self,
@@ -38,7 +41,27 @@ class JobTracker:
             notes=notes,
             privacy_acknowledged=privacy_acknowledged,
         )
-        return self.store.save(record)
+        saved = self.store.save(record)
+        self.memory.remember_analysis(
+            analysis,
+            job_title=job_title,
+            company=company,
+            source_id=saved.id,
+        )
+        self.memory.remember_opportunity(
+            title=job_title,
+            company=company,
+            source_id=saved.id,
+            details=notes,
+            tags=[modality, seniority, analysis.recommendation],
+        )
+        self.memory.remember_tracker_event(
+            record_id=saved.id,
+            status=saved.status.value,
+            job_title=job_title,
+            company=company,
+        )
+        return saved
 
     def change_status(self, record_id: str, status: JobStatus | str) -> StoredAnalysis:
         """Change a record status after validating the target state."""
@@ -47,7 +70,55 @@ class JobTracker:
             raise KeyError(f"Analise nao encontrada: {record_id}")
         record.status = JobStatus(status)
         record.updated_at = utc_now()
-        return self.store.save(record)
+        saved = self.store.save(record)
+        self.memory.remember_tracker_event(
+            record_id=saved.id,
+            status=saved.status.value,
+            job_title=saved.job_title,
+            company=saved.company,
+        )
+        return saved
+
+    def add_existing_application(
+        self,
+        *,
+        job_title: str,
+        company: str = "",
+        source_url: str = "",
+        notes: str = "",
+    ) -> StoredAnalysis:
+        """Save a vacancy the user already applied to, including LinkedIn applications."""
+        analysis = JobAnalysisSchema(
+            match_score=0,
+            ats_score=0,
+            opportunity_fit_score=0,
+            risk_score=0,
+            recommendation="save_for_later",
+        )
+        record = StoredAnalysis(
+            job_title=job_title,
+            company=company,
+            status=JobStatus.APPLIED,
+            analysis=analysis,
+            notes=notes or f"Candidatura já realizada. Fonte: {source_url}",
+            privacy_acknowledged=True,
+        )
+        saved = self.store.save(record)
+        self.memory.remember_opportunity(
+            title=job_title,
+            company=company,
+            source="existing_application",
+            source_id=saved.id,
+            details=saved.notes,
+            tags=["applied"],
+        )
+        self.memory.remember_tracker_event(
+            record_id=saved.id,
+            status=JobStatus.APPLIED.value,
+            job_title=job_title,
+            company=company,
+        )
+        return saved
 
     def list_analyses(self) -> list[StoredAnalysis]:
         """Return the stored history."""

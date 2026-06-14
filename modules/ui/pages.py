@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import hashlib
+from collections import Counter
+from typing import Literal, cast
 
 import streamlit as st
 
@@ -13,6 +15,7 @@ from modules.exporters.analysis_exporter import (
     analysis_to_markdown,
     tailor_to_markdown,
 )
+from modules.memory import CareerFeedback
 from modules.parsers.job_description_parser import parse_job_description
 from modules.parsers.resume_parser import parse_resume_file, parse_resume_text
 from modules.schemas.job_posting import JobPostingSchema
@@ -41,6 +44,7 @@ from modules.ui.components import (
     seniority_label,
 )
 from modules.ui.layout import (
+    CAREER_MEMORY,
     CONTRACTS,
     LEVELS,
     MODALITIES,
@@ -52,6 +56,7 @@ from modules.ui.layout import (
     run_demo,
     should_run_quick_analysis,
 )
+from modules.ui.memory_page import render_memory_page
 from modules.ui.quick_mode import QUICK_INPUT_HEIGHT, compact_status
 from modules.ui.scraping_page import render_scraping_page
 from modules.ui.search_intelligence_page import render_actionable_source
@@ -470,6 +475,37 @@ def _render_result_content(
         recommendation = analysis.recommendation.replace("_", " ").title()
         (st.success if analysis.should_apply() else st.warning)(f"Recomendação: {recommendation}")
         render_list(analysis.risk_flags, "Nenhum risco adicional detectado.")
+        with st.expander("Esta recomendação fez sentido?"):
+            rating_label = st.radio(
+                "Avaliação",
+                ["Sim", "Mais ou menos", "Não"],
+                horizontal=True,
+                key="memory_feedback_rating",
+            )
+            reason = st.text_area("Por quê?", key="memory_feedback_reason")
+            change_requested = st.text_area(
+                "O que você mudaria?",
+                key="memory_feedback_change",
+            )
+            outcomes = st.columns(2)
+            applied = outcomes[0].checkbox("Você aplicou para essa vaga?")
+            response_received = outcomes[1].checkbox("Você teve retorno?")
+            if st.button("Salvar feedback na memória", key="save_memory_feedback"):
+                rating = cast(
+                    Literal["yes", "partial", "no"],
+                    {"Sim": "yes", "Mais ou menos": "partial", "Não": "no"}[rating_label],
+                )
+                CAREER_MEMORY.remember_feedback(
+                    CareerFeedback(
+                        analysis_id=st.session_state.last_analysis_fingerprint or None,
+                        rating=rating,
+                        reason=reason,
+                        change_requested=change_requested,
+                        applied=applied,
+                        response_received=response_received,
+                    )
+                )
+                st.success("Feedback salvo na memória local.")
     with tabs[1]:
         render_list(analysis.strengths, "Nenhum ponto forte detectado.")
     with tabs[2]:
@@ -684,6 +720,14 @@ def render_dashboard_step() -> None:
     second[0].metric("Opportunity Fit médio", metrics.average_opportunity_fit)
     second[1].metric("Recomendadas", metrics.recommended_to_apply)
     second[2].metric("Alto risco", metrics.high_risk)
+    memory_items = CAREER_MEMORY.store.list_memory_items()
+    memory_tags = Counter(tag for item in memory_items for tag in item.tags)
+    memory_kinds = Counter(item.kind for item in memory_items)
+    memory_metrics = st.columns(4)
+    memory_metrics[0].metric("Memórias locais", len(memory_items))
+    memory_metrics[1].metric("Skills recorrentes", len(memory_tags))
+    memory_metrics[2].metric("Análises na memória", memory_kinds["job_analysis"])
+    memory_metrics[3].metric("Eventos do tracker", memory_kinds["tracker_event"])
     if not metrics.latest:
         st.caption("O dashboard será preenchido quando você salvar análises.")
         return
@@ -815,12 +859,14 @@ def render_app() -> None:
     with tabs[5]:
         render_search_intelligence_step(provider_name)
     with tabs[6]:
-        render_history_step()
+        render_memory_page()
     with tabs[7]:
-        render_dashboard_step()
+        render_history_step()
     with tabs[8]:
-        st.info("Os exports completos ficam disponíveis no resultado analisado.")
+        render_dashboard_step()
     with tabs[9]:
+        st.info("Os exports completos ficam disponíveis no resultado analisado.")
+    with tabs[10]:
         st.info("Diagnósticos técnicos ficam recolhidos e visíveis somente no modo avançado.")
     st.caption(
         "Processamento local por padrão · revisão humana obrigatória · sem auto-apply · "
