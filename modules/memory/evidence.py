@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from modules.memory.memory_scoring import MemoryScore
 from modules.memory.schemas import CareerEvidence, CareerMemoryItem
 
 
@@ -11,12 +12,16 @@ def safe_excerpt(content: str, limit: int = 240) -> str:
     return clean if len(clean) <= limit else f"{clean[: limit - 1].rstrip()}…"
 
 
-def evidence_from_item(item: CareerMemoryItem, score: float) -> CareerEvidence:
+def evidence_from_item(item: CareerMemoryItem, score: float | MemoryScore) -> CareerEvidence:
     """Build a traceable evidence card from one memory item."""
+    detail = score if isinstance(score, MemoryScore) else MemoryScore(final_score=score)
     return CareerEvidence(
         memory_id=item.id,
         title=item.title,
         source=item.source,
+        kind=item.kind,
         excerpt=safe_excerpt(item.content),
-        relevance_score=score,
+        relevance_score=detail.final_score,
+        selection_reason=". ".join(detail.reasons),
+        score_breakdown=detail.components,
     )

@@ -9,6 +9,7 @@ from .schemas import (
     CareerFeedback,
     CareerMemoryItem,
     CareerMemoryQuery,
+    EvidenceFeedback,
     MemoryExport,
     MemoryPrivacySettings,
 )
@@ -19,6 +20,7 @@ __all__ = [
     "CareerMemory",
     "CareerMemoryItem",
     "CareerMemoryQuery",
+    "EvidenceFeedback",
     "MemoryExport",
     "MemoryPrivacySettings",
     "MemoryRetriever",

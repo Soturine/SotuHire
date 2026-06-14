@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from modules.memory.memory_index import matches_filters, relevance_score
+from modules.memory.evidence_ranker import rank_evidence
 from modules.memory.schemas import CareerMemoryItem, CareerMemoryQuery, MemoryExport, utc_now
 
 
@@ -66,16 +66,15 @@ class MemoryStore:
     ) -> list[tuple[CareerMemoryItem, float]]:
         """Search locally and return scored items."""
         request = query if isinstance(query, CareerMemoryQuery) else CareerMemoryQuery(query=query)
-        scored = [
-            (item, relevance_score(request.query, item))
-            for item in self.list_memory_items()
-            if matches_filters(item, request.filters)
-        ]
         return [
-            (item, score)
-            for item, score in sorted(scored, key=lambda pair: pair[1], reverse=True)
-            if score > 0
-        ][: request.top_k]
+            (item, score.final_score)
+            for item, score in rank_evidence(
+                request.query,
+                self.list_memory_items(),
+                top_k=request.top_k,
+                filters=request.filters,
+            )
+        ]
 
     def clear(self) -> None:
         """Delete all local memory items."""

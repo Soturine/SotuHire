@@ -5,10 +5,11 @@ from __future__ import annotations
 import hashlib
 from pathlib import Path
 
+from modules.memory.feedback_calibration import NOT_USEFUL_TAG, USEFUL_TAG
 from modules.memory.memory_retriever import MemoryRetriever
 from modules.memory.memory_store import MemoryStore
 from modules.memory.memory_summarizer import memory_markdown_summary
-from modules.memory.schemas import CareerFeedback, CareerMemoryItem, MemoryKind
+from modules.memory.schemas import CareerFeedback, CareerMemoryItem, EvidenceFeedback, MemoryKind
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.user_preferences import UserPreferences
@@ -155,6 +156,24 @@ class CareerMemory:
                 source="manual_feedback",
                 source_id=feedback.analysis_id,
                 tags=[feedback.rating],
+            )
+        )
+
+    def remember_evidence_feedback(self, feedback: EvidenceFeedback) -> CareerMemoryItem:
+        """Persist useful/not-useful evidence feedback for future ranking."""
+        label = "útil" if feedback.useful else "não útil"
+        tag = USEFUL_TAG if feedback.useful else NOT_USEFUL_TAG
+        return self.store.add_memory_item(
+            CareerMemoryItem(
+                kind="feedback",
+                title=f"Feedback de evidência: {label}",
+                content=(
+                    f"Evidência marcada como {label}. "
+                    f"Consulta: {feedback.query or 'não informada'}."
+                ),
+                source="evidence_feedback",
+                source_id=feedback.memory_id,
+                tags=[tag, *(["analysis:" + feedback.analysis_id] if feedback.analysis_id else [])],
             )
         )
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from modules.memory.evidence import evidence_from_item
+from modules.memory.evidence_ranker import rank_evidence
 from modules.memory.memory_store import MemoryStore
 from modules.memory.schemas import CareerEvidence, CareerMemoryQuery
 
@@ -20,7 +21,10 @@ class MemoryRetriever:
             if isinstance(query, CareerMemoryQuery)
             else CareerMemoryQuery(query=query, top_k=top_k)
         )
-        return [
-            evidence_from_item(item, score)
-            for item, score in self.store.search_memory_items(request)
-        ]
+        ranked = rank_evidence(
+            request.query,
+            self.store.list_memory_items(),
+            top_k=request.top_k,
+            filters=request.filters,
+        )
+        return [evidence_from_item(item, score) for item, score in ranked]

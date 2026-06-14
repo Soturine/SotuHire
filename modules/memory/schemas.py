@@ -52,8 +52,11 @@ class CareerEvidence(BaseModel):
     memory_id: str
     title: str
     source: str
+    kind: MemoryKind | None = None
     excerpt: str
     relevance_score: float = Field(ge=0.0, le=1.0)
+    selection_reason: str = ""
+    score_breakdown: dict[str, float] = Field(default_factory=dict)
 
 
 class CareerMemoryQuery(BaseModel):
@@ -77,6 +80,17 @@ class CareerFeedback(BaseModel):
     change_requested: str = ""
     applied: bool | None = None
     response_received: bool | None = None
+
+
+class EvidenceFeedback(BaseModel):
+    """Useful/not-useful feedback for one retrieved memory evidence."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    memory_id: str
+    useful: bool
+    query: str = ""
+    analysis_id: str | None = None
 
 
 class MemoryPrivacySettings(BaseModel):
