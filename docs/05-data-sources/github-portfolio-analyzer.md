@@ -154,3 +154,147 @@ O módulo pode sugerir bullets:
 - Não inventar métricas de impacto.
 - Não baixar conteúdo excessivo.
 - Não avaliar pessoas; avaliar projetos e sinais técnicos.
+
+# Atualização: GitHub Analyzer 2.0
+
+A análise GitHub/Portfólio deve evoluir de sinais visíveis e heurísticas simples para um pipeline profundo no backend/site do SotuHire.
+
+A referência conceitual é a abordagem de ferramentas como REPOLOGS: analisar metadados, árvore, arquivos relevantes, dependências e documentação, em vez de depender apenas do DOM da página aberta.
+
+## Nova divisão de responsabilidades
+
+### Extensão
+
+A extensão deve:
+
+- detectar URL;
+- extrair owner/repo quando for GitHub;
+- capturar metadados visíveis quando necessário;
+- chamar Local Companion API;
+- mostrar resumo;
+- abrir relatório completo no site.
+
+### Backend/site
+
+O backend deve:
+
+- chamar GitHub API;
+- coletar metadados;
+- obter árvore completa;
+- montar directory tree;
+- selecionar arquivos relevantes;
+- ler conteúdo raw;
+- criar grafo simples de dependências;
+- montar contexto;
+- chamar prompt estruturado;
+- validar JSON;
+- calcular scores;
+- salvar evidências.
+
+## Pipeline proposto
+
+```mermaid
+flowchart TD
+    A[Repo URL] --> B[Owner/Repo Parser]
+    B --> C[GitHub Metadata]
+    C --> D[Full Tree]
+    D --> E[Filtered Directory Tree]
+    E --> F[Priority Sampler]
+    F --> G[Raw Files]
+    G --> H[Dependency Graph]
+    H --> I[Context Builder]
+    I --> J[GitHub Repo Prompt]
+    J --> K[Pydantic]
+    K --> L[Score Calculator]
+    L --> M[Career Evidence]
+```
+
+## Priority sampler
+
+Prioridade alta:
+
+- README;
+- package manifest;
+- pyproject;
+- requirements;
+- lockfile apenas como sinal, não como conteúdo completo;
+- Dockerfile;
+- docker-compose;
+- workflows;
+- docs;
+- tests;
+- entrypoints;
+- arquivos centrais por grafo de dependência.
+
+Ignorar conteúdo de:
+
+- node_modules;
+- dist;
+- build;
+- venv;
+- cache;
+- imagens;
+- binários;
+- dumps;
+- arquivos enormes;
+- outputs gerados.
+
+## Prompt
+
+Usar `github_repo_analysis_v2` do [Prompt Catalog](../04-ai/prompt-catalog.md).
+
+A análise deve retornar:
+
+- qualidade técnica;
+- valor para currículo;
+- prontidão para recrutador;
+- evidências por arquivo;
+- skills demonstradas;
+- bullets seguros;
+- inconsistências;
+- riscos de segurança;
+- recomendações priorizadas;
+- alinhamento com vaga.
+
+## Scores finais
+
+A IA retorna `dimension_scores` e reasoning.
+
+O código calcula:
+
+- Technical Quality Score;
+- Portfolio Score;
+- Resume Evidence Score;
+- Recruiter Readiness Score;
+- Job Alignment Score.
+
+## Diferença estratégica
+
+REPOLOGS responde principalmente:
+
+```text
+Este repositório é tecnicamente bom?
+```
+
+SotuHire deve responder:
+
+```text
+Este repositório ajuda essa pessoa a conseguir quais vagas?
+Como ele prova competências?
+Como citar no currículo sem exagerar?
+O que falta para ficar mais forte para recrutadores?
+```
+
+## Critério de pronto
+
+O módulo estará pronto quando:
+
+- repo por URL gerar relatório completo;
+- relatório citar arquivos como evidência;
+- o score técnico não for confundido com score de carreira;
+- o repo puder ser comparado com vaga;
+- bullets de currículo forem seguros;
+- recomendações forem priorizadas;
+- dados forem salvos na Career Memory quando o usuário confirmar.
+
+Documento de implementação: [v0.11.0 GitHub Analyzer 2.0](../07-development/v0.11.0-github-analyzer-2.md).

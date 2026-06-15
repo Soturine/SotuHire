@@ -43,3 +43,30 @@ currículos, matching de vagas, ATS, descoberta de oportunidades e acompanhament
 
 Use a navegação lateral para acessar todos os documentos técnicos, decisões de produto, fontes de
 dados, benchmarks e registros históricos.
+
+# Atualização de navegação pós-v0.9.0
+
+Novos documentos importantes adicionados à documentação:
+
+## Produto
+
+- [Estratégia multiárea](01-product/multi-domain-product-strategy.md)
+
+## Regras de negócio
+
+- [Regras multiárea](03-business-rules/multi-domain-career-rules.md)
+
+## IA
+
+- [Orquestração de IA e confiança](04-ai/ai-orchestration-and-confidence.md)
+- [Catálogo de prompts](04-ai/prompt-catalog.md)
+
+## Desenvolvimento
+
+- [v0.10.0 AI Structured Extraction](07-development/v0.10.0-ai-structured-extraction.md)
+- [v0.11.0 GitHub Analyzer 2.0](07-development/v0.11.0-github-analyzer-2.md)
+- [v0.12.0 Match Engine 2.0](07-development/v0.12.0-match-engine-2.md)
+
+## Auditoria
+
+- [Atualização de documentação pós-v0.9.0](00-audit/v0.9-roadmap-docs-update-summary.md)

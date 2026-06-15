@@ -90,3 +90,123 @@ O sistema nunca deve dizer que o usuário tem uma habilidade se ela não aparece
 Mas não deve inventar:
 
 > Você possui Power BI avançado.
+
+# Atualização: Match Engine 2.0 multiárea
+
+A regra antiga de match continua útil como base, mas a próxima evolução precisa ser mais rica que cobertura de palavras.
+
+O SotuHire deve tratar o match como compatibilidade entre:
+
+- requisitos obrigatórios;
+- requisitos desejáveis;
+- formação;
+- credenciais;
+- experiência;
+- ferramentas;
+- equipamentos;
+- normas;
+- ambiente de atuação;
+- senioridade;
+- modalidade;
+- localidade;
+- portfólio;
+- evidências;
+- preferências;
+- riscos.
+
+## Novo status por requisito
+
+Cada requisito deve receber status:
+
+- `matched`: evidência clara;
+- `partial`: evidência parcial;
+- `missing`: ausência clara;
+- `transferable`: competência transferível;
+- `unclear`: falta informação;
+- `not_applicable`: não aplicável.
+
+## Exemplo de requisito classificado
+
+```json
+{
+  "requirement": "Experiência em UTI",
+  "importance": "required",
+  "category": "environment",
+  "status": "missing",
+  "gap_severity": "high",
+  "candidate_evidence": [],
+  "safe_action": "Se essa experiência existir, especificar o setor; se não existir, tratar como gap real."
+}
+```
+
+## Travas de score
+
+Alguns gaps devem limitar o score final.
+
+Exemplos:
+
+- registro profissional obrigatório ausente;
+- diploma obrigatório ausente;
+- senioridade muito acima;
+- idioma obrigatório ausente;
+- localidade incompatível com presencial obrigatório;
+- certificação legal obrigatória ausente.
+
+Sugestão:
+
+```text
+1 knockout gap real -> score máximo 45
+2+ knockout gaps reais -> score máximo 30
+knockout incerto -> pedir revisão antes de travar
+```
+
+## Competências transferíveis
+
+Competências transferíveis devem ajudar, mas não substituir requisitos críticos.
+
+Exemplo:
+
+```text
+Experiência com atendimento ao público em saúde pode ajudar em vaga de healthtech,
+mas não comprova experiência em produto, dados ou desenvolvimento.
+```
+
+## Pesos iniciais sugeridos
+
+```text
+required_requirements: 25%
+domain_specific_competencies: 20%
+education_and_credentials: 15%
+experience_evidence: 15%
+work_model_location: 10%
+tools_equipment_systems: 5%
+soft_skills: 5%
+risk_adjustment: 5%
+```
+
+Esses pesos devem ser configuráveis por domínio.
+
+## Regras por domínio
+
+- TI: stack, projetos, arquitetura, testes e GitHub podem pesar mais.
+- Cybersecurity: labs, writeups, ferramentas, fundamentos, segurança e ética pesam mais.
+- Enfermagem: COREN, setor, procedimentos, escala e ambiente hospitalar pesam mais.
+- Psicologia: CRP, público atendido, contexto e abordagem pesam mais.
+- Pedagogia: etapa de ensino, BNCC, inclusão e sala de aula pesam mais.
+- Engenharia civil: CREA, obras, orçamento, cronograma, AutoCAD/Revit e normas pesam mais.
+- Arquitetura/interiores: portfólio visual, ferramentas, projeto executivo e atendimento pesam mais.
+
+## Saída explicável obrigatória
+
+A engine deve gerar explicação por requisito e uma síntese final.
+
+A síntese deve responder:
+
+- por que aplicar;
+- por que ter cautela;
+- quais gaps são críticos;
+- quais gaps são apenas de currículo;
+- quais evidências ajudam;
+- o que não deve ser inventado.
+
+Documento relacionado: [Match Engine 2.0](../07-development/v0.12.0-match-engine-2.md).

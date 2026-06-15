@@ -448,3 +448,154 @@ A v0.9.0 entrega o Browser Companion assistivo e calibra a memória:
 
 Próximos passos: edição visual do Kanban, export de ranking, provedores adicionais e embeddings
 locais opcionais.
+
+# Correção de rota pós-v0.9.0
+
+A seção histórica acima deve ser lida como registro da evolução do projeto. A partir da v0.9.0, o produto já possui extensão, Local Companion API, Career Memory, RAG lexical, tracker, Hidden Jobs Radar, Search Intelligence, extração opcional por Gemini e análise GitHub/portfólio.
+
+Portanto, o próximo roadmap não deve tratar extensão, RAG ou GitHub como ideias distantes. O foco agora é estabilizar, aprofundar IA estruturada, generalizar para múltiplas áreas e fortalecer a análise baseada em evidências.
+
+## Princípios do roadmap corrigido
+
+1. Não adicionar features soltas antes de estabilizar o fluxo.
+2. Não deixar o produto enviesado para TI.
+3. Não depender só de heurísticas quando a IA estruturada puder extrair melhor.
+4. Não deixar a IA calcular tudo sem validação.
+5. Não deixar a extensão carregar a inteligência pesada.
+6. Não reduzir qualidade de documentação, testes e explicabilidade.
+7. Não mexer no escopo de coleta autenticada dentro desta revisão.
+
+## v0.9.1 — Estabilização documental e clareza
+
+Foco: alinhar documentação com o estado real da v0.9.0.
+
+Entregas:
+
+- corrigir leitura do roadmap;
+- documentar visão multiárea;
+- documentar Prompt Catalog;
+- documentar AI Orchestration;
+- documentar GitHub Analyzer 2.0;
+- documentar Match Engine 2.0;
+- criar plano de v0.10, v0.11 e v0.12;
+- manter docs existentes sem redução.
+
+Critério de pronto:
+
+- MkDocs lista os novos documentos;
+- roadmap indica próximos marcos reais;
+- prompts têm contratos de entrada e saída;
+- multiárea aparece como decisão central de produto.
+
+## v0.10.0 — AI Structured Extraction e Domain Intelligence
+
+Foco: Gemini ou outro provider deve extrair informações do currículo e da vaga de forma estruturada, validada e multiárea.
+
+Entregas:
+
+- Prompt Registry;
+- `resume_extraction_v1`;
+- `job_extraction_multi_domain_v1`;
+- `ats_analysis_v1`;
+- `match_analysis_evidence_based_v1`;
+- schemas Pydantic;
+- JSON Guard;
+- confidence por campo;
+- comparação parser local x IA;
+- UI de revisão;
+- fixtures multiárea.
+
+Critério de pronto:
+
+- currículo de TI, enfermagem, pedagogia, engenharia civil e psicologia são extraídos em schema;
+- vaga de TI, enfermagem, arquitetura, engenharia e curso técnico é extraída em schema;
+- campos críticos têm confidence;
+- registro profissional ausente não é inventado;
+- fallback local continua funcionando.
+
+## v0.11.0 — GitHub Analyzer 2.0
+
+Foco: substituir análise rasa de repo por pipeline profundo no backend/site, com a extensão funcionando como ponte.
+
+Entregas:
+
+- GitHub API client;
+- full repository tree;
+- directory tree filtrada;
+- file sampler;
+- raw file reader;
+- dependency graph simples;
+- cache por SHA;
+- prompt `github_repo_analysis_v2`;
+- scores por dimensão;
+- evidências por arquivo;
+- bullets seguros para currículo;
+- comparação repo x vaga;
+- página de Portfólio/GitHub Analyzer no site.
+
+Critério de pronto:
+
+- repo por URL gera relatório validado;
+- relatório cita evidências por arquivo;
+- scores finais são calculados por código;
+- extensão envia owner/repo e abre relatório completo;
+- relatório pode ser salvo na Career Memory.
+
+## v0.12.0 — Match Engine 2.0 multiárea
+
+Foco: trocar match simples por engine de requisitos, evidências, domínio e confiança.
+
+Entregas:
+
+- requisitos classificados;
+- score ponderado por domínio;
+- gaps críticos;
+- competências transferíveis;
+- score de evidência;
+- score de confiança;
+- explicação por requisito;
+- travas por knockout gaps;
+- integração com ATS, Resume Tailor e Career Memory.
+
+Critério de pronto:
+
+- match não depende apenas de keyword;
+- áreas não técnicas não são penalizadas por ausência de GitHub;
+- registros profissionais obrigatórios viram gap crítico;
+- competências transferíveis aparecem como parciais;
+- recomendação final explica score e riscos.
+
+## v1.0 — SotuHire generalista estável
+
+Foco: fechar uma versão de portfólio/produto confiável.
+
+Entregas:
+
+- demo com múltiplas áreas;
+- README alinhado;
+- screenshots atualizadas;
+- testes passando;
+- cobertura documentada;
+- prompts versionados;
+- schemas estáveis;
+- exemplos fictícios completos;
+- vídeo/GIF de fluxo principal;
+- docs publicadas.
+
+Critério de pronto:
+
+- pessoa consegue analisar currículo, vaga, GitHub/portfólio e tracker;
+- produto funciona com áreas diferentes;
+- resultados são explicáveis;
+- dados sensíveis continuam locais por padrão;
+- ações externas exigem revisão humana.
+
+## Documentos de apoio
+
+- [Estratégia multiárea](multi-domain-product-strategy.md)
+- [Regras multiárea](../03-business-rules/multi-domain-career-rules.md)
+- [Prompt Catalog](../04-ai/prompt-catalog.md)
+- [AI Orchestration e Confidence](../04-ai/ai-orchestration-and-confidence.md)
+- [v0.10.0 AI Structured Extraction](../07-development/v0.10.0-ai-structured-extraction.md)
+- [v0.11.0 GitHub Analyzer 2.0](../07-development/v0.11.0-github-analyzer-2.md)
+- [v0.12.0 Match Engine 2.0](../07-development/v0.12.0-match-engine-2.md)

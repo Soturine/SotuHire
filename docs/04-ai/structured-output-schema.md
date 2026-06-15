@@ -188,3 +188,89 @@ Referências:
 - [Gemini Structured Outputs](https://ai.google.dev/gemini-api/docs/structured-output)
 - [JSON Resume](https://jsonresume.org/schema)
 - [Pydantic](https://docs.pydantic.dev/)
+
+# Atualização: schemas por função
+
+A próxima evolução deve separar schemas por função, em vez de depender de um único schema de análise completa.
+
+Schemas recomendados:
+
+- `ResumeExtractionOutput`;
+- `JobExtractionOutput`;
+- `DomainClassificationOutput`;
+- `ATSAnalysisOutput`;
+- `MatchEvidenceOutput`;
+- `ResumeTailorOutput`;
+- `GitHubRepoAnalysisOutput`;
+- `HiddenJobDetectionOutput`.
+
+## Regra de entrada no produto
+
+```text
+Output de IA só pode entrar no produto se passar no schema.
+```
+
+Se falhar:
+
+1. tentar reparo de JSON;
+2. validar novamente;
+3. se falhar, mostrar erro revisável;
+4. não salvar como análise final;
+5. preservar fallback local.
+
+## Confidence por campo
+
+Campos críticos devem ter confidence:
+
+- senioridade;
+- domínio profissional;
+- requisito obrigatório;
+- formação;
+- credencial;
+- registro profissional;
+- salário;
+- modalidade;
+- localidade;
+- evidência de experiência;
+- score sugerido.
+
+## Schema de requisito
+
+```json
+{
+  "text": "string",
+  "normalized_name": "string",
+  "category": "education | hard_skill | soft_skill | tool | software | equipment | certification | professional_license | language | experience | methodology | regulation | responsibility | availability | location | portfolio | other",
+  "importance": "required | preferred | optional | unclear",
+  "criticality": "low | medium | high | knockout",
+  "evidence": "string",
+  "confidence": 0.0
+}
+```
+
+## Schema de evidência
+
+```json
+{
+  "claim": "string",
+  "source": "resume | job | github | portfolio | memory | tracker | user_input",
+  "source_ref": "string | null",
+  "evidence_type": "text | file | config | readme | workflow | project | experience | education | credential",
+  "confidence": 0.0
+}
+```
+
+## Schema de confidence geral
+
+```json
+{
+  "overall": 0.0,
+  "low_confidence_fields": ["string"],
+  "needs_user_review": true,
+  "reason": "string"
+}
+```
+
+## Relação com Prompt Catalog
+
+Os detalhes completos de cada output ficam em [Prompt Catalog](prompt-catalog.md).

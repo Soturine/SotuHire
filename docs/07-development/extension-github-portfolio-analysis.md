@@ -89,3 +89,95 @@ POST /capture/commit-analysis
 Execute `python scripts/package_extension.py` para validar e gerar
 `dist/sotuhire-extension-v0.9.0.zip`. O guia de publicação e os textos da loja ficam em
 [`browser-extension/store/`](https://github.com/Soturine/SotuHire/tree/main/browser-extension/store).
+
+# Atualização: extensão como ponte para o GitHub Analyzer 2.0
+
+A extensão da v0.9.0 já entrega valor, mas a próxima evolução deve evitar concentrar análise pesada no content script.
+
+A regra passa a ser:
+
+```text
+Extensão captura e aciona. Backend/site analisa profundamente.
+```
+
+## Por que não colocar tudo na extensão
+
+Análise profunda de repositório exige:
+
+- GitHub API;
+- árvore completa;
+- leitura raw de arquivos;
+- sampler;
+- grafo de dependências;
+- prompt grande;
+- validação Pydantic;
+- comparação com currículo;
+- comparação com vaga;
+- integração com Career Memory;
+- tracker;
+- histórico.
+
+Isso pertence melhor ao backend/site do SotuHire.
+
+## Fluxo recomendado
+
+```text
+GitHub tab -> extensão extrai owner/repo -> Local Companion API -> GitHub Analyzer 2.0 -> relatório -> modal/site -> memória
+```
+
+## Payload mínimo da extensão
+
+```json
+{
+  "url": "https://github.com/owner/repo",
+  "owner": "owner",
+  "repo": "repo",
+  "page_type": "github_repo",
+  "visible_title": "string | null",
+  "visible_description": "string | null",
+  "mode": "quick | deep"
+}
+```
+
+## TypeScript
+
+O fato de uma referência ser feita em TypeScript não muda a arquitetura do SotuHire.
+
+TypeScript é recomendado para a extensão porque melhora:
+
+- tipos de payload;
+- organização;
+- build;
+- contratos;
+- manutenção;
+- testes de UI/content script.
+
+Mas o ganho principal virá de mover a análise profunda para o backend Python.
+
+## Standalone vs connected
+
+### Standalone
+
+Deve continuar existindo como fallback:
+
+- sem backend;
+- análise rápida;
+- DOM visível;
+- heurística local;
+- IA opcional para refinar texto.
+
+### Connected
+
+Deve ser o modo recomendado:
+
+- backend local;
+- GitHub API;
+- prompt estruturado;
+- validação;
+- memória;
+- tracker;
+- relatório completo.
+
+## Próxima implementação
+
+Ver [v0.11.0 GitHub Analyzer 2.0](v0.11.0-github-analyzer-2.md).

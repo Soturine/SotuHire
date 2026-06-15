@@ -76,3 +76,79 @@ No bypass
 ```
 
 O scraping entra para reduzir trabalho repetitivo, não para violar plataformas. O sistema deve preferir APIs, feeds, páginas públicas simples e entrada manual. Playwright e Scrapy entram apenas quando houver justificativa técnica.
+
+# Atualização pós-v0.9.0: visão multiárea
+
+A visão do produto evolui a partir da v0.9.0.
+
+O público inicial pode continuar usando exemplos de tecnologia, estágio, júnior, IA, dados, automação e desenvolvimento, mas o produto não deve ser limitado a essas áreas.
+
+A visão corrigida é:
+
+```text
+SotuHire é um copiloto de carreira local-first e multiárea que ajuda pessoas a analisar currículos, vagas, portfólios e evidências profissionais com IA estruturada, regras de negócio e revisão humana.
+```
+
+## Público expandido
+
+O SotuHire deve conseguir atender:
+
+- tecnologia;
+- cybersecurity;
+- engenharia biomédica;
+- engenharia civil;
+- engenharia elétrica;
+- engenharia mecânica;
+- enfermagem;
+- psicologia;
+- pedagogia;
+- arquitetura;
+- design de interiores;
+- administração;
+- financeiro;
+- marketing;
+- cursos técnicos;
+- saúde;
+- educação;
+- humanas;
+- exatas;
+- indústria;
+- logística;
+- estágio;
+- trainee;
+- primeiro emprego;
+- jovem aprendiz.
+
+## Nova proposta de valor
+
+Além de analisar currículo x vaga, o SotuHire deve responder:
+
+- quais requisitos são obrigatórios?
+- quais requisitos são desejáveis?
+- quais credenciais são críticas?
+- quais competências são transferíveis?
+- quais evidências do currículo ou portfólio comprovam cada requisito?
+- quais gaps podem ser resolvidos com reescrita?
+- quais gaps exigem aprendizado, certificação ou experiência real?
+- como adaptar o currículo sem inventar fatos?
+
+## Implicação técnica
+
+A visão multiárea exige:
+
+- Domain Intelligence;
+- prompts estruturados por função;
+- schemas Pydantic;
+- confidence por campo;
+- Match Engine 2.0;
+- ATS multiárea;
+- Resume Tailor seguro;
+- GitHub/Portfolio Analyzer 2.0;
+- fixtures de teste de várias áreas.
+
+## Documentos relacionados
+
+- [Estratégia multiárea](multi-domain-product-strategy.md)
+- [Regras multiárea](../03-business-rules/multi-domain-career-rules.md)
+- [Catálogo de prompts](../04-ai/prompt-catalog.md)
+- [Orquestração de IA e confiança](../04-ai/ai-orchestration-and-confidence.md)

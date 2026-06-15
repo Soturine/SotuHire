@@ -44,8 +44,10 @@ nav:
       - Atualização Tailor/Fit: 00-audit/mvp-tailor-fit-update-summary.md
       - Prontidão v0.1: 00-audit/v0.1-readiness-audit.md
       - Prontidão v0.4: 00-audit/v0.4-readiness-audit.md
+      - Atualização pós-v0.9.0: 00-audit/v0.9-roadmap-docs-update-summary.md
   - Produto:
       - Visão: 01-product/vision.md
+      - Estratégia multiárea: 01-product/multi-domain-product-strategy.md
       - MVP: 01-product/mvp-scope.md
       - Roadmap: 01-product/roadmap.md
       - Histórias de usuário: 01-product/user-stories.md
@@ -72,6 +74,7 @@ nav:
   - Regras de negócio:
       - ATS rules: 03-business-rules/ats-rules.md
       - Matching rules: 03-business-rules/matching-rules.md
+      - Regras multiárea: 03-business-rules/multi-domain-career-rules.md
       - Job filtering: 03-business-rules/job-filtering.md
       - Resume types: 03-business-rules/resume-types.md
       - Profile score: 03-business-rules/profile-score.md
@@ -83,6 +86,8 @@ nav:
       - Regras de captura assistida: 03-business-rules/browser-assisted-capture-rules.md
   - IA:
       - Prompting: 04-ai/prompting.md
+      - Catálogo de prompts: 04-ai/prompt-catalog.md
+      - Orquestração de IA e confiança: 04-ai/ai-orchestration-and-confidence.md
       - Structured output: 04-ai/structured-output-schema.md
       - Evaluation: 04-ai/evaluation.md
       - RAG memory: 04-ai/rag-memory-architecture.md
@@ -149,6 +154,9 @@ nav:
       - v0.6.0 UX, IA e busca: 07-development/v0.6.0-polished-ux-ai-search.md
       - v0.8.0 Career Memory e RAG: 07-development/v0.8.0-career-memory-rag.md
       - v0.9.0 Browser Companion: 07-development/v0.9.0-browser-extension-companion.md
+      - v0.10.0 AI Structured Extraction: 07-development/v0.10.0-ai-structured-extraction.md
+      - v0.11.0 GitHub Analyzer 2.0: 07-development/v0.11.0-github-analyzer-2.md
+      - v0.12.0 Match Engine 2.0: 07-development/v0.12.0-match-engine-2.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md
