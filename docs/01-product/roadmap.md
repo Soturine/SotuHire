@@ -1,31 +1,122 @@
 # Roadmap
 
-## Estratégia geral
+## Estado atual — v0.9.0
 
-O SotuHire deve evoluir em etapas pequenas. A regra é:
+Este roadmap está alinhado ao estado atual do SotuHire em **v0.9.0**.
 
-> Primeiro entregar valor manualmente. Depois automatizar coleta. Depois escalar.
+A leitura correta é **current-first**:
 
-Não começar por scraper complexo. O núcleo do produto é o match entre currículo e vaga.
+1. entender o que já existe;
+2. separar o que está em estabilização;
+3. planejar os próximos marcos reais;
+4. manter versões antigas apenas como histórico.
 
-## Roadmap entregue até v0.4
+## O que já existe no produto
 
-O roadmap foi consolidado em 12 de junho de 2026:
+A v0.9.0 já inclui:
+
+- análise local de currículo x vaga;
+- Match Score determinístico inicial;
+- ATS Score simples;
+- Opportunity Fit Score;
+- Risk Score;
+- Resume Tailor seguro em modo sugestão;
+- parsers de currículo e vaga;
+- provider Gemini opcional;
+- fallback local;
+- histórico local;
+- dashboard;
+- Job Tracker;
+- Search Intelligence;
+- Hidden Jobs Radar;
+- Career Memory local;
+- RAG lexical local;
+- perfil profissional persistente;
+- captura assistiva via extensão;
+- Local Companion API;
+- importação paginada de candidaturas já realizadas;
+- análise de GitHub, repositórios, projetos e portfólios;
+- modo standalone da extensão;
+- modo conectado ao SotuHire local;
+- documentação MkDocs;
+- CI com Ruff e pytest;
+- exemplos e fixtures fictícias.
+
+## Correção de rota após v0.9.0
+
+O projeto não está mais no estágio de MVP inicial.
+
+A próxima fase não deve ser descrita como “começar parser”, “criar tracker” ou “fazer extensão no futuro”, porque essas partes já existem.
+
+A próxima fase correta é:
+
+```text
+Estabilizar v0.9.0
+-> estruturar extração por IA
+-> tornar o produto multiárea
+-> aprofundar GitHub/Portfolio Analyzer
+-> substituir match simples por Match Engine 2.0
+-> fechar v1.0 como copiloto de carreira generalista
+```
+
+## Estratégia geral atual
+
+O SotuHire deve evoluir em etapas pequenas, mas a regra agora é:
+
+> Primeiro estabilizar o que já existe. Depois aprofundar IA estruturada. Depois escalar para múltiplas áreas.
+
+O núcleo do produto deixa de ser apenas “currículo + vaga” e passa a ser:
+
+```text
+Currículo + vaga + portfólio + histórico + preferências + evidências
+```
+
+O produto deve continuar local-first, explicável e com revisão humana.
+
+## Próximo ciclo real
+
+O próximo ciclo real é a transição para a v0.10.0:
+
+- Prompt Registry;
+- prompts versionados por função;
+- structured output com schemas;
+- extração de currículo por IA;
+- extração de vaga por IA;
+- Domain Intelligence multiárea;
+- confidence por campo;
+- revisão humana de campos incertos;
+- fallback heurístico preservado;
+- fixtures multiárea;
+- preparação para Match Engine 2.0.
+
+## Marcos planejados a partir da v0.9.0
+
+| Versão | Foco | Resultado esperado |
+| --- | --- | --- |
+| v0.9.1 | estabilização documental e polimento | roadmap, visão, README e changelog alinhados ao estado real |
+| v0.10.0 | AI Structured Extraction + Domain Intelligence | currículo e vaga extraídos por IA em JSON validado |
+| v0.11.0 | GitHub Analyzer 2.0 | análise profunda de repo com GitHub API, sampler, evidências e score de portfólio |
+| v0.12.0 | Match Engine 2.0 | match por requisitos, evidências, domínio, confidence e gaps críticos |
+| v1.0 | produto generalista estável | demo multiárea, prompts estáveis, docs e fluxo confiável |
+
+## O que fica como histórico
+
+As seções abaixo registram decisões e marcos anteriores.
+
+Elas não devem ser lidas como próximos passos atuais.
+
+Quando uma seção antiga disser que algo é “futuro”, conferir primeiro a tabela acima e o README atual.
+
+## Histórico — Roadmap entregue até v0.4
+
+O roadmap inicial foi consolidado em 12 de junho de 2026:
 
 - **v0.1:** núcleo determinístico, Pydantic, scores e Resume Tailor seguro;
 - **v0.2:** UX guiada, modo rápido/avançado e parsers automáticos;
 - **v0.3:** provider estruturado, Gemini opcional, fallback local e exports;
 - **v0.4:** tracker local, histórico e dashboard inicial.
 
-As seções históricas abaixo continuam registradas para preservar decisões anteriores. O próximo ciclo começa após validar a experiência v0.4 com dados fictícios variados.
-
-### Próximo ciclo
-
-- melhorar heurísticas e revisão dos parsers;
-- adicionar filtros e tendências ao dashboard;
-- RAG simples de carreira apoiado por evidências;
-- Search Intelligence responsável;
-- extensão assistiva apenas no futuro.
+As seções históricas abaixo continuam registradas para preservar decisões anteriores.
 
 ## v0.1 - Núcleo do produto
 
@@ -258,7 +349,9 @@ Ideias futuras:
 
 ---
 
-# Roadmap expandido: copiloto completo de carreira
+## Histórico legado — Roadmap expandido: copiloto completo de carreira
+
+Esta seção foi mantida para rastreabilidade. Alguns itens listados como futuros já foram antecipados na v0.8.0 ou v0.9.0. Para planejamento atual, usar a seção **Marcos planejados a partir da v0.9.0**.
 
 ## v0.6 - Search Intelligence
 
@@ -296,7 +389,7 @@ Ideias futuras:
 - Recuperar evidências relevantes para cada análise.
 - Explicar recomendações com base em fontes internas.
 
-## v1.1 - Browser Extension Assistant
+## Histórico legado — v1.1 Browser Extension Assistant antecipado na v0.9.0
 
 - Botão para analisar vaga aberta.
 - Botão para salvar vaga no tracker.
@@ -347,7 +440,7 @@ A partir da análise das referências e das perguntas de validação do produto,
 - Agentes especializados.
 - Reranking semântico com modelos próprios.
 
-### Mermaid do roadmap consolidado
+### Mermaid histórico do roadmap consolidado antigo
 
 ```mermaid
 flowchart LR
