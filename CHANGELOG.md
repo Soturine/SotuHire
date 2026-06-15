@@ -4,6 +4,14 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+### Documentation
+
+- alinhado `docs/01-product/roadmap.md` ao estado real da v0.9.0;
+- reorganizada a visão do produto para começar pela estratégia multiárea atual;
+- registrado o ciclo v0.9.1 como estabilização documental antes da v0.10.0;
+- destacado que v0.10.0, v0.11.0 e v0.12.0 são próximos marcos reais;
+- mantidas seções antigas como histórico, sem tratá-las como próximos passos atuais.
+
 ## [0.9.0] - 2026-06-14
 
 ### Added
