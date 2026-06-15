@@ -1,55 +1,103 @@
-# Arquitetura de Prompts
+# Prompt Architecture
+
+Este documento define como os prompts do SotuHire devem ser organizados, versionados, testados e usados.
 
 ## Objetivo
 
-Este documento define como os prompts do SotuHire devem ser organizados, versionados, validados e conectados ao código.
+Evitar prompts soltos, pequenos demais ou difíceis de validar.
 
-A partir da v0.10, prompts não devem ser textos soltos espalhados pelo código. Eles devem ser tratados como contratos de produto.
+Cada função de IA deve ter:
 
-## Princípio central
+- prompt específico;
+- versão;
+- contrato de entrada;
+- schema de saída;
+- regras anti-invenção;
+- regras de confiança;
+- critérios de falha;
+- exemplos;
+- testes.
+
+## Filosofia
+
+A IA interpreta, extrai, classifica, resume e sugere.
+
+O código valida, calcula score, aplica pesos, salva histórico e bloqueia resultados inseguros.
 
 ```txt
-IA interpreta, estrutura e explica.
-Código valida, calcula, bloqueia e persiste.
+IA = interpretação e estruturação
+Código = validação, cálculo e persistência
 ```
 
-A IA pode:
+## Fluxo padrão
 
-- extrair informações;
-- classificar requisitos;
-- interpretar domínio;
-- sugerir melhorias;
-- explicar gaps;
-- transformar texto em JSON;
-- gerar bullets seguros.
+```txt
+Input bruto
+  ↓
+Pré-processamento local
+  ↓
+Prompt versionado
+  ↓
+Resposta JSON
+  ↓
+JSON Guard
+  ↓
+Schema Pydantic
+  ↓
+Confidence Merger
+  ↓
+Score calculado pelo código
+  ↓
+UI de revisão quando necessário
+```
 
-O código deve:
+## Princípios
 
-- validar schema;
-- aplicar regras de negócio;
-- calcular score final;
-- bloquear inconsistências;
-- registrar prompt/model/input/output;
-- tratar erro;
-- pedir revisão humana quando necessário.
+### 1. Um prompt por tarefa
 
-## Por que separar prompts
+Não usar um prompt genérico para currículo, vaga, matching, ATS e GitHub.
 
-Um prompt único para tudo tende a:
+Cada tarefa tem objetivo, entrada e saída diferentes.
 
-- ficar grande demais;
-- misturar responsabilidades;
-- dificultar testes;
-- aumentar custo;
-- aumentar alucinação;
-- tornar versionamento confuso;
-- dificultar evolução por função.
+### 2. JSON rígido
 
-Por isso, cada função deve ter um prompt próprio.
+Prompts devem retornar JSON válido, sem Markdown e sem texto extra.
 
-## Estrutura de cada prompt
+### 3. Pydantic como contrato
 
-Cada prompt deve ter:
+A saída da IA só é aceita se passar por schema.
+
+### 4. Confidence por campo
+
+Cada campo relevante deve informar confiança.
+
+### 5. Anti-invenção
+
+A IA não pode inventar fatos profissionais.
+
+### 6. Human review
+
+Campos críticos com baixa confiança devem ser revisados pelo usuário.
+
+## Tipos de prompt
+
+| Prompt | Função |
+|---|---|
+| Resume Extraction | Extrair currículo bruto para perfil estruturado. |
+| Job Extraction | Extrair vaga para requisitos estruturados. |
+| Domain Classification | Detectar área profissional e categorias de requisitos. |
+| Match Analysis | Comparar vaga e perfil por evidências. |
+| ATS Analysis | Avaliar estrutura e aderência ATS. |
+| Resume Tailor | Sugerir adaptação segura do currículo. |
+| GitHub Repo Analysis | Avaliar repositório como evidência técnica e profissional. |
+| GitHub Profile Analysis | Avaliar perfil GitHub agregado. |
+| Portfolio Gap Analysis | Identificar lacunas no portfólio. |
+| Hidden Job Detection | Detectar oportunidade em texto informal. |
+| Career Advice | Gerar plano de evolução profissional. |
+
+## Estrutura obrigatória de cada prompt doc
+
+Cada arquivo em `docs/04-ai/prompts/` deve conter:
 
 - metadata;
 - propósito;
@@ -59,184 +107,65 @@ Cada prompt deve ter:
 - output schema;
 - system prompt;
 - user prompt template;
-- regras anti-invenção;
-- regras de confidence;
 - regras de calibração;
+- regras de confiança;
+- regras anti-invenção;
 - exemplos;
 - failure modes;
-- retry strategy;
-- fixtures de teste;
+- estratégia de retry;
 - módulos relacionados.
 
-## Metadata padrão
+## Modelo de metadata
+
+```yaml
+prompt_id: resume_extraction_v1
+version: 1.0.0
+status: planned
+owner: SotuHire
+used_by:
+  - modules.ai.orchestration
+  - modules.resume
+requires:
+  - JSON guard
+  - Pydantic schema
+  - confidence merger
+```
+
+## Configuração recomendada
 
 ```txt
-PROMPT_ID: snake_case_name
-PROMPT_VERSION: major.minor.patch
-STATUS: planned | draft | active | deprecated
-OWNER: SotuHire
-USED_BY: module/service
-OUTPUT_SCHEMA: PydanticModelName
-DEFAULT_TEMPERATURE: 0.1
-REQUIRES_REVIEW: true | false
+temperature: 0.1
+top_p: baixo/médio
+response_format: JSON
+retry_on_invalid_json: true
+max_retries: 2
 ```
 
-## Contrato de entrada
+## Falhas comuns
 
-O input contract deve descrever exatamente o que o prompt espera receber.
+- JSON inválido.
+- Campo obrigatório ausente.
+- Invenção de credencial.
+- Confundir curso com certificação.
+- Confundir projeto pessoal com experiência profissional.
+- Transformar competência transferível em match completo.
+- Criar score final sem explicação.
 
-Exemplo:
+## Estratégia de retry
 
-```json
-{
-  "resume_text": "string",
-  "file_type": "pdf | docx | txt | pasted_text",
-  "candidate_preferences": {
-    "target_roles": ["string"],
-    "target_domains": ["string"],
-    "locations": ["string"],
-    "work_models": ["remote | hybrid | onsite"],
-    "seniority_target": "string | null"
-  },
-  "existing_profile_memory": "object | null"
-}
-```
+1. Validar JSON.
+2. Se inválido, reenviar apenas erro de schema e pedir correção.
+3. Se continuar inválido, cair para fallback heurístico.
+4. Marcar resultado como `needs_user_review`.
 
-## Contrato de saída
+## Relação com código
 
-A saída deve ser JSON puro, sem markdown.
-
-Cada campo importante deve ter:
-
-- valor;
-- confidence quando fizer sentido;
-- evidência quando fizer sentido;
-- indicação de revisão quando confidence for baixa.
-
-## Confidence
-
-Confidence deve ser usado para indicar o quanto o modelo está seguro, não para dizer se o candidato é bom ou ruim.
-
-Exemplo:
-
-```json
-{
-  "field": "seniority",
-  "value": "junior",
-  "confidence": 0.62,
-  "evidence": ["estágio", "projetos acadêmicos"]
-}
-```
-
-## Anti-invenção
-
-Todos os prompts devem conter regras explícitas contra invenção.
-
-O modelo não deve inventar:
-
-- experiência;
-- cargo;
-- empresa;
-- formação;
-- certificação;
-- registro profissional;
-- idioma;
-- resultado;
-- tecnologia;
-- deploy;
-- métrica;
-- número de usuários;
-- conquista.
-
-## Regras para áreas regulamentadas
-
-Prompts que analisam currículo, vaga, matching ou ATS devem tratar credenciais profissionais como sensíveis.
-
-Exemplos:
-
-- COREN;
-- CRP;
-- CREA;
-- CAU;
-- CFT;
-- OAB;
-- CRC;
-- CRF;
-- CRM.
-
-O sistema pode dizer:
+Os prompts documentados aqui devem virar implementações em:
 
 ```txt
-Se você possui CRP ativo, deixe essa informação visível.
+modules/ai/prompts/
+modules/ai/schemas/
+modules/ai/prompt_registry.py
+modules/ai/json_guard.py
+modules/ai/orchestration.py
 ```
-
-Mas não deve dizer:
-
-```txt
-Adicione CRP ao currículo.
-```
-
-## Retry strategy
-
-Se a IA retornar JSON inválido:
-
-1. tentar reparar JSON localmente;
-2. validar novamente;
-3. se falhar, chamar prompt de correção com o erro de schema;
-4. se falhar de novo, usar fallback heurístico;
-5. marcar análise como `needs_review`.
-
-## Versionamento
-
-Quando mudar schema de saída, aumentar versão major.
-
-Quando mudar critérios ou textos sem quebrar schema, aumentar minor.
-
-Quando corrigir instrução sem mudar comportamento esperado, aumentar patch.
-
-## Logs
-
-Toda análise com IA deve registrar:
-
-- prompt_id;
-- prompt_version;
-- model;
-- provider;
-- input_hash;
-- output_hash;
-- timestamp;
-- schema_version;
-- validation_status;
-- confidence geral.
-
-Não registrar dados sensíveis desnecessários em logs legíveis.
-
-## Relação com testes
-
-Cada prompt deve ter fixtures.
-
-Exemplos mínimos:
-
-- currículo de TI;
-- currículo de enfermagem;
-- currículo de pedagogia;
-- currículo de engenharia civil;
-- vaga técnica;
-- vaga saúde;
-- vaga educação;
-- vaga post informal;
-- repositório simples;
-- repositório com testes;
-- repositório sem README.
-
-## Resultado esperado
-
-A arquitetura de prompts deve deixar o projeto pronto para o Codex implementar:
-
-- Prompt Registry;
-- Pydantic schemas;
-- JSON Guard;
-- retry strategy;
-- confidence merger;
-- AI orchestrator;
-- testes multiárea.

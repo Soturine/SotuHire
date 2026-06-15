@@ -1,112 +1,63 @@
-# Catálogo de Prompts
+# Prompt Catalog
 
-## Objetivo
+Este documento é o índice dos prompts oficiais planejados para o SotuHire.
 
-Este documento é o índice dos prompts planejados para o SotuHire.
+Os prompts completos ficam em `docs/04-ai/prompts/`.
 
-Os prompts completos ficam em:
+## Regra principal
 
-```txt
-docs/04-ai/prompts/
-```
+Não usar prompt genérico para tudo.
 
-A intenção é evitar um único documento gigante, incompleto e difícil de manter.
+Cada função do produto deve ter prompt próprio, saída estruturada e schema validável.
 
-## Filosofia
+## Prompts
 
-Os prompts do SotuHire devem ser:
-
-- separados por função;
-- versionados;
-- testáveis;
-- compatíveis com JSON estruturado;
-- validados por schema;
-- focados em evidência;
-- multiárea;
-- seguros contra invenção;
-- compatíveis com múltiplos providers.
-
-## Lista de prompts
-
-| Prompt | Arquivo | Versão alvo | Objetivo |
-|---|---|---:|---|
-| Resume Extraction | `prompts/resume-extraction-v1.md` | v0.10 | Extrair currículo em JSON estruturado. |
-| Job Extraction Multi-Domain | `prompts/job-extraction-multi-domain-v1.md` | v0.10 | Extrair vaga de qualquer área em JSON. |
-| Domain Classification | `prompts/domain-classification-v1.md` | v0.10 | Classificar domínio profissional e requisitos. |
-| Match Analysis Evidence-Based | `prompts/match-analysis-evidence-based-v1.md` | v0.12 | Comparar perfil e vaga com evidências. |
-| ATS Analysis | `prompts/ats-analysis-v1.md` | v0.12 | Avaliar currículo para ATS sem inventar fatos. |
-| Resume Tailor | `prompts/resume-tailor-v1.md` | v0.12 | Sugerir adaptação segura do currículo. |
-| GitHub Repo Analysis | `prompts/github-repo-analysis-v2.md` | v0.11 | Avaliar repositório como evidência técnica e profissional. |
-| GitHub Profile Analysis | `prompts/github-profile-analysis-v1.md` | v0.11 | Avaliar perfil GitHub como portfólio. |
-| Portfolio Gap Analysis | `prompts/portfolio-gap-analysis-v1.md` | v0.11 | Identificar lacunas no portfólio para objetivos de carreira. |
-| Hidden Job Detection | `prompts/hidden-job-detection-v1.md` | v0.10+ | Detectar oportunidades em textos públicos/postagens. |
-| Career Advice | `prompts/career-advice-v1.md` | v0.12 | Gerar plano de evolução profissional com base em evidências. |
+| Prompt | Arquivo | Função |
+|---|---|---|
+| Resume Extraction v1 | `prompts/resume-extraction-v1.md` | Extrair currículo bruto para perfil estruturado. |
+| Job Extraction Multi-Domain v1 | `prompts/job-extraction-multi-domain-v1.md` | Extrair vaga de qualquer área para requisitos estruturados. |
+| Domain Classification v1 | `prompts/domain-classification-v1.md` | Classificar domínio profissional e categorias. |
+| Match Analysis Evidence-Based v1 | `prompts/match-analysis-evidence-based-v1.md` | Comparar perfil e vaga por evidências. |
+| ATS Analysis v1 | `prompts/ats-analysis-v1.md` | Avaliar currículo para ATS e clareza. |
+| Resume Tailor v1 | `prompts/resume-tailor-v1.md` | Sugerir adaptação segura do currículo. |
+| GitHub Repo Analysis v2 | `prompts/github-repo-analysis-v2.md` | Avaliar repositório como evidência técnica e profissional. |
+| GitHub Profile Analysis v1 | `prompts/github-profile-analysis-v1.md` | Avaliar perfil GitHub agregado. |
+| Portfolio Gap Analysis v1 | `prompts/portfolio-gap-analysis-v1.md` | Identificar lacunas de portfólio. |
+| Hidden Job Detection v1 | `prompts/hidden-job-detection-v1.md` | Detectar oportunidade em texto informal. |
+| Career Advice v1 | `prompts/career-advice-v1.md` | Gerar plano de evolução profissional. |
 
 ## Regras globais
 
-Todos os prompts devem conter estas regras:
+Todos os prompts devem obedecer:
 
-1. Retornar somente JSON válido quando o prompt for estruturado.
-2. Não usar markdown dentro da resposta JSON.
-3. Não inventar fatos.
-4. Usar `null`, array vazio ou `not_evidenced` quando a informação não estiver presente.
-5. Diferenciar ausência de dado de dado não analisado.
-6. Atribuir confidence por campo importante.
-7. Incluir evidência sempre que possível.
-8. Marcar campos que precisam de revisão humana.
-9. Não sugerir mentir, exagerar ou inventar experiência.
-10. Tratar credenciais profissionais como sensíveis.
+- retornar JSON válido;
+- não usar Markdown na resposta;
+- não inventar fatos;
+- usar `null` ou array vazio quando não houver evidência;
+- retornar confidence por campo importante;
+- diferenciar ausente de não analisado;
+- marcar necessidade de revisão humana quando necessário;
+- não gerar afirmações profissionais sem evidência.
 
-## Relação com v0.10, v0.11 e v0.12
+## Status
 
-### v0.10.0
+| Prompt | Status documental | Status código |
+|---|---|---|
+| Resume Extraction | planejado | não implementado |
+| Job Extraction | planejado | não implementado |
+| Domain Classification | planejado | não implementado |
+| Match Analysis | planejado | não implementado |
+| ATS Analysis | planejado | não implementado |
+| Resume Tailor | planejado | não implementado |
+| GitHub Repo Analysis | planejado | não implementado |
+| GitHub Profile Analysis | planejado | não implementado |
+| Portfolio Gap Analysis | planejado | não implementado |
+| Hidden Job Detection | planejado | não implementado |
+| Career Advice | planejado | não implementado |
 
-Foco em extração estruturada:
+## Como usar este catálogo
 
-- Resume Extraction;
-- Job Extraction;
-- Domain Classification;
-- Hidden Job Detection inicial.
-
-### v0.11.0
-
-Foco em GitHub e portfólio:
-
-- GitHub Repo Analysis;
-- GitHub Profile Analysis;
-- Portfolio Gap Analysis.
-
-### v0.12.0
-
-Foco em matching e recomendações:
-
-- Match Analysis;
-- ATS Analysis;
-- Resume Tailor;
-- Career Advice.
-
-## Relação com código
-
-Documentação de prompts deve virar código em:
-
-```txt
-modules/ai/prompts/
-modules/ai/schemas/
-modules/ai/prompt_registry.py
-modules/ai/json_guard.py
-```
-
-## Qualidade esperada
-
-Um prompt só está pronto quando possui:
-
-- input contract;
-- output schema;
-- system prompt;
-- user prompt template;
-- calibration rules;
-- confidence rules;
-- anti-fabrication rules;
-- failure modes;
-- fixtures de teste;
-- módulos relacionados.
+- Para visão geral, leia este arquivo.
+- Para arquitetura, leia `prompt-architecture.md`.
+- Para registro e versionamento, leia `prompt-registry.md`.
+- Para implementar, use os arquivos individuais em `prompts/`.

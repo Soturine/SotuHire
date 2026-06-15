@@ -1,38 +1,24 @@
 # Prompt Registry
 
+O Prompt Registry é a camada planejada para registrar, versionar e executar prompts do SotuHire.
+
 ## Objetivo
 
-O Prompt Registry é o ponto central para registrar, carregar, versionar e executar prompts no SotuHire.
+Centralizar todos os prompts de IA para evitar chamadas soltas espalhadas pelo código.
 
-Ele evita que prompts fiquem espalhados em serviços diferentes e facilita testes, auditoria e evolução.
+## Problema atual
 
-## Problema
+Sem registry, cada módulo tende a montar seu próprio prompt. Isso dificulta:
 
-Sem registry, o projeto tende a ter:
+- versionamento;
+- testes;
+- auditoria;
+- troca de provider;
+- validação de schema;
+- comparação entre versões;
+- reprodutibilidade de análises.
 
-- prompts duplicados;
-- schemas inconsistentes;
-- modelos chamados de formas diferentes;
-- dificuldade de versionar;
-- dificuldade de testar;
-- dificuldade de auditar uma análise antiga.
-
-## Solução
-
-Criar uma camada de registro:
-
-```txt
-modules/ai/prompt_registry.py
-```
-
-E uma estrutura de prompts e schemas:
-
-```txt
-modules/ai/prompts/
-modules/ai/schemas/
-```
-
-## Interface sugerida
+## Modelo planejado
 
 ```python
 @dataclass(frozen=True)
@@ -43,125 +29,75 @@ class PromptSpec:
     user_template: str
     output_schema: type[BaseModel]
     temperature: float = 0.1
-    requires_review: bool = True
     max_retries: int = 2
 ```
 
-## Métodos esperados
+## Interface planejada
 
 ```python
 class PromptRegistry:
-    def register(self, spec: PromptSpec) -> None: ...
-    def get(self, prompt_id: str, version: str | None = None) -> PromptSpec: ...
-    def list_prompts(self) -> list[PromptSpec]: ...
-    def render_user_prompt(self, prompt_id: str, payload: dict) -> str: ...
+    def get(self, prompt_id: str, version: str | None = None) -> PromptSpec:
+        ...
+
+    def render_user_prompt(self, prompt_id: str, payload: dict) -> str:
+        ...
+
+    def validate_output(self, prompt_id: str, raw_json: str) -> BaseModel:
+        ...
 ```
 
-## Execução sugerida
+## Prompts registrados inicialmente
 
-```python
-result = ai_orchestrator.run_structured(
-    prompt_id="resume_extraction_v1",
-    payload={"resume_text": text},
-    provider="gemini",
-)
-```
+- `resume_extraction_v1`;
+- `job_extraction_multi_domain_v1`;
+- `domain_classification_v1`;
+- `match_analysis_evidence_based_v1`;
+- `ats_analysis_v1`;
+- `resume_tailor_v1`;
+- `github_repo_analysis_v2`;
+- `github_profile_analysis_v1`;
+- `portfolio_gap_analysis_v1`;
+- `hidden_job_detection_v1`;
+- `career_advice_v1`.
 
-## Responsabilidades
+## Dados salvos por execução
 
-O Prompt Registry deve:
-
-- mapear prompt_id para PromptSpec;
-- garantir versão;
-- expor schema esperado;
-- renderizar template;
-- manter metadados;
-- facilitar testes.
-
-O Prompt Registry não deve:
-
-- chamar API diretamente;
-- calcular score de negócio;
-- salvar dados de candidatura;
-- tomar decisões finais.
-
-## Relação com providers
-
-Providers como Gemini, OpenAI-compatible ou local models devem ficar atrás de uma interface.
-
-```txt
-AIProvider
-  generate_text(...)
-  generate_json(...)
-  supports_structured_output
-```
-
-O registry não deve depender de um provider específico.
-
-## Relação com JSON Guard
-
-Depois de chamar a IA, a resposta deve passar por:
-
-```txt
-raw_response
--> json_guard.parse
--> pydantic_schema.validate
--> confidence rules
--> result object
-```
-
-## Relação com scoring
-
-Prompts podem retornar sinais, evidências e sugestões de score.
-
-O score final deve ser calculado pelo código.
-
-Exemplo:
+Cada execução de prompt deve registrar:
 
 ```json
 {
-  "suggested_score_inputs": {
-    "required_requirements_coverage": 0.82,
-    "evidence_strength": 0.74,
-    "risk_penalty": 0.10
-  }
+  "prompt_id": "resume_extraction_v1",
+  "prompt_version": "1.0.0",
+  "provider": "gemini",
+  "model": "configured-model",
+  "input_hash": "sha256",
+  "schema_version": "1.0.0",
+  "created_at": "timestamp",
+  "status": "success | fallback | failed",
+  "confidence": 0.0
 }
 ```
 
-O código transforma isso em score final com regras versionadas.
+## Regras
 
-## Auditoria
+- Nunca chamar provider direto de módulo de negócio.
+- Sempre validar saída.
+- Sempre versionar prompt.
+- Sempre salvar prompt_id e prompt_version quando houver resultado persistido.
+- Sempre marcar fallback quando IA falhar.
+- Nunca confiar em score calculado apenas pela IA quando houver engine determinística.
 
-Cada execução deve permitir responder:
+## Relação com providers
 
-- qual prompt foi usado?
-- qual versão?
-- qual modelo?
-- qual schema?
-- o JSON validou?
-- quais campos vieram com baixa confiança?
-- houve fallback?
+O registry não deve depender de Gemini diretamente.
 
-## Roadmap de implementação
+Ele deve funcionar com qualquer provider compatível com texto e JSON estruturado.
 
-### v0.10.0
+## Critérios de pronto
 
-- Prompt Registry básico.
-- Resume extraction.
-- Job extraction.
-- Domain classification.
-- JSON Guard.
-- Pydantic schemas.
-
-### v0.11.0
-
-- GitHub Analyzer prompts.
-- Portfolio prompts.
-- Evidence index.
-
-### v0.12.0
-
-- Matching prompts.
-- ATS prompts.
-- Tailor prompts.
-- Career advice prompts.
+- Todos os prompts carregados por ID.
+- Schemas Pydantic vinculados.
+- Retry em JSON inválido.
+- Fallback documentado.
+- Testes unitários para pelo menos três prompts.
+- Fixtures cobrindo múltiplas áreas.
