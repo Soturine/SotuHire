@@ -1,694 +1,581 @@
-# Roadmap
+# Roadmap do SotuHire
+
+Este roadmap descreve o estado atual do SotuHire e os próximos marcos planejados depois da v0.9.0.
+
+O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
+
+## Leitura rápida
+
+| Item | Estado |
+|---|---|
+| Versão atual considerada | v0.9.0 |
+| Natureza da base atual | Produto local-first já funcional, não MVP inicial |
+| Próximo ciclo documental | v0.9.1 |
+| Próximo ciclo técnico | v0.10.0 |
+| Foco de produto | Copiloto de carreira multiárea |
+| Foco técnico imediato | Extração estruturada por IA + Domain Intelligence |
+| Grande lacuna atual | Código ainda depende bastante de heurísticas simples |
+| Risco principal | Prometer inteligência multiárea sem motor multiárea implementado |
 
 ## Estado atual — v0.9.0
 
-Este roadmap está alinhado ao estado atual do SotuHire em **v0.9.0**.
+A v0.9.0 deve ser tratada como uma base ampla do produto.
 
-A leitura correta é **current-first**:
+Ela já possui:
 
-1. entender o que já existe;
-2. separar o que está em estabilização;
-3. planejar os próximos marcos reais;
-4. manter versões antigas apenas como histórico.
-
-## O que já existe no produto
-
-A v0.9.0 já inclui:
-
-- análise local de currículo x vaga;
-- Match Score determinístico inicial;
-- ATS Score simples;
+- análise local de currículo e vaga;
+- Match Score;
+- ATS Score;
 - Opportunity Fit Score;
 - Risk Score;
-- Resume Tailor seguro em modo sugestão;
-- parsers de currículo e vaga;
-- provider Gemini opcional;
-- fallback local;
-- histórico local;
+- Resume Tailor;
+- tracker de candidaturas;
 - dashboard;
-- Job Tracker;
-- Search Intelligence;
-- Hidden Jobs Radar;
-- Career Memory local;
+- Career Memory;
 - RAG lexical local;
 - perfil profissional persistente;
-- captura assistiva via extensão;
+- Search Intelligence;
+- Hidden Jobs Radar;
+- extensão assistiva;
 - Local Companion API;
-- importação paginada de candidaturas já realizadas;
-- análise de GitHub, repositórios, projetos e portfólios;
-- modo standalone da extensão;
-- modo conectado ao SotuHire local;
-- documentação MkDocs;
-- CI com Ruff e pytest;
-- exemplos e fixtures fictícias.
+- análise inicial de GitHub e portfólio;
+- Gemini opcional;
+- documentação ampla;
+- testes automatizados;
+- workflows de qualidade e documentação.
 
-## Correção de rota após v0.9.0
+A v0.9.0 prova que o SotuHire existe como produto. A partir daqui, o foco deve ser coerência, confiabilidade, generalização multiárea e orquestração de IA com contratos formais.
 
-O projeto não está mais no estágio de MVP inicial.
+## Diagnóstico da v0.9.0
 
-A próxima fase não deve ser descrita como “começar parser”, “criar tracker” ou “fazer extensão no futuro”, porque essas partes já existem.
+### O que está bom
 
-A próxima fase correta é:
+- A visão local-first é forte.
+- A separação entre interface, módulos e serviços já existe.
+- O projeto já possui testes, CI, documentação e release.
+- O produto tem diferenciais bons: memória, tracker, análise de vaga, ATS, extensão e GitHub/portfólio.
+- O projeto já tem base suficiente para virar plataforma de inteligência de carreira.
 
-```text
-Estabilizar v0.9.0
--> estruturar extração por IA
--> tornar o produto multiárea
--> aprofundar GitHub/Portfolio Analyzer
--> substituir match simples por Match Engine 2.0
--> fechar v1.0 como copiloto de carreira generalista
+### O que ainda está fraco
+
+- O matching atual ainda é simples demais e depende muito de cobertura de palavras-chave.
+- Os parsers ainda carregam viés forte para tecnologia/dev.
+- A IA existe, mas ainda não opera por Prompt Registry completo.
+- Os prompts atuais implementados no código ainda são pequenos comparados à visão planejada.
+- O GitHub Analyzer atual é mais heurístico do que profundo.
+- A documentação anterior misturava estado atual, histórico antigo e planos futuros.
+
+### O que não deve acontecer agora
+
+- Não adicionar mais features soltas antes de fortalecer a base.
+- Não transformar o produto em bot de candidatura automática.
+- Não deixar o Gemini decidir score final sem validação do código.
+- Não criar regra hardcoded para cada profissão.
+- Não tratar GitHub Analyzer como simples leitura de DOM.
+
+## Direção do produto
+
+O SotuHire deve evoluir de:
+
+```txt
+ferramenta de análise de currículo/vaga com heurísticas e IA opcional
 ```
 
-## Estratégia geral atual
+para:
 
-O SotuHire deve evoluir em etapas pequenas, mas a regra agora é:
-
-> Primeiro estabilizar o que já existe. Depois aprofundar IA estruturada. Depois escalar para múltiplas áreas.
-
-O núcleo do produto deixa de ser apenas “currículo + vaga” e passa a ser:
-
-```text
-Currículo + vaga + portfólio + histórico + preferências + evidências
+```txt
+copiloto local-first de inteligência de carreira, multiárea, explicável e baseado em evidências
 ```
 
-O produto deve continuar local-first, explicável e com revisão humana.
-
-## Próximo ciclo real
-
-O próximo ciclo real é a transição para a v0.10.0:
-
-- Prompt Registry;
-- prompts versionados por função;
-- structured output com schemas;
-- extração de currículo por IA;
-- extração de vaga por IA;
-- Domain Intelligence multiárea;
-- confidence por campo;
-- revisão humana de campos incertos;
-- fallback heurístico preservado;
-- fixtures multiárea;
-- preparação para Match Engine 2.0.
-
-## Marcos planejados a partir da v0.9.0
-
-| Versão | Foco | Resultado esperado |
-| --- | --- | --- |
-| v0.9.1 | estabilização documental e polimento | roadmap, visão, README e changelog alinhados ao estado real |
-| v0.10.0 | AI Structured Extraction + Domain Intelligence | currículo e vaga extraídos por IA em JSON validado |
-| v0.11.0 | GitHub Analyzer 2.0 | análise profunda de repo com GitHub API, sampler, evidências e score de portfólio |
-| v0.12.0 | Match Engine 2.0 | match por requisitos, evidências, domínio, confidence e gaps críticos |
-| v1.0 | produto generalista estável | demo multiárea, prompts estáveis, docs e fluxo confiável |
-
-## O que fica como histórico
-
-As seções abaixo registram decisões e marcos anteriores.
-
-Elas não devem ser lidas como próximos passos atuais.
-
-Quando uma seção antiga disser que algo é “futuro”, conferir primeiro a tabela acima e o README atual.
-
-## Histórico — Roadmap entregue até v0.4
-
-O roadmap inicial foi consolidado em 12 de junho de 2026:
-
-- **v0.1:** núcleo determinístico, Pydantic, scores e Resume Tailor seguro;
-- **v0.2:** UX guiada, modo rápido/avançado e parsers automáticos;
-- **v0.3:** provider estruturado, Gemini opcional, fallback local e exports;
-- **v0.4:** tracker local, histórico e dashboard inicial.
-
-As seções históricas abaixo continuam registradas para preservar decisões anteriores.
-
-## v0.1 - Núcleo do produto
-
-Foco: entregar o **SotuHire v0.1 — MVP Core** como análise local, funcional, explicável e testável de currículo + vaga + preferências.
-
-Entregas:
-
-- campo para texto do currículo;
-- campo para descrição da vaga;
-- preferências de modalidade, localização, salário, contrato e senioridade;
-- schemas Pydantic para preferências, análise, currículo mestre e Resume Tailor;
-- Match Score determinístico;
-- ATS Score simples;
-- Opportunity Fit Score;
-- Risk Score simples;
-- recomendação final explicável;
-- pontos fortes, gaps e palavras-chave ausentes;
-- Resume Tailor em modo sugestão com regra anti-invenção;
-- Streamlit simples;
-- tratamento básico de texto vazio e erro;
-- testes pytest;
-- Ruff.
-
-Critério de pronto:
-
-- usuário consegue rodar localmente;
-- currículo, vaga e preferências geram relatório estruturado;
-- scores permanecem entre 0 e 100;
-- regras de negócio rodam sem depender da UI ou de LLM;
-- sugestões do Resume Tailor não inventam experiência;
-- erros básicos são tratados.
-
-Fora da v0.1:
-
-- scraping real;
-- extensão Chrome;
-- auto-apply ou envio automático para recrutador;
-- DOCX/PDF final;
-- PyTorch, fine-tuning e multi-agent complexo;
-- Concurso Mode funcional.
-
-## v0.2 - Saída estruturada
-
-Foco: transformar o relatório em dados confiáveis.
-
-Entregas:
-
-- schema Pydantic;
-- JSON com score, recomendação, listas e mensagem;
-- validação de resposta;
-- UI com componentes Streamlit;
-- fallback para resposta inválida.
-
-Critério de pronto:
-
-- UI não depende de texto solto;
-- score aparece como métrica;
-- listas aparecem organizadas;
-- output inválido não quebra a aplicação.
-
-## v0.3 - Regras de negócio
-
-Foco: deixar critérios explícitos e testáveis.
-
-Entregas:
-
-- regras de senioridade;
-- termos prioritários;
-- termos impeditivos;
-- classificação de recomendação;
-- score de risco;
-- testes unitários.
-
-Critério de pronto:
-
-- regras rodam sem IA;
-- testes passam;
-- alteração de regra não exige mexer na UI.
-
-## v0.4 - QA e qualidade
-
-Foco: mostrar engenharia.
-
-Entregas:
-
-- pytest;
-- Ruff;
-- pyproject.toml;
-- GitHub Actions;
-- fixtures;
-- mocks para IA;
-- comandos de desenvolvimento.
-
-Critério de pronto:
-
-- `ruff check .` passa;
-- `ruff format . --check` passa;
-- `pytest` passa;
-- CI passa no GitHub.
-
-## v0.5 - Persistência local
-
-Foco: histórico.
-
-Entregas:
-
-- SQLite;
-- salvar análises;
-- listar histórico;
-- filtrar por status;
-- editar status;
-- exportar CSV/JSON.
-
-Critério de pronto:
-
-- análise fica salva;
-- usuário consegue ver histórico;
-- dados sensíveis não são versionados.
-
-## v0.6 - Scraping responsável
-
-Foco: começar coleta automática controlada.
-
-Entregas:
-
-- interface de fontes;
-- conector manual;
-- conector de página pública simples;
-- normalizador;
-- deduplicação;
-- rate limit;
-- cache;
-- logs;
-- fixtures HTML.
-
-Critério de pronto:
-
-- conector roda sem login;
-- não acessa área privada;
-- respeita limites;
-- não faz auto-apply;
-- testes usam fixtures locais.
-
-## v0.7 - Hidden Jobs Radar
-
-Foco: identificar oportunidades em textos informais.
-
-Entregas:
-
-- classificador de post;
-- extração de cargo/empresa/local/contato;
-- score de confiança;
-- match com currículo;
-- mensagem sugerida para abordagem;
-- salvamento no tracker.
-
-Critério de pronto:
-
-- texto de post colado vira oportunidade estruturada;
-- falso positivo é sinalizado;
-- usuário revisa antes de qualquer ação.
-
-## v0.8 - Job Tracker
-
-Foco: organizar busca.
-
-Entregas:
-
-- tabela de vagas;
-- status da candidatura;
-- campos de contato;
-- data de aplicação;
-- notas;
-- filtros;
-- métricas simples.
-
-Status sugeridos:
-
-```text
-saved
-analyzed
-applied
-interview
-rejected
-offer
-archived
-```
-
-## v0.9 - Extensão assistiva
-
-Foco: reduzir copiar/colar.
-
-Entregas:
-
-- extensão lê página aberta pelo usuário;
-- envia texto ao app local;
-- mostra match;
-- salva no tracker;
-- sem auto-apply;
-- sem envio automático de mensagens.
-
-## v1.0 - Produto apresentável
-
-Foco: portfólio forte.
-
-Entregas:
-
-- README com screenshots;
-- demo em vídeo/GIF;
-- docs publicadas;
-- CI;
-- testes;
-- release;
-- exemplos fictícios;
-- roadmap claro.
-
-## Pós-v1
-
-Ideias futuras:
-
-- suporte a currículo DOCX;
-- exportação de relatório PDF;
-- comparação entre múltiplos currículos;
-- modo local com LLM via Ollama;
-- embeddings;
-- ranking semântico;
-- dashboard mais avançado;
-- alertas por e-mail/Telegram;
-- deploy opcional.
+A evolução deve ser feita por camadas:
+
+1. Extração estruturada de currículo e vaga.
+2. Classificação de domínio profissional.
+3. Normalização de requisitos e competências.
+4. Matching baseado em evidência.
+5. ATS e Resume Tailor seguros.
+6. GitHub/portfólio como evidência profissional.
+7. Tracker e memória como histórico de decisão.
+
+## Linha do tempo planejada
+
+| Versão | Nome | Tipo | Resultado esperado |
+|---|---|---|---|
+| v0.9.1 | Documentation & Prompt Reorganization | Documentação | Docs coerentes, prompts separados, roadmap atual-first. |
+| v0.10.0 | AI Structured Extraction + Domain Intelligence | Código | Currículo e vaga extraídos por IA estruturada com confidence. |
+| v0.11.0 | GitHub Analyzer 2.0 | Código | Repositórios analisados por árvore, arquivos, evidências e prompts ricos. |
+| v0.12.0 | Match Engine 2.0 | Código | Matching por requisitos, domínio, evidência, risco e confiança. |
+| v1.0.0 | Generalist Career Intelligence Platform | Produto | Versão estável, demonstrável e multiárea. |
 
 ---
 
-## Histórico legado — Roadmap expandido: copiloto completo de carreira
+# v0.9.1 — Documentation & Prompt Reorganization
 
-Esta seção foi mantida para rastreabilidade. Alguns itens listados como futuros já foram antecipados na v0.8.0 ou v0.9.0. Para planejamento atual, usar a seção **Marcos planejados a partir da v0.9.0**.
+## Objetivo
 
-## v0.6 - Search Intelligence
+Transformar a documentação em uma base clara para implementação com Codex.
 
-- Gerar queries por cargo, stack, senioridade, modalidade e país.
-- Criar busca por domínio com `site:`.
-- Sugerir fontes alternativas por perfil.
-- Integrar com [Alternative Job Boards](../05-data-sources/alternative-job-boards.md).
-- Priorizar fontes para estágio, júnior, trainee, remoto e híbrido.
+Esta versão não implementa feature nova no código. Ela organiza decisão de produto, roadmap, arquitetura de prompts e contratos de IA.
 
-## v0.7 - Social Opportunity Radar
+## Entregas obrigatórias
 
-- Detectar oportunidade em post colado.
-- Extrair cargo, empresa, stack, local e contato.
-- Classificar confiança do post.
-- Criar card no tracker.
-- Gerar mensagem curta para recrutador.
+### Produto
 
-## v0.8 - Job Tracker Kanban
+- Reescrever `docs/01-product/vision.md` sem duplicação histórica.
+- Reescrever `docs/01-product/roadmap.md` como roadmap atual-first.
+- Criar `docs/01-product/roadmap-history.md` para histórico de versões anteriores.
+- Manter `docs/01-product/multi-domain-product-strategy.md` como estratégia complementar.
 
-- Criar colunas de candidatura.
-- Salvar score, fonte, link e próximo follow-up.
-- Gerar métricas por fonte.
-- Evitar candidatura duplicada.
+### IA
 
-## v0.9 - Profile Score Engine
+- Criar `docs/04-ai/prompt-architecture.md`.
+- Criar `docs/04-ai/prompt-registry.md`.
+- Transformar `docs/04-ai/prompt-catalog.md` em índice.
+- Criar `docs/04-ai/prompts/README.md`.
+- Separar cada prompt em arquivo próprio.
 
-- LinkedIn Score por CSV exportado.
-- Portfolio Score por GitHub/portfólio.
-- Lattes Score quando o usuário fornecer dados acadêmicos.
-- Readiness Score combinando perfil + vaga.
+### Prompts documentados
 
-## v1.0 - RAG Memory
+- `resume-extraction-v1.md`;
+- `job-extraction-multi-domain-v1.md`;
+- `domain-classification-v1.md`;
+- `match-analysis-evidence-based-v1.md`;
+- `ats-analysis-v1.md`;
+- `resume-tailor-v1.md`;
+- `github-repo-analysis-v2.md`;
+- `github-profile-analysis-v1.md`;
+- `portfolio-gap-analysis-v1.md`;
+- `hidden-job-detection-v1.md`;
+- `career-advice-v1.md`.
 
-- Indexar currículo, vagas, posts, projetos, LinkedIn, Lattes e histórico.
-- Recuperar evidências relevantes para cada análise.
-- Explicar recomendações com base em fontes internas.
+## Fora de escopo da v0.9.1
 
-## Histórico legado — v1.1 Browser Extension Assistant antecipado na v0.9.0
+- Implementar código novo.
+- Refatorar módulos existentes.
+- Alterar extensão.
+- Alterar regras de fontes de dados.
+- Criar provider novo de IA.
+- Mudar persistência local.
 
-- Botão para analisar vaga aberta.
-- Botão para salvar vaga no tracker.
-- Botão para analisar post informal.
-- Botão para analisar repositório/portfólio.
-- Sempre exigir confirmação do usuário.
+## Critérios de pronto
 
-## v1.2 - Alerts Engine
+- Roadmap começa pelo estado atual real da v0.9.0.
+- Vision não tem seções duplicadas ou remendadas.
+- Histórico antigo fica separado em `roadmap-history.md`.
+- Cada prompt tem arquivo próprio.
+- Cada prompt informa entrada, saída, regras, confidence, exemplos e critérios de validação.
+- `mkdocs.yml` possui navegação para os novos documentos.
+- `CHANGELOG.md` registra a reorganização.
 
-- Alertas de vaga com alto match.
-- Alertas de follow-up.
-- Alertas de fonte nova.
-- Futuro: Telegram/e-mail.
+---
 
-## v1.3 - Multi-provider AI
+# v0.10.0 — AI Structured Extraction + Domain Intelligence
 
-- Interface `AIProvider`.
-- Gemini, OpenAI, OpenRouter e Ollama.
-- Comparação de custo/qualidade.
-- Modo local-first quando possível.
+## Objetivo
 
-## Ajuste de rota: Resume Tailor, preferências e concursos
+Fazer o SotuHire extrair currículo e vaga com IA estruturada, sem depender apenas das heurísticas atuais.
 
-A partir da análise das referências e das perguntas de validação do produto, o roadmap passa a separar claramente o que é MVP, o que é evolução natural e o que é produto futuro.
+A v0.10.0 deve ser o primeiro ciclo técnico depois da reorganização documental.
 
-### MVP imediato
+## Problema que resolve
 
-- Schemas Pydantic — v0.1.
-- Análise currículo x vaga — v0.1.
-- ATS Score — v0.1.
-- Match Score — v0.1.
-- Opportunity Fit Score — v0.1.
-- Resume Tailor em modo sugestão — v0.1.
+Hoje, parsers e listas de skills ainda tendem a funcionar melhor para TI/dev. Isso limita a visão multiárea.
 
-### Evolução de produto
+A v0.10.0 deve permitir que o SotuHire entenda currículos e vagas de áreas como:
 
-- Tracker/Kanban.
-- RAG simples de carreira.
-- GitHub/Portfolio Score.
-- LinkedIn/Profile Score.
-- Extensão assistiva local.
-- Resume Tailor com DOCX/PDF revisável.
+- tecnologia;
+- cybersecurity;
+- engenharia biomédica;
+- engenharia civil;
+- arquitetura;
+- design de interiores;
+- enfermagem;
+- psicologia;
+- pedagogia;
+- administração;
+- financeiro;
+- marketing;
+- logística;
+- cursos técnicos;
+- saúde;
+- educação;
+- humanas;
+- exatas;
+- indústria.
 
-### Futuro separado
+## Módulos planejados
 
-- Concurso Mode.
-- ML avançado com embeddings locais.
-- Agentes especializados.
-- Reranking semântico com modelos próprios.
+```txt
+modules/ai/
+  prompt_registry.py
+  json_guard.py
+  orchestration.py
+  prompts/
+  schemas/
+    resume_extraction.py
+    job_extraction.py
+    domain_classification.py
 
-### Mermaid histórico do roadmap consolidado antigo
-
-```mermaid
-flowchart LR
-    A[v0.1 Schemas + Match] --> B[v0.2 ATS + Fit]
-    B --> C[v0.3 Resume Tailor]
-    C --> D[v0.4 Tracker]
-    D --> E[v0.5 Search Intelligence]
-    E --> F[v0.6 Profile/Portfolio]
-    F --> G[v0.7 RAG simples]
-    G --> H[v0.8 Extensão]
-    H --> I[v1.0 Concurso Mode experimental]
+modules/domain_intelligence/
+  classifier.py
+  requirement_classifier.py
+  catalog_loader.py
+  taxonomy.py
+  transferable_skills.py
+  confidence_merger.py
 ```
-# Marco entregue: v0.5.0
 
-A v0.5.0 transforma o fluxo guiado em uma demonstração utilizável sem dados pessoais:
+## Funcionalidades
 
-- análise automática no modo rápido;
-- setup local assistido do Gemini;
-- exemplos fictícios e expected outputs;
-- skills técnicas limpas;
-- dashboard filtrável;
-- regressões do fluxo real simulado.
+### Extração de currículo por IA
 
-Scraping real, extensão Chrome, auto-apply, envio automático, PyTorch obrigatório e Concurso Mode funcional continuam fora deste marco.
+Entrada:
 
-# Marco entregue: v0.6.0
+- texto bruto do currículo;
+- tipo do arquivo;
+- preferências do usuário;
+- memória profissional opcional;
+- contexto de área alvo, se existir.
 
-A v0.6.0 inicia Search Intelligence e Hidden Jobs Radar em modo estritamente seguro:
+Saída:
 
-- gera queries e cargos equivalentes;
-- sugere fontes públicas e alertas manuais;
-- cria rotina semanal de busca;
-- não acessa rede, não raspa páginas e não envia mensagens;
-- diferencia claramente modo rápido e avançado;
-- adiciona diagnóstico real do Gemini e screenshots reproduzíveis.
+- identidade;
+- formação;
+- experiências;
+- projetos;
+- skills;
+- ferramentas;
+- idiomas;
+- certificações;
+- registros profissionais;
+- domínios profissionais;
+- senioridade estimada;
+- seções ausentes;
+- confidence por campo.
 
-Scraping responsável permanece uma etapa futura separada, dependente de políticas por fonte, rate limit, cache e revisão humana.
+### Extração de vaga por IA
 
-# Marco entregue: v0.7.0
+Entrada:
 
-A v0.7.0 transforma a estratégia em coleta pública acionável:
+- texto bruto da vaga;
+- URL ou fonte, se disponível;
+- contexto de origem;
+- preferências do usuário.
 
-- conecta URL manual, RSS/Atom, listagens e páginas públicas de carreira;
-- adiciona registry e fontes configuráveis;
-- usa robots.txt, user-agent identificável, cache, rate limit e logs;
-- normaliza e deduplica oportunidades antes da análise;
-- permite analisar e salvar oportunidades no tracker;
-- torna Search Intelligence e Hidden Jobs Radar acionáveis;
-- corrige o roteamento da chave Gemini da sessão para a análise real.
+Saída:
 
-Coleta autenticada autorizada passa a integrar o escopo após a v0.7.0. Bypass de bloqueios,
-auto-apply e envio automático permanecem fora do roadmap entregue.
+- título;
+- empresa;
+- domínio;
+- senioridade;
+- localidade;
+- modelo de trabalho;
+- tipo de contrato;
+- requisitos obrigatórios;
+- requisitos desejáveis;
+- responsabilidades;
+- benefícios;
+- red flags;
+- requisitos com categoria e criticalidade.
 
-# Ajuste de escopo: captura assistida
+### Domain Intelligence
 
-A coleta da v0.7 passa a distinguir páginas públicas, URL única e captura assistida. A captura assistida permite que a pessoa usuária envie a vaga ou publicação atualmente aberta, inclusive dentro de sua própria sessão autenticada.
+O sistema deve classificar requisitos em categorias como:
 
-Próximo marco:
+- formação;
+- experiência;
+- hard skill;
+- soft skill;
+- ferramenta;
+- software;
+- equipamento;
+- metodologia;
+- norma;
+- certificação;
+- registro profissional;
+- idioma;
+- portfólio;
+- disponibilidade;
+- localização;
+- ambiente de atuação.
 
-- extensão com ação **Salvar vaga atual**;
-- ação **Analisar vaga atual**;
-- ação **Enviar para tracker**;
-- preview do conteúdo antes do envio;
-- permissões mínimas por página.
+## Regras importantes
 
-Crawling autenticado autorizado foi implementado como modo separado, conectado via CDP a uma
-sessão iniciada pela pessoa usuária. Auto-apply e bypass continuam fora desse marco.
+- A IA extrai e classifica.
+- O código valida e calcula.
+- Campos com confidence baixa devem ir para revisão.
+- Parser heurístico continua existindo como fallback.
+- O sistema não deve inventar formação, experiência, certificação ou registro.
 
-# Marco entregue: v0.8.0
+## Prompts usados
 
-A v0.8.0 adiciona memória de carreira e inteligência personalizada:
-
-- memória local de currículos, projetos, análises, feedbacks, oportunidades e tracker;
-- RAG lexical com evidências usadas na recomendação;
-- perfil profissional persistente e preferências inferidas;
-- export/import e controles explícitos de privacidade;
-- contexto relevante opcional para Gemini, desativado por padrão;
-- Search Intelligence e Hidden Jobs Radar personalizados pelo histórico;
-- registro de vagas às quais a pessoa já se candidatou.
-
-Próximos passos: embeddings locais opcionais, avaliação longitudinal das recomendações e extensão
-assistiva para capturar a vaga atual.
-
-# Marco entregue: v0.9.0
-
-A v0.9.0 entrega o Browser Companion assistivo e calibra a memória:
-
-- extensão multiportal para LinkedIn, Gupy, Indeed, InfoJobs, Nube, páginas de carreira e outros;
-- Local Companion API restrita a localhost;
-- captura, análise e tracker para a vaga atual;
-- importação paginada de centenas de candidaturas;
-- deduplicação entre portais com preservação de todas as fontes;
-- ranking de requisitos recorrentes no dashboard;
-- feedback útil/não útil e ranking calibrado de evidências;
-- extração opcional de currículo por Gemini com fallback local.
-- análise standalone/conectada de GitHub, repositórios, projetos e portfólios;
-- evidências de README, commits e stack técnica reutilizadas nas vagas.
-
-Próximos passos: edição visual do Kanban, export de ranking, provedores adicionais e embeddings
-locais opcionais.
-
-# Correção de rota pós-v0.9.0
-
-A seção histórica acima deve ser lida como registro da evolução do projeto. A partir da v0.9.0, o produto já possui extensão, Local Companion API, Career Memory, RAG lexical, tracker, Hidden Jobs Radar, Search Intelligence, extração opcional por Gemini e análise GitHub/portfólio.
-
-Portanto, o próximo roadmap não deve tratar extensão, RAG ou GitHub como ideias distantes. O foco agora é estabilizar, aprofundar IA estruturada, generalizar para múltiplas áreas e fortalecer a análise baseada em evidências.
-
-## Princípios do roadmap corrigido
-
-1. Não adicionar features soltas antes de estabilizar o fluxo.
-2. Não deixar o produto enviesado para TI.
-3. Não depender só de heurísticas quando a IA estruturada puder extrair melhor.
-4. Não deixar a IA calcular tudo sem validação.
-5. Não deixar a extensão carregar a inteligência pesada.
-6. Não reduzir qualidade de documentação, testes e explicabilidade.
-7. Não mexer no escopo de coleta autenticada dentro desta revisão.
-
-## v0.9.1 — Estabilização documental e clareza
-
-Foco: alinhar documentação com o estado real da v0.9.0.
-
-Entregas:
-
-- corrigir leitura do roadmap;
-- documentar visão multiárea;
-- documentar Prompt Catalog;
-- documentar AI Orchestration;
-- documentar GitHub Analyzer 2.0;
-- documentar Match Engine 2.0;
-- criar plano de v0.10, v0.11 e v0.12;
-- manter docs existentes sem redução.
-
-Critério de pronto:
-
-- MkDocs lista os novos documentos;
-- roadmap indica próximos marcos reais;
-- prompts têm contratos de entrada e saída;
-- multiárea aparece como decisão central de produto.
-
-## v0.10.0 — AI Structured Extraction e Domain Intelligence
-
-Foco: Gemini ou outro provider deve extrair informações do currículo e da vaga de forma estruturada, validada e multiárea.
-
-Entregas:
-
-- Prompt Registry;
 - `resume_extraction_v1`;
 - `job_extraction_multi_domain_v1`;
-- `ats_analysis_v1`;
-- `match_analysis_evidence_based_v1`;
-- schemas Pydantic;
-- JSON Guard;
-- confidence por campo;
-- comparação parser local x IA;
-- UI de revisão;
-- fixtures multiárea.
+- `domain_classification_v1`.
 
-Critério de pronto:
+## Testes obrigatórios
 
-- currículo de TI, enfermagem, pedagogia, engenharia civil e psicologia são extraídos em schema;
-- vaga de TI, enfermagem, arquitetura, engenharia e curso técnico é extraída em schema;
-- campos críticos têm confidence;
-- registro profissional ausente não é inventado;
-- fallback local continua funcionando.
+Fixtures mínimas:
 
-## v0.11.0 — GitHub Analyzer 2.0
+- currículo de dev + vaga backend;
+- currículo de enfermagem + vaga hospitalar;
+- currículo de pedagogia + vaga escola;
+- currículo de engenharia civil + vaga de obras;
+- currículo de psicologia + vaga RH/clínica;
+- currículo técnico + vaga manutenção;
+- vaga curta informal;
+- vaga longa corporativa;
+- currículo com informação faltante;
+- currículo com registro profissional ausente.
 
-Foco: substituir análise rasa de repo por pipeline profundo no backend/site, com a extensão funcionando como ponte.
+## Critérios de pronto
 
-Entregas:
+- Saída validada por Pydantic.
+- Prompt versionado.
+- Retry para JSON inválido.
+- Confidence por campo.
+- Fallback heurístico.
+- UI mostra campos incertos.
+- Testes cobrem pelo menos cinco áreas diferentes.
 
-- GitHub API client;
-- full repository tree;
-- directory tree filtrada;
-- file sampler;
-- raw file reader;
-- dependency graph simples;
-- cache por SHA;
-- prompt `github_repo_analysis_v2`;
-- scores por dimensão;
+---
+
+# v0.11.0 — GitHub Analyzer 2.0
+
+## Objetivo
+
+Evoluir a análise de GitHub/portfólio para um nível mais profundo, inspirado por pipelines de análise de repositório que usam árvore completa, arquivos selecionados, prompt estruturado e scoring por dimensão.
+
+## Problema que resolve
+
+A análise atual do SotuHire identifica sinais úteis, mas ainda é rasa para avaliar um repositório como evidência profissional.
+
+Ela precisa sair de:
+
+```txt
+sinais visíveis + heurísticas simples + refinamento textual
+```
+
+para:
+
+```txt
+repo metadata + árvore completa + arquivos relevantes + evidências + prompt JSON + score técnico e profissional
+```
+
+## Módulos planejados
+
+```txt
+modules/github_analyzer/
+  github_client.py
+  tree_builder.py
+  raw_file_reader.py
+  sampler.py
+  dependency_graph.py
+  context_builder.py
+  evidence_index.py
+  scoring.py
+  schemas.py
+  service.py
+```
+
+## Fluxo planejado
+
+1. Receber URL, owner/repo ou payload da extensão.
+2. Buscar metadados públicos do repositório.
+3. Buscar árvore completa do branch principal.
+4. Construir árvore textual filtrada.
+5. Selecionar arquivos prioritários.
+6. Ler conteúdo raw dos arquivos selecionados.
+7. Detectar manifestos, workflows, testes, docs e configs.
+8. Construir grafo simples de dependências por imports.
+9. Montar contexto para IA.
+10. Chamar prompt `github_repo_analysis_v2`.
+11. Validar JSON.
+12. Calcular scores finais no código.
+13. Gerar evidências por arquivo.
+14. Salvar resultado no perfil/portfólio/memória quando o usuário escolher.
+
+## Dimensões de análise
+
+- testes;
+- segurança;
+- arquitetura;
+- qualidade de código;
+- documentação;
+- consistência;
+- manutenibilidade;
+- valor de portfólio;
+- evidência para currículo;
+- prontidão para recrutador;
+- aderência a vaga alvo, se houver.
+
+## Saídas esperadas
+
+- score técnico;
+- score de portfólio;
+- score de evidência curricular;
+- grade;
+- resumo profissional;
+- stack detectada;
+- skills demonstradas;
 - evidências por arquivo;
+- pontos fortes;
+- pontos fracos;
+- inconsistências;
+- flags de segurança;
+- recomendações priorizadas;
 - bullets seguros para currículo;
-- comparação repo x vaga;
-- página de Portfólio/GitHub Analyzer no site.
+- tipos de vaga onde o repo ajuda.
 
-Critério de pronto:
+## Prompts usados
 
-- repo por URL gera relatório validado;
-- relatório cita evidências por arquivo;
-- scores finais são calculados por código;
-- extensão envia owner/repo e abre relatório completo;
-- relatório pode ser salvo na Career Memory.
+- `github_repo_analysis_v2`;
+- `github_profile_analysis_v1`;
+- `portfolio_gap_analysis_v1`.
 
-## v0.12.0 — Match Engine 2.0 multiárea
+## Critérios de pronto
 
-Foco: trocar match simples por engine de requisitos, evidências, domínio e confiança.
+- Não depender apenas do DOM da página.
+- Analisar árvore completa conhecida.
+- Não afirmar ausência de teste se teste aparece na árvore.
+- Não inventar deploy, usuários, métricas ou empresas.
+- Gerar evidência por arquivo.
+- Separar score técnico de score de portfólio.
+- Ter fallback local quando IA não estiver disponível.
 
-Entregas:
+---
 
-- requisitos classificados;
-- score ponderado por domínio;
-- gaps críticos;
-- competências transferíveis;
-- score de evidência;
-- score de confiança;
-- explicação por requisito;
-- travas por knockout gaps;
-- integração com ATS, Resume Tailor e Career Memory.
+# v0.12.0 — Match Engine 2.0
 
-Critério de pronto:
+## Objetivo
 
-- match não depende apenas de keyword;
-- áreas não técnicas não são penalizadas por ausência de GitHub;
-- registros profissionais obrigatórios viram gap crítico;
-- competências transferíveis aparecem como parciais;
-- recomendação final explica score e riscos.
+Substituir o matching baseado principalmente em palavras por uma engine multiárea baseada em requisitos, evidências, domínio, risco e confiança.
 
-## v1.0 — SotuHire generalista estável
+## Problema que resolve
 
-Foco: fechar uma versão de portfólio/produto confiável.
+A mesma lógica de matching não serve para todas as áreas quando ela só compara keywords.
 
-Entregas:
+Exemplos:
 
-- demo com múltiplas áreas;
-- README alinhado;
-- screenshots atualizadas;
-- testes passando;
-- cobertura documentada;
-- prompts versionados;
-- schemas estáveis;
-- exemplos fictícios completos;
-- vídeo/GIF de fluxo principal;
-- docs publicadas.
+- Enfermagem pode depender de registro, setor e procedimentos.
+- Psicologia pode depender de abordagem, CRP, público atendido e contexto de atuação.
+- Engenharia civil pode depender de obra, orçamento, AutoCAD, Revit, normas e acompanhamento.
+- Pedagogia pode depender de BNCC, alfabetização, inclusão e etapa escolar.
+- Cybersecurity pode depender de SIEM, SOC, resposta a incidentes, hardening e frameworks.
+- Arquitetura/interiores pode depender de portfólio, software, projeto executivo e atendimento.
 
-Critério de pronto:
+## Módulos planejados
 
-- pessoa consegue analisar currículo, vaga, GitHub/portfólio e tracker;
-- produto funciona com áreas diferentes;
-- resultados são explicáveis;
-- dados sensíveis continuam locais por padrão;
-- ações externas exigem revisão humana.
+```txt
+modules/matching/
+  engine_v2.py
+  requirement_matcher.py
+  evidence_matcher.py
+  score_calculator.py
+  explanation_builder.py
+  risk_adjuster.py
+  confidence_merger.py
+  transferable_skill_matcher.py
+```
 
-## Documentos de apoio
+## Fórmula inicial sugerida
 
-- [Estratégia multiárea](multi-domain-product-strategy.md)
-- [Regras multiárea](../03-business-rules/multi-domain-career-rules.md)
-- [Prompt Catalog](../04-ai/prompt-catalog.md)
-- [AI Orchestration e Confidence](../04-ai/ai-orchestration-and-confidence.md)
-- [v0.10.0 AI Structured Extraction](../07-development/v0.10.0-ai-structured-extraction.md)
-- [v0.11.0 GitHub Analyzer 2.0](../07-development/v0.11.0-github-analyzer-2.md)
-- [v0.12.0 Match Engine 2.0](../07-development/v0.12.0-match-engine-2.md)
+| Categoria | Peso inicial |
+|---|---:|
+| Requisitos obrigatórios | 30% |
+| Requisitos desejáveis | 15% |
+| Formação, credenciais e registros | 15% |
+| Experiência prática e domínio | 15% |
+| Evidências de currículo, GitHub, portfólio e memória | 10% |
+| Senioridade e contexto | 5% |
+| ATS keywords seguras | 5% |
+| Preferências e logística | 5% |
+
+Os pesos devem ser configuráveis por domínio.
+
+## Regras de matching
+
+- Requisito obrigatório ausente pesa mais que desejável ausente.
+- Requisito eliminatório ausente deve gerar gap crítico.
+- Registro profissional obrigatório não pode ser inferido sem evidência.
+- Competência transferível pode reduzir gap, mas não deve virar match completo sem evidência.
+- Evidence score deve diferenciar currículo, GitHub, portfólio e memória.
+- A IA pode sugerir match status, mas o score final deve ser calculado pelo código.
+
+## Prompts usados
+
+- `match_analysis_evidence_based_v1`;
+- `ats_analysis_v1`;
+- `resume_tailor_v1`;
+- `career_advice_v1`.
+
+## Critérios de pronto
+
+- Explicação para cada score.
+- Suporte a required/preferred/optional/knockout.
+- Multiárea testado com fixtures.
+- Gaps críticos destacados.
+- Sugestões seguras, sem inventar experiência.
+- Comparação com engine antiga para regressão.
+
+---
+
+# v1.0.0 — Generalist Career Intelligence Platform
+
+## Objetivo
+
+Fechar uma versão estável, demonstrável e confiável do SotuHire como plataforma local-first de inteligência de carreira.
+
+## O que precisa estar pronto
+
+- Roadmap e docs coerentes.
+- Currículo e vaga extraídos com IA estruturada e fallback.
+- Domain Intelligence funcionando para múltiplas áreas.
+- Match Engine 2.0 com explicação.
+- ATS e Resume Tailor seguros.
+- GitHub Analyzer 2.0 conectado a evidências profissionais.
+- Tracker útil para acompanhamento real.
+- Exemplos multiárea.
+- Testes de regressão.
+- CI e docs passando.
+- README com demo clara.
+
+## Demonstrações recomendadas
+
+A v1.0 deve ter pelo menos quatro cenários fictícios:
+
+1. Dev/Backend ou Cybersecurity.
+2. Enfermagem ou saúde.
+3. Engenharia civil ou biomédica.
+4. Pedagogia, psicologia, arquitetura ou curso técnico.
+
+Cada demo deve mostrar:
+
+- currículo;
+- vaga;
+- extração estruturada;
+- matching;
+- ATS;
+- sugestões;
+- evidências;
+- plano de melhoria.
+
+## Fora de escopo permanente
+
+- Prometer contratação.
+- Inventar credenciais.
+- Substituir decisão humana.
+- Fazer score sem explicação.
+- Tratar todas as profissões como se fossem tecnologia.
+
+## Sequência recomendada de commits depois da documentação
+
+```txt
+1. docs: reorganize roadmap vision and AI prompts
+2. feat(ai): add prompt registry and JSON guard
+3. feat(ai): add structured resume extraction schemas
+4. feat(ai): add multi-domain job extraction schemas
+5. feat(domain): add domain intelligence classifier
+6. feat(match): add evidence-based matching engine
+7. feat(github): add GitHub Analyzer 2.0 pipeline
+```

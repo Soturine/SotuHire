@@ -1,197 +1,78 @@
-# Visão do produto
+# Visão do Produto
 
-## Visão atual — v0.9.0 em diante
+## Declaração de visão
 
-O **SotuHire** é um copiloto de carreira **local-first, multiárea e explicável**.
+O SotuHire é um copiloto local-first de inteligência de carreira para analisar currículos, vagas, portfólios, GitHub, histórico profissional e evidências de competência em múltiplas áreas.
 
-Ele ajuda pessoas a analisar currículos, vagas, portfólios, projetos, repositórios, histórico de candidaturas e evidências profissionais com apoio de IA estruturada, regras de negócio e revisão humana.
+O objetivo é ajudar o usuário a tomar decisões melhores sobre candidatura, adaptação de currículo, evolução profissional e priorização de oportunidades.
 
-A visão atual não limita o produto a tecnologia, desenvolvimento ou análise de sistemas. Esses exemplos continuam úteis para demonstração, mas o produto deve funcionar para diferentes áreas profissionais.
+O SotuHire não deve ser visto como um bot de candidatura. Ele deve ser visto como um sistema de análise, explicação, organização e recomendação com humano no controle.
 
-## Posicionamento atual
+## Posicionamento em uma frase
 
-O posicionamento corrigido é:
+> SotuHire transforma currículo, vaga e evidências profissionais em matching explicável, sugestões ATS seguras e plano de evolução para múltiplas áreas de carreira.
 
-> Um copiloto de carreira local-first que interpreta currículos, vagas e evidências profissionais de múltiplas áreas, gera análises explicáveis e ajuda a pessoa a adaptar sua candidatura sem inventar fatos.
+## O que o produto é
 
-## Público-alvo atual
+O SotuHire é:
 
-O público-alvo inclui:
+- local-first;
+- explicável;
+- multiárea;
+- orientado a evidências;
+- apoiado por IA opcional;
+- voltado para decisão humana;
+- útil para currículo, vaga, tracker, portfólio e GitHub;
+- desenhado para não inventar credenciais ou experiências.
 
-- tecnologia;
-- cybersecurity;
-- engenharia biomédica;
-- engenharia civil;
-- engenharia elétrica;
-- engenharia mecânica;
-- enfermagem;
-- psicologia;
-- pedagogia;
-- arquitetura;
-- design de interiores;
-- administração;
-- financeiro;
-- marketing;
-- cursos técnicos;
-- saúde;
-- educação;
-- humanas;
-- exatas;
-- indústria;
-- logística;
-- estágio;
-- trainee;
-- primeiro emprego;
-- jovem aprendiz;
-- transição de carreira.
-
-## Proposta de valor atual
-
-O SotuHire deve responder perguntas como:
-
-- a vaga combina com o currículo?
-- quais requisitos são obrigatórios?
-- quais requisitos são desejáveis?
-- quais requisitos são críticos ou eliminatórios?
-- quais credenciais profissionais aparecem na vaga?
-- quais competências do currículo comprovam requisitos?
-- quais competências são transferíveis?
-- quais evidências do GitHub, portfólio ou projetos ajudam na candidatura?
-- quais gaps podem ser resolvidos com reescrita?
-- quais gaps exigem aprendizado, certificação, registro ou experiência real?
-- quais palavras-chave podem melhorar ATS sem inventar fatos?
-- como apresentar melhor o perfil para uma vaga específica?
-
-## Princípios de produto
-
-- **Local-first:** dados sensíveis ficam locais por padrão.
-- **Human-review-always:** o usuário revisa antes de agir.
-- **No fabrication:** o sistema não inventa experiência, certificação, registro ou resultado.
-- **Evidence-based:** recomendações devem apontar evidências quando possível.
-- **Multi-domain:** o motor deve funcionar fora de TI.
-- **Explainable:** scores precisam ter justificativa.
-- **Provider-agnostic:** Gemini é um provider possível, não uma dependência conceitual única.
-
-## Implicação técnica atual
-
-A visão atual exige:
-
-- Prompt Registry;
-- prompts completos por função;
-- schemas Pydantic;
-- JSON estruturado;
-- confidence por campo;
-- Domain Intelligence;
-- Match Engine 2.0;
-- ATS multiárea;
-- Resume Tailor seguro;
-- GitHub/Portfolio Analyzer 2.0;
-- fixtures de teste de várias áreas;
-- auditoria de recomendações sensíveis.
-
-## Nota sobre histórico
-
-As seções abaixo preservam a visão inicial do projeto. Elas explicam a origem do SotuHire, mas a visão vigente é a visão multiárea descrita acima.
-
-## O que é o SotuHire
-
-O **SotuHire** é um assistente inteligente de carreira que ajuda candidatos a analisar currículos e oportunidades de trabalho com apoio de IA. Ele calcula compatibilidade entre currículo e vaga, identifica gaps, sugere palavras-chave e gera apoio textual para candidatura.
-
-A proposta não é substituir o candidato nem automatizar candidatura em massa. O objetivo é dar clareza para a pessoa decidir melhor onde aplicar e como adaptar sua candidatura.
-
-## Problema que o projeto resolve
-
-Pessoas buscando estágio, júnior ou primeira oportunidade geralmente perdem muito tempo com vagas ruins para o perfil. Muitas descrições são longas, vagas ou contraditórias. Algumas dizem “júnior”, mas pedem experiência de pleno. Outras pedem ferramentas que não são realmente obrigatórias. Também existem oportunidades escondidas em posts de recrutadores, indicações e publicações informais.
-
-O SotuHire resolve parte desse problema ao transformar textos soltos em análise estruturada.
-
-## Público-alvo inicial
-
-O público inicial é uma pessoa candidata da área de tecnologia, especialmente em transição ou início de carreira:
-
-- estudante de Engenharia da Computação;
-- candidato a estágio;
-- candidato júnior;
-- pessoa procurando vagas de IA, dados, automação, suporte técnico, QA ou desenvolvimento;
-- pessoa que quer melhorar currículo para ATS;
-- pessoa que quer entender se vale aplicar em uma vaga.
-
-## Proposta de valor
-
-O SotuHire entrega valor em três momentos:
-
-1. **Antes de aplicar:** ajuda a decidir se a vaga combina com o perfil.
-2. **Durante a preparação:** sugere ajustes no currículo e palavras-chave.
-3. **Na abordagem:** gera mensagem curta para recrutador ou resposta de formulário.
-
-## Posicionamento
-
-O projeto deve ser apresentado como:
-
-> Um copiloto inteligente de carreira que analisa currículos, interpreta descrições de vagas e recomenda candidaturas com explicação, mantendo o usuário no controle da decisão final.
-
-## Diferenciais
-
-- combina IA generativa com regras de negócio explícitas;
-- não depende apenas de contagem de palavras-chave;
-- explica o score de match;
-- evita recomendações cegas;
-- considera senioridade;
-- pode evoluir para radar de posts e vagas escondidas;
-- serve como projeto real de portfólio.
-
-## O que o SotuHire não é
+## O que o produto não é
 
 O SotuHire não é:
 
-- bot de candidatura automática em massa;
-- ferramenta para burlar plataforma;
-- scraper agressivo de LinkedIn;
-- substituto de revisão humana;
-- garantia de contratação;
-- sistema definitivo de ATS real de empresas.
+- robô de candidatura automática;
+- gerador de currículo falso;
+- ferramenta para inflar experiência;
+- sistema que promete contratação;
+- ATS mágico sem explicação;
+- crawler agressivo;
+- substituto de julgamento humano;
+- ferramenta exclusiva para devs.
 
-Ele é uma ferramenta de apoio à decisão.
+## Usuários-alvo
 
+O usuário-alvo é qualquer pessoa que precisa conectar currículo, vaga, histórico e evidências profissionais de forma mais clara.
 
-## Atualização: coleta de oportunidades
+Exemplos:
 
-O SotuHire pode incluir scraping, desde que seja tratado como coleta responsável de oportunidades públicas.
+- estudantes buscando estágio;
+- pessoas em transição de carreira;
+- profissionais de tecnologia;
+- profissionais de saúde;
+- profissionais de educação;
+- engenharias;
+- arquitetura e design;
+- cursos técnicos;
+- administração e negócios;
+- pessoas buscando primeiro emprego;
+- profissionais que querem adaptar currículo com segurança;
+- candidatos que possuem portfólio, GitHub ou projetos pessoais;
+- candidatos que precisam entender por que uma vaga combina ou não combina.
 
-A visão correta é:
+## Áreas que o produto deve suportar
 
-```text
-Manual-first
-Public-data-first
-Human-review-always
-No mass auto-apply
-No bypass
-```
+O produto deve ser projetado para múltiplas áreas desde o motor interno, não apenas pela interface.
 
-O scraping entra para reduzir trabalho repetitivo, não para violar plataformas. O sistema deve preferir APIs, feeds, páginas públicas simples e entrada manual. Playwright e Scrapy entram apenas quando houver justificativa técnica.
+Áreas esperadas:
 
-# Atualização pós-v0.9.0: visão multiárea
-
-A visão do produto evolui a partir da v0.9.0.
-
-O público inicial pode continuar usando exemplos de tecnologia, estágio, júnior, IA, dados, automação e desenvolvimento, mas o produto não deve ser limitado a essas áreas.
-
-A visão corrigida é:
-
-```text
-SotuHire é um copiloto de carreira local-first e multiárea que ajuda pessoas a analisar currículos, vagas, portfólios e evidências profissionais com IA estruturada, regras de negócio e revisão humana.
-```
-
-## Público expandido
-
-O SotuHire deve conseguir atender:
-
-- tecnologia;
+- desenvolvimento de software;
+- dados e IA;
+- QA e automação;
 - cybersecurity;
 - engenharia biomédica;
 - engenharia civil;
 - engenharia elétrica;
 - engenharia mecânica;
+- engenharia de produção;
 - enfermagem;
 - psicologia;
 - pedagogia;
@@ -200,48 +81,281 @@ O SotuHire deve conseguir atender:
 - administração;
 - financeiro;
 - marketing;
+- logística;
+- indústria;
 - cursos técnicos;
 - saúde;
 - educação;
 - humanas;
-- exatas;
-- indústria;
-- logística;
-- estágio;
-- trainee;
-- primeiro emprego;
-- jovem aprendiz.
+- exatas.
 
-## Nova proposta de valor
+Uma vaga pode pertencer a mais de um domínio. O sistema deve aceitar domínios primários e secundários.
 
-Além de analisar currículo x vaga, o SotuHire deve responder:
+## Problema central
 
-- quais requisitos são obrigatórios?
-- quais requisitos são desejáveis?
-- quais credenciais são críticas?
-- quais competências são transferíveis?
-- quais evidências do currículo ou portfólio comprovam cada requisito?
-- quais gaps podem ser resolvidos com reescrita?
-- quais gaps exigem aprendizado, certificação ou experiência real?
-- como adaptar o currículo sem inventar fatos?
+Candidatos costumam ter dificuldade em responder perguntas simples:
 
-## Implicação técnica
+- Meu currículo comunica bem o que eu sei fazer?
+- A vaga realmente combina comigo?
+- Quais requisitos são obrigatórios e quais são desejáveis?
+- O que eu já tenho evidência para afirmar?
+- O que eu não deveria afirmar?
+- Como adaptar o currículo sem mentir?
+- Meu GitHub ou portfólio ajuda nessa vaga?
+- O que devo melhorar primeiro?
+- Qual vaga vale mais meu tempo?
 
-A visão multiárea exige:
+O SotuHire deve transformar essas perguntas em análises estruturadas.
 
-- Domain Intelligence;
-- prompts estruturados por função;
-- schemas Pydantic;
-- confidence por campo;
-- Match Engine 2.0;
-- ATS multiárea;
-- Resume Tailor seguro;
-- GitHub/Portfolio Analyzer 2.0;
-- fixtures de teste de várias áreas.
+## Proposta de valor
 
-## Documentos relacionados
+O produto entrega valor quando gera respostas como:
 
-- [Estratégia multiárea](multi-domain-product-strategy.md)
-- [Regras multiárea](../03-business-rules/multi-domain-career-rules.md)
-- [Catálogo de prompts](../04-ai/prompt-catalog.md)
-- [Orquestração de IA e confiança](../04-ai/ai-orchestration-and-confidence.md)
+- match explicado por requisito;
+- ATS score com motivo;
+- gaps críticos separados de gaps leves;
+- sugestões seguras de currículo;
+- evidências por fonte;
+- competências transferíveis;
+- alerta de campos incertos;
+- priorização de oportunidades;
+- plano de melhoria prático.
+
+## Princípios fundamentais
+
+### 1. Local-first
+
+Dados de currículo, histórico, preferências e candidaturas devem ficar localmente por padrão.
+
+IA externa pode ser usada, mas deve ser opcional, configurável e limitada ao contexto necessário.
+
+### 2. Humano no controle
+
+O sistema deve sugerir, explicar e organizar. O usuário decide.
+
+### 3. Sem invenção
+
+O SotuHire nunca deve inventar:
+
+- experiência profissional;
+- cargo;
+- tempo de experiência;
+- formação;
+- certificação;
+- registro profissional;
+- idioma;
+- resultado mensurável;
+- empresa;
+- aprovação;
+- participação em projeto.
+
+Quando algo for possível, mas não comprovado, o sistema deve dizer:
+
+```txt
+Se isso for verdadeiro, deixe mais visível no currículo.
+```
+
+E não:
+
+```txt
+Adicione isso ao currículo.
+```
+
+### 4. Explicabilidade
+
+Todo score deve ter explicação.
+
+Um score sem justificativa é fraco. O SotuHire deve sempre responder:
+
+- o que bateu;
+- o que faltou;
+- o que é crítico;
+- o que é parcial;
+- qual evidência sustenta a análise;
+- qual confiança o sistema tem na resposta.
+
+### 5. Multiárea real
+
+Multiárea não significa trocar palavras de TI por palavras de outras áreas.
+
+Multiárea significa entender tipos de requisito:
+
+- formação;
+- registro profissional;
+- certificação;
+- experiência prática;
+- ferramenta;
+- software;
+- equipamento;
+- norma;
+- metodologia;
+- ambiente de atuação;
+- público atendido;
+- responsabilidade;
+- soft skill;
+- portfólio;
+- disponibilidade.
+
+### 6. IA com contrato
+
+A IA deve operar por prompts versionados, schemas de entrada e saída, confidence rules e validação.
+
+O código deve validar a resposta e calcular scores finais.
+
+## Modelo mental do produto
+
+O SotuHire deve funcionar como um funil de inteligência:
+
+```txt
+Currículo bruto
++ Vaga bruta
++ Preferências
++ Histórico
++ GitHub/portfólio
+        ↓
+Extração estruturada
+        ↓
+Classificação de domínio
+        ↓
+Normalização de requisitos
+        ↓
+Matching por evidências
+        ↓
+ATS e tailoring seguro
+        ↓
+Tracker, memória e plano de melhoria
+```
+
+## Núcleos do produto
+
+### Currículo
+
+O currículo é a fonte principal de evidência formal.
+
+O sistema deve extrair:
+
+- identidade básica;
+- resumo;
+- formação;
+- experiências;
+- projetos;
+- skills;
+- idiomas;
+- certificações;
+- registros profissionais;
+- domínios;
+- lacunas;
+- risco ATS;
+- confidence por campo.
+
+### Vaga
+
+A vaga deve ser interpretada como estrutura, não como texto plano.
+
+O sistema deve separar:
+
+- requisitos obrigatórios;
+- requisitos desejáveis;
+- responsabilidades;
+- benefícios;
+- senioridade;
+- domínio;
+- localidade;
+- modalidade;
+- tipo de contrato;
+- red flags;
+- requisitos eliminatórios.
+
+### Matching
+
+Matching deve ser comparação explicável entre requisitos e evidências.
+
+O score final deve considerar:
+
+- requisito obrigatório;
+- requisito desejável;
+- formação;
+- credenciais;
+- experiência;
+- domínio;
+- senioridade;
+- evidências;
+- ATS;
+- risco;
+- preferências.
+
+### ATS
+
+ATS não deve ser só lista de keywords.
+
+ATS deve considerar:
+
+- clareza;
+- estrutura;
+- seções ausentes;
+- vocabulário da vaga;
+- evidência real;
+- formatação;
+- redundância;
+- aderência ao domínio.
+
+### GitHub e portfólio
+
+GitHub e portfólio devem ser tratados como evidência profissional.
+
+Eles podem demonstrar:
+
+- tecnologia;
+- arquitetura;
+- documentação;
+- testes;
+- manutenção;
+- profundidade técnica;
+- consistência;
+- evolução;
+- capacidade de explicar projeto;
+- valor para vaga.
+
+### Tracker e memória
+
+Tracker e memória devem registrar aprendizado e histórico de decisões.
+
+Eles ajudam a responder:
+
+- quais vagas foram analisadas;
+- quais tinham maior aderência;
+- quais gaps aparecem com frequência;
+- quais currículos foram adaptados;
+- quais projetos ajudam mais;
+- quais áreas fazem mais sentido para o perfil.
+
+## Diferenciais do SotuHire
+
+- Local-first.
+- IA opcional.
+- Multiárea.
+- Explicação por evidência.
+- Integração entre currículo, vaga, GitHub, portfólio e tracker.
+- Foco em sugestão segura, não invenção.
+- Possibilidade de funcionar como projeto de portfólio forte e como ferramenta real.
+
+## Critério de sucesso
+
+O SotuHire está funcionando bem quando o usuário consegue:
+
+1. Inserir currículo.
+2. Inserir ou capturar vaga.
+3. Entender requisitos da vaga.
+4. Ver aderência com explicação.
+5. Ver gaps reais.
+6. Ver sugestões ATS seguras.
+7. Usar GitHub/portfólio como evidência.
+8. Decidir se vale aplicar.
+9. Salvar a análise no tracker.
+10. Saber o que melhorar para próximas vagas.
+
+## Visão de longo prazo
+
+A versão madura do SotuHire deve ser uma plataforma local-first de inteligência de carreira que ajuda pessoas de diferentes áreas a transformar experiências, projetos e habilidades em decisões profissionais melhores.
+
+O produto deve ser forte o suficiente para um dev mostrar como portfólio, mas genérico o suficiente para analisar currículo e vaga de enfermagem, pedagogia, psicologia, engenharia, arquitetura, design, cursos técnicos e áreas administrativas.
