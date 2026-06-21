@@ -21,6 +21,7 @@ from modules.memory import CareerFeedback, EvidenceFeedback
 from modules.parsers.job_description_parser import parse_job_description
 from modules.parsers.resume_parser import parse_resume_file, parse_resume_text
 from modules.profile import build_career_profile
+from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput
@@ -428,17 +429,30 @@ def _render_result_content(
 ) -> None:
     analysis = result.analysis
     cards = st.columns(4)
-    render_score_card(
-        cards[0], "Match Score", analysis.match_score, "Aderência às palavras da vaga."
+    match_note = (
+        "Compatibilidade por requisitos e evidências."
+        if analysis.analysis_version == "match_engine_v2"
+        else "Aderência às palavras da vaga."
     )
-    render_score_card(cards[1], "ATS Score", analysis.ats_score, "Leitura provável por triagem.")
+    ats_note = (
+        "Keywords alinhadas com evidências reais."
+        if analysis.analysis_version == "match_engine_v2"
+        else "Leitura provável por triagem."
+    )
+    risk_note = (
+        "Gaps críticos e cautelas anti-invenção."
+        if analysis.analysis_version == "match_engine_v2"
+        else "Sinais que pedem revisão."
+    )
+    render_score_card(cards[0], "Match Score", analysis.match_score, match_note)
+    render_score_card(cards[1], "ATS Score", analysis.ats_score, ats_note)
     render_score_card(
         cards[2],
         "Opportunity Fit",
         analysis.opportunity_fit_score,
         "Compatibilidade com preferências.",
     )
-    render_score_card(cards[3], "Risk Score", analysis.risk_score, "Sinais que pedem revisão.")
+    render_score_card(cards[3], "Risk Score", analysis.risk_score, risk_note)
     if result.provider == "gemini":
         st.success("Usando Gemini para melhorar a análise.")
     else:
@@ -458,6 +472,8 @@ def _render_result_content(
         st.info(f"Análise personalizada com base no seu histórico local{shared}.")
     else:
         st.caption("Nenhuma memória local relevante foi usada nesta análise.")
+    if analysis.analysis_version == "match_engine_v2":
+        _render_match_engine_v2_panel(analysis, compact=not advanced)
     if advanced:
         with st.expander("Detalhes técnicos da análise"):
             st.caption(f"Provider solicitado: {provider_label(result.requested_provider)}")
@@ -555,6 +571,9 @@ def _render_result_content(
         render_item_cards(tailor.improved_bullets, "Sem bullets sugeridos.")
         st.markdown("**Keywords seguras**")
         render_chips(tailor.keywords_added, "Nenhuma keyword segura adicional.")
+        if tailor.warnings:
+            st.markdown("**Alertas de segurança**")
+            render_list(tailor.warnings, "Nenhum alerta.")
     with tabs[5]:
         st.info(
             "O SotuHire não envia mensagens automaticamente. Use os pontos fortes e revise "
@@ -645,6 +664,52 @@ def _render_result_content(
                     privacy_acknowledged=acknowledged,
                 )
                 st.success(f"Análise salva: {record.id[:8]}")
+
+
+def _render_match_engine_v2_panel(analysis: JobAnalysisSchema, *, compact: bool) -> None:
+    """Render Match Engine 2 details without replacing the legacy result surface."""
+    st.markdown("**Match Engine 2.0**")
+    metrics = st.columns(4)
+    metrics[0].metric("Confidence", f"{analysis.confidence_score:.2f}")
+    metrics[1].metric("Evidence Score", f"{analysis.evidence_score}/100")
+    metrics[2].metric("Gaps críticos", len(analysis.critical_gaps))
+    metrics[3].metric("Transferíveis", len(analysis.transferable_skills))
+
+    if analysis.critical_gaps:
+        st.warning("Há gaps críticos. Revise compatibilidade antes de aplicar.")
+        render_list(analysis.critical_gaps[:3], "")
+    elif analysis.safe_actions:
+        st.info(analysis.safe_actions[0])
+
+    if compact:
+        render_list(analysis.score_reasoning[:3], "Sem motivos adicionais.")
+        return
+
+    overview = st.columns(3)
+    with overview[0]:
+        st.markdown("**Atendidos**")
+        render_list(analysis.matched_requirements[:8], "Nenhum requisito atendido listado.")
+    with overview[1]:
+        st.markdown("**Parciais**")
+        render_list(analysis.partial_requirements[:8], "Nenhum requisito parcial listado.")
+    with overview[2]:
+        st.markdown("**Ausentes**")
+        render_list(analysis.missing_requirements[:8], "Nenhum requisito ausente listado.")
+
+    details = st.columns(2)
+    with details[0]:
+        st.markdown("**Evidências usadas**")
+        render_list(analysis.evidence_used[:8], "Nenhuma evidência adicional listada.")
+        st.markdown("**GitHub/portfolio**")
+        render_list(
+            analysis.portfolio_github_improvements,
+            "Nenhuma melhoria de GitHub/portfolio sugerida.",
+        )
+    with details[1]:
+        st.markdown("**Ações seguras**")
+        render_list(analysis.safe_actions[:8], "Nenhuma ação segura adicional.")
+        st.markdown("**Competências transferíveis**")
+        render_list(analysis.transferable_skills[:6], "Nenhuma competência transferível listada.")
 
 
 def render_results_step(mode: str, provider_name: str) -> None:

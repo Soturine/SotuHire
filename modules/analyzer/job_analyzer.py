@@ -121,6 +121,16 @@ def job_analysis_from_match_v2(result: MatchResultV2) -> JobAnalysisSchema:
     """Convert Match Engine 2 output to the existing JobAnalysisSchema contract."""
     scores = result.score_breakdown
     explanation = result.explanation
+    missing_without_evidence = [
+        match.requirement.requirement_text
+        for match in result.requirement_matches
+        if match.match_status == "missing"
+    ]
+    safe_to_add_if_true = [
+        match.requirement.requirement_text
+        for match in result.requirement_matches
+        if match.match_status == "partial" and match.requirement.category != "professional_license"
+    ]
     return JobAnalysisSchema(
         match_score=scores.match_score,
         ats_score=scores.ats_alignment_score,
@@ -133,4 +143,20 @@ def job_analysis_from_match_v2(result: MatchResultV2) -> JobAnalysisSchema:
         risk_flags=explanation.critical_gaps,
         tailored_summary=explanation.summary,
         recruiter_message=" ".join(explanation.safe_actions[:2]),
+        analysis_version="match_engine_v2",
+        confidence_score=scores.confidence_score,
+        evidence_score=scores.evidence_score,
+        matched_requirements=explanation.matched_requirements,
+        partial_requirements=explanation.partial_requirements,
+        missing_requirements=explanation.missing_requirements,
+        critical_gaps=explanation.critical_gaps,
+        transferable_skills=explanation.transferable_skills,
+        evidence_used=explanation.evidence_used,
+        safe_actions=explanation.safe_actions,
+        resume_improvements=explanation.resume_improvements,
+        portfolio_github_improvements=explanation.portfolio_github_improvements,
+        score_reasoning=explanation.score_reasoning,
+        ats_present_keywords=explanation.matched_requirements,
+        ats_missing_but_safe_to_add=safe_to_add_if_true,
+        ats_missing_without_evidence=missing_without_evidence,
     )

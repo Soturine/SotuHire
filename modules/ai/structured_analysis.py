@@ -84,6 +84,14 @@ def analyze_structured(
             job_details,
             memory_context=provider_memory_context,
         )
+        analysis = _enhance_with_match_engine_v2(
+            analysis,
+            resume_text=resume_text,
+            job_text=job_text,
+            preferences=preferences,
+            job_details=job_details,
+            memory_context=memory_context,
+        )
         return StructuredAnalysisResult(
             analysis=analysis,
             provider=selected.name,
@@ -102,6 +110,14 @@ def analyze_structured(
             job_text,
             preferences,
             job_details,
+            memory_context=memory_context,
+        )
+        analysis = _enhance_with_match_engine_v2(
+            analysis,
+            resume_text=resume_text,
+            job_text=job_text,
+            preferences=preferences,
+            job_details=job_details,
             memory_context=memory_context,
         )
         diagnostic = diagnose_gemini_error(
@@ -128,3 +144,34 @@ def analyze_structured(
             memory_used=bool(evidence),
             memory_shared_with_provider=False,
         )
+
+
+def _enhance_with_match_engine_v2(
+    analysis: JobAnalysisSchema,
+    *,
+    resume_text: str,
+    job_text: str,
+    preferences: UserPreferences | None,
+    job_details: dict[str, object] | None,
+    memory_context: str,
+) -> JobAnalysisSchema:
+    """Use Match Engine 2 locally when structured extraction can be built safely."""
+    try:
+        from modules.ai.structured_job_extractor import extract_structured_job
+        from modules.ai.structured_resume_extractor import extract_structured_resume
+        from modules.analyzer.job_analyzer import analyze_job_v2
+
+        local_provider = MockProvider()
+        resume = extract_structured_resume(resume_text, provider=local_provider).output
+        job = extract_structured_job(job_text, provider=local_provider).output
+        memory_items = [memory_context] if memory_context.strip() else []
+        return analyze_job_v2(
+            resume=resume,
+            job=job,
+            memory_items=memory_items,
+            preferences_fit_score=analysis.opportunity_fit_score,
+            fallback_resume_text=resume_text,
+            fallback_job_text=job_text,
+        )
+    except Exception:
+        return analysis

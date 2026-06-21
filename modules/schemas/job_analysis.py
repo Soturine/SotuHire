@@ -26,6 +26,22 @@ class JobAnalysisSchema(BaseModel):
     risk_flags: list[str] = Field(default_factory=list)
     tailored_summary: str = ""
     recruiter_message: str = ""
+    analysis_version: Literal["legacy", "match_engine_v2"] = "legacy"
+    confidence_score: float = Field(default=0.0, ge=0.0, le=1.0)
+    evidence_score: int = Field(default=0, ge=0, le=100)
+    matched_requirements: list[str] = Field(default_factory=list)
+    partial_requirements: list[str] = Field(default_factory=list)
+    missing_requirements: list[str] = Field(default_factory=list)
+    critical_gaps: list[str] = Field(default_factory=list)
+    transferable_skills: list[str] = Field(default_factory=list)
+    evidence_used: list[str] = Field(default_factory=list)
+    safe_actions: list[str] = Field(default_factory=list)
+    resume_improvements: list[str] = Field(default_factory=list)
+    portfolio_github_improvements: list[str] = Field(default_factory=list)
+    score_reasoning: list[str] = Field(default_factory=list)
+    ats_present_keywords: list[str] = Field(default_factory=list)
+    ats_missing_but_safe_to_add: list[str] = Field(default_factory=list)
+    ats_missing_without_evidence: list[str] = Field(default_factory=list)
 
     def should_apply(self) -> bool:
         """Return True when the recommendation is positive enough to act."""
