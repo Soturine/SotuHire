@@ -1,0 +1,6 @@
+Pessoa Ficticia Enfermagem
+email: enfermagem@example.test
+Resumo: Tecnica de enfermagem com vivencia hospitalar e atendimento humanizado.
+Formacao: Curso tecnico em Enfermagem concluido.
+Experiencia: Estagio supervisionado em hospital escola, apoio em prontuario e sinais vitais.
+Competencias: administracao de medicamentos, prontuario eletronico, atendimento ao paciente.

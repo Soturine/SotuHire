@@ -1,0 +1,6 @@
+Pessoa Ficticia Psicologia
+email: psicologia@example.test
+Resumo: Psicologa com atuacao em recursos humanos e triagem organizacional.
+Formacao: Graduacao em Psicologia concluida.
+Experiencia: Estagio em recrutamento e selecao, entrevistas e acolhimento inicial.
+Competencias: entrevista, escuta ativa, comportamento organizacional, relatorios.

@@ -1,0 +1,6 @@
+Pessoa Ficticia Tecnico
+email: tecnico@example.test
+Resumo: Tecnico em manutencao industrial com vivencia em equipamentos eletromecanicos.
+Formacao: Curso tecnico em Eletrotecnica concluido.
+Experiencia: Manutencao preventiva em linha de producao, leitura de diagramas e CLP.
+Competencias: NR-10, CLP, instrumentos de medicao, manutencao corretiva.

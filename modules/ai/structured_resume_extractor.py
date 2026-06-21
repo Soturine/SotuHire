@@ -12,7 +12,6 @@ from modules.ai.prompt_registry import PromptRegistry
 from modules.ai.schemas.common import (
     ConfidenceSummary,
     CredentialSignal,
-    DomainSignal,
     LanguageSignal,
     StrictSchema,
 )

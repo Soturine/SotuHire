@@ -1,0 +1,6 @@
+Nome Ficticio Dev
+email: dev.backend@example.test
+Resumo: Desenvolvedor backend com Python, APIs REST e PostgreSQL.
+Experiencia: Projeto academico de API FastAPI com testes Pytest.
+Formacao: Tecnologia em Analise e Desenvolvimento de Sistemas, cursando.
+Competencias: Python, FastAPI, SQL, PostgreSQL, Docker, Git.

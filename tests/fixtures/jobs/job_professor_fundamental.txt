@@ -1,0 +1,5 @@
+Vaga: Professor Ensino Fundamental
+Empresa: Escola Ficticia
+Local: Hibrido
+Obrigatorio: Licenciatura em Pedagogia, BNCC e alfabetizacao.
+Desejavel: experiencia com educacao inclusiva e relatorios pedagogicos.

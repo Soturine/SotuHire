@@ -7,7 +7,6 @@ from pydantic import BaseModel
 from modules.ai.prompt_registry import PromptRegistry
 from modules.ai.prompt_spec import PromptSpec
 
-
 RESUME_EXTRACTION_SYSTEM_PROMPT = (
     "You extract structured resume facts for a local-first career copilot. "
     "Use only evidence present in the resume. Return valid JSON only. "

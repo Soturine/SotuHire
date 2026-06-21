@@ -1,0 +1,6 @@
+Vaga: Enfermeiro UTI
+Empresa: Hospital Ficticio
+Local: Sao Paulo, SP
+Contrato: CLT
+Obrigatorio: graduacao em Enfermagem, COREN ativo, experiencia em UTI.
+Responsabilidades: assistencia ao paciente critico, prontuario eletronico e escala de plantao.

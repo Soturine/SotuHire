@@ -1,0 +1,5 @@
+Pessoa Ficticia Cyber
+email: cyber@example.test
+Resumo: Analista de cybersecurity com laboratorios de SOC e SIEM.
+Projetos: Lab ficticio de monitoramento de logs e resposta a incidentes.
+Competencias: SIEM, SOC, hardening, Linux, redes, ISO 27001.

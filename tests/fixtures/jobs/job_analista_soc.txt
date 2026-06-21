@@ -1,0 +1,4 @@
+Vaga: Analista SOC
+Empresa: Seguranca Ficticia
+Obrigatorio: SIEM, SOC, resposta a incidentes, redes e Linux.
+Desejavel: ISO 27001, threat intelligence e hardening.

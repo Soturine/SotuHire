@@ -40,7 +40,7 @@ def classify_domain(
                 scores[rule.name] += 1
                 evidence[rule.name].append(keyword)
 
-    for alias, entry in aliases.items():
+    for _alias, entry in aliases.items():
         domain = _coerce_domain(entry.domain)
         scores[domain] += 2 if entry.category == "professional_license" else 1
         evidence[domain].append(entry.normalized_name)

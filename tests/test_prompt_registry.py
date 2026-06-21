@@ -1,0 +1,28 @@
+from modules.ai.prompt_loader import default_prompt_registry
+
+
+def test_default_prompt_registry_lists_initial_prompts() -> None:
+    registry = default_prompt_registry()
+
+    assert registry.list_prompt_ids() == [
+        "domain_classification_v1",
+        "job_extraction_multi_domain_v1",
+        "resume_extraction_v1",
+    ]
+
+
+def test_prompt_registry_renders_user_template() -> None:
+    registry = default_prompt_registry()
+
+    rendered = registry.render_user_prompt(
+        "domain_classification_v1",
+        {
+            "text": "Vaga de enfermagem com COREN.",
+            "text_type": "job",
+            "known_context": {},
+            "language": "pt-BR",
+        },
+    )
+
+    assert "Vaga de enfermagem com COREN" in rendered
+    assert registry.output_schema("resume_extraction_v1").__name__ == "ResumeExtractionOutput"

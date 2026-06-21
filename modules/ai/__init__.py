@@ -5,12 +5,12 @@ from .domain_classification_service import (
     classify_domain_structured,
 )
 from .providers import GeminiProvider, MockProvider, ProviderUnavailableError
+from .structured_analysis import StructuredAnalysisResult, analyze_structured, get_provider
 from .structured_job_extractor import StructuredJobExtractionResult, extract_structured_job
 from .structured_resume_extractor import (
     StructuredResumeExtractionResult,
     extract_structured_resume,
 )
-from .structured_analysis import StructuredAnalysisResult, analyze_structured, get_provider
 
 __all__ = [
     "DomainClassificationServiceResult",

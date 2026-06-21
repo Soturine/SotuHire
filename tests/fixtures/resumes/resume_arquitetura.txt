@@ -1,0 +1,6 @@
+Pessoa Ficticia Arquitetura
+email: arquitetura@example.test
+Resumo: Arquiteta com portfolio de interiores residenciais.
+Formacao: Arquitetura e Urbanismo concluida.
+Projetos: Projeto executivo de apartamento compacto com detalhamento de marcenaria.
+Competencias: AutoCAD, Revit, SketchUp, renderizacao, briefing.

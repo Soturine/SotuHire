@@ -1,0 +1,4 @@
+Vaga: Engenheiro Civil de Obras
+Empresa: Construtora Ficticia
+Obrigatorio: Engenharia Civil, CREA, acompanhamento de obra, AutoCAD e Revit.
+Desejavel: MS Project, orcamento e cronograma fisico-financeiro.

@@ -1,0 +1,6 @@
+Pessoa Ficticia Civil
+email: civil@example.test
+Resumo: Engenheira civil junior com experiencia em acompanhamento de obras.
+Formacao: Engenharia Civil concluida.
+Experiencia: Estagio em obra residencial, medicoes, orcamento e cronograma.
+Competencias: AutoCAD, Revit, leitura de projetos, normas ABNT, MS Project.

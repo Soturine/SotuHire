@@ -1,0 +1,7 @@
+Vaga: Desenvolvedor Backend Junior
+Empresa: Empresa Ficticia Tech
+Local: Remoto
+Contrato: CLT
+Requisitos obrigatorios: Python, APIs REST, SQL, Git.
+Desejavel: Docker, FastAPI, testes automatizados.
+Responsabilidades: desenvolver APIs, revisar codigo e documentar endpoints.

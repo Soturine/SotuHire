@@ -1,0 +1,4 @@
+Vaga: Engenheiro Biomedico
+Empresa: Clinica Ficticia
+Obrigatorio: Engenharia Biomedica, equipamentos hospitalares e manutencao preventiva.
+Desejavel: ANVISA, metrologia, calibracao e seguranca eletrica.

@@ -1,0 +1,6 @@
+Pessoa Ficticia Biomedica
+email: biomedica@example.test
+Resumo: Engenheira biomedica com foco em equipamentos hospitalares.
+Formacao: Engenharia Biomedica concluida.
+Experiencia: Manutencao preventiva e corretiva de bombas de infusao e monitores.
+Competencias: metrologia, calibracao, ANVISA, seguranca eletrica.

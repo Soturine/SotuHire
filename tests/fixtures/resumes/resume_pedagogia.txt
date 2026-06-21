@@ -1,0 +1,6 @@
+Pessoa Ficticia Pedagogia
+email: pedagogia@example.test
+Resumo: Pedagoga com experiencia em alfabetizacao e planejamento pedagogico.
+Formacao: Licenciatura em Pedagogia concluida.
+Experiencia: Professora auxiliar no ensino fundamental, planos de aula alinhados a BNCC.
+Competencias: BNCC, alfabetizacao, educacao inclusiva, relatorios pedagogicos.

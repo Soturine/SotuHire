@@ -1,0 +1,4 @@
+Vaga: Tecnico de Manutencao Industrial
+Empresa: Industria Ficticia
+Obrigatorio: curso tecnico, NR-10, CLP e instrumentos de medicao.
+Responsabilidades: manutencao preventiva, manutencao corretiva e apoio a producao.
