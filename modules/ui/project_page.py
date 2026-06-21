@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from typing import cast
+
 import streamlit as st
 
 from modules.core.text_utils import normalize_text
 from modules.local_api import LocalCompanionService
 from modules.memory import CareerMemory
-from modules.portfolio import ProjectAnalysisPayload, ProjectAnalysisStore
+from modules.portfolio import ProjectAnalysisPayload, ProjectAnalysisStore, ProjectPageType
 
 
 def _render_report(report) -> None:
@@ -79,7 +81,7 @@ def render_project_page() -> None:
         payload = ProjectAnalysisPayload(
             url=url,
             title=title,
-            page_type=page_type,
+            page_type=cast(ProjectPageType, page_type),
             visible_text=visible_text,
             readme_text=readme,
             files_sampled=[line.strip() for line in files.splitlines() if line.strip()],

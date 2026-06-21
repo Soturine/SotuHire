@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal, cast
 
 from pydantic import BaseModel, Field
 
@@ -17,6 +17,9 @@ from modules.ai.schemas.job_extraction import (
     JobRequirement,
     JobSeniority,
     RedFlag,
+    RequirementCategory,
+    RequirementCriticality,
+    RequirementImportance,
     SalaryInfo,
 )
 from modules.ai.structured_analysis import get_provider
@@ -25,6 +28,32 @@ from modules.domain_intelligence.domain_classifier import classify_domain
 from modules.domain_intelligence.requirement_types import classify_requirement
 from modules.parsers.job_description_parser import parse_job_description
 from modules.schemas.job_posting import JobPostingSchema
+
+JobWorkModel = Literal["remote", "hybrid", "onsite", "field", "unknown"]
+JobContractType = Literal[
+    "clt",
+    "pj",
+    "internship",
+    "temporary",
+    "freelance",
+    "trainee",
+    "apprentice",
+    "public_sector",
+    "unknown",
+]
+JobSeniorityLevel = Literal[
+    "intern",
+    "apprentice",
+    "assistant",
+    "junior",
+    "mid",
+    "senior",
+    "specialist",
+    "coordinator",
+    "manager",
+    "director",
+    "unknown",
+]
 
 
 class StructuredJobExtractionResult(StrictSchema):
@@ -209,10 +238,8 @@ def _requirement_from_text(
     evidence_text: str,
 ) -> JobRequirement:
     classification = classify_requirement(text)
-    return JobRequirement(
-        text=text,
-        normalized_name=classification.normalized_name or text,
-        category=classification.category
+    category = (
+        classification.category
         if classification.category
         in {
             "education",
@@ -233,31 +260,48 @@ def _requirement_from_text(
             "portfolio",
             "other",
         }
-        else "other",
-        importance=importance if importance in {"required", "preferred", "optional"} else "unclear",
-        criticality=classification.criticality
+        else "other"
+    )
+    requirement_importance = (
+        importance if importance in {"required", "preferred", "optional"} else "unclear"
+    )
+    criticality = (
+        classification.criticality
         if classification.criticality in {"low", "medium", "high", "knockout"}
-        else "medium",
+        else "medium"
+    )
+    return JobRequirement(
+        text=text,
+        normalized_name=classification.normalized_name or text,
+        category=cast(RequirementCategory, category),
+        importance=cast(RequirementImportance, requirement_importance),
+        criticality=cast(RequirementCriticality, criticality),
         domain=classification.domain,
         evidence=text if normalize_text(text) in normalize_text(evidence_text) else "",
         confidence=max(classification.confidence, 0.65),
     )
 
 
-def _work_model(modality: str) -> str:
-    return {"remote": "remote", "hybrid": "hybrid", "onsite": "onsite"}.get(modality, "unknown")
+def _work_model(modality: str) -> JobWorkModel:
+    return cast(
+        JobWorkModel,
+        {"remote": "remote", "hybrid": "hybrid", "onsite": "onsite"}.get(modality, "unknown"),
+    )
 
 
-def _contract_type(contract: str) -> str:
+def _contract_type(contract: str) -> JobContractType:
     normalized = normalize_text(contract)
-    return {
-        "clt": "clt",
-        "pj": "pj",
-        "estagio": "internship",
-        "temporario": "temporary",
-        "freelance": "freelance",
-        "trainee": "trainee",
-    }.get(normalized, "unknown")
+    return cast(
+        JobContractType,
+        {
+            "clt": "clt",
+            "pj": "pj",
+            "estagio": "internship",
+            "temporario": "temporary",
+            "freelance": "freelance",
+            "trainee": "trainee",
+        }.get(normalized, "unknown"),
+    )
 
 
 def _job_seniority(seniority: str) -> JobSeniority:
@@ -271,7 +315,11 @@ def _job_seniority(seniority: str) -> JobSeniority:
         "senior": "senior",
         "especialista": "specialist",
     }.get(normalized, "unknown")
-    return JobSeniority(level=level, evidence=[seniority] if seniority else [], confidence=0.72)
+    return JobSeniority(
+        level=cast(JobSeniorityLevel, level),
+        evidence=[seniority] if seniority else [],
+        confidence=0.72,
+    )
 
 
 def _salary_raw(job: JobPostingSchema) -> str:

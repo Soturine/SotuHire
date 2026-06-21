@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from modules.local_api import LocalCompanionApp, LocalCompanionService
 from modules.memory import CareerMemory, MemoryStore
 from modules.portfolio import ProjectAnalysisStore
@@ -18,9 +20,10 @@ def test_connected_sotuhire_mode_saves_full_report_and_evidence(tmp_path):
     )
 
     status, payload = app.handle("POST", "/capture/repo-analysis", body=body)
+    response = cast(dict[str, Any], payload)
 
     assert status == 200
-    assert payload["saved_to_memory"] is True
-    assert payload["report"]["overall_score"] > 0
+    assert response["saved_to_memory"] is True
+    assert cast(dict[str, Any], response["report"])["overall_score"] > 0
     assert service.project_store.list()
     assert memory.store.list_memory_items(kind="project_evidence")

@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any, cast
 
 from modules.local_api import LocalCompanionApp, LocalCompanionService
 from modules.memory import CareerMemory, MemoryStore
@@ -29,9 +30,10 @@ def test_connected_project_analysis_saves_memory(tmp_path):
     body = b'{"url":"https://github.example/example/repo","page_type":"github_repo","title":"Repo","languages":["Python"]}'
 
     status, payload = app.handle("POST", "/capture/github-repo", body=body)
+    response = cast(dict[str, Any], payload)
 
     assert status == 200
-    assert payload["report"]["github_profile_score"] >= 0
+    assert cast(dict[str, Any], response["report"])["github_profile_score"] >= 0
     assert service.project_store.list()
     assert service.memory.store.list_memory_items(kind="project_evidence")
 

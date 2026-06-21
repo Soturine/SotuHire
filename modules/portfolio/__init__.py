@@ -9,6 +9,7 @@ from .schemas import (
     ProjectAnalysisPayload,
     ProjectAnalysisRecord,
     ProjectAnalysisReport,
+    ProjectPageType,
 )
 from .store import ProjectAnalysisStore
 
@@ -17,6 +18,7 @@ __all__ = [
     "ProjectAnalysisPayload",
     "ProjectAnalysisRecord",
     "ProjectAnalysisReport",
+    "ProjectPageType",
     "ProjectAnalysisStore",
     "analyze_commits",
     "analyze_project",

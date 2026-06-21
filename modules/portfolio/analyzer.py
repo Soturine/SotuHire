@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Literal, cast
+
 from modules.core.text_utils import normalize_text
 from modules.portfolio.commit_analysis import analyze_commits
 from modules.portfolio.file_sampler import prioritize_paths
@@ -161,8 +163,8 @@ def _average(*values: int) -> int:
     return round(sum(values) / len(values))
 
 
-def _grade(score: int) -> str:
-    return (
+def _grade(score: int) -> Literal["A", "B", "C", "D", "F"]:
+    grade = (
         "A"
         if score >= 85
         else "B"
@@ -173,6 +175,7 @@ def _grade(score: int) -> str:
         if score >= 40
         else "F"
     )
+    return cast(Literal["A", "B", "C", "D", "F"], grade)
 
 
 def _clamp(value: int) -> int:

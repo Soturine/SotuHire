@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Literal, cast
 
 from pydantic import BaseModel, Field
 
@@ -32,6 +32,33 @@ from modules.domain_intelligence.domain_classifier import classify_domain
 from modules.domain_intelligence.requirement_types import classify_requirement
 from modules.parsers.resume_parser import parse_resume_text
 from modules.schemas.resume_profile import ResumeProfileSchema
+
+ResumeSkillCategory = Literal[
+    "hard_skill",
+    "soft_skill",
+    "tool",
+    "software",
+    "equipment",
+    "methodology",
+    "language",
+    "certification",
+    "professional_license",
+    "regulation",
+    "domain_knowledge",
+    "other",
+]
+ResumeSeniorityLevel = Literal[
+    "intern",
+    "apprentice",
+    "assistant",
+    "junior",
+    "mid",
+    "senior",
+    "specialist",
+    "coordinator",
+    "manager",
+    "unknown",
+]
 
 
 class StructuredResumeExtractionResult(StrictSchema):
@@ -222,10 +249,8 @@ def _mark_resume_disagreements(
 
 def _skill_entry(skill: str, evidence_text: str) -> ExtractedSkill:
     classification = classify_requirement(skill)
-    return ExtractedSkill(
-        name=skill,
-        normalized_name=classification.normalized_name or skill,
-        category=classification.category
+    category = (
+        classification.category
         if classification.category
         in {
             "hard_skill",
@@ -241,7 +266,12 @@ def _skill_entry(skill: str, evidence_text: str) -> ExtractedSkill:
             "domain_knowledge",
             "other",
         }
-        else "hard_skill",
+        else "hard_skill"
+    )
+    return ExtractedSkill(
+        name=skill,
+        normalized_name=classification.normalized_name or skill,
+        category=cast(ResumeSkillCategory, category),
         evidence=[skill] if normalize_text(skill) in normalize_text(evidence_text) else [],
         confidence=max(classification.confidence, 0.7),
     )
@@ -263,7 +293,7 @@ def _detect_resume_seniority(text: str) -> SenioritySignal:
     for term, level in terms:
         if term in normalized:
             return SenioritySignal(
-                estimated_level=level,
+                estimated_level=cast(ResumeSeniorityLevel, level),
                 reasoning=f"Detected seniority term: {term}.",
                 evidence=[term],
                 confidence=0.72,
