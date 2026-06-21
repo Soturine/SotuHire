@@ -1,5 +1,6 @@
 """Match Engine 2 public API."""
 
+from modules.matching.engine import analyze_match_v2
 from modules.matching.models import (
     OTHER_PROFESSIONAL_REGISTRATION_OPTION,
     CandidateEvidence,
@@ -14,6 +15,7 @@ from modules.matching.models import (
 )
 
 __all__ = [
+    "analyze_match_v2",
     "CandidateEvidence",
     "CriticalGap",
     "MatchExplanation",
