@@ -47,6 +47,8 @@ nav:
       - Atualização pós-v0.9.0: 00-audit/v0.9-roadmap-docs-update-summary.md
   - Produto:
       - Visão: 01-product/vision.md
+      - Demo v1.0: 01-product/v1-demo.md
+      - GitHub Pages vs app local: 01-product/github-pages-site.md
       - Estratégia multiárea: 01-product/multi-domain-product-strategy.md
       - MVP: 01-product/mvp-scope.md
       - Roadmap: 01-product/roadmap.md
@@ -173,6 +175,7 @@ nav:
       - v0.10.0 AI Structured Extraction: 07-development/v0.10.0-ai-structured-extraction.md
       - v0.11.0 GitHub Analyzer 2.0: 07-development/v0.11.0-github-analyzer-2.md
       - v0.12.0 Match Engine 2.0: 07-development/v0.12.0-match-engine-2.md
+      - v1.0.0 Stable Release: 07-development/v1.0.0-stable-release.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md

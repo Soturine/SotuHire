@@ -1,3 +1,67 @@
+# SotuHire
+
+SotuHire é um copiloto local-first de inteligência de carreira para comparar currículo, vaga,
+GitHub, portfolio, memória profissional e evidências reais.
+
+Ele ajuda a responder:
+
+- esta vaga combina comigo?
+- quais requisitos estão atendidos?
+- quais gaps são críticos?
+- quais evidências comprovam o match?
+- o que posso melhorar no currículo sem inventar nada?
+
+!!! info "GitHub Pages é estático"
+    Este site apresenta documentação, visão de produto e demos estáticas. O app completo não roda
+    no GitHub Pages. Para usar o produto com Streamlit, IA opcional e Local Companion API, rode
+    localmente com `streamlit run app.py`.
+
+![Interface atual do SotuHire](assets/screenshots/sotuhire-v0.9-extension-tab.png)
+
+## O que está disponível na v1.0.0
+
+- Match Engine 2.0 com requisitos, evidências, score breakdown, confidence e gaps críticos.
+- AI Structured Extraction com Prompt Registry, JSON Guard e schemas Pydantic.
+- Domain Intelligence multiárea.
+- GitHub Analyzer 2.0 para repositórios públicos, READMEs, arquivos e evidências técnicas.
+- ATS review e Resume Tailor com regras anti-invenção.
+- Career Memory local, RAG lexical, tracker, dashboard e extensão assistiva.
+- Demos fictícias multiárea para backend, enfermagem, pedagogia, engenharia civil, arquitetura e
+  cybersecurity.
+
+## Como rodar localmente
+
+```bash
+git clone https://github.com/Soturine/SotuHire.git
+cd SotuHire
+python -m venv .venv
+pip install -r docs/requirements/requirements.txt
+streamlit run app.py
+```
+
+Para Gemini opcional:
+
+```bash
+pip install -r docs/requirements/requirements-ai.txt
+```
+
+## Comece por aqui
+
+- [Visão do produto](01-product/vision.md)
+- [Roadmap](01-product/roadmap.md)
+- [Demo v1.0](01-product/v1-demo.md)
+- [GitHub Pages vs app local](01-product/github-pages-site.md)
+- [Match Engine 2.0](07-development/v0.12.0-match-engine-2.md)
+- [GitHub Analyzer 2.0](07-development/v0.11.0-github-analyzer-2.md)
+- [AI Structured Extraction](07-development/v0.10.0-ai-structured-extraction.md)
+- [Prompts](04-ai/prompts/README.md)
+- [Setup local](07-development/setup.md)
+
+## Limites importantes
+
+SotuHire não promete contratação, não faz candidatura automática, não inventa experiência,
+certificação ou registro profissional, e mantém a pessoa usuária no controle da decisão.
+
 # Documentação do SotuHire
 
 Bem-vindo à documentação do SotuHire, um copiloto de carreira local-first para análise de
