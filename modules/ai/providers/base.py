@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
+from pydantic import BaseModel
+
+from modules.ai.prompt_spec import PromptSpec
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
 
@@ -27,3 +30,13 @@ class AIProvider(ABC):
         memory_context: str = "",
     ) -> JobAnalysisSchema:
         """Return a validated structured analysis."""
+
+    def generate_structured(
+        self,
+        prompt: PromptSpec,
+        payload: dict[str, object],
+    ) -> BaseModel:
+        """Return a prompt-specific Pydantic model for structured extraction."""
+        raise ProviderUnavailableError(
+            f"Provider {self.name} does not support prompt-specific structured extraction."
+        )
