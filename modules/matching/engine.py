@@ -6,6 +6,7 @@ from modules.ai.schemas.job_extraction import JobExtractionOutput
 from modules.ai.schemas.resume_extraction import ResumeExtractionOutput
 from modules.core.text_utils import normalize_text
 from modules.github_analyzer.schemas import GitHubAnalyzerReport
+from modules.matching.domain_weights import weights_for_domain
 from modules.matching.evidence_matcher import (
     collect_github_evidence,
     collect_portfolio_evidence,
@@ -62,6 +63,7 @@ def analyze_match_v2(
         preferences_fit_score=preferences_fit_score,
         resume_confidence=resume.extraction_confidence.overall or 0.55,
         job_confidence=job.extraction_confidence.overall or 0.55,
+        weights=weights_for_domain(job.domain_classification.primary_domain),
     )
     explanation = build_match_explanation(
         matches=matches,

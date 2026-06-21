@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from modules.matching.domain_weights import MatchWeights, weights_for_domain
 from modules.matching.models import (
     OTHER_PROFESSIONAL_REGISTRATION_OPTION,
     CandidateEvidence,
@@ -31,8 +32,10 @@ __all__ = [
     "MatchRequirement",
     "MatchResultV2",
     "MatchScoreBreakdown",
+    "MatchWeights",
     "OTHER_PROFESSIONAL_REGISTRATION_OPTION",
     "ProfessionalRegistrationInput",
     "RequirementMatch",
     "TransferableSkillMatch",
+    "weights_for_domain",
 ]

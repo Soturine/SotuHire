@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from modules.matching.confidence import calculate_confidence_score
+from modules.matching.domain_weights import DEFAULT_MATCH_WEIGHTS, MatchWeights
 from modules.matching.models import CandidateEvidence, MatchScoreBreakdown, RequirementMatch
 from modules.matching.risk_adjustment import calculate_risk_penalty
 from modules.matching.transferable_skills import TransferableSkillMatch
@@ -20,8 +21,10 @@ def calculate_match_scores(
     preferences_fit_score: int = 60,
     resume_confidence: float = 0.6,
     job_confidence: float = 0.6,
+    weights: MatchWeights | None = None,
 ) -> MatchScoreBreakdown:
     """Calculate weighted match scores with risk penalties."""
+    active_weights = weights or DEFAULT_MATCH_WEIGHTS
     required = _requirement_group_score(
         [match for match in matches if match.requirement.importance == "required"]
     )
@@ -43,15 +46,15 @@ def calculate_match_scores(
         job_confidence=job_confidence,
     )
     raw = round(
-        required * 0.30
-        + preferred * 0.15
-        + _clamp(domain_fit_score) * 0.10
-        + _clamp(seniority_fit_score) * 0.10
-        + _clamp(education) * 0.10
-        + evidence_strength * 0.10
-        + github_portfolio * 0.05
-        + _clamp(ats_keyword_alignment_score) * 0.05
-        + _clamp(preferences_fit_score) * 0.05
+        required * active_weights.required_requirements
+        + preferred * active_weights.preferred_requirements
+        + _clamp(domain_fit_score) * active_weights.domain_fit
+        + _clamp(seniority_fit_score) * active_weights.seniority_fit
+        + _clamp(education) * active_weights.education_credentials
+        + evidence_strength * active_weights.evidence_strength
+        + github_portfolio * active_weights.portfolio_github_evidence
+        + _clamp(ats_keyword_alignment_score) * active_weights.ats_keyword_alignment
+        + _clamp(preferences_fit_score) * active_weights.preferences_fit
     )
     overall = _apply_caps(raw - risk_penalty, matches)
     risk_score = _clamp(risk_penalty)
