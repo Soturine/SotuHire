@@ -130,7 +130,7 @@ def gemini_setup_status(api_key: str | None = None) -> GeminiSetupStatus:
             sdk_installed=False,
             available=False,
             message="Gemini indisponível. Usando análise local.",
-            reason="SDK ausente. Instale com: pip install -r requirements-ai.txt",
+            reason="SDK ausente. Instale com: pip install -r docs/requirements/requirements-ai.txt",
         )
     return GeminiSetupStatus(
         key_configured=True,

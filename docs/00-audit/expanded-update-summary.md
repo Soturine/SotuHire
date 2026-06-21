@@ -81,4 +81,4 @@ Nenhum documento Markdown existente teve número de linhas reduzido nesta atuali
 - `docs/README.md`
 - `mkdocs.yml`
 - `pyproject.toml`
-- `requirements.txt`
+- `docs/requirements/requirements.txt`

@@ -86,7 +86,7 @@ O provider valida `response.parsed` ou o JSON retornado com Pydantic. Sem `GEMIN
 Instalação opcional:
 
 ```bash
-pip install -r requirements-ai.txt
+pip install -r docs/requirements/requirements-ai.txt
 ```
 
 Configuração:

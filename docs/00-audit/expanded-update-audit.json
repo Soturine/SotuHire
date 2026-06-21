@@ -66,7 +66,7 @@
     "docs/README.md",
     "mkdocs.yml",
     "pyproject.toml",
-    "requirements.txt"
+    "docs/requirements/requirements.txt"
   ],
   "unchanged_files": [
     ".github/workflows/ci.yml",

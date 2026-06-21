@@ -33,7 +33,7 @@ source .venv/bin/activate
 ## Instalar dependências
 
 ```bash
-pip install -r requirements.txt
+pip install -r docs/requirements/requirements.txt
 ```
 
 Dependências sugeridas para o MVP:

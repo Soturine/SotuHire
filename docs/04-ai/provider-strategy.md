@@ -113,7 +113,7 @@ A camada atual usa `modules/ai/providers/`:
 
 `DEFAULT_AI_PROVIDER=local` é a configuração segura. Quando `gemini` é selecionado sem chave ou SDK, o app não quebra: registra warning e usa o provider local.
 
-O provider não pode ignorar schemas Pydantic, inventar fatos ou contornar regras determinísticas. O SDK Gemini fica em `requirements-ai.txt`, fora das dependências obrigatórias.
+O provider não pode ignorar schemas Pydantic, inventar fatos ou contornar regras determinísticas. O SDK Gemini fica em `docs/requirements/requirements-ai.txt`, fora das dependências obrigatórias.
 
 ```mermaid
 flowchart LR
@@ -137,7 +137,7 @@ GEMINI_MODEL=gemini-2.5-flash
 Para usar Gemini, altere `DEFAULT_AI_PROVIDER=gemini`, informe a chave e instale:
 
 ```bash
-pip install -r requirements-ai.txt
+pip install -r docs/requirements/requirements-ai.txt
 ```
 
 `LLM_PROVIDER` e `LLM_MODEL` continuam aceitos como aliases para instalações antigas. As variáveis novas têm precedência quando ambas estão configuradas.
@@ -151,7 +151,7 @@ O resultado estruturado registra:
 - `fallback_used`: confirmação explícita do fallback;
 - `warning`: motivo resumido e ação necessária.
 
-A interface nunca apresenta `mock` ao usuário. O nome exibido é `Análise local`. Quando Gemini não possui chave, o aviso é `Gemini não configurado. Usando análise local.`. Quando falta o SDK, a orientação é `Instale requirements-ai.txt para usar Gemini.`.
+A interface nunca apresenta `mock` ao usuário. O nome exibido é `Análise local`. Quando Gemini não possui chave, o aviso é `Gemini não configurado. Usando análise local.`. Quando falta o SDK, a orientação é `Instale com: pip install -r docs/requirements/requirements-ai.txt`.
 
 ## Evolução na v0.5.0
 

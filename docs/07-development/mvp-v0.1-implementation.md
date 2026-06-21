@@ -68,7 +68,7 @@ O Resume Tailor só sugere keywords presentes nas evidências fornecidas. Requis
 ```bash
 python -m venv .venv
 .venv\Scripts\activate
-pip install -r requirements.txt
+pip install -r docs/requirements/requirements.txt
 streamlit run app.py
 ```
 

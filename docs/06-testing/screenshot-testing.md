@@ -20,7 +20,7 @@ docs/assets/screenshots/sotuhire-v0.6-ai-setup.png
 Instale as dependências e o navegador:
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r docs/requirements/requirements-dev.txt
 playwright install chromium
 ```
 

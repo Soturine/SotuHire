@@ -92,7 +92,7 @@ class PlaywrightAuthenticatedCrawler:
             from playwright.sync_api import sync_playwright
         except ImportError as exc:
             raise RuntimeError(
-                "Instale requirements-scraping.txt para usar o navegador autenticado."
+                "Instale com: pip install -r docs/requirements/requirements-scraping.txt."
             ) from exc
 
         selectors = selectors_for_source(source)

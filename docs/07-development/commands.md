@@ -31,7 +31,7 @@ source .venv/bin/activate
 Instalar:
 
 ```bash
-pip install -r requirements.txt
+pip install -r docs/requirements/requirements.txt
 ```
 
 Atualizar pip:

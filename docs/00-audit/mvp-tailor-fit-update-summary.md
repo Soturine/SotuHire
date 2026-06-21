@@ -38,9 +38,9 @@
     "modules/schemas/json_resume.py",
     "modules/schemas/resume_tailor.py",
     "modules/schemas/user_preferences.py",
-    "requirements-dev.txt",
-    "requirements-ml.txt",
-    "requirements-scraping.txt",
+    "docs/requirements/requirements-dev.txt",
+    "docs/requirements/requirements-ml.txt",
+    "docs/requirements/requirements-scraping.txt",
     "tests/test_opportunity_fit.py",
     "tests/test_pydantic_schemas.py",
     "tests/test_resume_tailor.py"

@@ -26,7 +26,7 @@ O Google AI Studio é aberto em `https://aistudio.google.com/app/apikey`.
 ## Instalar o SDK
 
 ```bash
-pip install -r requirements-ai.txt
+pip install -r docs/requirements/requirements-ai.txt
 ```
 
 O SDK usado é `google-genai`.

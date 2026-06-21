@@ -6,42 +6,43 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## [0.10.0] - 2026-06-21
 
-### Added
+### Adicionado
 
-- Prompt Registry foundation with versioned `PromptSpec`, lazy prompt loading and initial prompts
-  for resume extraction, multi-domain job extraction and domain classification.
-- JSON Guard for AI responses, including Markdown fence cleanup, JSON parsing, Pydantic validation
-  and low-confidence field detection.
-- Pydantic schemas for `ResumeExtractionOutput`, `JobExtractionOutput` and
-  `DomainClassificationOutput`, with confidence constrained to `0..1`.
-- Domain Intelligence foundation with multi-area domain catalog, aliases and deterministic
-  classification for software, cybersecurity, engineering, nursing, psychology, pedagogy,
-  architecture, healthcare, education, technical and general profiles.
-- Structured resume, job and domain classification services with provider-aware execution and
-  local heuristic fallback.
-- Gemini provider support for prompt-specific structured extraction without exposing API keys.
-- Multi-domain fictitious fixtures for resumes and jobs across technology, healthcare, education,
-  engineering, architecture, cybersecurity and technical maintenance.
+- Base de Prompt Registry com `PromptSpec` versionado, carregamento lazy de prompts e prompts
+  iniciais para resume extraction, multi-domain job extraction e domain classification.
+- JSON Guard para respostas de IA, incluindo limpeza de Markdown fences, parse de JSON, validação
+  Pydantic e detecção de campos com baixa confiança.
+- Schemas Pydantic para `ResumeExtractionOutput`, `JobExtractionOutput` e
+  `DomainClassificationOutput`, com confidence limitado a `0..1`.
+- Base de Domain Intelligence com catálogo multiárea, aliases e classificação determinística para
+  software, cybersecurity, engineering, nursing, psychology, pedagogy, architecture, healthcare,
+  education, perfis técnicos e perfis generalistas.
+- Serviços estruturados de resume, job e domain classification, com execução provider-aware e
+  fallback heurístico local.
+- Suporte no provider Gemini para extração estruturada por prompt específico sem expor API keys.
+- Fixtures fictícias multiárea para currículos e vagas em technology, healthcare, education,
+  engineering, architecture, cybersecurity e technical maintenance.
 
-### Changed
+### Alterado
 
-- Project version bumped to `0.10.0`.
-- `modules/ai` now exports structured extraction services in addition to the existing analysis
-  flow.
-- Existing parsers remain the local fallback and are not replaced by AI output.
+- Versão do projeto atualizada para `0.10.0`.
+- `modules/ai` passa a exportar serviços de structured extraction além do fluxo de análise
+  existente.
+- Parsers existentes permanecem como fallback local e não são substituídos por saída de IA.
 
-### Tests
+### Testes
 
-- Added coverage for prompt registry, JSON Guard, resume extraction schema, job extraction schema,
-  domain intelligence and structured extraction fallback behavior.
-- Added fake-provider tests so structured extraction never calls a real API in the test suite.
+- Cobertura adicionada para Prompt Registry, JSON Guard, schema de resume extraction, schema de job
+  extraction, Domain Intelligence e comportamento de fallback da structured extraction.
+- Testes com fake provider garantem que a structured extraction nunca chama uma API real na suíte.
 
-### Security
+### Segurança
 
-- AI output remains advisory and must pass Pydantic validation before entering product flows.
-- Professional licenses such as COREN, CRP, CREA and CAU are detected as regulated signals, not
-  invented.
-- No authenticated collection behavior was changed.
+- Saídas de IA continuam consultivas e precisam passar por validação Pydantic antes de entrar em
+  fluxos do produto.
+- Registros profissionais como COREN, CRP, CREA e CAU são detectados como sinais regulados, não
+  inventados.
+- Nenhum comportamento de coleta autenticada foi alterado.
 
 ## [0.9.1] - 2026-06-21
 

@@ -38,7 +38,9 @@ class GeminiProvider(AIProvider):
             genai = importlib.import_module("google.genai")
             types = importlib.import_module("google.genai.types")
         except ImportError as exc:
-            raise ProviderUnavailableError("Instale requirements-ai.txt para usar Gemini.") from exc
+            raise ProviderUnavailableError(
+                "Instale com: pip install -r docs/requirements/requirements-ai.txt"
+            ) from exc
 
         client = genai.Client(api_key=self.api_key)
         response = client.models.generate_content(
@@ -67,12 +69,14 @@ class GeminiProvider(AIProvider):
     ) -> BaseModel:
         """Call Gemini for a prompt-specific structured extraction."""
         if not self.api_key:
-            raise ProviderUnavailableError("Gemini nÃ£o configurado: informe GEMINI_API_KEY.")
+            raise ProviderUnavailableError("Gemini não configurado: informe GEMINI_API_KEY.")
         try:
             genai = importlib.import_module("google.genai")
             types = importlib.import_module("google.genai.types")
         except ImportError as exc:
-            raise ProviderUnavailableError("Instale requirements-ai.txt para usar Gemini.") from exc
+            raise ProviderUnavailableError(
+                "Instale com: pip install -r docs/requirements/requirements-ai.txt"
+            ) from exc
 
         client = genai.Client(api_key=self.api_key)
         response = client.models.generate_content(
@@ -102,7 +106,9 @@ class GeminiProvider(AIProvider):
             genai = importlib.import_module("google.genai")
             types = importlib.import_module("google.genai.types")
         except ImportError as exc:
-            raise ProviderUnavailableError("Instale requirements-ai.txt para usar Gemini.") from exc
+            raise ProviderUnavailableError(
+                "Instale com: pip install -r docs/requirements/requirements-ai.txt"
+            ) from exc
 
         client = genai.Client(api_key=self.api_key)
         response = client.models.generate_content(

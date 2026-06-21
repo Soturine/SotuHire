@@ -102,7 +102,7 @@ source .venv/bin/activate
 Instale e abra o app:
 
 ```bash
-pip install -r requirements.txt
+pip install -r docs/requirements/requirements.txt
 streamlit run app.py
 ```
 
@@ -125,7 +125,7 @@ Copy-Item .env.example .env
 ### Gemini opcional
 
 ```bash
-pip install -r requirements-ai.txt
+pip install -r docs/requirements/requirements-ai.txt
 ```
 
 Configure no `.env`:
@@ -183,7 +183,7 @@ local. Veja [Análise GitHub e portfólio](docs/07-development/extension-github-
 Instale as dependências de scraping:
 
 ```bash
-pip install -r requirements-scraping.txt
+pip install -r docs/requirements/requirements-scraping.txt
 playwright install chromium
 ```
 
@@ -252,6 +252,7 @@ SotuHire/
 ├── examples/               # currículos, vagas e resultados fictícios
 ├── config/                 # exemplos de fontes configuráveis
 ├── docs/                   # documentação publicada com MkDocs
+│   └── requirements/       # dependências separadas por perfil
 ├── scripts/                # automações auxiliares
 └── .github/workflows/      # CI e publicação da documentação
 ```
@@ -261,7 +262,7 @@ SotuHire/
 Instale as dependências de desenvolvimento:
 
 ```bash
-pip install -r requirements-dev.txt
+pip install -r docs/requirements/requirements-dev.txt
 ```
 
 Execute as verificações:

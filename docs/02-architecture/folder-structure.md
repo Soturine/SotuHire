@@ -5,7 +5,6 @@
 ```text
 sotuhire/
 ├── app.py
-├── requirements.txt
 ├── .env.example
 ├── README.md
 ├── LICENSE
@@ -39,7 +38,8 @@ sotuhire/
     ├── 04-ai/
     ├── 05-data-sources/
     ├── 06-engineering/
-    └── 07-development/
+    ├── 07-development/
+    └── requirements/
 ```
 
 ## Responsabilidade de cada arquivo
