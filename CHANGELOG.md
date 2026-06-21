@@ -4,6 +4,47 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [0.10.0] - 2026-06-21
+
+### Added
+
+- Prompt Registry foundation with versioned `PromptSpec`, lazy prompt loading and initial prompts
+  for resume extraction, multi-domain job extraction and domain classification.
+- JSON Guard for AI responses, including Markdown fence cleanup, JSON parsing, Pydantic validation
+  and low-confidence field detection.
+- Pydantic schemas for `ResumeExtractionOutput`, `JobExtractionOutput` and
+  `DomainClassificationOutput`, with confidence constrained to `0..1`.
+- Domain Intelligence foundation with multi-area domain catalog, aliases and deterministic
+  classification for software, cybersecurity, engineering, nursing, psychology, pedagogy,
+  architecture, healthcare, education, technical and general profiles.
+- Structured resume, job and domain classification services with provider-aware execution and
+  local heuristic fallback.
+- Gemini provider support for prompt-specific structured extraction without exposing API keys.
+- Multi-domain fictitious fixtures for resumes and jobs across technology, healthcare, education,
+  engineering, architecture, cybersecurity and technical maintenance.
+
+### Changed
+
+- Project version bumped to `0.10.0`.
+- `modules/ai` now exports structured extraction services in addition to the existing analysis
+  flow.
+- Existing parsers remain the local fallback and are not replaced by AI output.
+
+### Tests
+
+- Added coverage for prompt registry, JSON Guard, resume extraction schema, job extraction schema,
+  domain intelligence and structured extraction fallback behavior.
+- Added fake-provider tests so structured extraction never calls a real API in the test suite.
+
+### Security
+
+- AI output remains advisory and must pass Pydantic validation before entering product flows.
+- Professional licenses such as COREN, CRP, CREA and CAU are detected as regulated signals, not
+  invented.
+- No authenticated collection behavior was changed.
+
+## [0.9.1] - 2026-06-21
+
 ### Documentation
 
 - alinhado `docs/01-product/roadmap.md` ao estado real da v0.9.0;

@@ -1,6 +1,12 @@
 # Prompt Registry
 
-O Prompt Registry é a camada planejada para registrar, versionar e executar prompts do SotuHire.
+O Prompt Registry é a camada usada para registrar e versionar prompts estruturados do SotuHire.
+
+Na v0.10.0, a primeira implementação está em:
+
+- `modules/ai/prompt_spec.py`;
+- `modules/ai/prompt_registry.py`;
+- `modules/ai/prompt_loader.py`.
 
 ## Objetivo
 
@@ -18,7 +24,7 @@ Sem registry, cada módulo tende a montar seu próprio prompt. Isso dificulta:
 - comparação entre versões;
 - reprodutibilidade de análises.
 
-## Modelo planejado
+## Modelo implementado
 
 ```python
 @dataclass(frozen=True)
@@ -29,10 +35,11 @@ class PromptSpec:
     user_template: str
     output_schema: type[BaseModel]
     temperature: float = 0.1
-    max_retries: int = 2
+    mode: str = "structured_extraction"
+    max_retries: int = 1
 ```
 
-## Interface planejada
+## Interface implementada
 
 ```python
 class PromptRegistry:
@@ -42,7 +49,7 @@ class PromptRegistry:
     def render_user_prompt(self, prompt_id: str, payload: dict) -> str:
         ...
 
-    def validate_output(self, prompt_id: str, raw_json: str) -> BaseModel:
+    def output_schema(self, prompt_id: str, version: str | None = None) -> type[BaseModel]:
         ...
 ```
 
@@ -51,14 +58,7 @@ class PromptRegistry:
 - `resume_extraction_v1`;
 - `job_extraction_multi_domain_v1`;
 - `domain_classification_v1`;
-- `match_analysis_evidence_based_v1`;
-- `ats_analysis_v1`;
-- `resume_tailor_v1`;
-- `github_repo_analysis_v2`;
-- `github_profile_analysis_v1`;
-- `portfolio_gap_analysis_v1`;
-- `hidden_job_detection_v1`;
-- `career_advice_v1`.
+Os demais prompts continuam documentados como playbooks e entram em ciclos futuros.
 
 ## Dados salvos por execução
 
@@ -97,7 +97,7 @@ Ele deve funcionar com qualquer provider compatível com texto e JSON estruturad
 
 - Todos os prompts carregados por ID.
 - Schemas Pydantic vinculados.
-- Retry em JSON inválido.
+- JSON inválido tratado pelo JSON Guard.
 - Fallback documentado.
 - Testes unitários para pelo menos três prompts.
 - Fixtures cobrindo múltiplas áreas.

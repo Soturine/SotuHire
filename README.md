@@ -30,6 +30,8 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - lê currículos em TXT, PDF e DOCX;
 - extrai experiências, formação, projetos, links e competências;
 - interpreta descrições de vagas e publicações com oportunidades;
+- possui base de extração estruturada por IA com JSON Guard, Pydantic e fallback local;
+- classifica domínios e requisitos multiárea com Domain Intelligence inicial;
 - calcula Match Score, ATS Score, Opportunity Fit Score e Risk Score;
 - explica pontos fortes, gaps, riscos e palavras-chave ausentes;
 - sugere adaptações de currículo sem inventar experiências;
@@ -208,7 +210,8 @@ automaticamente.
 | --- | --- |
 | `modules/parsers` | Extração e normalização de currículo e vaga. |
 | `modules/analyzer`, `modules/ats`, `modules/preferences` | Scores, recomendação, riscos e aderência às preferências. |
-| `modules/ai` | Providers, diagnóstico, Gemini opcional e análise estruturada. |
+| `modules/ai` | Providers, diagnóstico, Gemini opcional, Prompt Registry, JSON Guard e extração estruturada. |
+| `modules/domain_intelligence` | Classificação multiárea, aliases, requisitos e sinais de profissões regulamentadas. |
 | `modules/resume_tailor` | Sugestões rastreáveis para adaptar o currículo. |
 | `modules/scraping`, `modules/opportunities` | Conectores, coleta, deduplicação e armazenamento de oportunidades. |
 | `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
@@ -285,6 +288,8 @@ mkdocs serve
 - perfil profissional persistente, feedback learning e preferências inferidas;
 - export/import de memória e flags explícitas de privacidade;
 - parsers de currículo e vaga;
+- Prompt Registry, JSON Guard e schemas Pydantic para extração estruturada;
+- Domain Intelligence inicial para vagas e currículos multiárea;
 - scores explicáveis e Resume Tailor;
 - tracker, histórico e dashboard;
 - Search Intelligence e Hidden Jobs Radar;
@@ -296,8 +301,6 @@ mkdocs serve
 ### Próximas evoluções documentadas
 
 - v0.9.1: documentação, navegação e prompt playbooks;
-- v0.10.0: AI Structured Extraction e Domain Intelligence, com Prompt Registry, JSON Guard,
-  schemas Pydantic, extração estruturada de currículo/vaga e confiança por campo;
 - v0.11.0: GitHub Analyzer 2.0, com API, árvore completa, sampler, contexto de arquivos, prompt
   estruturado, evidence index e score de portfólio;
 - v0.12.0: Match Engine 2.0, com matching por requisitos, evidências, domínio, senioridade, gaps

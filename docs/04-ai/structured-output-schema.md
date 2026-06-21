@@ -191,18 +191,28 @@ Referências:
 
 # Atualização: schemas por função
 
-A próxima evolução deve separar schemas por função, em vez de depender de um único schema de análise completa.
+A v0.10.0 iniciou a separação de schemas por função, em vez de depender de um único schema de
+análise completa.
 
-Schemas recomendados:
+Schemas implementados nesta base:
 
 - `ResumeExtractionOutput`;
 - `JobExtractionOutput`;
-- `DomainClassificationOutput`;
+- `DomainClassificationOutput`.
+
+Schemas ainda planejados:
+
 - `ATSAnalysisOutput`;
 - `MatchEvidenceOutput`;
 - `ResumeTailorOutput`;
 - `GitHubRepoAnalysisOutput`;
 - `HiddenJobDetectionOutput`.
+
+Arquivos:
+
+- `modules/ai/schemas/resume_extraction.py`;
+- `modules/ai/schemas/job_extraction.py`;
+- `modules/ai/schemas/domain_classification.py`.
 
 ## Regra de entrada no produto
 
