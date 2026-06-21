@@ -14,6 +14,12 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 
 [Documentação](https://soturine.github.io/SotuHire/) ·
 [Roadmap](docs/01-product/roadmap.md) ·
+[Visão](docs/01-product/vision.md) ·
+[Estratégia multiárea](docs/01-product/multi-domain-product-strategy.md) ·
+[Prompt Catalog](docs/04-ai/prompt-catalog.md) ·
+[Prompt Architecture](docs/04-ai/prompt-architecture.md) ·
+[Prompt Registry](docs/04-ai/prompt-registry.md) ·
+[Prompts individuais](docs/04-ai/prompts/README.md) ·
 [Changelog](CHANGELOG.md) ·
 [Segurança e privacidade](docs/06-engineering/security-privacy.md)
 
@@ -35,11 +41,11 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
   autorizadas;
 - normaliza, deduplica e salva oportunidades para análise;
 - mantém tracker, histórico e dashboard locais;
-- gera Search Intelligence e Hidden Jobs Radar.
+- gera Search Intelligence e Hidden Jobs Radar;
 - captura a vaga atual com extensão assistiva e Local Companion API;
 - importa candidaturas paginadas sem duplicar vagas já registradas;
 - consolida a mesma vaga encontrada em LinkedIn, Gupy, Indeed, InfoJobs, Nube e outros portais;
-- mostra todas as fontes da candidatura e ranqueia requisitos recorrentes.
+- mostra todas as fontes da candidatura e ranqueia requisitos recorrentes;
 - analisa perfis GitHub, repositórios, READMEs, commits, projetos e portfólios públicos;
 - transforma projetos em evidências reutilizáveis para vagas, memória e perfil profissional;
 - oferece análise standalone na extensão ou análise conectada ao SotuHire local.
@@ -208,9 +214,9 @@ automaticamente.
 | `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
 | `modules/tracker`, `modules/storage` | Histórico, Kanban, follow-up e persistência local. |
 | `modules/memory`, `modules/profile` | Career Memory, RAG local, evidências, perfil persistente e preferências inferidas. |
-| `modules/local_api`, `browser-extension` | API localhost e extensão assistiva multiportal. |
+| `modules/local_api` | API localhost para integração local com a extensão. |
+| `browser-extension` | Extensão assistiva multiportal e análise GitHub/portfólio no navegador. |
 | `modules/portfolio` | Amostragem, commits, scores e evidências de GitHub/projetos/portfólio. |
-| `modules/portfolio` | Análise e sinais de portfólio. |
 | `modules/ui` | Fluxos Streamlit rápido e avançado. |
 
 Arquitetura resumida:
@@ -287,13 +293,16 @@ mkdocs serve
 - calibração da memória, feedback de evidência e ranking de requisitos.
 - análise de GitHub, portfólio, READMEs e commits com evidências de projeto.
 
-### Próximas evoluções
+### Próximas evoluções documentadas
 
-- Resume Tailor exportável em DOCX/PDF;
-- alertas configuráveis e follow-up;
-- análise expandida de GitHub, portfólio, LinkedIn e Lattes;
-- embeddings locais opcionais e reranking semântico;
-- conectores adicionais por fonte.
+- v0.9.1: documentação, navegação e prompt playbooks;
+- v0.10.0: AI Structured Extraction e Domain Intelligence, com Prompt Registry, JSON Guard,
+  schemas Pydantic, extração estruturada de currículo/vaga e confiança por campo;
+- v0.11.0: GitHub Analyzer 2.0, com API, árvore completa, sampler, contexto de arquivos, prompt
+  estruturado, evidence index e score de portfólio;
+- v0.12.0: Match Engine 2.0, com matching por requisitos, evidências, domínio, senioridade, gaps
+  críticos e competências transferíveis;
+- v1.0: versão generalista estável de inteligência de carreira.
 
 O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).
 
