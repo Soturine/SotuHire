@@ -293,6 +293,7 @@ def run_analysis(provider_name: str) -> None:
         target_company=job.company or None,
         job_text=st.session_state.job_text,
         evidence_text=st.session_state.resume_text,
+        match_analysis=st.session_state.analysis_result.analysis,
     )
     st.session_state.last_analysis_fingerprint = analysis_fingerprint(provider_name)
 

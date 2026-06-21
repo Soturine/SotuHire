@@ -1,6 +1,7 @@
 from modules.resume_tailor.keyword_helper import suggest_safe_keywords
 from modules.resume_tailor.section_ranker import rank_resume_sections
 from modules.resume_tailor.tailor_rules import build_safe_tailor_output
+from modules.schemas.job_analysis import JobAnalysisSchema
 
 
 def test_suggest_safe_keywords_only_returns_evidence_backed_terms():
@@ -47,3 +48,31 @@ def test_safe_tailor_output_accepts_empty_texts():
     assert output.is_safe_to_export()
     assert output.tailored_sections == []
     assert output.warnings
+
+
+def test_safe_tailor_uses_match_engine_evidence_without_inventing_claims():
+    analysis = JobAnalysisSchema(
+        match_score=68,
+        ats_score=70,
+        opportunity_fit_score=60,
+        risk_score=20,
+        recommendation="apply_with_adjustments",
+        analysis_version="match_engine_v2",
+        ats_present_keywords=["FastAPI"],
+        ats_missing_but_safe_to_add=["Docker"],
+        ats_missing_without_evidence=["AWS"],
+        critical_gaps=["A vaga exige certificacao sem evidencia no curriculo."],
+        evidence_used=["github: FastAPI"],
+    )
+
+    output = build_safe_tailor_output(
+        target_role="Backend Python",
+        job_text="FastAPI Docker AWS",
+        evidence_text="Projeto com FastAPI.",
+        match_analysis=analysis,
+    )
+
+    assert "FastAPI" in output.keywords_added
+    assert any("Adicionar somente se for verdadeiro" in warning for warning in output.warnings)
+    assert any("Nao declarar sem evidencia: AWS" in warning for warning in output.warnings)
+    assert output.is_safe_to_export()

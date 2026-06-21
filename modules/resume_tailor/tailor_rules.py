@@ -5,6 +5,7 @@ from __future__ import annotations
 from modules.core.text_utils import extract_keywords, first_sentences
 from modules.resume_tailor.keyword_helper import suggest_safe_keywords
 from modules.resume_tailor.section_ranker import rank_resume_sections
+from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput, TailoredResumeSection
 
 INDUSTRIAL_TERMS = {
@@ -47,6 +48,7 @@ def build_safe_tailor_output(
     job_text: str,
     evidence_text: str,
     target_company: str | None = None,
+    match_analysis: JobAnalysisSchema | None = None,
 ) -> ResumeTailorOutput:
     """Build evidence-backed resume suggestions without inventing facts."""
     job_keywords = extract_keywords(job_text)
@@ -57,9 +59,15 @@ def build_safe_tailor_output(
         f"Keyword pedida pela vaga sem evidencia suficiente: {keyword}"
         for keyword in unsupported[:10]
     ]
+    if match_analysis:
+        safe_keywords = _merge_items(safe_keywords, match_analysis.ats_present_keywords)
+        warnings.extend(_match_warnings(match_analysis))
 
     tailored_sections: list[TailoredResumeSection] = []
-    evidence_sentences = first_sentences(evidence_text, limit=8)
+    evidence_sentences = _merge_items(
+        first_sentences(evidence_text, limit=8),
+        (match_analysis.evidence_used[:5] if match_analysis else []),
+    )
     original_summary = " ".join(evidence_sentences[:2])
     improved_bullets = [_improve_bullet(sentence) for sentence in evidence_sentences[:5]]
     if original_summary:
@@ -97,3 +105,23 @@ def _improve_bullet(text: str) -> str:
         return ""
     improved = cleaned[0].upper() + cleaned[1:]
     return improved if improved.endswith((".", "!", "?")) else f"{improved}."
+
+
+def _match_warnings(match_analysis: JobAnalysisSchema) -> list[str]:
+    warnings = []
+    warnings.extend(
+        f"Gap critico do Match Engine 2.0: {gap}" for gap in match_analysis.critical_gaps[:5]
+    )
+    warnings.extend(
+        f"Adicionar somente se for verdadeiro e houver evidencia: {keyword}"
+        for keyword in match_analysis.ats_missing_but_safe_to_add[:8]
+    )
+    warnings.extend(
+        f"Nao declarar sem evidencia: {keyword}"
+        for keyword in match_analysis.ats_missing_without_evidence[:8]
+    )
+    return warnings
+
+
+def _merge_items(*groups: list[str]) -> list[str]:
+    return list(dict.fromkeys(item for group in groups for item in group if item.strip()))
