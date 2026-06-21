@@ -12,7 +12,7 @@ from modules.analyzer.recommendation import (
 from modules.ats.ats_score import calculate_simple_ats_score
 from modules.core.text_utils import extract_keywords, first_sentences, keyword_coverage
 from modules.github_analyzer.schemas import GitHubAnalyzerReport
-from modules.matching import MatchResultV2, analyze_match_v2
+from modules.matching.models import MatchResultV2
 from modules.portfolio.schemas import ProjectAnalysisReport
 from modules.preferences.opportunity_fit import calculate_opportunity_fit_score
 from modules.schemas.job_analysis import JobAnalysisSchema
@@ -101,6 +101,8 @@ def analyze_job_v2(
 ) -> JobAnalysisSchema:
     """Analyze structured resume/job data through Match Engine 2 with legacy fallback."""
     try:
+        from modules.matching.engine import analyze_match_v2
+
         result = analyze_match_v2(
             resume=resume,
             job=job,
