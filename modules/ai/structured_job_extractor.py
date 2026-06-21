@@ -163,11 +163,11 @@ def _job_output_from_local(
         softwares=[item for item in requirements if item.category == "software"],
         equipment=[item for item in requirements if item.category == "equipment"],
         professional_licenses=professional_licenses,
-        education_requirements=[
-            item for item in requirements if item.category == "education"
-        ],
+        education_requirements=[item for item in requirements if item.category == "education"],
         benefits=job.benefits,
-        red_flags=[RedFlag(type="missing_information", description=flag) for flag in job.risk_flags],
+        red_flags=[
+            RedFlag(type="missing_information", description=flag) for flag in job.risk_flags
+        ],
         keywords_for_ats=job.ats_keywords,
         missing_job_information=missing_info,
         extraction_confidence=ConfidenceSummary(

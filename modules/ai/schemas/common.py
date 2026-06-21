@@ -61,8 +61,6 @@ class LanguageSignal(StrictSchema):
     """Language evidence with an optional proficiency level."""
 
     language: str = ""
-    level: Literal["basic", "intermediate", "advanced", "fluent", "native", "unknown"] = (
-        "unknown"
-    )
+    level: Literal["basic", "intermediate", "advanced", "fluent", "native", "unknown"] = "unknown"
     evidence: list[str] = Field(default_factory=list)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)

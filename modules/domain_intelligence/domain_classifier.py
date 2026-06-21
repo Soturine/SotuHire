@@ -82,7 +82,9 @@ def classify_domain(
 
     notes = []
     if known_context:
-        notes.append("Known context was provided but deterministic classification used text evidence.")
+        notes.append(
+            "Known context was provided but deterministic classification used text evidence."
+        )
     if text_type not in {"resume", "job", "project", "profile", "post"}:
         notes.append(f"Unrecognized text_type: {text_type}.")
 

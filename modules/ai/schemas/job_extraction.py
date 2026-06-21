@@ -136,9 +136,7 @@ class JobExtractionOutput(StrictSchema):
     """Structured, multi-domain job extraction result."""
 
     job_identity: JobIdentity = Field(default_factory=JobIdentity)
-    domain_classification: JobDomainClassification = Field(
-        default_factory=JobDomainClassification
-    )
+    domain_classification: JobDomainClassification = Field(default_factory=JobDomainClassification)
     domains: list[DomainSignal] = Field(default_factory=list)
     seniority: JobSeniority = Field(default_factory=JobSeniority)
     requirements: list[JobRequirement] = Field(default_factory=list)
