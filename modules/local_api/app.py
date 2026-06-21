@@ -14,6 +14,8 @@ from modules.core.opportunity_identity import (
     same_opportunity,
     source_domain,
 )
+from modules.github_analyzer import analyze_github_repository, project_report_from_github_analysis
+from modules.github_analyzer.exceptions import GitHubAnalyzerError
 from modules.local_api.schemas import (
     ApplicationBatchPayload,
     BrowserCapturePayload,
@@ -36,6 +38,7 @@ from modules.parsers.job_description_parser import parse_job_description
 from modules.portfolio import (
     ProjectAnalysisPayload,
     ProjectAnalysisRecord,
+    ProjectAnalysisReport,
     ProjectAnalysisStore,
     analyze_project,
     enhance_project_report,
@@ -330,7 +333,7 @@ class LocalCompanionService:
         self, payload: ProjectAnalysisPayload, *, save_to_memory: bool = True
     ) -> ProjectCompanionResponse:
         """Analyze and optionally persist a public GitHub/project/portfolio capture."""
-        report = analyze_project(payload.model_copy(update={"provider_used": "local"}))
+        report = self._analyze_project_or_repository(payload)
         if payload.provider_used == "gemini":
             report = enhance_project_report(payload, report)
         self.project_store.save(ProjectAnalysisRecord(payload=payload, report=report))
@@ -341,6 +344,23 @@ class LocalCompanionService:
             report=report,
             saved_to_memory=save_to_memory,
         )
+
+    def _analyze_project_or_repository(
+        self,
+        payload: ProjectAnalysisPayload,
+    ) -> ProjectAnalysisReport:
+        """Use GitHub Analyzer 2 when requested, preserving the legacy fallback."""
+        use_github_api = payload.analysis_result.get("use_github_api") is True
+        if payload.page_type == "github_repo" and use_github_api:
+            try:
+                github_report = analyze_github_repository(
+                    payload.url or f"https://github.com/{payload.owner}/{payload.repo}",
+                    fallback_payload=payload,
+                )
+                return project_report_from_github_analysis(github_report, payload)
+            except GitHubAnalyzerError:
+                pass
+        return analyze_project(payload.model_copy(update={"provider_used": "local"}))
 
     def _resolve_record(self, request: CaptureActionRequest) -> CompanionCaptureRecord:
         if request.capture is not None:

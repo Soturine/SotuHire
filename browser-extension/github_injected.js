@@ -49,6 +49,7 @@
       commit_messages: commits,
       languages: unique([...document.querySelectorAll("[aria-label*='language'], [class*='language']")].map(text)).slice(0, 100),
       topics: unique([...document.querySelectorAll("[data-octo-click*='topic'], [class*='topic']")].map(text)).slice(0, 100),
+      analysis_result: { use_github_api: pageType() === "github_repo" },
       provider_used: saved.useAI ? "gemini" : "local"
     };
   };

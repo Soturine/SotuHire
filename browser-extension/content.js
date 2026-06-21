@@ -122,6 +122,7 @@
       commit_messages: [...new Set(commitMessages)],
       languages: [...new Set(languages)],
       topics: [...new Set(topics)],
+      analysis_result: { use_github_api: pageType === "github_repo" },
       provider_used: "local"
     };
   };
