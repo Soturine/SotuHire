@@ -32,6 +32,23 @@ PRIORITY_NAMES = {
     "requirements.txt",
 }
 
+PRIORITY_NAME_ORDER = {
+    "readme.md": 0,
+    "pyproject.toml": 1,
+    "package.json": 1,
+    "requirements.txt": 2,
+    "requirements-dev.txt": 2,
+    "go.mod": 2,
+    "cargo.toml": 2,
+    "pom.xml": 2,
+    "build.gradle": 2,
+    ".env.example": 3,
+    "dockerfile": 4,
+    "docker-compose.yml": 4,
+    "docker-compose.yaml": 4,
+    "mkdocs.yml": 5,
+}
+
 PRIORITY_PREFIXES = (
     ".github/workflows/",
     "app/",
@@ -94,19 +111,19 @@ def _rank_key(entry: RepositoryTreeEntry, central: set[str]) -> tuple[int, int, 
     if lower in central:
         priority = 0
     elif name in PRIORITY_NAMES:
-        priority = 1
+        priority = 10 + PRIORITY_NAME_ORDER.get(name, 9)
     elif lower.startswith(".github/workflows/"):
-        priority = 2
+        priority = 30
     elif name in ENTRYPOINT_NAMES:
-        priority = 3
+        priority = 40
     elif lower.startswith(("src/", "modules/", "app/")):
-        priority = 4
+        priority = 50
     elif lower.startswith("tests/") or "/tests/" in lower:
-        priority = 5
+        priority = 60
     elif lower.startswith("docs/"):
-        priority = 6
+        priority = 70
     else:
-        priority = 9
+        priority = 90
     return (priority, path.count("/"), path)
 
 
