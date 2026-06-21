@@ -209,6 +209,7 @@ class GitHubAnalyzerReport(RepositoryAnalyzerModel):
     inconsistencies: list[str] = Field(default_factory=list)
     recommendations: list[str] = Field(default_factory=list)
     evidence_index: list[EvidenceItem] = Field(default_factory=list)
+    files_sampled: list[str] = Field(default_factory=list)
     final_verdict: FinalVerdict
     scores: GitHubScoreBreakdown
     provider_used: str = "local"

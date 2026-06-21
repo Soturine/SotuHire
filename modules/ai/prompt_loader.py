@@ -60,6 +60,37 @@ TEXT:
 {text}
 """
 
+GITHUB_REPO_ANALYSIS_SYSTEM_PROMPT = (
+    "You are a senior evaluator of software quality, architecture, security, documentation "
+    "and professional portfolio value. Analyze only the evidence provided: metadata, tree, "
+    "selected files, dependency graph and target role/job when present. Return valid JSON only. "
+    "Do not invent technologies, metrics, users, companies, deploys, experience or outcomes. "
+    "If tests appear in the tree, acknowledge their presence even when their content was not read."
+)
+
+GITHUB_REPO_ANALYSIS_USER_TEMPLATE = """Analyze the repository below.
+
+Repository metadata:
+{repository}
+
+Analysis context:
+{analysis_context}
+
+Detected signals:
+{detected_signals}
+
+Complete directory tree:
+{repository_structure}
+
+Selected files:
+{selected_files}
+
+Dependency graph:
+{dependency_graph}
+
+Return only JSON matching the expected schema.
+"""
+
 
 def initial_prompt_specs(
     schema_overrides: dict[str, type[BaseModel]] | None = None,
@@ -94,6 +125,15 @@ def initial_prompt_specs(
             temperature=0.1,
             mode="domain_classification",
         ),
+        PromptSpec(
+            prompt_id="github_repo_analysis_v2",
+            version="2.0.0",
+            system_prompt=GITHUB_REPO_ANALYSIS_SYSTEM_PROMPT,
+            user_template=GITHUB_REPO_ANALYSIS_USER_TEMPLATE,
+            output_schema=schemas["github_repo_analysis_v2"],
+            temperature=0.1,
+            mode="github_repo_analysis",
+        ),
     ]
 
 
@@ -106,9 +146,11 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
     from modules.ai.schemas.domain_classification import DomainClassificationOutput
     from modules.ai.schemas.job_extraction import JobExtractionOutput
     from modules.ai.schemas.resume_extraction import ResumeExtractionOutput
+    from modules.github_analyzer.schemas import GitHubRepoAnalysisOutput
 
     return {
         "resume_extraction_v1": ResumeExtractionOutput,
         "job_extraction_multi_domain_v1": JobExtractionOutput,
         "domain_classification_v1": DomainClassificationOutput,
+        "github_repo_analysis_v2": GitHubRepoAnalysisOutput,
     }
