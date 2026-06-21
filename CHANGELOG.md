@@ -26,6 +26,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ### Alterado
 
+- Versão do projeto atualizada para `1.0.0`.
 - README, roadmap, visão, regras de matching e docs do Match Engine foram atualizados para refletir
   a versão estável v1.0.0.
 - A home do MkDocs passou a apresentar o produto como site público estático, sem prometer execução

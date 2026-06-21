@@ -316,7 +316,7 @@ A Match Engine 2.0 deve considerar pelo menos:
 - ATS;
 - riscos.
 
-Pesos implementados na v0.12.0:
+Pesos default consolidados a partir da v0.12.0:
 
 ```text
 required_requirements: 30%
@@ -331,15 +331,15 @@ preferences_fit: 5%
 risk_adjustment: penalidade
 ```
 
-Os pesos podem mudar por domínio em versões futuras.
+Na v1.0.0, o Match Engine 2.0 também aplica overrides simples por domínio.
 
 Exemplo:
 
-- enfermagem: credencial e setor pesam mais;
-- arquitetura: portfólio e ferramentas visuais pesam mais;
-- TI: projetos, stack, testes e arquitetura pesam mais;
-- pedagogia: etapa de ensino, BNCC e experiência com público pesam mais;
-- engenharia civil: obras, orçamento, normas e software pesam mais.
+- enfermagem/saúde: credencial, formação e setor pesam mais;
+- arquitetura: portfólio, softwares e projeto executivo pesam mais;
+- cybersecurity: ferramentas, práticas e evidências técnicas pesam mais;
+- pedagogia: formação, BNCC, etapa de ensino e inclusão pesam mais;
+- engenharia civil: CREA, obras, orçamento, normas e software pesam mais.
 
 ## Critério de qualidade
 

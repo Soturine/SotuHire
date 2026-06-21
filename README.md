@@ -2,6 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
+[![Release](https://img.shields.io/badge/release-v1.0.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.0.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 

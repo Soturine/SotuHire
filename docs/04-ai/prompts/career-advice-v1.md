@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: career_advice_v1
 PROMPT_VERSION: 1.0.0
-STATUS: reviewed in v0.12.0; planned for deeper v1.0 workflow
+STATUS: reviewed for v1.0.0; deeper automated workflow remains post-v1
 OWNER: SotuHire
 USED_BY: modules/recommendations, modules/profile, modules/tracker
 DEFAULT_TEMPERATURE: 0.1

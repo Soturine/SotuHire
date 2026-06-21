@@ -124,13 +124,13 @@ Os prompts específicos podem expandir esse formato com schemas próprios.
 | Job Extraction | implementado | implementado | v0.10.0 |
 | Domain Classification | implementado | implementado | v0.10.0 |
 | Match Analysis | revisado | engine determinística implementada; IA opcional futura | v0.12.0 |
-| ATS Analysis | revisado | heurística existente; integração profunda futura | v0.12.0/v1.0 |
-| Resume Tailor | revisado | fallback seguro existente; integração profunda futura | v0.12.0/v1.0 |
+| ATS Analysis | revisado | heurística existente com integração de evidências do Match Engine 2.0 | v1.0.0 |
+| Resume Tailor | revisado | fallback seguro com integração de evidências do Match Engine 2.0 | v1.0.0 |
 | GitHub Repo Analysis | implementado | implementado | v0.11.0 |
 | GitHub Profile Analysis | revisado | fallback heurístico existente | v0.11.0 |
 | Portfolio Gap Analysis | revisado | planejamento/futuro | v0.11.0 |
 | Hidden Job Detection | planejado | não implementado | pós-v0.10.0 |
-| Career Advice | revisado | planejamento/futuro | v1.0 |
+| Career Advice | revisado | recomendações seguras; automação profunda pós-v1 | pós-v1 |
 
 ## Como o Codex deve usar estes documentos
 

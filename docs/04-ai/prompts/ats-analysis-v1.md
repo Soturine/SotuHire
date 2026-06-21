@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: ats_analysis_v1
 PROMPT_VERSION: 1.0.0
-STATUS: reviewed in v0.12.0; heuristic scoring exists, deeper v2 integration future
+STATUS: reviewed for v1.0.0; deterministic Match Engine 2.0 keyword evidence integration available
 OWNER: SotuHire
 USED_BY: modules/ats, modules/recommendations
 DEFAULT_TEMPERATURE: 0.1
