@@ -4,6 +4,47 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.0.0] - 2026-06-21
+
+### Adicionado
+
+- Apresentação do Match Engine 2.0 no fluxo principal, com `Confidence`, `Evidence Score`, gaps
+  críticos, requisitos atendidos/parciais/ausentes, competências transferíveis, evidências usadas e
+  ações seguras.
+- Enriquecimento determinístico do `analyze_structured` com Match Engine 2.0, mantendo fallback
+  legado quando a extração estruturada local não estiver disponível.
+- Classificação ATS baseada em evidências do Match Engine 2.0, separando keywords presentes,
+  keywords que só devem ser adicionadas se forem verdadeiras e keywords sem evidência.
+- Resume Tailor usando evidências do Match Engine 2.0 para keywords seguras, warnings e gaps
+  críticos.
+- Pesos configuráveis por domínio em `modules/matching/domain_weights.py`, com perfis iniciais para
+  enfermagem/saúde, arquitetura, cybersecurity, pedagogia e engenharia civil.
+- Demos fictícias multiárea em `examples/` e outputs estáticos em `examples/outputs/`.
+- GitHub Pages preparado como site estático de produto, documentação e demo, com páginas sobre
+  demo v1.0 e diferença entre Pages e app local.
+- Documento de desenvolvimento `docs/07-development/v1.0.0-stable-release.md`.
+
+### Alterado
+
+- README, roadmap, visão, regras de matching e docs do Match Engine foram atualizados para refletir
+  a versão estável v1.0.0.
+- A home do MkDocs passou a apresentar o produto como site público estático, sem prometer execução
+  do backend no GitHub Pages.
+- A UI diferencia melhor score, confidence, evidência e risco.
+
+### Segurança
+
+- O GitHub Pages é documentado explicitamente como site estático; o app completo continua local via
+  Streamlit/Local Companion API.
+- Demos usam apenas nomes, empresas e cenários fictícios.
+- Tailor e ATS preservam linguagem condicional para itens sem evidência.
+- Nenhum comportamento de coleta autenticada, compliance ou exposição de API keys foi alterado.
+
+### Validação
+
+- QA final executado com `ruff check .`, `ruff format --check .`, `pytest`, `mkdocs build --strict`,
+  `python -m compileall modules tests` e `pyright`.
+
 ## [0.12.0] - 2026-06-21
 
 ### Adicionado

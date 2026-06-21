@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire e os próximos marcos planejados a partir da v0.12.0.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.0.0 e os próximos refinamentos pós-v1.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,18 +8,18 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v0.12.0 |
+| Versão atual considerada | v1.0.0 |
 | Natureza da base atual | Produto local-first já funcional, não MVP inicial |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v1.0.0 |
+| Próximo ciclo técnico | pós-v1 |
 | Foco de produto | Copiloto de carreira multiárea |
-| Foco técnico imediato | Estabilização, UI polish, exemplos e fluxo generalista |
-| Grande lacuna atual | Expor melhor a explicação v2 na experiência principal |
-| Risco principal | Crescer integrações sem consolidar o fluxo generalista ponta a ponta |
+| Foco técnico imediato | Refinamento visual, demos guiadas e feedback de uso real |
+| Grande lacuna atual | Screenshots/walkthroughs v1 ainda podem ficar mais ricos |
+| Risco principal | Adicionar features grandes antes de observar o uso da v1 |
 
-## Estado atual — v0.12.0
+## Estado atual — v1.0.0
 
-A v0.12.0 é a base ampla atual do produto, com Match Engine 2.0 implementado.
+A v1.0.0 é a primeira versão estável e demonstrável do produto.
 
 Ela já possui:
 
@@ -40,12 +40,17 @@ Ela já possui:
 - Local Companion API;
 - análise inicial de GitHub e portfólio;
 - Match Engine 2.0 com requisitos, evidências, gaps críticos, confidence e explicação;
+- apresentação visual do Match Engine 2.0 no fluxo principal;
+- ATS e Resume Tailor usando sinais/evidências do match;
+- pesos por domínio profissional;
+- demos fictícias multiárea;
+- GitHub Pages como site estático de produto/documentação/demo;
 - Gemini opcional;
 - documentação ampla;
 - testes automatizados;
 - workflows de qualidade e documentação.
 
-A base até a v0.12.0 prova que o SotuHire existe como produto multiárea. A partir daqui, o foco deve ser coerência, confiabilidade, polish de UI, exemplos e fluxo generalista demonstrável.
+A base até a v1.0.0 prova que o SotuHire existe como produto multiárea demonstrável. A partir daqui, o foco deve ser feedback real, refinamento visual e evolução incremental.
 
 ## Diagnóstico atual
 
@@ -59,11 +64,11 @@ A base até a v0.12.0 prova que o SotuHire existe como produto multiárea. A par
 
 ### O que ainda está fraco
 
-- O matching v2 já existe, mas a apresentação principal ainda pode expor melhor explicações, gaps e evidências.
+- A apresentação v2 já existe, mas pode ganhar screenshots e walkthroughs mais atuais.
 - Os parsers ainda carregam viés forte para tecnologia/dev.
 - A IA existe, mas ainda não opera por Prompt Registry completo.
 - Os prompts atuais implementados no código ainda são pequenos comparados à visão planejada.
-- Integrações profundas entre Match Engine 2.0, ATS e Resume Tailor ainda podem amadurecer.
+- Integrações entre Match Engine 2.0, ATS, Tailor e GitHub Analyzer podem ficar mais visuais.
 - A documentação anterior misturava estado atual, histórico antigo e planos futuros.
 
 ### O que não deve acontecer agora
@@ -547,7 +552,7 @@ Fechar uma versão estável, demonstrável e confiável do SotuHire como platafo
 
 ## Demonstrações recomendadas
 
-A v1.0 deve ter pelo menos quatro cenários fictícios:
+A v1.0 inclui cenários fictícios para demonstração:
 
 1. Dev/Backend ou Cybersecurity.
 2. Enfermagem ou saúde.

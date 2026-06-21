@@ -33,6 +33,7 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - possui base de extração estruturada por IA com JSON Guard, Pydantic e fallback local;
 - classifica domínios e requisitos multiárea com Domain Intelligence inicial;
 - executa Match Engine 2.0 com requisitos, evidências, gaps críticos, confidence e explicação;
+- ajusta pesos de matching por domínio profissional;
 - calcula Match Score, ATS Score, Opportunity Fit Score e Risk Score;
 - explica pontos fortes, gaps, riscos e palavras-chave ausentes;
 - sugere adaptações de currículo sem inventar experiências;
@@ -52,6 +53,7 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - analisa perfis GitHub, repositórios, READMEs, commits, projetos e portfólios públicos;
 - transforma projetos em evidências reutilizáveis para vagas, memória e perfil profissional;
 - oferece análise standalone na extensão ou análise conectada ao SotuHire local.
+- publica documentação e demo estática no GitHub Pages.
 
 ## Como Usar
 
@@ -70,6 +72,18 @@ resultados, consultar a **Memória de carreira** e acompanhar candidaturas no tr
 
 Também é possível clicar em **Rodar análise de exemplo** para conhecer o fluxo sem usar dados
 pessoais.
+
+### GitHub Pages vs app local
+
+O site em [soturine.github.io/SotuHire](https://soturine.github.io/SotuHire/) é estático: serve para
+documentação, visão de produto e demos. Ele não roda Python, Streamlit, IA, Local Companion API ou
+backend.
+
+O app completo continua local:
+
+```bash
+streamlit run app.py
+```
 
 ## Instalação
 
@@ -213,8 +227,8 @@ automaticamente.
 | `modules/analyzer`, `modules/ats`, `modules/preferences` | Scores, recomendação, riscos e aderência às preferências. |
 | `modules/ai` | Providers, diagnóstico, Gemini opcional, Prompt Registry, JSON Guard e extração estruturada. |
 | `modules/domain_intelligence` | Classificação multiárea, aliases, requisitos e sinais de profissões regulamentadas. |
-| `modules/matching` | Match Engine 2.0, evidências, requisitos, transferable skills, scoring, risk adjustment e explanation builder. |
-| `modules/resume_tailor` | Sugestões rastreáveis para adaptar o currículo. |
+| `modules/matching` | Match Engine 2.0, evidências, requisitos, pesos por domínio, transferable skills, scoring, risk adjustment e explanation builder. |
+| `modules/resume_tailor` | Sugestões rastreáveis para adaptar o currículo com evidências do match. |
 | `modules/scraping`, `modules/opportunities` | Conectores, coleta, deduplicação e armazenamento de oportunidades. |
 | `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
 | `modules/tracker`, `modules/storage` | Histórico, Kanban, follow-up e persistência local. |
@@ -295,6 +309,9 @@ mkdocs serve
 - Domain Intelligence inicial para vagas e currículos multiárea;
 - Match Engine 2.0 com requisitos obrigatórios/desejáveis, evidências, gaps críticos, confidence e
   explicações;
+- pesos de match por domínio, ATS evidence review e Resume Tailor seguro;
+- GitHub Pages como site estático de documentação/demo;
+- demos fictícias multiárea em `examples/`;
 - scores explicáveis e Resume Tailor;
 - tracker, histórico e dashboard;
 - Search Intelligence e Hidden Jobs Radar;
@@ -305,9 +322,12 @@ mkdocs serve
 - GitHub Analyzer 2.0 com GitHub API pública, tree builder, sampler, dependency graph, evidence
   index, scoring calculado por código e fallback local.
 
-### Próximas evoluções documentadas
+### Pós-v1
 
-- v1.0: versão generalista estável de inteligência de carreira.
+- melhorar screenshots específicos da UI v1;
+- aprofundar visualmente a integração GitHub Analyzer + Match Engine;
+- criar walkthroughs em vídeo/GIF quando houver assets reais;
+- evoluir pesos por domínio para configuração externa se o uso real justificar.
 
 O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).
 

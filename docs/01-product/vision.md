@@ -354,6 +354,17 @@ O SotuHire está funcionando bem quando o usuário consegue:
 9. Salvar a análise no tracker.
 10. Saber o que melhorar para próximas vagas.
 
+## Estado v1.0.0
+
+Na v1.0.0, o SotuHire já é uma versão estável e demonstrável:
+
+- o app completo roda localmente via Streamlit;
+- GitHub Pages funciona como site estático de produto, documentação e demo;
+- Match Engine 2.0 aparece no fluxo principal com confidence, evidências e gaps críticos;
+- ATS e Resume Tailor usam sinais do match para preservar sugestões seguras;
+- exemplos fictícios multiárea mostram backend, enfermagem, pedagogia, engenharia civil,
+  arquitetura e cybersecurity.
+
 ## Visão de longo prazo
 
 A versão madura do SotuHire deve ser uma plataforma local-first de inteligência de carreira que ajuda pessoas de diferentes áreas a transformar experiências, projetos e habilidades em decisões profissionais melhores.

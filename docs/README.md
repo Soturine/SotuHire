@@ -197,6 +197,9 @@ estágios, jovem aprendiz, transição de carreira e outros perfis.
 
 ## Marcos documentados
 
+- v1.0.0 é a primeira versão estável e demonstrável, com UI expondo Match Engine 2.0, pesos por
+  domínio, ATS/Tailor conectados ao match, demos fictícias multiárea e GitHub Pages como site
+  estático.
 - v0.9.0 já é um produto local-first funcional, com análise local, ATS, matching, tracker,
   dashboard, memória, RAG, extensão, Local Companion API, Hidden Jobs Radar e análise de
   GitHub/portfólio.

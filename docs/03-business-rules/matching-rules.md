@@ -225,7 +225,16 @@ preferences_fit: 5%
 risk_adjustment: penalidade
 ```
 
-Esses pesos são a base da v0.12.0 e podem evoluir por domínio em versões futuras.
+Esses pesos são o default. Na v1.0.0, `modules/matching/domain_weights.py` adiciona overrides por
+domínio.
+
+Perfis iniciais:
+
+- saúde/enfermagem: formação e registro profissional pesam mais; GitHub/portfolio não penaliza;
+- arquitetura: portfolio, evidências visuais e softwares pesam mais;
+- cybersecurity: ferramentas, evidências técnicas e GitHub/portfolio pesam mais;
+- pedagogia: formação, BNCC, domínio educacional e preferências pesam mais;
+- engenharia civil: CREA, formação, obras, AutoCAD/Revit, evidências e normas pesam mais.
 
 ## Regras por domínio
 
