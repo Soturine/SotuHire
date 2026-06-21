@@ -136,10 +136,10 @@ estágios, jovem aprendiz, transição de carreira e outros perfis.
   dashboard, memória, RAG, extensão, Local Companion API, Hidden Jobs Radar e análise de
   GitHub/portfólio.
 - v0.9.1 é uma versão documental: navegação, README, CHANGELOG e prompt playbooks.
-- v0.10.0 está planejada para AI Structured Extraction e Domain Intelligence, com Prompt Registry,
+- v0.10.0 implementou AI Structured Extraction e Domain Intelligence, com Prompt Registry,
   JSON Guard, schemas Pydantic, extração estruturada de currículo/vaga e confiança por campo.
-- v0.11.0 está planejada como GitHub Analyzer 2.0, com API, árvore completa, sampler, contexto de
-  arquivos, prompt estruturado, evidence index e score de portfólio.
+- v0.11.0 implementou GitHub Analyzer 2.0, com API pública do GitHub, árvore, sampler, contexto de
+  arquivos, Prompt Registry, evidence index, scoring por código e fallback local.
 - v0.12.0 está planejada como Match Engine 2.0, saindo de keyword matching simples para matching por
   requisitos, evidências, domínio, senioridade, gaps críticos e competências transferíveis.
 - v1.0 é a meta de versão generalista estável de inteligência de carreira.

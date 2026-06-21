@@ -157,7 +157,7 @@ O módulo pode sugerir bullets:
 
 # Atualização: GitHub Analyzer 2.0
 
-A análise GitHub/Portfólio deve evoluir de sinais visíveis e heurísticas simples para um pipeline profundo no backend/site do SotuHire.
+A análise GitHub/Portfólio evoluiu na v0.11.0 de sinais visíveis e heurísticas simples para uma base de pipeline profundo no backend/site do SotuHire.
 
 A referência conceitual é a abordagem de ferramentas como REPOLOGS: analisar metadados, árvore, arquivos relevantes, dependências e documentação, em vez de depender apenas do DOM da página aberta.
 
@@ -176,7 +176,7 @@ A extensão deve:
 
 ### Backend/site
 
-O backend deve:
+O backend agora possui base para:
 
 - chamar GitHub API;
 - coletar metadados;
@@ -190,6 +190,10 @@ O backend deve:
 - validar JSON;
 - calcular scores;
 - salvar evidências.
+
+Implementação principal: `modules/github_analyzer/`.
+
+O fluxo antigo de `modules/portfolio` continua como fallback quando a API falha ou quando a extensão envia apenas sinais capturados.
 
 ## Pipeline proposto
 

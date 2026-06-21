@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: job_extraction_multi_domain_v1
 PROMPT_VERSION: 1.0.0
-STATUS: planned for v0.10.0
+STATUS: implemented in v0.10.0
 OWNER: SotuHire
 USED_BY: modules/jobs, modules/domain_intelligence, modules/ai
 DEFAULT_TEMPERATURE: 0.1

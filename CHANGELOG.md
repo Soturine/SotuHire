@@ -4,6 +4,41 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [0.11.0] - 2026-06-21
+
+### Adicionado
+
+- Módulo `modules/github_analyzer` com cliente GitHub público, modelos Pydantic, tree builder,
+  filtros, sampler, dependency graph, context builder, evidence index, schemas, scoring e service.
+- Suporte a `GITHUB_TOKEN` opcional no cliente GitHub para aumentar rate limit sem exigir token em
+  repositórios públicos simples.
+- Registro do prompt `github_repo_analysis_v2` no Prompt Registry, com saída validável por JSON
+  Guard/Pydantic.
+- Pipeline determinístico de fallback para gerar relatório parcial quando a GitHub API falha ou
+  quando só há sinais capturados pela extensão.
+- Fixtures e testes unitários para URL parsing, árvore, sampler, dependency graph, context builder,
+  evidence index, scoring, service e fallback.
+
+### Alterado
+
+- Local Companion API passa a usar o GitHub Analyzer 2 quando o payload da extensão solicita análise
+  por API, mantendo o analyzer antigo de portfólio como fallback.
+- A extensão continua leve e apenas sinaliza `analysis_result.use_github_api` para o backend local.
+- Arquivos `requirements*.txt` foram movidos para `docs/requirements/`, mantendo a raiz mais limpa.
+- Versão do projeto atualizada para `0.11.0`.
+
+### Segurança
+
+- Tokens GitHub são opcionais, lidos por ambiente e não são enviados para a extensão/frontend.
+- O scoring aplica trava de segurança quando evidências indicam possível segredo exposto.
+- A análise diferencia arquivo presente na árvore de conteúdo realmente lido.
+- Nenhum comportamento de coleta autenticada foi alterado.
+
+### Documentação
+
+- Prompt playbook `github_repo_analysis_v2` revisado para refletir o pipeline implementado.
+- Docs de GitHub/portfólio e roadmap atualizados para a v0.11.0.
+
 ## [0.10.0] - 2026-06-21
 
 ### Adicionado

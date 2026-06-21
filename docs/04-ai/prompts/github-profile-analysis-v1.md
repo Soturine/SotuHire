@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: github_profile_analysis_v1
 PROMPT_VERSION: 1.0.0
-STATUS: planned for v0.11.0
+STATUS: reviewed in v0.11.0; deep profile pipeline future
 OWNER: SotuHire
 USED_BY: modules/github_analyzer, modules/portfolio
 DEFAULT_TEMPERATURE: 0.1

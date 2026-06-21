@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire e os próximos marcos planejados depois da v0.9.0.
+Este roadmap descreve o estado atual do SotuHire e os próximos marcos planejados a partir da v0.11.0.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,18 +8,18 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v0.9.0 |
+| Versão atual considerada | v0.11.0 |
 | Natureza da base atual | Produto local-first já funcional, não MVP inicial |
-| Próximo ciclo documental | v0.9.1 |
-| Próximo ciclo técnico | v0.10.0 |
+| Próximo ciclo documental | contínuo |
+| Próximo ciclo técnico | v0.12.0 |
 | Foco de produto | Copiloto de carreira multiárea |
-| Foco técnico imediato | Extração estruturada por IA + Domain Intelligence |
-| Grande lacuna atual | Código ainda depende bastante de heurísticas simples |
+| Foco técnico imediato | Match Engine 2.0 baseado em evidências |
+| Grande lacuna atual | Matching ainda precisa evoluir de keywords para requisitos evidenciados |
 | Risco principal | Prometer inteligência multiárea sem motor multiárea implementado |
 
-## Estado atual — v0.9.0
+## Estado atual — v0.11.0
 
-A v0.9.0 deve ser tratada como uma base ampla do produto.
+A v0.11.0 deve ser tratada como uma base ampla do produto.
 
 Ela já possui:
 
@@ -44,9 +44,9 @@ Ela já possui:
 - testes automatizados;
 - workflows de qualidade e documentação.
 
-A v0.9.0 prova que o SotuHire existe como produto. A partir daqui, o foco deve ser coerência, confiabilidade, generalização multiárea e orquestração de IA com contratos formais.
+A base até a v0.11.0 prova que o SotuHire existe como produto. A partir daqui, o foco deve ser coerência, confiabilidade, generalização multiárea e matching por evidências.
 
-## Diagnóstico da v0.9.0
+## Diagnóstico atual
 
 ### O que está bom
 

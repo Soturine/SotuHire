@@ -298,12 +298,11 @@ mkdocs serve
 - extensão assistiva multiportal, Local Companion API e importação paginada deduplicada;
 - calibração da memória, feedback de evidência e ranking de requisitos.
 - análise de GitHub, portfólio, READMEs e commits com evidências de projeto.
+- GitHub Analyzer 2.0 com GitHub API pública, tree builder, sampler, dependency graph, evidence
+  index, scoring calculado por código e fallback local.
 
 ### Próximas evoluções documentadas
 
-- v0.9.1: documentação, navegação e prompt playbooks;
-- v0.11.0: GitHub Analyzer 2.0, com API, árvore completa, sampler, contexto de arquivos, prompt
-  estruturado, evidence index e score de portfólio;
 - v0.12.0: Match Engine 2.0, com matching por requisitos, evidências, domínio, senioridade, gaps
   críticos e competências transferíveis;
 - v1.0: versão generalista estável de inteligência de carreira.

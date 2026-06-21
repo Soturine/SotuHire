@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: github_repo_analysis_v2
 PROMPT_VERSION: 2.0.0
-STATUS: planned for v0.11.0
+STATUS: implemented in v0.11.0
 OWNER: SotuHire
 USED_BY: modules/github_analyzer, modules/portfolio
 DEFAULT_TEMPERATURE: 0.1

@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: domain_classification_v1
 PROMPT_VERSION: 1.0.0
-STATUS: planned for v0.10.0
+STATUS: implemented in v0.10.0
 OWNER: SotuHire
 USED_BY: modules/domain_intelligence
 DEFAULT_TEMPERATURE: 0.1

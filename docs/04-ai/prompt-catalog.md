@@ -120,15 +120,15 @@ Os prompts específicos podem expandir esse formato com schemas próprios.
 
 | Prompt | Status documental | Status código | Marco |
 |---|---|---|---|
-| Resume Extraction | planejado | não implementado | v0.10.0 |
-| Job Extraction | planejado | não implementado | v0.10.0 |
-| Domain Classification | planejado | não implementado | v0.10.0 |
+| Resume Extraction | implementado | implementado | v0.10.0 |
+| Job Extraction | implementado | implementado | v0.10.0 |
+| Domain Classification | implementado | implementado | v0.10.0 |
 | Match Analysis | planejado | não implementado | v0.12.0 |
 | ATS Analysis | planejado | não implementado | v0.12.0 |
 | Resume Tailor | planejado | não implementado | v0.12.0 |
-| GitHub Repo Analysis | planejado | não implementado | v0.11.0 |
-| GitHub Profile Analysis | planejado | não implementado | v0.11.0 |
-| Portfolio Gap Analysis | planejado | não implementado | v0.11.0 |
+| GitHub Repo Analysis | implementado | implementado | v0.11.0 |
+| GitHub Profile Analysis | revisado | fallback heurístico existente | v0.11.0 |
+| Portfolio Gap Analysis | revisado | planejamento/futuro | v0.11.0 |
 | Hidden Job Detection | planejado | não implementado | pós-v0.10.0 |
 | Career Advice | planejado | não implementado | v0.12.0/v1.0 |
 
