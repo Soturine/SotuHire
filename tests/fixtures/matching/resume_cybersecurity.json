@@ -1,0 +1,48 @@
+{
+  "candidate_identity": {
+    "name": "Pessoa Cybersecurity",
+    "confidence": 0.86
+  },
+  "domains": [
+    {
+      "domain": "cybersecurity",
+      "confidence": 0.9,
+      "evidence": ["SOC e SIEM"]
+    }
+  ],
+  "seniority": {
+    "estimated_level": "junior",
+    "evidence": ["Analista SOC junior"],
+    "confidence": 0.76
+  },
+  "experiences": [
+    {
+      "title": "Analista SOC Junior",
+      "responsibilities": ["Monitoramento de alertas e documentacao de incidentes"],
+      "tools_or_methods": ["SIEM", "SOC", "risco", "investigacao", "documentacao"],
+      "domain": "cybersecurity",
+      "evidence": ["Triagem de alertas SIEM"],
+      "confidence": 0.82
+    }
+  ],
+  "tools": [
+    {
+      "name": "SIEM",
+      "normalized_name": "SIEM",
+      "category": "tool",
+      "evidence": ["Triagem de alertas SIEM"],
+      "confidence": 0.86
+    },
+    {
+      "name": "SOC",
+      "normalized_name": "SOC",
+      "category": "other",
+      "evidence": ["Rotina de SOC"],
+      "confidence": 0.8
+    }
+  ],
+  "extraction_confidence": {
+    "overall": 0.8,
+    "needs_user_review": false
+  }
+}

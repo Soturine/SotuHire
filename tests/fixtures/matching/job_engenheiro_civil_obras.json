@@ -1,0 +1,65 @@
+{
+  "job_identity": {
+    "title": "Engenheiro Civil de Obras",
+    "work_model": "field",
+    "confidence": 0.86
+  },
+  "domain_classification": {
+    "primary_domain": "engineering",
+    "is_regulated_profession": true,
+    "confidence": 0.9,
+    "evidence": ["CREA", "obras"]
+  },
+  "seniority": {
+    "level": "senior",
+    "confidence": 0.8
+  },
+  "requirements": [
+    {
+      "text": "Gestao de obra",
+      "normalized_name": "gestao_de_obra",
+      "category": "experience",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "engineering",
+      "evidence": "Gestao de obra obrigatoria",
+      "confidence": 0.84
+    }
+  ],
+  "softwares": [
+    {
+      "text": "AutoCAD",
+      "normalized_name": "AutoCAD",
+      "category": "software",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "engineering",
+      "evidence": "AutoCAD obrigatorio",
+      "confidence": 0.86
+    },
+    {
+      "text": "Revit",
+      "normalized_name": "Revit",
+      "category": "software",
+      "importance": "preferred",
+      "criticality": "medium",
+      "domain": "architecture",
+      "evidence": "Revit desejavel",
+      "confidence": 0.78
+    }
+  ],
+  "professional_licenses": [
+    {
+      "name": "CREA ativo",
+      "type": "professional_license",
+      "status": "active",
+      "evidence": ["CREA obrigatorio"],
+      "confidence": 0.92
+    }
+  ],
+  "keywords_for_ats": ["CREA", "AutoCAD", "Revit", "obra"],
+  "extraction_confidence": {
+    "overall": 0.84,
+    "needs_user_review": false
+  }
+}

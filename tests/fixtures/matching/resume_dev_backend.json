@@ -1,0 +1,87 @@
+{
+  "candidate_identity": {
+    "name": "Pessoa Dev Backend",
+    "location": "Sao Paulo",
+    "confidence": 0.9
+  },
+  "domains": [
+    {
+      "domain": "software_development",
+      "confidence": 0.9,
+      "evidence": ["Backend Python"]
+    }
+  ],
+  "seniority": {
+    "estimated_level": "mid",
+    "reasoning": "Tres anos em APIs backend.",
+    "evidence": ["Desenvolvedor Backend"],
+    "confidence": 0.82
+  },
+  "education": [
+    {
+      "course": "Analise e Desenvolvimento de Sistemas",
+      "institution": "Faculdade Exemplo",
+      "degree_type": "technical",
+      "status": "completed",
+      "evidence": ["ADS completo"],
+      "confidence": 0.8
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Desenvolvedor Backend",
+      "company": "Empresa Exemplo",
+      "responsibilities": ["Construiu APIs REST em Python"],
+      "tools_or_methods": ["Python", "FastAPI", "PostgreSQL", "REST APIs"],
+      "domain": "software_development",
+      "evidence": ["APIs em Python e FastAPI"],
+      "confidence": 0.86
+    }
+  ],
+  "skills": [
+    {
+      "name": "Python",
+      "normalized_name": "Python",
+      "category": "hard_skill",
+      "evidence": ["APIs em Python"],
+      "confidence": 0.88
+    },
+    {
+      "name": "REST APIs",
+      "normalized_name": "REST APIs",
+      "category": "hard_skill",
+      "evidence": ["Construiu APIs REST"],
+      "confidence": 0.82
+    }
+  ],
+  "tools": [
+    {
+      "name": "pytest",
+      "normalized_name": "pytest",
+      "category": "tool",
+      "evidence": ["Testes automatizados"],
+      "confidence": 0.76
+    }
+  ],
+  "softwares": [
+    {
+      "name": "PostgreSQL",
+      "normalized_name": "PostgreSQL",
+      "category": "software",
+      "evidence": ["Modelagem e consultas PostgreSQL"],
+      "confidence": 0.82
+    },
+    {
+      "name": "FastAPI",
+      "normalized_name": "FastAPI",
+      "category": "hard_skill",
+      "evidence": ["APIs FastAPI"],
+      "confidence": 0.86
+    }
+  ],
+  "extraction_confidence": {
+    "overall": 0.84,
+    "needs_user_review": false,
+    "reason": "Curriculo estruturado com evidencias tecnicas."
+  }
+}

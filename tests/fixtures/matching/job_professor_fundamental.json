@@ -1,0 +1,45 @@
+{
+  "job_identity": {
+    "title": "Professor Ensino Fundamental",
+    "work_model": "onsite",
+    "confidence": 0.84
+  },
+  "domain_classification": {
+    "primary_domain": "pedagogy",
+    "confidence": 0.88,
+    "evidence": ["Ensino Fundamental", "BNCC"]
+  },
+  "seniority": {
+    "level": "mid",
+    "confidence": 0.72
+  },
+  "requirements": [
+    {
+      "text": "BNCC obrigatoria",
+      "normalized_name": "BNCC",
+      "category": "regulation",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "pedagogy",
+      "evidence": "Planejamento alinhado a BNCC",
+      "confidence": 0.86
+    }
+  ],
+  "education_requirements": [
+    {
+      "text": "Licenciatura em Pedagogia",
+      "normalized_name": "Pedagogia",
+      "category": "education",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "pedagogy",
+      "evidence": "Licenciatura exigida",
+      "confidence": 0.82
+    }
+  ],
+  "keywords_for_ats": ["BNCC", "Pedagogia", "planejamento"],
+  "extraction_confidence": {
+    "overall": 0.82,
+    "needs_user_review": false
+  }
+}

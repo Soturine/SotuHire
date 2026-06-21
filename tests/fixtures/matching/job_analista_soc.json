@@ -1,0 +1,43 @@
+{
+  "job_identity": {
+    "title": "Analista SOC",
+    "work_model": "remote",
+    "confidence": 0.84
+  },
+  "domain_classification": {
+    "primary_domain": "cybersecurity",
+    "confidence": 0.9,
+    "evidence": ["SOC", "SIEM"]
+  },
+  "seniority": {
+    "level": "mid",
+    "confidence": 0.76
+  },
+  "requirements": [
+    {
+      "text": "SIEM",
+      "normalized_name": "SIEM",
+      "category": "tool",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "cybersecurity",
+      "evidence": "SIEM obrigatorio",
+      "confidence": 0.88
+    },
+    {
+      "text": "SOC",
+      "normalized_name": "SOC",
+      "category": "other",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "cybersecurity",
+      "evidence": "Experiencia em SOC",
+      "confidence": 0.84
+    }
+  ],
+  "keywords_for_ats": ["SIEM", "SOC", "risco", "incidentes"],
+  "extraction_confidence": {
+    "overall": 0.82,
+    "needs_user_review": false
+  }
+}

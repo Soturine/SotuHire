@@ -1,0 +1,65 @@
+{
+  "job_identity": {
+    "title": "Arquiteto de Interiores",
+    "work_model": "hybrid",
+    "confidence": 0.86
+  },
+  "domain_classification": {
+    "primary_domain": "architecture",
+    "is_regulated_profession": true,
+    "confidence": 0.9,
+    "evidence": ["CAU", "interiores"]
+  },
+  "seniority": {
+    "level": "mid",
+    "confidence": 0.76
+  },
+  "requirements": [
+    {
+      "text": "Projeto executivo",
+      "normalized_name": "projeto_executivo",
+      "category": "experience",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "architecture",
+      "evidence": "Projeto executivo obrigatorio",
+      "confidence": 0.8
+    }
+  ],
+  "softwares": [
+    {
+      "text": "AutoCAD",
+      "normalized_name": "AutoCAD",
+      "category": "software",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "architecture",
+      "evidence": "AutoCAD obrigatorio",
+      "confidence": 0.86
+    },
+    {
+      "text": "Revit",
+      "normalized_name": "Revit",
+      "category": "software",
+      "importance": "preferred",
+      "criticality": "medium",
+      "domain": "architecture",
+      "evidence": "Revit desejavel",
+      "confidence": 0.78
+    }
+  ],
+  "professional_licenses": [
+    {
+      "name": "CAU ativo",
+      "type": "professional_license",
+      "status": "active",
+      "evidence": ["CAU obrigatorio"],
+      "confidence": 0.92
+    }
+  ],
+  "keywords_for_ats": ["CAU", "AutoCAD", "Revit", "interiores"],
+  "extraction_confidence": {
+    "overall": 0.84,
+    "needs_user_review": false
+  }
+}

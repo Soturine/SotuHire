@@ -1,0 +1,51 @@
+{
+  "candidate_identity": {
+    "name": "Pessoa Pedagogia",
+    "confidence": 0.86
+  },
+  "domains": [
+    {
+      "domain": "pedagogy",
+      "confidence": 0.9,
+      "evidence": ["Docencia fundamental"]
+    }
+  ],
+  "seniority": {
+    "estimated_level": "mid",
+    "evidence": ["Professora do ensino fundamental"],
+    "confidence": 0.8
+  },
+  "education": [
+    {
+      "course": "Licenciatura em Pedagogia",
+      "institution": "Universidade Exemplo",
+      "degree_type": "licentiate",
+      "status": "completed",
+      "evidence": ["Licenciatura completa"],
+      "confidence": 0.9
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Professor Ensino Fundamental",
+      "responsibilities": ["Planejamento de aulas alinhado a BNCC"],
+      "tools_or_methods": ["BNCC", "planejamento", "comunicacao"],
+      "domain": "pedagogy",
+      "evidence": ["Aulas alinhadas a BNCC"],
+      "confidence": 0.86
+    }
+  ],
+  "skills": [
+    {
+      "name": "BNCC",
+      "normalized_name": "BNCC",
+      "category": "regulation",
+      "evidence": ["Planejamento alinhado a BNCC"],
+      "confidence": 0.88
+    }
+  ],
+  "extraction_confidence": {
+    "overall": 0.82,
+    "needs_user_review": false
+  }
+}

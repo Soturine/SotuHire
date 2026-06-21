@@ -1,0 +1,50 @@
+{
+  "candidate_identity": {
+    "name": "Pessoa Psicologia",
+    "confidence": 0.86
+  },
+  "domains": [
+    {
+      "domain": "psychology",
+      "confidence": 0.9,
+      "evidence": ["Psicologia organizacional"]
+    }
+  ],
+  "seniority": {
+    "estimated_level": "mid",
+    "evidence": ["Psicologa em RH"],
+    "confidence": 0.8
+  },
+  "education": [
+    {
+      "course": "Bacharelado em Psicologia",
+      "degree_type": "bachelor",
+      "status": "completed",
+      "evidence": ["Psicologia"],
+      "confidence": 0.88
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Psicologa RH",
+      "responsibilities": ["Escuta ativa e desenvolvimento humano"],
+      "tools_or_methods": ["escuta ativa", "desenvolvimento humano", "RH"],
+      "domain": "psychology",
+      "evidence": ["Atuacao em RH"],
+      "confidence": 0.84
+    }
+  ],
+  "professional_licenses": [
+    {
+      "name": "CRP ativo",
+      "type": "professional_license",
+      "status": "active",
+      "evidence": ["CRP ativo informado"],
+      "confidence": 0.9
+    }
+  ],
+  "extraction_confidence": {
+    "overall": 0.82,
+    "needs_user_review": false
+  }
+}

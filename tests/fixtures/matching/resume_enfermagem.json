@@ -1,0 +1,52 @@
+{
+  "candidate_identity": {
+    "name": "Pessoa Enfermagem",
+    "confidence": 0.88
+  },
+  "domains": [
+    {
+      "domain": "nursing",
+      "confidence": 0.9,
+      "evidence": ["Enfermagem hospitalar"]
+    }
+  ],
+  "seniority": {
+    "estimated_level": "mid",
+    "evidence": ["Enfermeiro assistencial"],
+    "confidence": 0.8
+  },
+  "education": [
+    {
+      "course": "Bacharelado em Enfermagem",
+      "institution": "Universidade Exemplo",
+      "degree_type": "bachelor",
+      "status": "completed",
+      "evidence": ["Graduacao em Enfermagem"],
+      "confidence": 0.9
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Enfermeiro UTI",
+      "company": "Hospital Exemplo",
+      "responsibilities": ["Protocolos assistenciais e documentacao clinica"],
+      "tools_or_methods": ["protocolos", "documentacao", "UTI"],
+      "domain": "nursing",
+      "evidence": ["Atuacao em UTI"],
+      "confidence": 0.86
+    }
+  ],
+  "professional_licenses": [
+    {
+      "name": "COREN ativo",
+      "type": "professional_license",
+      "status": "active",
+      "evidence": ["COREN ativo informado no curriculo"],
+      "confidence": 0.92
+    }
+  ],
+  "extraction_confidence": {
+    "overall": 0.84,
+    "needs_user_review": false
+  }
+}

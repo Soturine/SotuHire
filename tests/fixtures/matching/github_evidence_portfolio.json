@@ -1,0 +1,86 @@
+{
+  "repository_identity": {
+    "owner": "example",
+    "name": "portfolio",
+    "url": "https://github.com/example/portfolio",
+    "project_type": "portfolio",
+    "detected_domains": ["software_development"],
+    "confidence": 0.82
+  },
+  "executive_summary": {
+    "short_summary": "Portfolio web.",
+    "professional_summary": "Projeto demonstra frontend e apresentacao profissional.",
+    "recruiter_summary": "Portfolio util como evidencia complementar.",
+    "limitations": []
+  },
+  "dimension_scores": {
+    "tests": 5,
+    "security": 7,
+    "architecture": 7,
+    "code_quality": 7,
+    "documentation": 7,
+    "consistency": 7,
+    "maintainability": 7,
+    "portfolio_value": 9,
+    "resume_evidence": 7,
+    "recruiter_readiness": 8,
+    "job_alignment": 6
+  },
+  "tech_stack": {
+    "languages": ["TypeScript"],
+    "frameworks": ["React"],
+    "libraries": [],
+    "tools": ["Vite"],
+    "databases": [],
+    "devops": [],
+    "testing_tools": [],
+    "detected_from_files": []
+  },
+  "architecture": {
+    "rating": "good"
+  },
+  "security": {
+    "risk_level": "low"
+  },
+  "portfolio_value": {
+    "best_fit_roles": ["Frontend Developer"],
+    "skills_demonstrated": [
+      {
+        "skill": "React",
+        "category": "hard_skill",
+        "evidence_files": ["src/App.tsx"],
+        "confidence": 0.86
+      }
+    ],
+    "career_strengths": ["Apresentacao visual"],
+    "career_weaknesses": [],
+    "how_to_present_in_interview": ["Mostrar estudos de caso"]
+  },
+  "resume_evidence": {
+    "safe_resume_bullets": [],
+    "skills_to_add_if_true": ["React"],
+    "do_not_claim": []
+  },
+  "final_verdict": {
+    "is_portfolio_ready": true,
+    "one_sentence_verdict": "Portfolio pronto como evidencia complementar."
+  },
+  "scores": {
+    "technical_score": 72,
+    "portfolio_score": 88,
+    "resume_evidence_score": 72,
+    "recruiter_readiness_score": 78,
+    "job_alignment_score": 64,
+    "overall_score": 74,
+    "documentation_score": 72,
+    "test_signal_score": 50,
+    "security_score": 80,
+    "security_risk_level": "low",
+    "grade": "B",
+    "confidence_score": 0.76,
+    "applied_caps": []
+  },
+  "files_sampled": ["src/App.tsx", "README.md"],
+  "provider_used": "local",
+  "fallback_used": false
+}

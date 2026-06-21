@@ -1,0 +1,44 @@
+{
+  "job_identity": {
+    "title": "Psicologo RH",
+    "work_model": "hybrid",
+    "confidence": 0.84
+  },
+  "domain_classification": {
+    "primary_domain": "psychology",
+    "secondary_domains": ["business"],
+    "is_regulated_profession": true,
+    "confidence": 0.88,
+    "evidence": ["CRP", "RH"]
+  },
+  "seniority": {
+    "level": "mid",
+    "confidence": 0.74
+  },
+  "requirements": [
+    {
+      "text": "Experiencia em RH",
+      "normalized_name": "RH",
+      "category": "experience",
+      "importance": "preferred",
+      "criticality": "medium",
+      "domain": "business",
+      "evidence": "Experiencia em RH desejavel",
+      "confidence": 0.78
+    }
+  ],
+  "professional_licenses": [
+    {
+      "name": "CRP ativo",
+      "type": "professional_license",
+      "status": "active",
+      "evidence": ["CRP obrigatorio"],
+      "confidence": 0.92
+    }
+  ],
+  "keywords_for_ats": ["CRP", "RH", "escuta ativa"],
+  "extraction_confidence": {
+    "overall": 0.82,
+    "needs_user_review": false
+  }
+}

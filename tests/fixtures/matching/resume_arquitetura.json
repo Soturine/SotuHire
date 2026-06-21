@@ -1,0 +1,66 @@
+{
+  "candidate_identity": {
+    "name": "Pessoa Arquitetura",
+    "confidence": 0.86
+  },
+  "domains": [
+    {
+      "domain": "architecture",
+      "confidence": 0.9,
+      "evidence": ["Arquitetura de interiores"]
+    }
+  ],
+  "seniority": {
+    "estimated_level": "mid",
+    "evidence": ["Projetos de interiores"],
+    "confidence": 0.78
+  },
+  "education": [
+    {
+      "course": "Bacharelado em Arquitetura e Urbanismo",
+      "degree_type": "bachelor",
+      "status": "completed",
+      "evidence": ["Arquitetura e Urbanismo"],
+      "confidence": 0.9
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Arquiteto de Interiores",
+      "responsibilities": ["Briefing, projeto executivo e atendimento ao cliente"],
+      "tools_or_methods": ["briefing", "AutoCAD", "Revit", "projeto"],
+      "domain": "architecture",
+      "evidence": ["Projetos residenciais"],
+      "confidence": 0.84
+    }
+  ],
+  "softwares": [
+    {
+      "name": "AutoCAD",
+      "normalized_name": "AutoCAD",
+      "category": "software",
+      "evidence": ["Plantas em AutoCAD"],
+      "confidence": 0.86
+    },
+    {
+      "name": "Revit",
+      "normalized_name": "Revit",
+      "category": "software",
+      "evidence": ["Modelagem em Revit"],
+      "confidence": 0.82
+    }
+  ],
+  "professional_licenses": [
+    {
+      "name": "CAU ativo",
+      "type": "professional_license",
+      "status": "active",
+      "evidence": ["CAU ativo informado"],
+      "confidence": 0.9
+    }
+  ],
+  "extraction_confidence": {
+    "overall": 0.84,
+    "needs_user_review": false
+  }
+}

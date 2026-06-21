@@ -1,0 +1,121 @@
+{
+  "repository_identity": {
+    "owner": "example",
+    "name": "backend-api",
+    "url": "https://github.com/example/backend-api",
+    "project_type": "api",
+    "detected_domains": ["software_development"],
+    "confidence": 0.9
+  },
+  "executive_summary": {
+    "short_summary": "API backend em FastAPI.",
+    "professional_summary": "Projeto demonstra Python, FastAPI, PostgreSQL e testes.",
+    "recruiter_summary": "Repositorio util para evidenciar backend.",
+    "limitations": []
+  },
+  "dimension_scores": {
+    "tests": 8,
+    "security": 7,
+    "architecture": 8,
+    "code_quality": 8,
+    "documentation": 7,
+    "consistency": 8,
+    "maintainability": 8,
+    "portfolio_value": 8,
+    "resume_evidence": 8,
+    "recruiter_readiness": 8,
+    "job_alignment": 8
+  },
+  "score_explanation": ["Stack detectada em arquivos reais."],
+  "tech_stack": {
+    "languages": ["Python"],
+    "frameworks": ["FastAPI"],
+    "libraries": ["Pydantic"],
+    "tools": ["pytest", "Docker"],
+    "databases": ["PostgreSQL"],
+    "devops": ["GitHub Actions"],
+    "testing_tools": ["pytest"],
+    "detected_from_files": [
+      {
+        "technology": "FastAPI",
+        "evidence_file": "modules/api.py",
+        "confidence": 0.92
+      }
+    ]
+  },
+  "architecture": {
+    "rating": "good",
+    "style": "modular",
+    "entry_points": ["modules/api.py"],
+    "important_modules": [
+      {
+        "path": "modules/api.py",
+        "role": "API",
+        "evidence": "FastAPI app"
+      }
+    ],
+    "positive_signals": ["Camadas separadas"],
+    "problems": [],
+    "improvement_suggestions": []
+  },
+  "security": {
+    "risk_level": "low",
+    "security_flags": [],
+    "positive_security_signals": ["Sem secrets nos arquivos amostrados"]
+  },
+  "documentation": ["README com setup"],
+  "testing": ["pytest"],
+  "portfolio_value": {
+    "best_fit_roles": ["Backend Developer"],
+    "skills_demonstrated": [
+      {
+        "skill": "FastAPI",
+        "category": "hard_skill",
+        "evidence_files": ["modules/api.py"],
+        "confidence": 0.92
+      },
+      {
+        "skill": "PostgreSQL",
+        "category": "software",
+        "evidence_files": ["modules/db.py"],
+        "confidence": 0.84
+      }
+    ],
+    "career_strengths": ["Backend API"],
+    "career_weaknesses": [],
+    "how_to_present_in_interview": ["Explicar arquitetura da API"]
+  },
+  "resume_evidence": {
+    "safe_resume_bullets": [],
+    "skills_to_add_if_true": ["FastAPI", "PostgreSQL"],
+    "do_not_claim": []
+  },
+  "job_alignment": ["Apoia vagas backend Python"],
+  "inconsistencies": [],
+  "recommendations": [],
+  "evidence_index": [],
+  "files_sampled": ["modules/api.py", "modules/db.py", "tests/test_api.py"],
+  "final_verdict": {
+    "is_portfolio_ready": true,
+    "main_blockers": [],
+    "next_3_actions": ["Adicionar exemplos de request"],
+    "one_sentence_verdict": "Repositorio pronto para apoiar candidatura backend."
+  },
+  "scores": {
+    "technical_score": 82,
+    "portfolio_score": 80,
+    "resume_evidence_score": 82,
+    "recruiter_readiness_score": 78,
+    "job_alignment_score": 84,
+    "overall_score": 82,
+    "documentation_score": 75,
+    "test_signal_score": 80,
+    "security_score": 82,
+    "security_risk_level": "low",
+    "grade": "B",
+    "confidence_score": 0.84,
+    "applied_caps": []
+  },
+  "provider_used": "local",
+  "fallback_used": false
+}

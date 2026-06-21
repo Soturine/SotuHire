@@ -1,0 +1,44 @@
+{
+  "job_identity": {
+    "title": "Enfermeiro UTI",
+    "work_model": "onsite",
+    "confidence": 0.86
+  },
+  "domain_classification": {
+    "primary_domain": "nursing",
+    "is_regulated_profession": true,
+    "confidence": 0.9,
+    "evidence": ["COREN", "UTI"]
+  },
+  "seniority": {
+    "level": "mid",
+    "evidence": ["Experiencia em UTI"],
+    "confidence": 0.78
+  },
+  "requirements": [
+    {
+      "text": "Experiencia em UTI",
+      "normalized_name": "UTI",
+      "category": "experience",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "nursing",
+      "evidence": "Experiencia em UTI",
+      "confidence": 0.82
+    }
+  ],
+  "professional_licenses": [
+    {
+      "name": "COREN ativo",
+      "type": "professional_license",
+      "status": "active",
+      "evidence": ["COREN obrigatorio"],
+      "confidence": 0.94
+    }
+  ],
+  "keywords_for_ats": ["COREN", "UTI", "protocolos"],
+  "extraction_confidence": {
+    "overall": 0.84,
+    "needs_user_review": false
+  }
+}

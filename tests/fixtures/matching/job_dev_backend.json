@@ -1,0 +1,59 @@
+{
+  "job_identity": {
+    "title": "Desenvolvedor Backend Python",
+    "company": "Empresa Produto",
+    "location": "Remoto",
+    "work_model": "remote",
+    "confidence": 0.86
+  },
+  "domain_classification": {
+    "primary_domain": "software_development",
+    "secondary_domains": ["data"],
+    "is_tech_job": true,
+    "confidence": 0.9,
+    "evidence": ["Python", "FastAPI", "PostgreSQL"]
+  },
+  "seniority": {
+    "level": "mid",
+    "evidence": ["Pleno"],
+    "confidence": 0.86
+  },
+  "requirements": [
+    {
+      "text": "Python obrigatorio",
+      "normalized_name": "Python",
+      "category": "hard_skill",
+      "importance": "required",
+      "criticality": "high",
+      "domain": "software_development",
+      "evidence": "Python obrigatorio",
+      "confidence": 0.92
+    },
+    {
+      "text": "FastAPI desejavel",
+      "normalized_name": "FastAPI",
+      "category": "hard_skill",
+      "importance": "preferred",
+      "criticality": "medium",
+      "domain": "software_development",
+      "evidence": "FastAPI desejavel",
+      "confidence": 0.85
+    },
+    {
+      "text": "PostgreSQL desejavel",
+      "normalized_name": "PostgreSQL",
+      "category": "software",
+      "importance": "preferred",
+      "criticality": "medium",
+      "domain": "data",
+      "evidence": "PostgreSQL desejavel",
+      "confidence": 0.82
+    }
+  ],
+  "keywords_for_ats": ["Python", "FastAPI", "PostgreSQL", "API", "pytest"],
+  "extraction_confidence": {
+    "overall": 0.86,
+    "needs_user_review": false,
+    "reason": "Vaga clara e estruturada."
+  }
+}

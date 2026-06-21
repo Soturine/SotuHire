@@ -1,0 +1,66 @@
+{
+  "candidate_identity": {
+    "name": "Pessoa Engenharia Civil",
+    "confidence": 0.88
+  },
+  "domains": [
+    {
+      "domain": "engineering",
+      "confidence": 0.9,
+      "evidence": ["Engenharia civil"]
+    }
+  ],
+  "seniority": {
+    "estimated_level": "senior",
+    "evidence": ["Gestao de obra"],
+    "confidence": 0.86
+  },
+  "education": [
+    {
+      "course": "Bacharelado em Engenharia Civil",
+      "degree_type": "bachelor",
+      "status": "completed",
+      "evidence": ["Engenharia Civil"],
+      "confidence": 0.9
+    }
+  ],
+  "experiences": [
+    {
+      "title": "Engenheiro Civil",
+      "responsibilities": ["Planejamento, orcamento e cronograma de obras"],
+      "tools_or_methods": ["AutoCAD", "Revit", "planejamento", "orcamento", "gestao de obra"],
+      "domain": "engineering",
+      "evidence": ["Obras residenciais"],
+      "confidence": 0.86
+    }
+  ],
+  "softwares": [
+    {
+      "name": "AutoCAD",
+      "normalized_name": "AutoCAD",
+      "category": "software",
+      "evidence": ["Projetos em AutoCAD"],
+      "confidence": 0.88
+    },
+    {
+      "name": "Revit",
+      "normalized_name": "Revit",
+      "category": "software",
+      "evidence": ["Compatibilizacao em Revit"],
+      "confidence": 0.82
+    }
+  ],
+  "professional_licenses": [
+    {
+      "name": "CREA ativo",
+      "type": "professional_license",
+      "status": "active",
+      "evidence": ["CREA ativo informado"],
+      "confidence": 0.9
+    }
+  ],
+  "extraction_confidence": {
+    "overall": 0.86,
+    "needs_user_review": false
+  }
+}
