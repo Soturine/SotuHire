@@ -20,3 +20,13 @@ def test_all_expected_outputs_are_valid_json():
 
     assert len(expected) >= 3
     assert all(json.loads(path.read_text(encoding="utf-8"))["fixture"] for path in expected)
+
+
+def test_v1_multi_domain_demo_markdown_examples_are_fictitious():
+    demo_files = sorted(Path("examples").glob("demo_*.md"))
+    output_files = sorted(Path("examples/outputs").glob("match_*.md"))
+
+    assert len(demo_files) >= 12
+    assert len(output_files) >= 6
+    assert all("fict" in path.read_text(encoding="utf-8").casefold() for path in demo_files)
+    assert all("fict" in path.read_text(encoding="utf-8").casefold() for path in output_files)
