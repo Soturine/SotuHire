@@ -1,0 +1,13 @@
+{
+  "entries": [
+    {"path": "README.md", "type": "blob", "size": 900},
+    {"path": "package.json", "type": "blob", "size": 700},
+    {"path": "src/index.ts", "type": "blob", "size": 1700},
+    {"path": "src/api/client.ts", "type": "blob", "size": 1600},
+    {"path": "tests/client.test.ts", "type": "blob", "size": 850},
+    {"path": "node_modules/react/index.js", "type": "blob", "size": 1000},
+    {"path": "pnpm-lock.yaml", "type": "blob", "size": 5000}
+  ],
+  "truncated": false,
+  "ref": "main"
+}

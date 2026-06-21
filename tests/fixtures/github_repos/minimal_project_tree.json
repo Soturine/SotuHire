@@ -1,0 +1,8 @@
+{
+  "entries": [
+    {"path": "README.md", "type": "blob", "size": 300},
+    {"path": "script.py", "type": "blob", "size": 400}
+  ],
+  "truncated": false,
+  "ref": "main"
+}

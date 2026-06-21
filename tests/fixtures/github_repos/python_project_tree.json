@@ -1,0 +1,17 @@
+{
+  "entries": [
+    {"path": "README.md", "type": "blob", "size": 1200},
+    {"path": "pyproject.toml", "type": "blob", "size": 800},
+    {"path": ".env.example", "type": "blob", "size": 120},
+    {"path": ".github/workflows/ci.yml", "type": "blob", "size": 600},
+    {"path": "modules/api.py", "type": "blob", "size": 1800},
+    {"path": "modules/service.py", "type": "blob", "size": 2400},
+    {"path": "modules/storage.py", "type": "blob", "size": 1400},
+    {"path": "tests/test_service.py", "type": "blob", "size": 900},
+    {"path": "docs/usage.md", "type": "blob", "size": 700},
+    {"path": "dist/bundle.js", "type": "blob", "size": 500000},
+    {"path": "assets/logo.png", "type": "blob", "size": 3000}
+  ],
+  "truncated": false,
+  "ref": "main"
+}

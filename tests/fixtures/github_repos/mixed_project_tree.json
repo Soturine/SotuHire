@@ -1,0 +1,12 @@
+{
+  "entries": [
+    {"path": "README.md", "type": "blob", "size": 1000},
+    {"path": "Dockerfile", "type": "blob", "size": 400},
+    {"path": "docker-compose.yml", "type": "blob", "size": 500},
+    {"path": "backend/main.py", "type": "blob", "size": 1800},
+    {"path": "frontend/src/App.tsx", "type": "blob", "size": 2200},
+    {"path": ".github/workflows/ci.yaml", "type": "blob", "size": 650}
+  ],
+  "truncated": false,
+  "ref": "main"
+}

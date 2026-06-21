@@ -1,0 +1,29 @@
+[
+  {
+    "path": "README.md",
+    "content": "# Career Lab\n\nFastAPI service with setup and usage.",
+    "reason_selected": "readme",
+    "size": 1200,
+    "language_hint": "Markdown",
+    "fetched": true,
+    "truncated": false
+  },
+  {
+    "path": "modules/api.py",
+    "content": "from modules.service import build_report\n\napp = FastAPI()\n",
+    "reason_selected": "source",
+    "size": 1800,
+    "language_hint": "Python",
+    "fetched": true,
+    "truncated": false
+  },
+  {
+    "path": "modules/service.py",
+    "content": "import json\nfrom modules.storage import save\n\ndef build_report():\n    return {}\n",
+    "reason_selected": "source",
+    "size": 2400,
+    "language_hint": "Python",
+    "fetched": true,
+    "truncated": false
+  }
+]
