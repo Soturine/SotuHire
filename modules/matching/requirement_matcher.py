@@ -347,10 +347,12 @@ def _infer_category(
 ) -> RequirementCategory:
     if credential:
         return credential.category
-    if explicit in RequirementCategory.__args__:  # type: ignore[attr-defined]
+    if explicit in RequirementCategory.__args__ and explicit != "other":  # type: ignore[attr-defined]
         return explicit  # type: ignore[return-value]
     if alias and alias.category in RequirementCategory.__args__:  # type: ignore[attr-defined]
         return alias.category  # type: ignore[return-value]
+    if explicit == "other":
+        return "other"
     normalized = normalize_text(text)
     if any(term in normalized for term in ("bacharel", "graduacao", "superior", "tecnico em")):
         return "education"
