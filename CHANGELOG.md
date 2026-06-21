@@ -11,6 +11,13 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - registrado o ciclo v0.9.1 como estabilização documental antes da v0.10.0;
 - destacado que v0.10.0, v0.11.0 e v0.12.0 são próximos marcos reais;
 - mantidas seções antigas como histórico, sem tratá-las como próximos passos atuais.
+- reorganizada a navegação da documentação para a v0.9.1;
+- adicionadas entradas MkDocs para histórico do roadmap, arquitetura de prompts, Prompt Registry e
+  prompt playbooks individuais;
+- clarificado o índice da documentação em torno de visão de produto, roadmap, prompts de IA, regras
+  de negócio, dados, fontes e marcos de desenvolvimento;
+- documentada a limpeza documental da v0.9.1 como preparação para v0.10.0 AI Structured Extraction
+  e Domain Intelligence.
 
 ## [0.9.0] - 2026-06-14
 
