@@ -4,6 +4,55 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [0.12.0] - 2026-06-21
+
+### Adicionado
+
+- Módulo `modules/matching` com models Pydantic, exceptions, requirement matcher, evidence matcher,
+  transferable skills, score calculator, risk adjustment, confidence scoring, explanation builder e
+  engine determinística.
+- Catálogo inicial de registros e conselhos profissionais brasileiros no Domain Intelligence e no
+  Requirement Matcher, incluindo CRM, CRO, CRF, COREN, CREFITO, CRN, CRMV, CRP, CREF, CRTR, CREA,
+  CAU, CFT, CRT, CRQ, OAB, CRC, CRA, CORECON, CRB, CRESS, CONRERP, CRECI, CRBio e MTE/DRT.
+- Classificação de MTE/DRT como `professional_registration`, separada de `professional_license`.
+- `ProfessionalRegistrationInput` e opção genérica `Outro conselho / Outro registro profissional`
+  para cadastro/manual review de registros profissionais.
+- Integração incremental `analyze_job_v2` no analyzer atual, mantendo `analyze_job` como fallback
+  legado.
+- Fixtures multiárea para backend, enfermagem, pedagogia, psicologia, engenharia civil,
+  arquitetura, cybersecurity e evidências GitHub/portfolio.
+- Testes dedicados para requirement matching, evidence matching, transferable skills, scoring,
+  explanation builder, confidence, risk adjustment e engine v2.
+
+### Alterado
+
+- Match Engine 2.0 passa a calcular score por código com pesos para requisitos obrigatórios,
+  desejáveis, domínio, senioridade, formação/credenciais, evidências, GitHub/portfolio, ATS,
+  preferências e penalidade de risco.
+- Registros profissionais obrigatórios ausentes passam a gerar gap crítico e limitam o score,
+  sem serem compensados por soft skills ou competências transferíveis.
+- Evidências do GitHub Analyzer 2.0 podem contribuir para evidence score e explicação quando
+  disponíveis.
+- Aliases de domínio passam a inferir categorias quando o requisito chega sem categoria explícita.
+- Importação pública de `modules/matching` ficou lazy para evitar ciclos de importação.
+- Versão do projeto atualizada para `0.12.0`.
+
+### Segurança
+
+- Sugestões para registros profissionais usam linguagem condicional, como "se possuir" e "se houver
+  evidência", sem recomendar invenção de credenciais.
+- A engine diferencia match direto de competência transferível e não transforma projeto pessoal em
+  experiência corporativa.
+- Nenhum comportamento de coleta autenticada, compliance ou exposição de API keys foi alterado.
+
+### Documentação
+
+- Regras de matching, regras multiárea, roadmap, README e docs de desenvolvimento atualizados para
+  refletir o Match Engine 2.0 implementado.
+- Prompts `match_analysis_evidence_based_v1`, `ats_analysis_v1`, `resume_tailor_v1` e
+  `career_advice_v1` revisados para contratos, confidence, anti-fabrication e integração com
+  evidências/Match Engine 2.0.
+
 ## [0.11.0] - 2026-06-21
 
 ### Adicionado

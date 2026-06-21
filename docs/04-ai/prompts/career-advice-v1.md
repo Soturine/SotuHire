@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: career_advice_v1
 PROMPT_VERSION: 1.0.0
-STATUS: planned for v0.12.0
+STATUS: reviewed in v0.12.0; planned for deeper v1.0 workflow
 OWNER: SotuHire
 USED_BY: modules/recommendations, modules/profile, modules/tracker
 DEFAULT_TEMPERATURE: 0.1
@@ -35,7 +35,7 @@ Gerar recomendações de evolução profissional com base em evidências do perf
 {
   "candidate_profile": "object",
   "job_targets": ["object"],
-  "match_history": ["object"],
+  "match_history": ["MatchResultV2 | object"],
   "portfolio_reports": ["object"],
   "tracker_summary": "object | null",
   "constraints": "object | null",
@@ -91,6 +91,10 @@ Restrições: {constraints}
 - Priorizar ações concretas.
 - Separar currículo, portfólio e busca de vagas.
 - Se dados forem insuficientes, marcar confidence baixo.
+- Separar gaps de currículo, gaps de evidência, gaps de skill e gaps regulatórios.
+- Para profissão regulamentada, tratar registro ausente como caminho de compatibilidade/regularização,
+  não como texto a ser adicionado.
+- Usar Match Engine 2.0 para explicar tendências de vagas, requisitos recorrentes e riscos.
 
 ## Confidence rules
 
@@ -107,6 +111,7 @@ Restrições: {constraints}
 - Do not invent company names.
 - Do not invent certifications.
 - Do not invent professional licenses.
+- Do not promise hiring, interview callbacks or legal eligibility.
 - Do not invent languages.
 - Do not invent technologies.
 - Do not invent metrics.

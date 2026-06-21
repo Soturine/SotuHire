@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: resume_tailor_v1
 PROMPT_VERSION: 1.0.0
-STATUS: planned for v0.12.0
+STATUS: reviewed in v0.12.0; safe fallback exists, deeper v2 integration future
 OWNER: SotuHire
 USED_BY: modules/recommendations, modules/ats
 DEFAULT_TEMPERATURE: 0.1
@@ -36,8 +36,14 @@ Gerar sugestões de adaptação segura do currículo para uma vaga específica, 
   "resume_text": "string",
   "candidate_profile": "object",
   "job_post": "object",
-  "match_analysis": "object",
+  "match_analysis": "MatchResultV2 | object",
   "ats_analysis": "object",
+  "evidence_sources": {
+    "resume": "object | null",
+    "github": "object | null",
+    "portfolio": "object | null",
+    "memory": "object | null"
+  },
   "language": "pt-BR"
 }
 ```
@@ -57,6 +63,7 @@ Gerar sugestões de adaptação segura do currículo para uma vaga específica, 
       "action": "rewrite | reorder | highlight | add_if_true | remove | clarify",
       "suggestion": "string",
       "supported_by": ["string"],
+      "condition": "string | null",
       "risk_of_overclaiming": "low | medium | high"
     }
   ],
@@ -104,6 +111,10 @@ Gere sugestões seguras para adaptar o currículo à vaga.
 - Bullets fortes precisam de evidência.
 - Se a pessoa talvez tenha uma skill mas não está claro, usar `add_if_true`.
 - Listar explicitamente o que não deve ser reivindicado.
+- Registro profissional, formação e certificação só podem ser destacados como fato quando a
+  evidência existir.
+- Para gap crítico, orientar revisão de compatibilidade da vaga em vez de maquiagem curricular.
+- Projeto pessoal ou GitHub pode virar evidência de projeto, não experiência corporativa.
 
 ## Confidence rules
 
@@ -120,6 +131,7 @@ Gere sugestões seguras para adaptar o currículo à vaga.
 - Do not invent company names.
 - Do not invent certifications.
 - Do not invent professional licenses.
+- Do not suggest adding COREN, CRP, CREA, CAU or similar as fact without evidence.
 - Do not invent languages.
 - Do not invent technologies.
 - Do not invent metrics.

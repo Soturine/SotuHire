@@ -1,6 +1,6 @@
 # Prompts
 
-Esta pasta contém os prompts planejados para o SotuHire.
+Esta pasta contém os prompts planejados, implementados ou revisados para o SotuHire.
 
 Cada prompt é documentado como um contrato funcional, não apenas como texto para copiar e colar.
 

@@ -32,6 +32,7 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - interpreta descrições de vagas e publicações com oportunidades;
 - possui base de extração estruturada por IA com JSON Guard, Pydantic e fallback local;
 - classifica domínios e requisitos multiárea com Domain Intelligence inicial;
+- executa Match Engine 2.0 com requisitos, evidências, gaps críticos, confidence e explicação;
 - calcula Match Score, ATS Score, Opportunity Fit Score e Risk Score;
 - explica pontos fortes, gaps, riscos e palavras-chave ausentes;
 - sugere adaptações de currículo sem inventar experiências;
@@ -212,6 +213,7 @@ automaticamente.
 | `modules/analyzer`, `modules/ats`, `modules/preferences` | Scores, recomendação, riscos e aderência às preferências. |
 | `modules/ai` | Providers, diagnóstico, Gemini opcional, Prompt Registry, JSON Guard e extração estruturada. |
 | `modules/domain_intelligence` | Classificação multiárea, aliases, requisitos e sinais de profissões regulamentadas. |
+| `modules/matching` | Match Engine 2.0, evidências, requisitos, transferable skills, scoring, risk adjustment e explanation builder. |
 | `modules/resume_tailor` | Sugestões rastreáveis para adaptar o currículo. |
 | `modules/scraping`, `modules/opportunities` | Conectores, coleta, deduplicação e armazenamento de oportunidades. |
 | `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
@@ -228,7 +230,7 @@ Arquitetura resumida:
 currículo + vaga + preferências
         -> parsers e schemas
         -> recuperação de evidências da memória local
-        -> regras, scores e IA opcional
+        -> Match Engine 2.0, regras, scores e IA opcional
         -> análise explicável e Resume Tailor
         -> tracker, histórico e dashboard
 
@@ -291,6 +293,8 @@ mkdocs serve
 - parsers de currículo e vaga;
 - Prompt Registry, JSON Guard e schemas Pydantic para extração estruturada;
 - Domain Intelligence inicial para vagas e currículos multiárea;
+- Match Engine 2.0 com requisitos obrigatórios/desejáveis, evidências, gaps críticos, confidence e
+  explicações;
 - scores explicáveis e Resume Tailor;
 - tracker, histórico e dashboard;
 - Search Intelligence e Hidden Jobs Radar;
@@ -303,8 +307,6 @@ mkdocs serve
 
 ### Próximas evoluções documentadas
 
-- v0.12.0: Match Engine 2.0, com matching por requisitos, evidências, domínio, senioridade, gaps
-  críticos e competências transferíveis;
 - v1.0: versão generalista estável de inteligência de carreira.
 
 O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).

@@ -1,7 +1,8 @@
 # Documentação do SotuHire
 
 Bem-vindo à documentação do SotuHire, um copiloto de carreira local-first para análise de
-currículos, vagas, ATS, oportunidades, histórico, portfólio, GitHub e evidências profissionais.
+currículos, vagas, ATS, Match Engine 2.0, oportunidades, histórico, portfólio, GitHub e evidências
+profissionais.
 A visão atual é multiárea: tecnologia é uma das frentes, mas o produto também cobre saúde,
 engenharias, educação, administração, finanças, marketing, logística, indústria, design,
 estágios, jovem aprendiz, transição de carreira e outros perfis.
@@ -140,8 +141,9 @@ estágios, jovem aprendiz, transição de carreira e outros perfis.
   JSON Guard, schemas Pydantic, extração estruturada de currículo/vaga e confiança por campo.
 - v0.11.0 implementou GitHub Analyzer 2.0, com API pública do GitHub, árvore, sampler, contexto de
   arquivos, Prompt Registry, evidence index, scoring por código e fallback local.
-- v0.12.0 está planejada como Match Engine 2.0, saindo de keyword matching simples para matching por
-  requisitos, evidências, domínio, senioridade, gaps críticos e competências transferíveis.
+- v0.12.0 implementou Match Engine 2.0, saindo de keyword matching simples para matching por
+  requisitos, evidências, domínio, senioridade, gaps críticos, confidence e competências
+  transferíveis.
 - v1.0 é a meta de versão generalista estável de inteligência de carreira.
 
 ## Auditoria e histórico

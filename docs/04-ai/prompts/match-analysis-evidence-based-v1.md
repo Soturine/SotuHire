@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: match_analysis_evidence_based_v1
 PROMPT_VERSION: 1.0.0
-STATUS: planned for v0.12.0
+STATUS: reviewed in v0.12.0; deterministic engine implemented, AI advisory
 OWNER: SotuHire
 USED_BY: modules/matching
 DEFAULT_TEMPERATURE: 0.1
@@ -35,6 +35,12 @@ Comparar perfil estruturado, vaga estruturada e evidências adicionais para gera
 {
   "candidate_profile": "object",
   "job_post": "object",
+  "match_engine_context": {
+    "requirements": ["MatchRequirement"],
+    "candidate_evidence": ["CandidateEvidence"],
+    "critical_gap_policy": "object",
+    "score_weights": "object"
+  },
   "evidence_sources": {
     "resume": "object | null",
     "github": "object | null",
@@ -58,12 +64,16 @@ Comparar perfil estruturado, vaga estruturada e evidências adicionais para gera
   "requirement_matches": [
     {
       "job_requirement": "string",
+      "normalized_name": "string",
+      "category": "education | hard_skill | soft_skill | tool | software | equipment | certification | professional_license | professional_registration | language | experience | methodology | regulation | responsibility | availability | location | portfolio | domain_knowledge | other",
       "importance": "required | preferred | optional | unclear",
+      "criticality": "low | medium | high | knockout",
       "match_status": "matched | partial | missing | unclear",
       "candidate_evidence": ["string"],
       "evidence_source": "resume | github | portfolio | memory | none",
       "gap_severity": "none | low | medium | high | knockout",
-      "recommendation": "string"
+      "safe_action": "string",
+      "confidence": 0.0
     }
   ],
   "critical_gaps": [
@@ -78,7 +88,9 @@ Comparar perfil estruturado, vaga estruturada e evidências adicionais para gera
     {
       "candidate_skill": "string",
       "could_help_with": "string",
+      "transfer_level": "low | medium | high",
       "explanation": "string",
+      "limitation": "string",
       "confidence": 0.0
     }
   ],
@@ -131,9 +143,13 @@ Compare o perfil e a vaga abaixo.
 ## Calibration rules
 
 - Requisito obrigatório ausente deve gerar gap mais grave.
-- Registro profissional ausente quando exigido deve ser knockout ou high.
+- Registro profissional ausente quando exigido deve ser `knockout`.
+- MTE/DRT deve ser tratado como `professional_registration`, não como conselho de classe.
 - Competências transferíveis devem ter explicação e confidence.
+- Competências transferíveis não devem virar `matched` sem evidência direta.
 - Não marcar como matched sem evidência.
+- Não compensar gap legal/regulatório com soft skill.
+- Sugerir ações com linguagem condicional: "se possuir", "se for verdadeiro", "se houver evidência".
 
 ## Confidence rules
 
@@ -150,6 +166,7 @@ Compare o perfil e a vaga abaixo.
 - Do not invent company names.
 - Do not invent certifications.
 - Do not invent professional licenses.
+- Do not tell the user to add a professional license unless the input already proves it.
 - Do not invent languages.
 - Do not invent technologies.
 - Do not invent metrics.

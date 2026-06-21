@@ -56,17 +56,25 @@ Requisitos: 5+ anos, AWS avançado, produção com agentes, liderança técnica
 Resultado: baixa aderência, mesmo que cite Python e IA
 ```
 
-## Fórmula inicial sugerida
+## Fórmula atual da v0.12.0
 
-No MVP, não precisa de fórmula estatística complexa. Uma fórmula simples pode combinar:
+Na Match Engine 2.0, a nota final é calculada pelo código. A IA pode apoiar classificação e
+explicação, mas não decide o score final sozinha.
 
-- 50% análise semântica da IA;
-- 20% senioridade;
-- 15% habilidades técnicas;
-- 10% localidade/modalidade;
-- 5% qualidade ATS.
+| Dimensão | Peso |
+|---|---:|
+| Requisitos obrigatórios | 30% |
+| Requisitos desejáveis | 15% |
+| Aderência de domínio | 10% |
+| Senioridade | 10% |
+| Formação, certificações e registros | 10% |
+| Força das evidências | 10% |
+| Evidências GitHub/portfolio | 5% |
+| ATS keyword alignment | 5% |
+| Preferências/logística | 5% |
 
-Essa fórmula deve ser documentada e ajustável.
+O `risk_adjustment` aplica penalidade depois do cálculo base. Gaps knockout e registros
+profissionais obrigatórios ausentes limitam fortemente o score.
 
 ## Exemplo de saída
 
@@ -90,6 +98,36 @@ O sistema nunca deve dizer que o usuário tem uma habilidade se ela não aparece
 Mas não deve inventar:
 
 > Você possui Power BI avançado.
+
+## Registros profissionais sensíveis
+
+A v0.12.0 trata registros profissionais e conselhos de classe como requisitos sensíveis quando a
+vaga os exige.
+
+Catálogo inicial:
+
+- saúde: CRM, CRO, CRF, COREN, CREFITO, CRN, CRMV, CRP, CREF, CRTR;
+- engenharia/arquitetura/técnico/indústria: CREA, CAU, CFT, CRT, CRQ;
+- humanas/gestão/comunicação/sociais: OAB, CRC, CRA, CORECON, CRB, CRESS, CONRERP, CRECI;
+- ciências e outras áreas: CRBio;
+- registro profissional vinculado ao trabalho: MTE/DRT como `professional_registration`.
+
+Regras:
+
+- registro obrigatório explícito vira `importance = required` e `criticality = knockout`;
+- registro desejável vira `importance = preferred` e `criticality = medium`;
+- registro obrigatório ausente vira `match_status = missing` e `gap_severity = knockout`;
+- MTE/DRT não são tratados como conselho de classe, mas como `professional_registration`;
+- a opção genérica `Outro conselho / Outro registro profissional` deve ser aceita para cadastro ou
+  revisão manual.
+
+Sugestão correta:
+
+```text
+A vaga exige CREA. Como o currículo não mostra esse registro, isso deve ser tratado como gap
+crítico. Se você possui CREA ativo, destaque no currículo; caso contrário, a vaga pode não ser
+compatível.
+```
 
 # Atualização: Match Engine 2.0 multiárea
 
@@ -121,9 +159,10 @@ Cada requisito deve receber status:
 - `matched`: evidência clara;
 - `partial`: evidência parcial;
 - `missing`: ausência clara;
-- `transferable`: competência transferível;
 - `unclear`: falta informação;
 - `not_applicable`: não aplicável.
+
+Competências transferíveis ficam em uma lista própria e não viram match direto.
 
 ## Exemplo de requisito classificado
 
@@ -131,7 +170,7 @@ Cada requisito deve receber status:
 {
   "requirement": "Experiência em UTI",
   "importance": "required",
-  "category": "environment",
+  "category": "experience",
   "status": "missing",
   "gap_severity": "high",
   "candidate_evidence": [],
@@ -171,20 +210,22 @@ Experiência com atendimento ao público em saúde pode ajudar em vaga de health
 mas não comprova experiência em produto, dados ou desenvolvimento.
 ```
 
-## Pesos iniciais sugeridos
+## Pesos implementados
 
 ```text
-required_requirements: 25%
-domain_specific_competencies: 20%
-education_and_credentials: 15%
-experience_evidence: 15%
-work_model_location: 10%
-tools_equipment_systems: 5%
-soft_skills: 5%
-risk_adjustment: 5%
+required_requirements: 30%
+preferred_requirements: 15%
+domain_fit: 10%
+seniority_fit: 10%
+education_credentials: 10%
+evidence_strength: 10%
+portfolio_github_evidence: 5%
+ats_keyword_alignment: 5%
+preferences_fit: 5%
+risk_adjustment: penalidade
 ```
 
-Esses pesos devem ser configuráveis por domínio.
+Esses pesos são a base da v0.12.0 e podem evoluir por domínio em versões futuras.
 
 ## Regras por domínio
 

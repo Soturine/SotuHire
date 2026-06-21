@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire e os próximos marcos planejados a partir da v0.11.0.
+Este roadmap descreve o estado atual do SotuHire e os próximos marcos planejados a partir da v0.12.0.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,18 +8,18 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v0.11.0 |
+| Versão atual considerada | v0.12.0 |
 | Natureza da base atual | Produto local-first já funcional, não MVP inicial |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v0.12.0 |
+| Próximo ciclo técnico | v1.0.0 |
 | Foco de produto | Copiloto de carreira multiárea |
-| Foco técnico imediato | Match Engine 2.0 baseado em evidências |
-| Grande lacuna atual | Matching ainda precisa evoluir de keywords para requisitos evidenciados |
-| Risco principal | Prometer inteligência multiárea sem motor multiárea implementado |
+| Foco técnico imediato | Estabilização, UI polish, exemplos e fluxo generalista |
+| Grande lacuna atual | Expor melhor a explicação v2 na experiência principal |
+| Risco principal | Crescer integrações sem consolidar o fluxo generalista ponta a ponta |
 
-## Estado atual — v0.11.0
+## Estado atual — v0.12.0
 
-A v0.11.0 deve ser tratada como uma base ampla do produto.
+A v0.12.0 é a base ampla atual do produto, com Match Engine 2.0 implementado.
 
 Ela já possui:
 
@@ -39,12 +39,13 @@ Ela já possui:
 - extensão assistiva;
 - Local Companion API;
 - análise inicial de GitHub e portfólio;
+- Match Engine 2.0 com requisitos, evidências, gaps críticos, confidence e explicação;
 - Gemini opcional;
 - documentação ampla;
 - testes automatizados;
 - workflows de qualidade e documentação.
 
-A base até a v0.11.0 prova que o SotuHire existe como produto. A partir daqui, o foco deve ser coerência, confiabilidade, generalização multiárea e matching por evidências.
+A base até a v0.12.0 prova que o SotuHire existe como produto multiárea. A partir daqui, o foco deve ser coerência, confiabilidade, polish de UI, exemplos e fluxo generalista demonstrável.
 
 ## Diagnóstico atual
 
@@ -58,11 +59,11 @@ A base até a v0.11.0 prova que o SotuHire existe como produto. A partir daqui, 
 
 ### O que ainda está fraco
 
-- O matching atual ainda é simples demais e depende muito de cobertura de palavras-chave.
+- O matching v2 já existe, mas a apresentação principal ainda pode expor melhor explicações, gaps e evidências.
 - Os parsers ainda carregam viés forte para tecnologia/dev.
 - A IA existe, mas ainda não opera por Prompt Registry completo.
 - Os prompts atuais implementados no código ainda são pequenos comparados à visão planejada.
-- O GitHub Analyzer atual é mais heurístico do que profundo.
+- Integrações profundas entre Match Engine 2.0, ATS e Resume Tailor ainda podem amadurecer.
 - A documentação anterior misturava estado atual, histórico antigo e planos futuros.
 
 ### O que não deve acontecer agora
@@ -464,34 +465,38 @@ Exemplos:
 - Cybersecurity pode depender de SIEM, SOC, resposta a incidentes, hardening e frameworks.
 - Arquitetura/interiores pode depender de portfólio, software, projeto executivo e atendimento.
 
-## Módulos planejados
+## Módulos implementados
 
 ```txt
 modules/matching/
-  engine_v2.py
+  __init__.py
+  models.py
+  exceptions.py
+  engine.py
   requirement_matcher.py
   evidence_matcher.py
+  transferable_skills.py
   score_calculator.py
+  risk_adjustment.py
+  confidence.py
   explanation_builder.py
-  risk_adjuster.py
-  confidence_merger.py
-  transferable_skill_matcher.py
 ```
 
-## Fórmula inicial sugerida
+## Fórmula implementada
 
-| Categoria | Peso inicial |
+| Categoria | Peso |
 |---|---:|
 | Requisitos obrigatórios | 30% |
 | Requisitos desejáveis | 15% |
-| Formação, credenciais e registros | 15% |
-| Experiência prática e domínio | 15% |
-| Evidências de currículo, GitHub, portfólio e memória | 10% |
-| Senioridade e contexto | 5% |
-| ATS keywords seguras | 5% |
+| Aderência de domínio | 10% |
+| Senioridade | 10% |
+| Formação, certificações e registros | 10% |
+| Força das evidências | 10% |
+| Evidências GitHub/portfolio | 5% |
+| ATS keyword alignment | 5% |
 | Preferências e logística | 5% |
 
-Os pesos devem ser configuráveis por domínio.
+O `risk_adjustment` aplica penalidade depois do cálculo base.
 
 ## Regras de matching
 
@@ -511,12 +516,12 @@ Os pesos devem ser configuráveis por domínio.
 
 ## Critérios de pronto
 
-- Explicação para cada score.
+- Explicação para score e requisitos principais.
 - Suporte a required/preferred/optional/knockout.
 - Multiárea testado com fixtures.
-- Gaps críticos destacados.
-- Sugestões seguras, sem inventar experiência.
-- Comparação com engine antiga para regressão.
+- Gaps críticos destacados e score travado quando necessário.
+- Sugestões seguras, sem inventar experiência ou registro profissional.
+- Engine antiga preservada como fallback.
 
 ---
 

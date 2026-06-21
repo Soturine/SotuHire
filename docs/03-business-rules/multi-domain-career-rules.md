@@ -49,15 +49,15 @@ Categorias recomendadas:
 - `methodology`;
 - `certification`;
 - `professional_license`;
+- `professional_registration`;
 - `regulation`;
 - `language`;
 - `experience`;
-- `environment`;
 - `responsibility`;
 - `availability`;
 - `location`;
 - `portfolio`;
-- `academic_output`;
+- `domain_knowledge`;
 - `other`.
 
 ## Importância e criticidade
@@ -82,19 +82,12 @@ Em áreas regulamentadas, o sistema deve ser conservador.
 
 Exemplos de registros:
 
-- COREN;
-- CRP;
-- CREA;
-- CAU;
-- CFT;
-- CRM;
-- CRF;
-- OAB;
-- CRC;
-- CREF;
-- CRO;
-- CRBio;
-- CRQ.
+- saúde: CRM, CRO, CRF, COREN, CREFITO, CRN, CRMV, CRP, CREF, CRTR;
+- engenharia, arquitetura, técnica e indústria: CREA, CAU, CFT, CRT, CRQ;
+- humanas, gestão, comunicação e sociais: OAB, CRC, CRA, CORECON, CRB, CRESS, CONRERP, CRECI;
+- ciências e outras áreas: CRBio.
+
+MTE/DRT deve ser tratado como `professional_registration`, não como conselho de classe.
 
 Regra:
 
@@ -323,20 +316,22 @@ A Match Engine 2.0 deve considerar pelo menos:
 - ATS;
 - riscos.
 
-Pesos sugeridos por padrão:
+Pesos implementados na v0.12.0:
 
 ```text
-required_requirements: 25%
-domain_specific_competencies: 20%
-education_and_credentials: 15%
-experience_evidence: 15%
-work_model_location: 10%
-tools_equipment_systems: 5%
-soft_skills: 5%
-risk_adjustment: 5%
+required_requirements: 30%
+preferred_requirements: 15%
+domain_fit: 10%
+seniority_fit: 10%
+education_credentials: 10%
+evidence_strength: 10%
+portfolio_github_evidence: 5%
+ats_keyword_alignment: 5%
+preferences_fit: 5%
+risk_adjustment: penalidade
 ```
 
-Os pesos podem mudar por domínio.
+Os pesos podem mudar por domínio em versões futuras.
 
 Exemplo:
 

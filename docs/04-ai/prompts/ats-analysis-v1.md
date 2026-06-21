@@ -5,7 +5,7 @@
 ```txt
 PROMPT_ID: ats_analysis_v1
 PROMPT_VERSION: 1.0.0
-STATUS: planned for v0.12.0
+STATUS: reviewed in v0.12.0; heuristic scoring exists, deeper v2 integration future
 OWNER: SotuHire
 USED_BY: modules/ats, modules/recommendations
 DEFAULT_TEMPERATURE: 0.1
@@ -35,7 +35,11 @@ Avaliar currículo para ATS considerando uma vaga específica, sem sugerir inven
   "resume_text": "string",
   "candidate_profile": "object",
   "job_post": "object",
-  "match_signals": "object | null",
+  "match_signals": "MatchResultV2 | object | null",
+  "evidence_policy": {
+    "safe_keywords_only": true,
+    "professional_credentials_are_sensitive": true
+  },
   "language": "pt-BR"
 }
 ```
@@ -111,6 +115,8 @@ Avalie o currículo para ATS em relação à vaga.
 - Keywords não evidenciadas devem ir para `missing_and_not_evidenced` ou sugestão condicional.
 - Problemas de formatação devem ser separados de problemas de conteúdo.
 - Não sugerir adicionar certificação/registro sem evidência.
+- Keywords derivadas de GitHub/portfolio só devem ser sugeridas quando houver evidência real.
+- Registro profissional obrigatório ausente deve aparecer como risco, não como keyword comum.
 
 ## Confidence rules
 
@@ -127,6 +133,7 @@ Avalie o currículo para ATS em relação à vaga.
 - Do not invent company names.
 - Do not invent certifications.
 - Do not invent professional licenses.
+- Do not convert "keyword missing" into "safe to claim" without evidence.
 - Do not invent languages.
 - Do not invent technologies.
 - Do not invent metrics.

@@ -123,14 +123,14 @@ Os prompts específicos podem expandir esse formato com schemas próprios.
 | Resume Extraction | implementado | implementado | v0.10.0 |
 | Job Extraction | implementado | implementado | v0.10.0 |
 | Domain Classification | implementado | implementado | v0.10.0 |
-| Match Analysis | planejado | não implementado | v0.12.0 |
-| ATS Analysis | planejado | não implementado | v0.12.0 |
-| Resume Tailor | planejado | não implementado | v0.12.0 |
+| Match Analysis | revisado | engine determinística implementada; IA opcional futura | v0.12.0 |
+| ATS Analysis | revisado | heurística existente; integração profunda futura | v0.12.0/v1.0 |
+| Resume Tailor | revisado | fallback seguro existente; integração profunda futura | v0.12.0/v1.0 |
 | GitHub Repo Analysis | implementado | implementado | v0.11.0 |
 | GitHub Profile Analysis | revisado | fallback heurístico existente | v0.11.0 |
 | Portfolio Gap Analysis | revisado | planejamento/futuro | v0.11.0 |
 | Hidden Job Detection | planejado | não implementado | pós-v0.10.0 |
-| Career Advice | planejado | não implementado | v0.12.0/v1.0 |
+| Career Advice | revisado | planejamento/futuro | v1.0 |
 
 ## Como o Codex deve usar estes documentos
 
@@ -201,8 +201,8 @@ A ordem segue os marcos:
 
 - v0.10.0: currículo, vaga e domínio;
 - v0.11.0: GitHub, perfil GitHub e portfólio;
-- v0.12.0: matching, ATS, tailor e carreira;
-- v1.0: consolidação, exemplos multiárea e demos.
+- v0.12.0: Match Engine 2.0 determinístico e revisão dos prompts de matching, ATS, tailor e carreira;
+- v1.0: integração profunda, consolidação, exemplos multiárea e demos.
 
 ## Relação com multiárea
 
