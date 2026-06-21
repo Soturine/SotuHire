@@ -50,6 +50,7 @@ nav:
       - Estratégia multiárea: 01-product/multi-domain-product-strategy.md
       - MVP: 01-product/mvp-scope.md
       - Roadmap: 01-product/roadmap.md
+      - Histórico do roadmap: 01-product/roadmap-history.md
       - Histórias de usuário: 01-product/user-stories.md
       - Rotina inteligente de busca: 01-product/job-search-routine.md
       - Resume Tailor: 01-product/resume-tailor.md
@@ -86,9 +87,24 @@ nav:
       - Regras de captura assistida: 03-business-rules/browser-assisted-capture-rules.md
   - IA:
       - Prompting: 04-ai/prompting.md
+      - Arquitetura de prompts: 04-ai/prompt-architecture.md
+      - Prompt Registry: 04-ai/prompt-registry.md
       - Catálogo de prompts: 04-ai/prompt-catalog.md
       - Orquestração de IA e confiança: 04-ai/ai-orchestration-and-confidence.md
       - Structured output: 04-ai/structured-output-schema.md
+      - Prompts:
+          - Índice: 04-ai/prompts/README.md
+          - Resume Extraction v1: 04-ai/prompts/resume-extraction-v1.md
+          - Job Extraction Multi-Domain v1: 04-ai/prompts/job-extraction-multi-domain-v1.md
+          - Domain Classification v1: 04-ai/prompts/domain-classification-v1.md
+          - Match Analysis Evidence-Based v1: 04-ai/prompts/match-analysis-evidence-based-v1.md
+          - ATS Analysis v1: 04-ai/prompts/ats-analysis-v1.md
+          - Resume Tailor v1: 04-ai/prompts/resume-tailor-v1.md
+          - GitHub Repo Analysis v2: 04-ai/prompts/github-repo-analysis-v2.md
+          - GitHub Profile Analysis v1: 04-ai/prompts/github-profile-analysis-v1.md
+          - Portfolio Gap Analysis v1: 04-ai/prompts/portfolio-gap-analysis-v1.md
+          - Hidden Job Detection v1: 04-ai/prompts/hidden-job-detection-v1.md
+          - Career Advice v1: 04-ai/prompts/career-advice-v1.md
       - Evaluation: 04-ai/evaluation.md
       - RAG memory: 04-ai/rag-memory-architecture.md
       - Career Memory e RAG local: 04-ai/career-memory-rag.md
