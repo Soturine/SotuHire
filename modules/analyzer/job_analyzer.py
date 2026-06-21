@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from modules.ai.schemas.job_extraction import JobExtractionOutput
+from modules.ai.schemas.resume_extraction import ResumeExtractionOutput
 from modules.analyzer.recommendation import (
     build_recommendation,
     calculate_risk_score,
@@ -9,6 +11,9 @@ from modules.analyzer.recommendation import (
 )
 from modules.ats.ats_score import calculate_simple_ats_score
 from modules.core.text_utils import extract_keywords, first_sentences, keyword_coverage
+from modules.github_analyzer.schemas import GitHubAnalyzerReport
+from modules.matching import MatchResultV2, analyze_match_v2
+from modules.portfolio.schemas import ProjectAnalysisReport
 from modules.preferences.opportunity_fit import calculate_opportunity_fit_score
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
@@ -79,4 +84,51 @@ def analyze_job(
         missing_keywords=missing_keywords,
         risk_flags=risk_flags,
         tailored_summary=build_tailored_summary(resume_text, job_text),
+    )
+
+
+def analyze_job_v2(
+    resume: ResumeExtractionOutput,
+    job: JobExtractionOutput,
+    *,
+    github_report: GitHubAnalyzerReport | None = None,
+    portfolio_report: ProjectAnalysisReport | None = None,
+    memory_items: list[str] | None = None,
+    profile_items: list[str] | None = None,
+    preferences_fit_score: int = 60,
+    fallback_resume_text: str = "",
+    fallback_job_text: str = "",
+) -> JobAnalysisSchema:
+    """Analyze structured resume/job data through Match Engine 2 with legacy fallback."""
+    try:
+        result = analyze_match_v2(
+            resume=resume,
+            job=job,
+            github_report=github_report,
+            portfolio_report=portfolio_report,
+            memory_items=memory_items,
+            profile_items=profile_items,
+            preferences_fit_score=preferences_fit_score,
+        )
+        return job_analysis_from_match_v2(result)
+    except Exception:
+        return analyze_job(fallback_resume_text, fallback_job_text)
+
+
+def job_analysis_from_match_v2(result: MatchResultV2) -> JobAnalysisSchema:
+    """Convert Match Engine 2 output to the existing JobAnalysisSchema contract."""
+    scores = result.score_breakdown
+    explanation = result.explanation
+    return JobAnalysisSchema(
+        match_score=scores.match_score,
+        ats_score=scores.ats_alignment_score,
+        opportunity_fit_score=scores.opportunity_fit_score,
+        risk_score=scores.risk_score,
+        recommendation=result.recommendation,
+        strengths=explanation.matched_requirements[:8],
+        gaps=[*explanation.critical_gaps, *explanation.missing_requirements][:8],
+        missing_keywords=explanation.missing_requirements[:15],
+        risk_flags=explanation.critical_gaps,
+        tailored_summary=explanation.summary,
+        recruiter_message=" ".join(explanation.safe_actions[:2]),
     )
