@@ -1,228 +1,92 @@
-# SotuHire
-
-SotuHire é um copiloto local-first de inteligência de carreira para comparar currículo, vaga,
-GitHub, portfolio, memória profissional e evidências reais.
-
-Ele ajuda a responder:
-
-- esta vaga combina comigo?
-- quais requisitos estão atendidos?
-- quais gaps são críticos?
-- quais evidências comprovam o match?
-- o que posso melhorar no currículo sem inventar nada?
-
-!!! info "GitHub Pages é estático"
-    Este site apresenta documentação, visão de produto e demos estáticas. O app completo não roda
-    no GitHub Pages. Para usar o produto com Streamlit, IA opcional e Local Companion API, rode
-    localmente com `streamlit run app.py`.
-
-![Interface atual do SotuHire](assets/screenshots/sotuhire-v0.9-extension-tab.png)
-
-## O que está disponível na v1.0.0
-
-- Match Engine 2.0 com requisitos, evidências, score breakdown, confidence e gaps críticos.
-- AI Structured Extraction com Prompt Registry, JSON Guard e schemas Pydantic.
-- Domain Intelligence multiárea.
-- GitHub Analyzer 2.0 para repositórios públicos, READMEs, arquivos e evidências técnicas.
-- ATS review e Resume Tailor com regras anti-invenção.
-- Career Memory local, RAG lexical, tracker, dashboard e extensão assistiva.
-- Demos fictícias multiárea para backend, enfermagem, pedagogia, engenharia civil, arquitetura e
-  cybersecurity.
-
-## Como rodar localmente
-
-```bash
-git clone https://github.com/Soturine/SotuHire.git
-cd SotuHire
-python -m venv .venv
-pip install -r docs/requirements/requirements.txt
-streamlit run app.py
-```
-
-Para Gemini opcional:
-
-```bash
-pip install -r docs/requirements/requirements-ai.txt
-```
-
-## Comece por aqui
-
-- [Visão do produto](01-product/vision.md)
-- [Roadmap](01-product/roadmap.md)
-- [Demo v1.0](01-product/v1-demo.md)
-- [GitHub Pages vs app local](01-product/github-pages-site.md)
-- [Match Engine 2.0](07-development/v0.12.0-match-engine-2.md)
-- [GitHub Analyzer 2.0](07-development/v0.11.0-github-analyzer-2.md)
-- [AI Structured Extraction](07-development/v0.10.0-ai-structured-extraction.md)
-- [Prompts](04-ai/prompts/README.md)
-- [Setup local](07-development/setup.md)
-
-## Limites importantes
-
-SotuHire não promete contratação, não faz candidatura automática, não inventa experiência,
-certificação ou registro profissional, e mantém a pessoa usuária no controle da decisão.
-
 # Documentação do SotuHire
 
-Bem-vindo à documentação do SotuHire, um copiloto de carreira local-first para análise de
-currículos, vagas, ATS, Match Engine 2.0, oportunidades, histórico, portfólio, GitHub e evidências
-profissionais.
-A visão atual é multiárea: tecnologia é uma das frentes, mas o produto também cobre saúde,
-engenharias, educação, administração, finanças, marketing, logística, indústria, design,
-estágios, jovem aprendiz, transição de carreira e outros perfis.
+Este é o índice documental do SotuHire. A home pública do site fica em [Início](index.md).
+
+SotuHire é um copiloto de carreira local-first para análise de currículos, vagas, ATS,
+Match Engine 2.0, oportunidades, histórico, portfolio, GitHub e evidências profissionais.
 
 ## Comece aqui
 
+- [Home pública](index.md)
 - [Visão do produto](01-product/vision.md)
 - [Roadmap atual](01-product/roadmap.md)
-- [Estratégia multiárea](01-product/multi-domain-product-strategy.md)
-- [Arquitetura](02-architecture/overview.md)
 - [Setup local](07-development/setup.md)
 - [Comandos de desenvolvimento](07-development/commands.md)
+- [GitHub Pages vs app local](01-product/github-pages-site.md)
 
 ## Produto
 
-- [Visão](01-product/vision.md)
-- [Roadmap](01-product/roadmap.md)
-- [Histórico do roadmap](01-product/roadmap-history.md)
+- [Demo v1.0](01-product/v1-demo.md)
 - [Estratégia multiárea](01-product/multi-domain-product-strategy.md)
 - [MVP](01-product/mvp-scope.md)
 - [Histórias de usuário](01-product/user-stories.md)
-- [Rotina inteligente de busca](01-product/job-search-routine.md)
 - [Resume Tailor](01-product/resume-tailor.md)
 - [Opportunity Fit Score](01-product/user-preferences-opportunity-fit.md)
 - [Concurso Mode](01-product/concurso-mode.md)
+
+## Frontend-ready
+
+- [Overview frontend](08-frontend/README.md)
+- [Arquitetura frontend-ready](08-frontend/frontend-architecture.md)
+- [Lovable handoff](08-frontend/lovable-handoff.md)
+- [Mapa de telas](08-frontend/screen-map.md)
+- [API contract](08-frontend/api-contract.md)
+- [Mock data contract](08-frontend/mock-data-contract.md)
+- [Frontend rules](08-frontend/frontend-rules.md)
+- [Application Intelligence](08-frontend/application-intelligence.md)
+
+## Arquitetura e regras
+
+- [Arquitetura](02-architecture/overview.md)
+- [Data flow](02-architecture/data-flow.md)
+- [Local Companion API](02-architecture/local-companion-api.md)
+- [Matching rules](03-business-rules/matching-rules.md)
+- [ATS rules](03-business-rules/ats-rules.md)
+- [Resume Tailor rules](03-business-rules/resume-tailor-rules.md)
+- [Regras multiárea](03-business-rules/multi-domain-career-rules.md)
+- [Privacidade da memória](03-business-rules/memory-privacy-rules.md)
 
 ## IA e prompts
 
 - [Prompt Architecture](04-ai/prompt-architecture.md)
 - [Prompt Registry](04-ai/prompt-registry.md)
 - [Prompt Catalog](04-ai/prompt-catalog.md)
-- [AI Orchestration and Confidence](04-ai/ai-orchestration-and-confidence.md)
 - [Structured Output](04-ai/structured-output-schema.md)
-- [Prompting](04-ai/prompting.md)
-- [Evaluation](04-ai/evaluation.md)
-- [RAG Memory Architecture](04-ai/rag-memory-architecture.md)
-- [Career Memory e RAG local](04-ai/career-memory-rag.md)
-- [Calibração de evidências](04-ai/evidence-calibration.md)
-- [Provider Strategy](04-ai/provider-strategy.md)
-- [Gemini Structured Output](04-ai/gemini-structured-output.md)
-- [Setup local do Gemini](04-ai/gemini-local-setup.md)
+- [Prompts individuais](04-ai/prompts/README.md)
 - [Gemini na análise real](04-ai/gemini-real-analysis-routing.md)
-- [JSON Resume e Pydantic](04-ai/json-resume-and-pydantic.md)
-- [ML avançado futuro](04-ai/advanced-ml-future.md)
 
-## Prompts individuais
+## Desenvolvimento
 
-- [Índice de prompts](04-ai/prompts/README.md)
-- [Resume Extraction v1](04-ai/prompts/resume-extraction-v1.md)
-- [Job Extraction Multi-Domain v1](04-ai/prompts/job-extraction-multi-domain-v1.md)
-- [Domain Classification v1](04-ai/prompts/domain-classification-v1.md)
-- [Match Analysis Evidence-Based v1](04-ai/prompts/match-analysis-evidence-based-v1.md)
-- [ATS Analysis v1](04-ai/prompts/ats-analysis-v1.md)
-- [Resume Tailor v1](04-ai/prompts/resume-tailor-v1.md)
-- [GitHub Repo Analysis v2](04-ai/prompts/github-repo-analysis-v2.md)
-- [GitHub Profile Analysis v1](04-ai/prompts/github-profile-analysis-v1.md)
-- [Portfolio Gap Analysis v1](04-ai/prompts/portfolio-gap-analysis-v1.md)
-- [Hidden Job Detection v1](04-ai/prompts/hidden-job-detection-v1.md)
-- [Career Advice v1](04-ai/prompts/career-advice-v1.md)
-
-## Arquitetura
-
-- [Overview](02-architecture/overview.md)
-- [Data flow](02-architecture/data-flow.md)
-- [Folder structure](02-architecture/folder-structure.md)
-- [Architecture decisions](02-architecture/architecture-decisions.md)
-- [MVP core schemas](02-architecture/mvp-core-schemas.md)
-- [Local companion app](02-architecture/local-companion-app.md)
-- [Local Companion API](02-architecture/local-companion-api.md)
-- [Background jobs](02-architecture/background-jobs.md)
-- [Parsers](02-architecture/parsers.md)
-- [Semântica do parser](02-architecture/parser-semantics.md)
-- [Fluxo automático](02-architecture/auto-flow.md)
-- [Storage e histórico](02-architecture/storage-and-history.md)
-- [Pipeline de coleta de oportunidades](02-architecture/opportunity-collection-pipeline.md)
-- [Modo rápido vs. avançado](02-architecture/quick-vs-advanced-mode.md)
-- [Career Memory Store](02-architecture/career-memory-store.md)
-
-## Regras de negócio
-
-- [Matching](03-business-rules/matching-rules.md)
-- [ATS](03-business-rules/ats-rules.md)
-- [Multi-domain career rules](03-business-rules/multi-domain-career-rules.md)
-- [Tracker e Kanban](07-development/job-tracker-kanban.md)
-- [Search Intelligence](05-data-sources/search-intelligence.md)
-- [Job filtering](03-business-rules/job-filtering.md)
-- [Resume types](03-business-rules/resume-types.md)
-- [Profile score](03-business-rules/profile-score.md)
-- [Resume Tailor rules](03-business-rules/resume-tailor-rules.md)
-- [Opportunity Fit Score](03-business-rules/opportunity-fit-score.md)
-- [Public exam rules](03-business-rules/public-exam-rules.md)
-- [Privacidade da memória](03-business-rules/memory-privacy-rules.md)
-- [Regras de captura assistida](03-business-rules/browser-assisted-capture-rules.md)
+- [QA Testing](06-engineering/qa-testing.md)
+- [Ruff](06-engineering/ruff.md)
+- [CI/CD](06-engineering/ci-cd.md)
+- [Security Privacy](06-engineering/security-privacy.md)
+- [v0.10.0 AI Structured Extraction](07-development/v0.10.0-ai-structured-extraction.md)
+- [v0.11.0 GitHub Analyzer 2.0](07-development/v0.11.0-github-analyzer-2.md)
+- [v0.12.0 Match Engine 2.0](07-development/v0.12.0-match-engine-2.md)
+- [v1.0.0 Stable Release](07-development/v1.0.0-stable-release.md)
 
 ## Dados e fontes
 
 - [Fontes públicas](05-data-sources/job-sources.md)
 - [Brazilian job portals](05-data-sources/brazilian-job-portals.md)
-- [Portal connector roadmap](05-data-sources/portal-connector-roadmap.md)
-- [Source connectors](05-data-sources/source-connectors.md)
 - [Scraping strategy](05-data-sources/scraping-strategy.md)
-- [Authenticated browser crawling](05-data-sources/authenticated-browser-crawling.md)
 - [Compliance and ethics](05-data-sources/compliance-and-ethics.md)
 - [Hidden Jobs Radar](05-data-sources/hidden-jobs-radar.md)
-- [Search Intelligence foundation](05-data-sources/search-intelligence-foundation.md)
-- [Hidden Jobs Radar safe mode](05-data-sources/hidden-jobs-radar-safe-mode.md)
-- [RSS e URL manual](05-data-sources/rss-and-manual-url-connectors.md)
-- [Alternative job boards](05-data-sources/alternative-job-boards.md)
-- [Social post discovery](05-data-sources/social-post-discovery.md)
+- [Search Intelligence](05-data-sources/search-intelligence.md)
 - [GitHub/Portfolio Analyzer](05-data-sources/github-portfolio-analyzer.md)
-- [JobSpy experimental reference](05-data-sources/jobspy-experimental-reference.md)
 
-## Desenvolvimento
+## Marcos
 
-- [Setup](07-development/setup.md)
-- [Testes e QA](06-engineering/qa-testing.md)
-- [Commands](07-development/commands.md)
-- [Contributing](07-development/contributing.md)
-- [Clean Code e SOLID](06-engineering/clean-code-solid.md)
-- [Ruff](06-engineering/ruff.md)
-- [CI/CD](06-engineering/ci-cd.md)
-- [Security Privacy](06-engineering/security-privacy.md)
-- [Avoid overengineering](06-engineering/avoid-overengineering.md)
-- [Repository metadata](07-development/repository-metadata.md)
-- [v0.10.0 AI Structured Extraction](07-development/v0.10.0-ai-structured-extraction.md)
-- [v0.11.0 GitHub Analyzer 2.0](07-development/v0.11.0-github-analyzer-2.md)
-- [v0.12.0 Match Engine 2.0](07-development/v0.12.0-match-engine-2.md)
+- v1.1.0 prepara handoff profissional para frontend moderno, contratos API, mocks e site público.
+- v1.0.0 é a primeira versão estável e demonstrável, com Match Engine 2.0 exposto na UI,
+  pesos por domínio, ATS/Tailor conectados ao match, demos fictícias multiárea e GitHub Pages.
+- v0.12.0 implementou Match Engine 2.0.
+- v0.11.0 implementou GitHub Analyzer 2.0.
+- v0.10.0 implementou AI Structured Extraction e Domain Intelligence.
 
-## Marcos documentados
+## Limites
 
-- v1.0.0 é a primeira versão estável e demonstrável, com UI expondo Match Engine 2.0, pesos por
-  domínio, ATS/Tailor conectados ao match, demos fictícias multiárea e GitHub Pages como site
-  estático.
-- v0.9.0 já é um produto local-first funcional, com análise local, ATS, matching, tracker,
-  dashboard, memória, RAG, extensão, Local Companion API, Hidden Jobs Radar e análise de
-  GitHub/portfólio.
-- v0.9.1 é uma versão documental: navegação, README, CHANGELOG e prompt playbooks.
-- v0.10.0 implementou AI Structured Extraction e Domain Intelligence, com Prompt Registry,
-  JSON Guard, schemas Pydantic, extração estruturada de currículo/vaga e confiança por campo.
-- v0.11.0 implementou GitHub Analyzer 2.0, com API pública do GitHub, árvore, sampler, contexto de
-  arquivos, Prompt Registry, evidence index, scoring por código e fallback local.
-- v0.12.0 implementou Match Engine 2.0, saindo de keyword matching simples para matching por
-  requisitos, evidências, domínio, senioridade, gaps críticos, confidence e competências
-  transferíveis.
-- v1.0 é a meta de versão generalista estável de inteligência de carreira.
+SotuHire não promete contratação, não faz candidatura automática, não inventa experiências,
+certificações ou registros profissionais, e mantém a pessoa usuária no controle da decisão.
 
-## Auditoria e histórico
-
-- [Auditoria de documentação](00-audit/documentation-audit.md)
-- [Relatório local](00-audit/local-build-report.md)
-- [Atualização pós-v0.9.0](00-audit/v0.9-roadmap-docs-update-summary.md)
-- O changelog do repositório fica na raiz do projeto.
-
-## Observação sobre escopo
-
-SotuHire mantém a pessoa usuária no controle, não inventa experiências, não faz candidatura
-automática e não deve ser tratado como ferramenta exclusiva de TI. Recursos futuros documentados no
-roadmap são planejamento técnico; quando algo ainda não está implementado, a documentação deve
-tratar como planejado ou futuro.

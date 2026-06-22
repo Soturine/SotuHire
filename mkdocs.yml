@@ -3,6 +3,7 @@ site_description: Copiloto de carreira com IA, ATS, match, scraping responsável
 site_url: https://soturine.github.io/SotuHire/
 repo_url: https://github.com/Soturine/SotuHire
 repo_name: Soturine/SotuHire
+exclude_docs: /README.md
 
 theme:
   name: material
@@ -35,8 +36,15 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
 
+extra_css:
+  - stylesheets/sotuhire-site.css
+
+extra_javascript:
+  - javascripts/sotuhire-demo.js
+
 nav:
-  - Início: README.md
+  - Início: index.md
+  - Documentação: documentation-index.md
   - Auditoria:
       - Auditoria de documentação: 00-audit/documentation-audit.md
       - Relatório local: 00-audit/local-build-report.md
