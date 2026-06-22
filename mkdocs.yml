@@ -176,6 +176,16 @@ nav:
       - v0.11.0 GitHub Analyzer 2.0: 07-development/v0.11.0-github-analyzer-2.md
       - v0.12.0 Match Engine 2.0: 07-development/v0.12.0-match-engine-2.md
       - v1.0.0 Stable Release: 07-development/v1.0.0-stable-release.md
+  - Frontend:
+      - Overview: 08-frontend/README.md
+      - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md
+      - Lovable handoff: 08-frontend/lovable-handoff.md
+      - Mapa de telas: 08-frontend/screen-map.md
+      - API contract: 08-frontend/api-contract.md
+      - Mock data contract: 08-frontend/mock-data-contract.md
+      - Design system notes: 08-frontend/design-system-notes.md
+      - Frontend rules: 08-frontend/frontend-rules.md
+      - Application Intelligence: 08-frontend/application-intelligence.md
   - Benchmark:
       - Players e inspirações: 08-benchmark/players-and-inspirations.md
       - Projetos de referência: 08-benchmark/reference-projects.md
