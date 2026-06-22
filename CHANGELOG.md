@@ -4,6 +4,38 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.1.0] - 2026-06-22
+
+### Adicionado
+
+- Documentação frontend-ready em `docs/08-frontend`, incluindo arquitetura, handoff Lovable,
+  screen map, API contract, mock data contract, design notes, frontend rules e Application
+  Intelligence.
+- Mocks JSON oficiais em `docs/assets/mock-api` para prototipação de frontend.
+- Home pública dedicada em `docs/index.md` para o GitHub Pages.
+- Demo estática v1.1 em `docs/08-frontend/static-demo.md`.
+- Estrutura reservada `apps/web` para um frontend moderno futuro.
+
+### Alterado
+
+- `docs/README.md` passou a ser índice documental do repositório, enquanto `docs/index.md` virou a
+  home do site.
+- Roadmap atualizado com v1.1.0, v1.2.0, v1.3.0, v1.4.0 e v2.0.0.
+- README raiz passou a explicar Streamlit como app local atual/dev, GitHub Pages como site estático
+  e Lovable/React como frontend futuro guiado por contratos.
+
+### Segurança
+
+- Documentado que o frontend futuro não deve conter API keys, Gemini key, GitHub token ou regras
+  críticas de negócio.
+- Reforçado que GitHub Pages continua estático e não roda backend.
+- Mocks usam apenas dados fictícios.
+
+### Validação
+
+- QA final planejado com `ruff check .`, `ruff format --check .`, `pytest`, `mkdocs build --strict`,
+  `python -m compileall modules tests`, `pyright` e `node --check docs/javascripts/sotuhire-demo.js`.
+
 ## [1.0.0] - 2026-06-21
 
 ### Adicionado

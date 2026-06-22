@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.0.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.0.0)
+[![Release](https://img.shields.io/badge/release-v1.1.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.1.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -14,6 +14,8 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 > Esta vaga faz sentido para mim, quais são os gaps e o que devo ajustar antes de aplicar?
 
 [Documentação](https://soturine.github.io/SotuHire/) ·
+[Demo estática](docs/08-frontend/static-demo.md) ·
+[Frontend handoff](docs/08-frontend/README.md) ·
 [Roadmap](docs/01-product/roadmap.md) ·
 [Visão](docs/01-product/vision.md) ·
 [Estratégia multiárea](docs/01-product/multi-domain-product-strategy.md) ·
@@ -55,6 +57,7 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - transforma projetos em evidências reutilizáveis para vagas, memória e perfil profissional;
 - oferece análise standalone na extensão ou análise conectada ao SotuHire local.
 - publica documentação e demo estática no GitHub Pages.
+- documenta contratos, mocks e handoff para um frontend moderno futuro.
 
 ## Como Usar
 
@@ -85,6 +88,16 @@ O app completo continua local:
 ```bash
 streamlit run app.py
 ```
+
+### Frontend moderno futuro
+
+O Streamlit continua sendo o app local atual/dev. A identidade futura do produto pode ser um
+frontend moderno separado, criado com Lovable, React, Vite, Next.js ou outro stack.
+
+Esse frontend pode redesenhar toda a experiência visual, mas deve consumir contratos em
+[`docs/08-frontend`](docs/08-frontend/README.md) e não deve reimplementar regra de negócio crítica.
+Matching, ATS, Resume Tailor, GitHub Analyzer, validações fortes, privacidade e regras
+anti-invenção continuam no backend/core.
 
 ## Instalação
 
@@ -238,6 +251,7 @@ automaticamente.
 | `browser-extension` | Extensão assistiva multiportal e análise GitHub/portfólio no navegador. |
 | `modules/portfolio` | Amostragem, commits, scores e evidências de GitHub/projetos/portfólio. |
 | `modules/ui` | Fluxos Streamlit rápido e avançado. |
+| `apps/web` | Espaço reservado para futuro frontend moderno. |
 
 Arquitetura resumida:
 
@@ -263,6 +277,7 @@ Veja a [documentação de arquitetura](docs/02-architecture/overview.md) e o
 ```text
 SotuHire/
 ├── app.py                  # entrada Streamlit
+├── apps/                   # apps futuros, incluindo web frontend reservado
 ├── modules/                # domínio, serviços, conectores e UI
 ├── browser-extension/      # extensão assistiva Manifest V3
 ├── tests/                  # testes unitários, integração e regressão
@@ -312,6 +327,8 @@ mkdocs serve
   explicações;
 - pesos de match por domínio, ATS evidence review e Resume Tailor seguro;
 - GitHub Pages como site estático de documentação/demo;
+- home profissional do GitHub Pages, demo estática v1.1 e handoff frontend-ready;
+- contratos API e mocks para Lovable/React em `docs/08-frontend` e `docs/assets/mock-api`;
 - demos fictícias multiárea em `examples/`;
 - scores explicáveis e Resume Tailor;
 - tracker, histórico e dashboard;
@@ -323,11 +340,12 @@ mkdocs serve
 - GitHub Analyzer 2.0 com GitHub API pública, tree builder, sampler, dependency graph, evidence
   index, scoring calculado por código e fallback local.
 
-### Pós-v1
+### Próximos passos
 
-- melhorar screenshots específicos da UI v1;
-- aprofundar visualmente a integração GitHub Analyzer + Match Engine;
-- criar walkthroughs em vídeo/GIF quando houver assets reais;
+- v1.2.0: API Layer / FastAPI Foundation;
+- v1.3.0: Modern Web Frontend;
+- v1.4.0: Streamlit Legacy Mode;
+- v2.0.0: SaaS-ready Architecture;
 - evoluir pesos por domínio para configuração externa se o uso real justificar.
 
 O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).

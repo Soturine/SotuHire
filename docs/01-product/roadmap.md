@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.0.0 e os próximos refinamentos pós-v1.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.1.0 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,18 +8,18 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.0.0 |
+| Versão atual considerada | v1.1.0 |
 | Natureza da base atual | Produto local-first já funcional, não MVP inicial |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | pós-v1 |
+| Próximo ciclo técnico | v1.2.0 API Layer / FastAPI Foundation |
 | Foco de produto | Copiloto de carreira multiárea |
-| Foco técnico imediato | Refinamento visual, demos guiadas e feedback de uso real |
-| Grande lacuna atual | Screenshots/walkthroughs v1 ainda podem ficar mais ricos |
-| Risco principal | Adicionar features grandes antes de observar o uso da v1 |
+| Foco técnico imediato | Separar contratos de frontend, API futura e core Python |
+| Grande lacuna atual | API HTTP versionada ainda é futura |
+| Risco principal | Reimplementar regra crítica no frontend visual |
 
-## Estado atual — v1.0.0
+## Estado atual — v1.1.0
 
-A v1.0.0 é a primeira versão estável e demonstrável do produto.
+A v1.1.0 mantém a base estável da v1.0.0 e prepara o projeto para um frontend profissional futuro.
 
 Ela já possui:
 
@@ -45,12 +45,20 @@ Ela já possui:
 - pesos por domínio profissional;
 - demos fictícias multiárea;
 - GitHub Pages como site estático de produto/documentação/demo;
+- home profissional em `docs/index.md`;
+- documentação frontend-ready em `docs/08-frontend`;
+- contratos de API futura para Lovable/React;
+- mocks JSON oficiais em `docs/assets/mock-api`;
+- demo estática v1.1 sem backend real;
+- estrutura reservada `apps/web`;
 - Gemini opcional;
 - documentação ampla;
 - testes automatizados;
 - workflows de qualidade e documentação.
 
-A base até a v1.0.0 prova que o SotuHire existe como produto multiárea demonstrável. A partir daqui, o foco deve ser feedback real, refinamento visual e evolução incremental.
+A base até a v1.1.0 prova que o SotuHire existe como produto multiárea demonstrável e já tem
+contratos para uma futura camada web. A partir daqui, o foco técnico deve ser API versionada,
+frontend moderno e preservação do core como fonte de verdade.
 
 ## Diagnóstico atual
 
@@ -64,11 +72,11 @@ A base até a v1.0.0 prova que o SotuHire existe como produto multiárea demonst
 
 ### O que ainda está fraco
 
-- A apresentação v2 já existe, mas pode ganhar screenshots e walkthroughs mais atuais.
+- A apresentação v2 já existe e começa a ganhar screenshots e walkthroughs mais atuais.
 - Os parsers ainda carregam viés forte para tecnologia/dev.
 - A IA existe, mas ainda não opera por Prompt Registry completo.
 - Os prompts atuais implementados no código ainda são pequenos comparados à visão planejada.
-- Integrações entre Match Engine 2.0, ATS, Tailor e GitHub Analyzer podem ficar mais visuais.
+- A futura camada React/Lovable ainda precisa de API real para substituir mocks.
 - A documentação anterior misturava estado atual, histórico antigo e planos futuros.
 
 ### O que não deve acontecer agora
@@ -78,6 +86,7 @@ A base até a v1.0.0 prova que o SotuHire existe como produto multiárea demonst
 - Não deixar o Gemini decidir score final sem validação do código.
 - Não criar regra hardcoded para cada profissão.
 - Não tratar GitHub Analyzer como simples leitura de DOM.
+- Não reimplementar matching, ATS, Tailor ou regras anti-invenção no frontend.
 
 ## Direção do produto
 
@@ -112,6 +121,45 @@ A evolução deve ser feita por camadas:
 | v0.11.0 | GitHub Analyzer 2.0 | Código | Repositórios analisados por árvore, arquivos, evidências e prompts ricos. |
 | v0.12.0 | Match Engine 2.0 | Código | Matching por requisitos, domínio, evidência, risco e confiança. |
 | v1.0.0 | Generalist Career Intelligence Platform | Produto | Versão estável, demonstrável e multiárea. |
+| v1.1.0 | Professional Frontend Handoff and Product Site | Produto/docs | Site profissional, handoff Lovable, contratos e mocks. |
+| v1.2.0 | API Layer / FastAPI Foundation | Código | API HTTP versionada para consumir o core local-first. |
+| v1.3.0 | Modern Web Frontend | Frontend | Frontend moderno consumindo contratos reais. |
+| v1.4.0 | Streamlit Legacy Mode | Produto | Streamlit mantido como modo local/dev legado. |
+| v2.0.0 | SaaS-ready Architecture | Arquitetura | Base pronta para opção SaaS sem abandonar local-first. |
+
+---
+
+# v1.1.0 — Professional Frontend Handoff and Product Site
+
+## Objetivo
+
+Preparar o SotuHire para um frontend profissional futuro sem remover Streamlit e sem mover regra
+crítica para o browser.
+
+## Entregas
+
+- Criar `docs/08-frontend` com arquitetura, handoff Lovable, screen map, API contract, mocks,
+  design notes, frontend rules e Application Intelligence.
+- Criar mocks oficiais em `docs/assets/mock-api`.
+- Criar home dedicada `docs/index.md`.
+- Transformar `docs/README.md` em índice documental do repositório.
+- Criar demo estática v1.1 para site e Lovable.
+- Reservar `apps/web` para futuro frontend moderno.
+
+## Fora de escopo
+
+- Implementar API FastAPI completa.
+- Criar app React/Next completo.
+- Remover Streamlit.
+- Alterar coleta autenticada.
+- Colocar chaves ou tokens no frontend.
+
+## Próximos ciclos
+
+- v1.2.0: API Layer / FastAPI Foundation.
+- v1.3.0: Modern Web Frontend.
+- v1.4.0: Streamlit Legacy Mode.
+- v2.0.0: SaaS-ready Architecture.
 
 ---
 
