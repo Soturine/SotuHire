@@ -138,10 +138,59 @@
   margin: 1.5rem 0;
 }
 
+.md-typeset .sotu-demo-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 1rem 0 1.4rem;
+}
+
+.md-typeset .sotu-demo-grid--two {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.md-typeset .sotu-demo-card {
+  background: #ffffff;
+  border: 1px solid #dce8e4;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.md-typeset .sotu-demo-card--strong {
+  border-color: #2f756d;
+}
+
+.md-typeset .sotu-demo-card strong {
+  display: block;
+  font-size: 1.8rem;
+  margin: 0.25rem 0;
+}
+
+.md-typeset .sotu-bars {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.md-typeset .sotu-bars span {
+  background:
+    linear-gradient(90deg, #cce7df var(--value), #eef5f2 var(--value));
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.45rem 0.55rem;
+}
+
+.md-typeset .sotu-bars--warn span {
+  background:
+    linear-gradient(90deg, #f4d7bc var(--value), #fbf0e5 var(--value));
+}
+
 @media (max-width: 900px) {
   .md-typeset .sotu-hero,
   .md-typeset .sotu-flow,
-  .md-typeset .sotu-grid {
+  .md-typeset .sotu-grid,
+  .md-typeset .sotu-demo-grid,
+  .md-typeset .sotu-demo-grid--two {
     grid-template-columns: 1fr;
   }
 
@@ -149,4 +198,3 @@
     grid-template-columns: 1fr;
   }
 }
-

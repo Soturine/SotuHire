@@ -63,10 +63,21 @@ manter a agregação no backend/core e expor resultados prontos para o frontend.
 - `GET /api/v1/tracker/funnel`
 - `GET /api/v1/tracker/sources`
 
+## Mocks relacionados
+
+- `docs/assets/mock-api/tracker-metrics.json`
+- `docs/assets/mock-api/tracker-requirements.json`
+- `docs/assets/mock-api/tracker-funnel.json`
+- `docs/assets/mock-api/tracker-sources.json`
+
+## Demo estática
+
+A página [Static demo](static-demo.md) mostra uma representação visual desses contratos usando
+apenas dados fictícios.
+
 ## Regras
 
 - Não calcular métricas oficiais no frontend.
 - Não tratar ausência de evidência como competência confirmada.
 - Mostrar quando há poucos dados para concluir tendência.
 - Usar apenas dados locais autorizados.
-

@@ -19,6 +19,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [Overview frontend](08-frontend/README.md)
 - [Arquitetura frontend-ready](08-frontend/frontend-architecture.md)
 - [Lovable handoff](08-frontend/lovable-handoff.md)
+- [Demo estática v1.1](08-frontend/static-demo.md)
 - [Mapa de telas](08-frontend/screen-map.md)
 - [API contract](08-frontend/api-contract.md)
 - [Mock data contract](08-frontend/mock-data-contract.md)
@@ -54,4 +55,3 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [CI/CD](06-engineering/ci-cd.md)
 - [Security Privacy](06-engineering/security-privacy.md)
 - [v1.0.0 Stable Release](07-development/v1.0.0-stable-release.md)
-

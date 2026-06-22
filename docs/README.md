@@ -29,6 +29,7 @@ Match Engine 2.0, oportunidades, histórico, portfolio, GitHub e evidências pro
 - [Overview frontend](08-frontend/README.md)
 - [Arquitetura frontend-ready](08-frontend/frontend-architecture.md)
 - [Lovable handoff](08-frontend/lovable-handoff.md)
+- [Demo estática v1.1](08-frontend/static-demo.md)
 - [Mapa de telas](08-frontend/screen-map.md)
 - [API contract](08-frontend/api-contract.md)
 - [Mock data contract](08-frontend/mock-data-contract.md)
@@ -89,4 +90,3 @@ Match Engine 2.0, oportunidades, histórico, portfolio, GitHub e evidências pro
 
 SotuHire não promete contratação, não faz candidatura automática, não inventa experiências,
 certificações ou registros profissionais, e mantém a pessoa usuária no controle da decisão.
-

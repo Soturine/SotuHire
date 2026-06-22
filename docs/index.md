@@ -10,7 +10,7 @@
     </p>
     <div class="sotu-actions">
       <a class="sotu-button sotu-button--primary" href="07-development/setup/">Rodar localmente</a>
-      <a class="sotu-button" href="01-product/v1-demo/">Ver demo estática</a>
+      <a class="sotu-button" href="08-frontend/static-demo/">Ver demo estática</a>
       <a class="sotu-button" href="08-frontend/lovable-handoff/">Handoff frontend</a>
     </div>
   </div>
@@ -119,7 +119,7 @@ pip install -r docs/requirements/requirements-ai.txt
 
 - [Índice documental](documentation-index.md)
 - [Roadmap](01-product/roadmap.md)
-- [Demo v1.0](01-product/v1-demo.md)
+- [Demo estática v1.1](08-frontend/static-demo.md)
 - [GitHub Pages vs app local](01-product/github-pages-site.md)
 - [Prompt catalog](04-ai/prompt-catalog.md)
 - [Release notes](https://github.com/Soturine/SotuHire/releases)
