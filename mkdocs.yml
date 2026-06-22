@@ -75,6 +75,7 @@ nav:
       - MVP core schemas: 02-architecture/mvp-core-schemas.md
       - Local companion app: 02-architecture/local-companion-app.md
       - Local Companion API: 02-architecture/local-companion-api.md
+      - Frontend API Layer: 02-architecture/frontend-api-layer.md
       - Background jobs: 02-architecture/background-jobs.md
       - Parsers: 02-architecture/parsers.md
       - Semântica do parser: 02-architecture/parser-semantics.md
@@ -185,6 +186,7 @@ nav:
       - v0.11.0 GitHub Analyzer 2.0: 07-development/v0.11.0-github-analyzer-2.md
       - v0.12.0 Match Engine 2.0: 07-development/v0.12.0-match-engine-2.md
       - v1.0.0 Stable Release: 07-development/v1.0.0-stable-release.md
+      - v1.2.0 API Layer: 07-development/v1.2.0-api-layer.md
   - Frontend:
       - Overview: 08-frontend/README.md
       - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md

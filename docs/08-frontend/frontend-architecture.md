@@ -5,11 +5,11 @@
 ```text
 Frontend moderno / Lovable
         -> API Contract
-        -> Local API / Future API Layer
+        -> FastAPI local /api/v1
         -> Core Python modules
 ```
 
-O Streamlit continua sendo o app local atual. A v1.1.0 apenas prepara a transição para
+O Streamlit continua sendo o app local atual. A v1.2.0 adiciona a FastAPI local para
 um frontend moderno separado, sem remover o fluxo existente.
 
 ## Responsabilidades do frontend
@@ -38,14 +38,13 @@ um frontend moderno separado, sem remover o fluxo existente.
 ## Fronteira de segurança
 
 O frontend não deve receber API keys, Gemini keys, GitHub tokens ou segredos locais.
-Quando existir uma API HTTP para o frontend, CORS deve ser restrito e configurado para
+A API HTTP para o frontend usa CORS restrito e deve ser configurada para
 origens conhecidas. O GitHub Pages continua estático e não executa backend.
 
 ## Modo recomendado de evolução
 
 1. Prototipar telas com os mocks oficiais.
 2. Validar navegação e estados visuais sem backend real.
-3. Implementar uma camada de API versionada.
-4. Trocar mocks por chamadas reais.
+3. Usar `python scripts/run_api.py` para subir a API local.
+4. Trocar mocks por chamadas reais em `/api/v1`.
 5. Manter os cálculos e regras críticas no core Python.
-

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.1.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.1.0)
+[![Release](https://img.shields.io/badge/release-v1.2.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.2.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -16,6 +16,7 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 [Documentação](https://soturine.github.io/SotuHire/) ·
 [Demo estática](docs/08-frontend/static-demo.md) ·
 [Frontend handoff](docs/08-frontend/README.md) ·
+[API contract](docs/08-frontend/api-contract.md) ·
 [Roadmap](docs/01-product/roadmap.md) ·
 [Visão](docs/01-product/vision.md) ·
 [Estratégia multiárea](docs/01-product/multi-domain-product-strategy.md) ·
@@ -64,6 +65,7 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - oferece análise standalone na extensão ou análise conectada ao SotuHire local.
 - publica documentação e demo estática no GitHub Pages.
 - documenta contratos, mocks e handoff para um frontend moderno futuro.
+- expõe FastAPI local em `/api/v1` para frontend moderno, com OpenAPI.
 
 ## Como Usar
 
@@ -95,13 +97,33 @@ O app completo continua local:
 streamlit run app.py
 ```
 
+### API local v1.2.0
+
+Para conectar um frontend moderno ou inspecionar o OpenAPI:
+
+```bash
+python scripts/run_api.py
+```
+
+Endpoints:
+
+```text
+http://127.0.0.1:8787/api/v1
+http://127.0.0.1:8787/openapi.json
+http://127.0.0.1:8787/docs
+```
+
+A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
+[Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
+
 ### Frontend moderno futuro
 
 O Streamlit continua sendo o app local atual/dev. A identidade futura do produto pode ser um
 frontend moderno separado, criado com Lovable, React, Vite, Next.js ou outro stack.
 
 Esse frontend pode redesenhar toda a experiência visual, mas deve consumir contratos em
-[`docs/08-frontend`](docs/08-frontend/README.md) e não deve reimplementar regra de negócio crítica.
+[`docs/08-frontend`](docs/08-frontend/README.md) e a API local em `apps/api`, sem reimplementar regra
+de negócio crítica.
 Matching, ATS, Resume Tailor, GitHub Analyzer, validações fortes, privacidade e regras
 anti-invenção continuam no backend/core.
 
@@ -254,6 +276,7 @@ automaticamente.
 | `modules/tracker`, `modules/storage` | Histórico, Kanban, follow-up e persistência local. |
 | `modules/memory`, `modules/profile` | Career Memory, RAG local, evidências, perfil persistente e preferências inferidas. |
 | `modules/local_api` | API localhost para integração local com a extensão. |
+| `apps/api` | FastAPI local para frontends modernos, OpenAPI e contratos `/api/v1`. |
 | `browser-extension` | Extensão assistiva multiportal e análise GitHub/portfólio no navegador. |
 | `modules/portfolio` | Amostragem, commits, scores e evidências de GitHub/projetos/portfólio. |
 | `modules/ui` | Fluxos Streamlit rápido e avançado. |
@@ -283,7 +306,7 @@ Veja a [documentação de arquitetura](docs/02-architecture/overview.md) e o
 ```text
 SotuHire/
 ├── app.py                  # entrada Streamlit
-├── apps/                   # apps futuros, incluindo web frontend reservado
+├── apps/                   # FastAPI local e web frontend reservado
 ├── modules/                # domínio, serviços, conectores e UI
 ├── browser-extension/      # extensão assistiva Manifest V3
 ├── tests/                  # testes unitários, integração e regressão
@@ -335,6 +358,7 @@ mkdocs serve
 - GitHub Pages como site estático de documentação/demo;
 - home profissional do GitHub Pages, demo estática v1.1 e handoff frontend-ready;
 - contratos API e mocks para Lovable/React em `docs/08-frontend` e `docs/assets/mock-api`;
+- FastAPI local em `apps/api`, OpenAPI, endpoints `/api/v1` e Application Intelligence;
 - demos fictícias multiárea em `examples/`;
 - scores explicáveis e Resume Tailor;
 - tracker, histórico e dashboard;
@@ -348,7 +372,6 @@ mkdocs serve
 
 ### Próximos passos
 
-- v1.2.0: API Layer / FastAPI Foundation;
 - v1.3.0: Modern Web Frontend;
 - v1.4.0: Streamlit Legacy Mode;
 - v2.0.0: SaaS-ready Architecture;

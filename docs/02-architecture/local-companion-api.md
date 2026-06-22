@@ -4,6 +4,14 @@ A Local Companion API conecta a extensão assistiva ao SotuHire sem publicar um 
 Ela usa a biblioteca padrão do Python, escuta somente em `127.0.0.1:8765` e persiste dados nos
 stores locais ignorados pelo Git.
 
+Ela continua existindo na v1.2.0. A nova FastAPI em `apps/api` atende frontends modernos em
+`/api/v1`; a Local Companion API continua atendendo a extensão assistiva e os fluxos `/capture/*`.
+
+| API local | Porta padrão | Uso principal |
+| --- | --- | --- |
+| Local Companion API | `8765` | extensão assistiva, captura de vaga/projeto e integração com navegador |
+| Frontend API Layer | `8787` | frontend moderno, OpenAPI e contratos `/api/v1` |
+
 ## Endpoints
 
 | Endpoint | Uso |

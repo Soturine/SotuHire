@@ -66,11 +66,21 @@ Lovable deve usar:
 
 ## Como conectar depois com a API real
 
+Desde a v1.2.0, a API real local existe em `apps/api`.
+
 1. Criar o frontend com dados mockados.
 2. Isolar a camada de dados em um client HTTP.
-3. Mapear cada tela para endpoint versionado.
-4. Tratar loading, erro, vazio e sucesso.
-5. Substituir mocks por `GET`/`POST`/`PATCH` reais quando a API v1 existir.
+3. Usar `http://127.0.0.1:8787/api/v1` em desenvolvimento local.
+4. Consultar `http://127.0.0.1:8787/openapi.json` para gerar ou validar types.
+5. Mapear cada tela para endpoint versionado.
+6. Tratar loading, erro, vazio e sucesso.
+7. Substituir mocks por `GET`/`POST`/`PATCH` reais sem recalcular regra critica no frontend.
+
+Para subir a API:
+
+```bash
+python scripts/run_api.py
+```
 
 ## Regra anti-invenção
 

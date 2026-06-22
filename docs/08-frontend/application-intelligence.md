@@ -1,7 +1,7 @@
 # Application Intelligence
 
-Application Intelligence é a camada analítica futura do Kanban/tracker. Ela transforma
-vagas salvas, candidaturas e resultados de matching em sinais úteis para decisão.
+Application Intelligence e a camada analitica do Kanban/tracker. Ela transforma vagas salvas,
+candidaturas e resultados de matching em sinais uteis para decisao.
 
 ## Objetivo
 
@@ -9,59 +9,62 @@ Responder perguntas como:
 
 - quais fontes trazem vagas com melhor match?
 - quais requisitos aparecem mais nas vagas aplicadas?
-- quais gaps críticos estão se repetindo?
+- quais gaps criticos estao se repetindo?
 - em quais etapas as candidaturas param?
-- o perfil está evoluindo em direção às vagas desejadas?
+- o perfil esta evoluindo em direcao as vagas desejadas?
 
-## Métricas futuras
+## Disponivel na v1.2.0
 
 - total de vagas salvas;
 - total de candidaturas aplicadas;
 - vagas por status;
-- vagas por fonte;
-- match médio por status;
-- ATS médio;
+- match medio por status;
+- ATS medio;
 - taxa de resposta;
 - taxa de entrevista;
 - taxa de oferta;
-- requisitos mais pedidos nas vagas aplicadas;
-- requisitos mais pedidos nas vagas salvas;
-- requisitos mais pedidos nas vagas com alto match;
-- gaps críticos recorrentes;
-- skills ausentes mais frequentes;
+- requisitos mais pedidos;
 - requisitos por fonte;
-- evolução semanal/mensal das candidaturas.
+- skills/requisitos ausentes mais frequentes;
+- gaps criticos recorrentes;
+- funil salvo -> aplicado -> resposta -> entrevista -> oferta;
+- fontes com volume, aplicacoes, entrevistas, match medio e top requirements.
 
-## Gráficos recomendados
+## Funcoes de backend
 
-- cards KPI;
-- funil de candidatura;
-- gráfico de barras para requisitos mais pedidos;
-- gráfico de barras para gaps recorrentes;
-- donut/pizza para status;
-- linha temporal para candidaturas por semana;
-- heatmap simples requisito x fonte;
-- tabela ranqueada de skills.
-
-## Base atual
-
-O projeto já possui tracker, dashboard e `rank_applied_requirements`. A evolução deve
-manter a agregação no backend/core e expor resultados prontos para o frontend.
-
-## Evolução proposta
+As agregacoes ficam em `modules/tracker/dashboard.py`:
 
 - `rank_requirements_by_status`
 - `rank_requirements_by_source`
 - `rank_missing_requirements`
 - `rank_critical_gaps`
-- `requirements_trend_over_time`
+- `calculate_application_funnel`
+- `calculate_source_metrics`
 
-## Contratos relacionados
+## Endpoints
 
 - `GET /api/v1/tracker/metrics`
 - `GET /api/v1/tracker/requirements`
 - `GET /api/v1/tracker/funnel`
 - `GET /api/v1/tracker/sources`
+
+## Graficos recomendados
+
+- cards KPI;
+- funil de candidatura;
+- barras para requisitos mais pedidos;
+- barras para gaps recorrentes;
+- donut/pizza para status;
+- tabela ranqueada de sources;
+- tabela ranqueada de skills.
+
+## Evolucao futura
+
+- trend semanal/mensal de candidaturas;
+- trend de requisitos ao longo do tempo;
+- heatmap requisito x fonte;
+- comparacao por dominio profissional;
+- metricas de tempo entre etapas.
 
 ## Mocks relacionados
 
@@ -70,14 +73,14 @@ manter a agregação no backend/core e expor resultados prontos para o frontend.
 - `docs/assets/mock-api/tracker-funnel.json`
 - `docs/assets/mock-api/tracker-sources.json`
 
-## Demo estática
+## Demo estatica
 
-A página [Static demo](static-demo.md) mostra uma representação visual desses contratos usando
-apenas dados fictícios.
+A pagina [Static demo](static-demo.md) mostra uma representacao visual desses contratos usando
+apenas dados ficticios.
 
 ## Regras
 
-- Não calcular métricas oficiais no frontend.
-- Não tratar ausência de evidência como competência confirmada.
-- Mostrar quando há poucos dados para concluir tendência.
+- Nao calcular metricas oficiais no frontend.
+- Nao tratar ausencia de evidencia como competencia confirmada.
+- Mostrar quando ha poucos dados para concluir tendencia.
 - Usar apenas dados locais autorizados.

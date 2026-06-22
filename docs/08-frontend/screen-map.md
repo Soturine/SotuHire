@@ -17,7 +17,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: resumir perfil, análises recentes, vagas salvas e próximos passos.
 - Dados necessários: perfil, métricas do tracker, análises recentes, gaps recorrentes.
-- Endpoint futuro: `GET /api/v1/tracker/metrics`.
+- Endpoint: `GET /api/v1/tracker/metrics`.
 - Estados vazios: primeira análise ainda não executada.
 - Estados de erro: API local indisponível ou storage não iniciado.
 - Liberdade visual: cards KPI, charts, feed e atalhos.
@@ -27,7 +27,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: receber currículo em texto ou arquivo.
 - Dados necessários: texto bruto ou arquivo suportado.
-- Endpoint futuro: `POST /api/v1/resume/extract`.
+- Endpoint: `POST /api/v1/resume/extract`.
 - Estados vazios: nenhum currículo carregado.
 - Estados de erro: arquivo inválido, tipo não suportado, texto insuficiente.
 - Liberdade visual: dropzone, editor, progresso e preview.
@@ -37,7 +37,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: mostrar perfil estruturado extraído e editável.
 - Dados necessários: skills, experiências, formação, projetos, links e preferências.
-- Endpoint futuro: `POST /api/v1/resume/extract`.
+- Endpoint: `POST /api/v1/resume/extract`.
 - Estados vazios: perfil não extraído.
 - Estados de erro: baixa confiança de extração.
 - Liberdade visual: abas, cards, tabelas ou timeline.
@@ -47,7 +47,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: receber descrição de vaga, link ou texto público.
 - Dados necessários: texto da vaga e metadados opcionais.
-- Endpoint futuro: `POST /api/v1/job/extract`.
+- Endpoint: `POST /api/v1/job/extract`.
 - Estados vazios: nenhuma vaga informada.
 - Estados de erro: vaga incompleta, descrição curta, fonte indisponível.
 - Liberdade visual: editor, URL input, preview e checklist.
@@ -57,7 +57,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: mostrar Match Score, Confidence, Evidence Score, gaps e ações seguras.
 - Dados necessários: análise de currículo, vaga e evidências.
-- Endpoint futuro: `POST /api/v1/match/analyze`.
+- Endpoint: `POST /api/v1/match/analyze`.
 - Estados vazios: currículo ou vaga ausente.
 - Estados de erro: extração falhou, evidência insuficiente, baixa confiança.
 - Liberdade visual: scorecards, breakdown, timeline, accordion e charts.
@@ -67,7 +67,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: separar keywords presentes, seguras se verdadeiras e sem evidência.
 - Dados necessários: currículo, vaga, keywords e match signals.
-- Endpoint futuro: `POST /api/v1/ats/analyze`.
+- Endpoint: `POST /api/v1/ats/analyze`.
 - Estados vazios: análise de match ainda não executada.
 - Estados de erro: keywords insuficientes ou baixa confiança.
 - Liberdade visual: listas, tags, heatmap e comparação.
@@ -77,7 +77,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: sugerir ajustes seguros de currículo para a vaga.
 - Dados necessários: perfil, vaga, ATS review e evidências.
-- Endpoint futuro: `POST /api/v1/resume/tailor`.
+- Endpoint: `POST /api/v1/resume/tailor`.
 - Estados vazios: sem análise ou sem evidências.
 - Estados de erro: tentativa de gerar afirmação sem base.
 - Liberdade visual: editor comparativo, sugestões aceitas/rejeitadas e checklist.
@@ -87,7 +87,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: analisar repositório público como evidência profissional.
 - Dados necessários: URL ou owner/repo.
-- Endpoint futuro: `POST /api/v1/github/repo/analyze`.
+- Endpoint: `POST /api/v1/github/repo/analyze`.
 - Estados vazios: nenhum repositório informado.
 - Estados de erro: repo privado, rate limit, URL inválida.
 - Liberdade visual: scorecards, linguagens, evidências, arquivos e riscos.
@@ -107,7 +107,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: acompanhar vagas por status.
 - Dados necessários: jobs, status, fonte, datas, match e notas.
-- Endpoint futuro: `GET/POST/PATCH /api/v1/tracker/jobs`.
+- Endpoint: `GET/POST/PATCH /api/v1/tracker/jobs`.
 - Estados vazios: nenhuma vaga salva.
 - Estados de erro: conflito de atualização, job inexistente.
 - Liberdade visual: board, listas, cards compactos e filtros.
@@ -117,7 +117,7 @@ visual, desde que preserve dados, contratos e regras.
 
 - Objetivo: mostrar métricas e padrões das candidaturas.
 - Dados necessários: métricas, requisitos, fontes, funil, gaps e timeline.
-- Endpoint futuro: `GET /api/v1/tracker/metrics`, `/requirements`, `/funnel`, `/sources`.
+- Endpoint: `GET /api/v1/tracker/metrics`, `/requirements`, `/funnel`, `/sources`.
 - Estados vazios: dados insuficientes.
 - Estados de erro: métricas indisponíveis ou storage corrompido.
 - Liberdade visual: KPIs, barras, donut, funil, heatmap e tabelas.
@@ -152,4 +152,3 @@ visual, desde que preserve dados, contratos e regras.
 - Estados de erro: não aplicável.
 - Liberdade visual: página educativa, checklist e FAQ.
 - Regras: não prometer privacidade absoluta se integração externa for ativada.
-

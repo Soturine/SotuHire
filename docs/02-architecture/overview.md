@@ -103,7 +103,7 @@ application_helper.generate_message()
 UI exibe relatório
 ```
 
-## Por que não começar com FastAPI + React
+## Por que o MVP não começou com FastAPI + React
 
 FastAPI + React pode ser bom no futuro, mas no MVP inicial adiciona custo desnecessário:
 
@@ -115,6 +115,28 @@ FastAPI + React pode ser bom no futuro, mas no MVP inicial adiciona custo desnec
 - mais pontos de falha.
 
 Streamlit é suficiente para validar o produto rápido.
+
+## Frontend API Layer v1.2.0
+
+A v1.2.0 adiciona FastAPI como camada HTTP local e fina em `apps/api`, sem substituir o Streamlit e
+sem duplicar regras do core.
+
+```text
+Frontend moderno -> FastAPI /api/v1 -> modules/ -> stores locais
+Streamlit         -> modules/ -> stores locais
+Extensao          -> Local Companion API -> modules/ -> stores locais
+```
+
+Responsabilidades da FastAPI:
+
+- expor OpenAPI em `/openapi.json` e docs interativas em `/docs`;
+- publicar endpoints versionados para resume/job extraction, match, ATS, Tailor, GitHub Analyzer e
+  tracker;
+- aplicar CORS restrito por default;
+- devolver DTOs Pydantic estaveis para Lovable/React;
+- manter Match, ATS, Tailor, GitHub Analyzer, tracker e Application Intelligence no backend/core.
+
+Detalhes: [Frontend API Layer](frontend-api-layer.md).
 
 ## Por que não começar com microserviços
 

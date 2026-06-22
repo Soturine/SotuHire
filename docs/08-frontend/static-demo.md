@@ -118,6 +118,5 @@ Avisos:
 
 ## Limite da demo
 
-Esta página é uma vitrine estática. O app real continua local, com Streamlit hoje e futura
-API/frontend moderno depois.
-
+Esta página é uma vitrine estática. O app real continua local com Streamlit, e a API local v1.2.0
+fica disponível em `apps/api` para um frontend moderno futuro.

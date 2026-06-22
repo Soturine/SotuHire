@@ -48,6 +48,19 @@ Rodar Streamlit:
 streamlit run app.py
 ```
 
+Rodar FastAPI local:
+
+```bash
+python scripts/run_api.py
+```
+
+OpenAPI:
+
+```text
+http://127.0.0.1:8787/openapi.json
+http://127.0.0.1:8787/docs
+```
+
 ## Testes
 
 Rodar todos:

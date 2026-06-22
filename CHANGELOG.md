@@ -4,6 +4,55 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.2.0] - 2026-06-22
+
+### Adicionado
+
+- FastAPI local em `apps/api`, com `create_app()`, OpenAPI e docs interativas.
+- Endpoint `GET /api/v1/health`.
+- Endpoints de analise `POST /api/v1/resume/extract`, `POST /api/v1/job/extract`,
+  `POST /api/v1/match/analyze`, `POST /api/v1/ats/analyze`, `POST /api/v1/resume/tailor` e
+  `POST /api/v1/github/repo/analyze`.
+- Endpoints do tracker `GET/POST /api/v1/tracker/jobs` e
+  `PATCH /api/v1/tracker/jobs/{id}`.
+- Endpoints de Application Intelligence `GET /api/v1/tracker/metrics`,
+  `GET /api/v1/tracker/requirements`, `GET /api/v1/tracker/funnel` e
+  `GET /api/v1/tracker/sources`.
+- DTOs Pydantic para requests/responses da API, com envelope `ok`, `data`, `warnings` e
+  `request_id`.
+- Configuracao local por env: `SOTUHIRE_API_HOST`, `SOTUHIRE_API_PORT` e
+  `SOTUHIRE_API_ALLOWED_ORIGINS`.
+- Script `scripts/run_api.py` para subir a API local.
+- Funcoes de Application Intelligence em `modules/tracker/dashboard.py`, incluindo ranking por
+  status, ranking por source, missing requirements, critical gaps, funnel e source metrics.
+- Testes dedicados para health, resume, job, match, ATS, Tailor, GitHub, tracker e Application
+  Intelligence.
+
+### Alterado
+
+- Versao do projeto atualizada para `1.2.0`.
+- `docs/08-frontend/api-contract.md` passou a documentar a API real implementada na v1.2.0.
+- Documentacao de arquitetura passou a diferenciar Frontend API Layer e Local Companion API.
+- README raiz passou a documentar `python scripts/run_api.py`, OpenAPI e `/api/v1`.
+- Dependencias FastAPI/Uvicorn/HTTPX foram adicionadas em `docs/requirements/requirements.txt`.
+
+### Seguranca
+
+- CORS e restrito por default, sem wildcard.
+- Respostas de resume/job extraction removem `raw_text` por default.
+- A API reutiliza regras do core e nao move Match, ATS, Tailor, GitHub Analyzer ou metricas oficiais
+  para o frontend.
+- Tracker continua local-first e sem armazenar curriculo bruto.
+- GitHub Analyzer aceita `fallback_payload` com dados publicos/capturados sem expor tokens no
+  frontend.
+
+### Validacao
+
+- Precheck antes da implementacao: `ruff check .`, `ruff format --check .`, `pytest`,
+  `mkdocs build --strict`, `python -m compileall modules tests`, `pyright` e
+  `node --check docs/javascripts/sotuhire-demo.js`.
+- Testes focados da API e Application Intelligence: `13 passed`.
+
 ## [1.1.0] - 2026-06-22
 
 ### Adicionado

@@ -1,16 +1,16 @@
 {
   "status": "ok",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "local_first": true,
   "environment": "mock",
   "capabilities": [
     "resume_extract",
     "job_extract",
-    "match_engine_v2",
-    "ats_review",
+    "match_analyze",
+    "ats_analyze",
     "resume_tailor",
-    "github_repo_analysis",
-    "tracker",
+    "github_repo_analyze",
+    "tracker_jobs",
     "application_intelligence"
   ]
 }

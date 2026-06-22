@@ -1,369 +1,453 @@
-# API contract v1
+# API contract v1.2.0
 
-Este documento define contratos futuros para um frontend moderno. A v1.1.0 não implementa
-todos estes endpoints. Ela documenta a fronteira para Lovable, React, Vite, Next.js ou
-outro frontend consumir depois.
+Este contrato descreve a FastAPI local implementada na v1.2.0 para consumo por Lovable,
+React, Vite, Next.js ou outro frontend moderno.
 
-## Convenções
+Base local padrao:
 
-- Base futura local: `http://127.0.0.1:<port>/api/v1`
+```text
+http://127.0.0.1:8787/api/v1
+```
+
+OpenAPI:
+
+```text
+http://127.0.0.1:8787/openapi.json
+http://127.0.0.1:8787/docs
+```
+
+## Convencoes
+
 - Formato: JSON.
-- IDs: strings estáveis geradas pelo backend.
-- Erros: payloads com `error.code`, `error.message` e `error.details`.
-- Segurança: CORS restrito em API real; nunca expor API keys no frontend.
+- Envelope de sucesso:
+
+```json
+{
+  "ok": true,
+  "data": {},
+  "warnings": [],
+  "request_id": ""
+}
+```
+
+- Envelope de erro:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "invalid_payload",
+    "message": "Payload invalido para o contrato da API.",
+    "details": {}
+  },
+  "request_id": ""
+}
+```
+
+- CORS e restrito por default. Configure origens com `SOTUHIRE_API_ALLOWED_ORIGINS`.
+- A API e local-first. Nao coloque Gemini key, GitHub token ou secrets no frontend.
+- Curriculo bruto entra somente no request necessario; respostas de extracao removem `raw_text`
+  por default.
+- Regras de Match, ATS, Resume Tailor, GitHub Analyzer e Application Intelligence ficam no backend.
 
 ## GET /api/v1/health
 
-- Objetivo: verificar se a API local está ativa.
-- Request JSON: nenhum.
-- Response JSON:
+Verifica se a API local esta ativa.
+
+Response `data`:
 
 ```json
 {
   "status": "ok",
-  "version": "1.1.0",
+  "service": "sotuhire-api",
+  "version": "1.2.0",
   "local_first": true,
-  "capabilities": ["resume_extract", "job_extract", "match", "tracker"]
+  "openapi_url": "/openapi.json",
+  "docs_url": "/docs",
+  "capabilities": [
+    "resume_extract",
+    "job_extract",
+    "match_analyze",
+    "ats_analyze",
+    "resume_tailor",
+    "github_repo_analyze",
+    "tracker_jobs",
+    "application_intelligence"
+  ]
 }
 ```
-
-- Erros possíveis: `service_unavailable`.
-- Segurança: não retornar segredos ou paths sensíveis.
-- Equivalente atual: Local Companion API já possui health check.
-- Status: parcialmente existente.
 
 ## POST /api/v1/resume/extract
 
-- Objetivo: extrair perfil estruturado de currículo.
-- Request JSON:
+Extrai `ResumeProfileSchema` a partir de texto colado.
+
+Request:
 
 ```json
 {
-  "resume_text": "Texto fictício do currículo",
-  "language": "pt-BR",
-  "options": {"use_ai": false}
+  "resume_text": "Texto ficticio do curriculo",
+  "source_type": "text",
+  "include_raw_text": false,
+  "request_id": "ui_001"
 }
 ```
 
-- Response JSON:
+Response `data`:
 
 ```json
 {
   "profile": {
-    "name": "Pessoa Fictícia",
-    "headline": "Desenvolvedora Backend",
+    "name": "Pessoa Ficticia",
+    "email": "pessoa@example.invalid",
     "skills": ["Python", "FastAPI"],
-    "experience": [],
-    "education": [],
-    "projects": []
+    "experiences": [],
+    "projects": [],
+    "raw_text": ""
   },
-  "confidence": 0.82,
-  "warnings": []
+  "confidence": 0.85
 }
 ```
-
-- Erros possíveis: `invalid_payload`, `resume_too_short`, `unsupported_file_type`.
-- Segurança: currículo é dado sensível; manter local por padrão.
-- Equivalente atual: parsers e extração estruturada em `modules/parsers` e `modules/ai`.
-- Status: futuro endpoint.
 
 ## POST /api/v1/job/extract
 
-- Objetivo: transformar vaga em requisitos estruturados.
-- Request JSON:
+Extrai `JobPostingSchema` a partir de descricao de vaga.
+
+Request:
 
 ```json
 {
-  "job_text": "Descrição fictícia da vaga",
+  "job_text": "Cargo: Backend Python\nRequisitos: Python, FastAPI, SQL",
   "source_url": "https://example.invalid/jobs/backend",
-  "language": "pt-BR"
+  "include_raw_text": false
 }
 ```
 
-- Response JSON:
+Response `data`:
 
 ```json
 {
   "job": {
-    "title": "Backend Developer",
-    "company": "Empresa Fictícia",
-    "required_skills": ["Python", "APIs"],
-    "preferred_skills": ["Docker"],
-    "domain": "technology"
+    "title": "Backend Python",
+    "company": "",
+    "modality": "unknown",
+    "required_skills": ["Python", "SQL", "FastAPI"],
+    "desired_skills": [],
+    "ats_keywords": ["backend", "python"],
+    "raw_text": ""
   },
-  "confidence": 0.86
+  "confidence": 0.75
 }
 ```
 
-- Erros possíveis: `job_too_short`, `invalid_url`, `unsupported_language`.
-- Segurança: não acessar fontes autenticadas sem ação explícita.
-- Equivalente atual: `modules/parsers/job_description_parser.py` e extrator estruturado.
-- Status: futuro endpoint.
+Warnings podem incluir dados ausentes como salario, empresa ou modalidade.
 
 ## POST /api/v1/match/analyze
 
-- Objetivo: calcular match entre currículo, vaga e evidências.
-- Request JSON:
+Calcula match usando o fluxo local estruturado e Match Engine 2.0.
+
+Request minimo:
 
 ```json
 {
-  "profile": {"skills": ["Python", "FastAPI"]},
-  "job": {"required_skills": ["Python", "Docker"]},
-  "evidence": {"github": [], "portfolio": []}
+  "resume_text": "Texto ficticio do curriculo",
+  "job_text": "Descricao ficticia da vaga",
+  "preferences": null,
+  "github_evidence": [],
+  "portfolio_evidence": []
 }
 ```
 
-- Response JSON:
+Tambem aceita `profile` e `job` ja estruturados quando o frontend executou as extracoes antes.
+
+Response `data`:
 
 ```json
 {
-  "analysis_version": "match_engine_v2",
-  "match_score": 78,
-  "confidence_score": 0.66,
-  "evidence_score": 72,
-  "critical_gaps": [],
-  "safe_actions": ["Evidencie Docker somente se tiver experiência real."]
+  "provider_used": "local",
+  "local_first": true,
+  "analysis": {
+    "match_score": 78,
+    "ats_score": 74,
+    "opportunity_fit_score": 70,
+    "risk_score": 20,
+    "recommendation": "apply_with_adjustments",
+    "analysis_version": "match_engine_v2",
+    "confidence_score": 0.66,
+    "evidence_score": 72,
+    "matched_requirements": [],
+    "partial_requirements": [],
+    "missing_requirements": [],
+    "critical_gaps": [],
+    "safe_actions": []
+  }
 }
 ```
-
-- Erros possíveis: `missing_resume`, `missing_job`, `low_confidence`.
-- Segurança: score real deve vir do backend/core.
-- Equivalente atual: `modules/matching` e `modules/analyzer`.
-- Status: futuro endpoint.
 
 ## POST /api/v1/ats/analyze
 
-- Objetivo: revisar alinhamento ATS sem incentivar invenção.
-- Request JSON:
+Classifica keywords ATS usando evidencia do Match Engine 2.0.
+
+Request:
 
 ```json
 {
-  "resume_text": "string",
+  "resume_text": "Texto ficticio do curriculo",
+  "job_text": "Descricao ficticia da vaga",
   "job_keywords": ["Python", "Docker"],
-  "match_analysis": {"analysis_version": "match_engine_v2"}
+  "match_analysis": null
 }
 ```
 
-- Response JSON:
+Response `data`:
 
 ```json
 {
   "ats_score": 74,
   "present": ["Python"],
   "missing_but_safe_to_add_if_true": ["Docker"],
-  "missing_without_evidence": ["Kubernetes"]
+  "missing_without_evidence": []
 }
 ```
-
-- Erros possíveis: `missing_match_analysis`, `invalid_keywords`.
-- Segurança: separar keyword segura de keyword sem evidência.
-- Equivalente atual: `modules/ats`.
-- Status: futuro endpoint.
 
 ## POST /api/v1/resume/tailor
 
-- Objetivo: gerar sugestões seguras de ajuste de currículo.
-- Request JSON:
+Gera sugestoes seguras de ajuste do curriculo sem inventar experiencia.
+
+Request:
 
 ```json
 {
-  "profile": {"skills": ["Python"]},
-  "job": {"required_skills": ["Python", "Docker"]},
-  "ats_review": {"present": ["Python"]},
-  "match_analysis": {"critical_gaps": []}
+  "target_role": "Backend Python",
+  "target_company": "Empresa Ficticia",
+  "job_text": "Descricao ficticia da vaga",
+  "evidence_text": "Evidencias fornecidas pela pessoa usuaria",
+  "match_analysis": null
 }
 ```
 
-- Response JSON:
+Response `data`:
 
 ```json
 {
-  "safe_keywords": ["Python"],
-  "suggested_bullets": [
-    "Descreva projetos Python com contexto, impacto e evidências verificáveis."
-  ],
-  "warnings": ["Não declare Docker sem experiência real."]
+  "safe_to_export": true,
+  "tailor": {
+    "target_role": "Backend Python",
+    "target_company": "Empresa Ficticia",
+    "section_order": ["Resumo", "Projetos", "Skills"],
+    "improved_bullets": [],
+    "keywords_added": ["Python"],
+    "evidence_used": [],
+    "warnings": []
+  }
 }
 ```
-
-- Erros possíveis: `insufficient_evidence`, `invalid_profile`.
-- Segurança: nunca gerar credencial, cargo ou experiência falsa.
-- Equivalente atual: `modules/resume_tailor`.
-- Status: futuro endpoint.
 
 ## POST /api/v1/github/repo/analyze
 
-- Objetivo: analisar repositório público como evidência técnica.
-- Request JSON:
+Analisa repositorio publico como evidencia tecnica.
+
+Request:
 
 ```json
 {
   "repo_url": "https://github.com/example/fictitious-api",
-  "include_files": true
+  "mode": "full",
+  "target_role": "Backend Python",
+  "target_job": {},
+  "candidate_profile": {},
+  "career_domains": ["software"],
+  "language": "pt-BR",
+  "fallback_payload": null
 }
 ```
 
-- Response JSON:
+Response `data`:
 
 ```json
 {
-  "repo": "example/fictitious-api",
-  "quality_score": 81,
-  "languages": ["Python"],
-  "evidence": ["README com instalação", "testes automatizados"],
-  "risks": []
+  "report": {
+    "repository_identity": {
+      "owner": "example",
+      "name": "fictitious-api",
+      "url": "https://github.com/example/fictitious-api",
+      "project_type": "api"
+    },
+    "scores": {
+      "overall_score": 81,
+      "grade": "B"
+    },
+    "provider_used": "local",
+    "fallback_used": false
+  }
 }
 ```
 
-- Erros possíveis: `repo_not_found`, `private_repo`, `rate_limited`.
-- Segurança: análise pública básica não deve exigir token no frontend.
-- Equivalente atual: `modules/github_analyzer`.
-- Status: futuro endpoint.
+`fallback_payload` aceita sinais publicos capturados pela extensao quando a GitHub API falha.
 
 ## GET /api/v1/tracker/jobs
 
-- Objetivo: listar vagas salvas.
-- Request JSON: nenhum.
-- Response JSON:
+Lista registros locais do tracker.
+
+Response `data`:
 
 ```json
 {
   "jobs": [
     {
       "id": "job_demo_001",
-      "title": "Backend Developer",
-      "company": "Empresa Fictícia",
+      "job_title": "Backend Python",
+      "company": "Empresa Ficticia",
       "status": "applied",
-      "match_score": 78
+      "requirements": ["Python", "Docker"],
+      "analysis": {
+        "match_score": 82,
+        "ats_score": 74
+      }
     }
   ]
 }
 ```
 
-- Erros possíveis: `storage_unavailable`.
-- Segurança: retornar apenas dados locais autorizados.
-- Equivalente atual: tracker local.
-- Status: futuro endpoint.
-
 ## POST /api/v1/tracker/jobs
 
-- Objetivo: salvar nova vaga no tracker.
-- Request JSON:
+Cria ou atualiza um card do tracker local.
+
+Request:
 
 ```json
 {
-  "title": "Backend Developer",
-  "company": "Empresa Fictícia",
-  "source": "LinkedIn",
-  "status": "saved"
+  "title": "Backend Python",
+  "company": "Empresa Ficticia",
+  "source_url": "https://linkedin.com/jobs/123",
+  "requirements": ["Python", "Docker"],
+  "status": "applied",
+  "match_score": 82,
+  "ats_score": 74,
+  "privacy_acknowledged": true
 }
 ```
 
-- Response JSON:
+Response `data`:
 
 ```json
-{"id": "job_demo_001", "status": "saved"}
+{
+  "job": {
+    "id": "generated_id",
+    "job_title": "Backend Python",
+    "status": "applied"
+  }
+}
 ```
-
-- Erros possíveis: `invalid_status`, `duplicate_job`.
-- Segurança: deduplicação e validação ficam no backend.
-- Equivalente atual: tracker local.
-- Status: futuro endpoint.
 
 ## PATCH /api/v1/tracker/jobs/{id}
 
-- Objetivo: atualizar status, notas ou metadados de uma vaga.
-- Request JSON:
+Atualiza status e/ou notas.
+
+Request:
 
 ```json
 {
   "status": "interview",
-  "notes": "Entrevista técnica marcada."
+  "notes": "Entrevista tecnica marcada."
 }
 ```
 
-- Response JSON:
-
-```json
-{"id": "job_demo_001", "status": "interview", "updated": true}
-```
-
-- Erros possíveis: `job_not_found`, `invalid_status`, `conflict`.
-- Segurança: preservar histórico de mudanças quando disponível.
-- Equivalente atual: tracker local.
-- Status: futuro endpoint.
-
 ## GET /api/v1/tracker/metrics
 
-- Objetivo: retornar KPIs agregados.
-- Request JSON: nenhum.
-- Response JSON:
+Retorna KPIs do tracker.
+
+Response `data`:
 
 ```json
 {
   "total_saved": 18,
   "total_applied": 9,
-  "average_match": 73,
+  "by_status": {
+    "applied": 9,
+    "interview": 2,
+    "offer": 1
+  },
+  "average_match_by_status": {
+    "applied": 75
+  },
   "response_rate": 0.33,
   "interview_rate": 0.22,
   "offer_rate": 0.05
 }
 ```
 
-- Erros possíveis: `not_enough_data`, `storage_unavailable`.
-- Segurança: agregações oficiais vêm do backend.
-- Equivalente atual: dashboard/tracker.
-- Status: futuro endpoint.
-
 ## GET /api/v1/tracker/requirements
 
-- Objetivo: ranquear requisitos, skills ausentes e gaps críticos.
-- Request JSON: nenhum.
-- Response JSON: ver `docs/assets/mock-api/tracker-requirements.json`.
-- Erros possíveis: `not_enough_data`.
-- Segurança: não inferir skills como possuídas sem evidência.
-- Equivalente atual: `rank_applied_requirements`.
-- Status: futuro endpoint.
+Retorna rankings de requisitos e gaps para Application Intelligence.
+
+Response `data`:
+
+```json
+{
+  "top_requirements": [
+    {
+      "name": "Python",
+      "count": 12,
+      "status_scope": "all",
+      "sources": ["linkedin.com"],
+      "candidate_has_evidence": true
+    }
+  ],
+  "missing_requirements": [],
+  "critical_gaps": [],
+  "requirements_by_source": [
+    {"source": "linkedin.com", "requirement": "Python", "count": 6}
+  ]
+}
+```
 
 ## GET /api/v1/tracker/funnel
 
-- Objetivo: retornar funil de candidaturas.
-- Request JSON: nenhum.
-- Response JSON:
+Retorna funil salvo -> aplicado -> resposta -> entrevista -> oferta.
+
+Response `data`:
 
 ```json
 {
   "stages": [
-    {"status": "saved", "count": 18},
-    {"status": "applied", "count": 9},
-    {"status": "interview", "count": 2},
-    {"status": "offer", "count": 1}
+    {"status": "saved", "label": "Salvas", "count": 18},
+    {"status": "applied", "label": "Aplicadas", "count": 9},
+    {"status": "response", "label": "Com resposta", "count": 3},
+    {"status": "interview", "label": "Entrevistas", "count": 2},
+    {"status": "offer", "label": "Oferta", "count": 1}
+  ],
+  "conversion_rates": [
+    {"from": "saved", "to": "applied", "rate": 0.5}
   ]
 }
 ```
 
-- Erros possíveis: `storage_unavailable`.
-- Segurança: usar dados locais agregados.
-- Equivalente atual: métricas do tracker.
-- Status: futuro endpoint.
-
 ## GET /api/v1/tracker/sources
 
-- Objetivo: comparar fontes de vagas e resultados.
-- Request JSON: nenhum.
-- Response JSON:
+Compara fontes/domains de vagas.
+
+Response `data`:
 
 ```json
 {
   "sources": [
-    {"name": "LinkedIn", "saved": 8, "applied": 4, "average_match": 76},
-    {"name": "Gupy", "saved": 5, "applied": 3, "average_match": 69}
+    {
+      "name": "linkedin.com",
+      "saved": 8,
+      "applied": 4,
+      "interviews": 1,
+      "average_match": 76,
+      "top_requirements": ["Python", "Docker"]
+    }
   ]
 }
 ```
 
-- Erros possíveis: `not_enough_data`.
-- Segurança: não armazenar credenciais de portais no frontend.
-- Equivalente atual: tracker e normalização de fontes.
-- Status: futuro endpoint.
+## Variaveis de ambiente
 
+| Variavel | Default | Uso |
+| --- | --- | --- |
+| `SOTUHIRE_API_HOST` | `127.0.0.1` | Host usado por `scripts/run_api.py`. |
+| `SOTUHIRE_API_PORT` | `8787` | Porta local usada por `scripts/run_api.py`. |
+| `SOTUHIRE_API_ALLOWED_ORIGINS` | origens locais + GitHub Pages | Lista CSV para CORS. |
+| `GITHUB_TOKEN` | vazio | Token opcional usado pelo GitHub Analyzer core. |

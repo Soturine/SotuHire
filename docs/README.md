@@ -14,6 +14,7 @@ Match Engine 2.0, oportunidades, histórico, portfolio, GitHub e evidências pro
 - [Setup local](07-development/setup.md)
 - [Comandos de desenvolvimento](07-development/commands.md)
 - [GitHub Pages vs app local](01-product/github-pages-site.md)
+- [Frontend API Layer](02-architecture/frontend-api-layer.md)
 
 ## Produto
 
@@ -42,6 +43,7 @@ Match Engine 2.0, oportunidades, histórico, portfolio, GitHub e evidências pro
 - [Arquitetura](02-architecture/overview.md)
 - [Data flow](02-architecture/data-flow.md)
 - [Local Companion API](02-architecture/local-companion-api.md)
+- [Frontend API Layer](02-architecture/frontend-api-layer.md)
 - [Matching rules](03-business-rules/matching-rules.md)
 - [ATS rules](03-business-rules/ats-rules.md)
 - [Resume Tailor rules](03-business-rules/resume-tailor-rules.md)
@@ -67,6 +69,7 @@ Match Engine 2.0, oportunidades, histórico, portfolio, GitHub e evidências pro
 - [v0.11.0 GitHub Analyzer 2.0](07-development/v0.11.0-github-analyzer-2.md)
 - [v0.12.0 Match Engine 2.0](07-development/v0.12.0-match-engine-2.md)
 - [v1.0.0 Stable Release](07-development/v1.0.0-stable-release.md)
+- [v1.2.0 API Layer](07-development/v1.2.0-api-layer.md)
 
 ## Dados e fontes
 
@@ -80,6 +83,7 @@ Match Engine 2.0, oportunidades, histórico, portfolio, GitHub e evidências pro
 
 ## Marcos
 
+- v1.2.0 implementou FastAPI local, OpenAPI, endpoints `/api/v1` e Application Intelligence.
 - v1.1.0 prepara handoff profissional para frontend moderno, contratos API, mocks e site público.
 - v1.0.0 é a primeira versão estável e demonstrável, com Match Engine 2.0 exposto na UI,
   pesos por domínio, ATS/Tailor conectados ao match, demos fictícias multiárea e GitHub Pages.

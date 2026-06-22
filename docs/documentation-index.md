@@ -14,6 +14,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [Setup local](07-development/setup.md)
 - [Comandos de desenvolvimento](07-development/commands.md)
 - [GitHub Pages vs app local](01-product/github-pages-site.md)
+- [Frontend API Layer](02-architecture/frontend-api-layer.md)
 
 ## Frontend-ready
 
@@ -42,6 +43,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [Arquitetura](02-architecture/overview.md)
 - [Data flow](02-architecture/data-flow.md)
 - [Local Companion API](02-architecture/local-companion-api.md)
+- [Frontend API Layer](02-architecture/frontend-api-layer.md)
 - [Matching rules](03-business-rules/matching-rules.md)
 - [ATS rules](03-business-rules/ats-rules.md)
 - [Resume Tailor rules](03-business-rules/resume-tailor-rules.md)
@@ -56,3 +58,4 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [CI/CD](06-engineering/ci-cd.md)
 - [Security Privacy](06-engineering/security-privacy.md)
 - [v1.0.0 Stable Release](07-development/v1.0.0-stable-release.md)
+- [v1.2.0 API Layer](07-development/v1.2.0-api-layer.md)

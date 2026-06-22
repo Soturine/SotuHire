@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.1.0 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.2.0 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,18 +8,18 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.1.0 |
+| Versão atual considerada | v1.2.0 |
 | Natureza da base atual | Produto local-first já funcional, não MVP inicial |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v1.2.0 API Layer / FastAPI Foundation |
+| Próximo ciclo técnico | v1.3.0 Modern Web Frontend |
 | Foco de produto | Copiloto de carreira multiárea |
-| Foco técnico imediato | Separar contratos de frontend, API futura e core Python |
-| Grande lacuna atual | API HTTP versionada ainda é futura |
+| Foco técnico imediato | Conectar frontend moderno aos contratos reais da API |
+| Grande lacuna atual | Frontend moderno ainda não consome a API real |
 | Risco principal | Reimplementar regra crítica no frontend visual |
 
-## Estado atual — v1.1.0
+## Estado atual — v1.2.0
 
-A v1.1.0 mantém a base estável da v1.0.0 e prepara o projeto para um frontend profissional futuro.
+A v1.2.0 mantém a base estável da v1.1.0 e adiciona uma FastAPI local para frontends modernos.
 
 Ela já possui:
 
@@ -47,18 +47,19 @@ Ela já possui:
 - GitHub Pages como site estático de produto/documentação/demo;
 - home profissional em `docs/index.md`;
 - documentação frontend-ready em `docs/08-frontend`;
-- contratos de API futura para Lovable/React;
+- contratos de API real para Lovable/React;
+- FastAPI local em `apps/api`, com OpenAPI e endpoints `/api/v1`;
 - mocks JSON oficiais em `docs/assets/mock-api`;
-- demo estática v1.1 sem backend real;
+- demo estática v1.1 com contrato agora conectável a backend local;
 - estrutura reservada `apps/web`;
 - Gemini opcional;
 - documentação ampla;
 - testes automatizados;
 - workflows de qualidade e documentação.
 
-A base até a v1.1.0 prova que o SotuHire existe como produto multiárea demonstrável e já tem
-contratos para uma futura camada web. A partir daqui, o foco técnico deve ser API versionada,
-frontend moderno e preservação do core como fonte de verdade.
+A base até a v1.2.0 prova que o SotuHire existe como produto multiárea demonstrável e já tem
+API versionada local. A partir daqui, o foco técnico deve ser frontend moderno e preservação do
+core como fonte de verdade.
 
 ## Diagnóstico atual
 
@@ -76,7 +77,7 @@ frontend moderno e preservação do core como fonte de verdade.
 - Os parsers ainda carregam viés forte para tecnologia/dev.
 - A IA existe, mas ainda não opera por Prompt Registry completo.
 - Os prompts atuais implementados no código ainda são pequenos comparados à visão planejada.
-- A futura camada React/Lovable ainda precisa de API real para substituir mocks.
+- A futura camada React/Lovable agora precisa consumir a API real em vez de depender apenas de mocks.
 - A documentação anterior misturava estado atual, histórico antigo e planos futuros.
 
 ### O que não deve acontecer agora
@@ -129,6 +130,39 @@ A evolução deve ser feita por camadas:
 
 ---
 
+# v1.2.0 — API Layer / FastAPI Foundation
+
+## Objetivo
+
+Criar uma API HTTP local e versionada para que um frontend moderno consuma o core Python sem
+reimplementar regra de negócio no browser.
+
+## Entregas
+
+- Criar `apps/api` com FastAPI, routers, DTOs Pydantic e services finos.
+- Expor OpenAPI em `/openapi.json` e docs interativas em `/docs`.
+- Implementar endpoints `/api/v1` para health, resume/job extraction, match, ATS, Tailor, GitHub
+  Analyzer, tracker e Application Intelligence.
+- Adicionar CORS restrito por default e configuração por env.
+- Criar `scripts/run_api.py`.
+- Manter Streamlit e Local Companion API funcionando.
+- Atualizar contratos, arquitetura, handoff Lovable, README e changelog.
+
+## Fora de escopo
+
+- Criar frontend moderno completo.
+- Publicar API em ambiente SaaS.
+- Remover Streamlit.
+- Substituir Local Companion API.
+
+## Próximos ciclos
+
+- v1.3.0: Modern Web Frontend.
+- v1.4.0: Streamlit Legacy Mode.
+- v2.0.0: SaaS-ready Architecture.
+
+---
+
 # v1.1.0 — Professional Frontend Handoff and Product Site
 
 ## Objetivo
@@ -156,7 +190,6 @@ crítica para o browser.
 
 ## Próximos ciclos
 
-- v1.2.0: API Layer / FastAPI Foundation.
 - v1.3.0: Modern Web Frontend.
 - v1.4.0: Streamlit Legacy Mode.
 - v2.0.0: SaaS-ready Architecture.
