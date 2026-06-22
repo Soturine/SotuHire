@@ -8,6 +8,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 ## Comece aqui
 
 - [Home pública](index.md)
+- [Visual preview v1.1](01-product/visual-preview.md)
 - [Visão do produto](01-product/vision.md)
 - [Roadmap atual](01-product/roadmap.md)
 - [Setup local](07-development/setup.md)

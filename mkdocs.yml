@@ -55,6 +55,7 @@ nav:
       - Atualização pós-v0.9.0: 00-audit/v0.9-roadmap-docs-update-summary.md
   - Produto:
       - Visão: 01-product/vision.md
+      - Visual preview v1.1: 01-product/visual-preview.md
       - Demo v1.0: 01-product/v1-demo.md
       - GitHub Pages vs app local: 01-product/github-pages-site.md
       - Estratégia multiárea: 01-product/multi-domain-product-strategy.md

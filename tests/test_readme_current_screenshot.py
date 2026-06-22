@@ -1,12 +1,17 @@
 from pathlib import Path
 
 
-def test_readme_references_one_current_screenshot_and_changelog():
+def test_readme_references_current_streamlit_screenshots_and_changelog():
     readme = Path("README.md").read_text(encoding="utf-8")
-    screenshot = Path("docs/assets/screenshots/sotuhire-v0.9-extension-tab.png")
+    screenshots = [
+        Path("docs/assets/screenshots/sotuhire-v1.1-streamlit-home.png"),
+        Path("docs/assets/screenshots/sotuhire-v1.1-streamlit-match.png"),
+        Path("docs/assets/screenshots/sotuhire-v1.1-streamlit-dashboard.png"),
+    ]
 
-    assert str(screenshot).replace("\\", "/") in readme
-    assert readme.count("docs/assets/screenshots/") == 1
+    for screenshot in screenshots:
+        assert str(screenshot).replace("\\", "/") in readme
+        assert screenshot.exists()
+        assert 10_000 < screenshot.stat().st_size < 600_000
+    assert readme.count("docs/assets/screenshots/") == len(screenshots)
     assert "[Changelog](CHANGELOG.md)" in readme
-    assert screenshot.exists()
-    assert 10_000 < screenshot.stat().st_size < 600_000

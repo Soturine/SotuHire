@@ -8,6 +8,7 @@ Match Engine 2.0, oportunidades, histórico, portfolio, GitHub e evidências pro
 ## Comece aqui
 
 - [Home pública](index.md)
+- [Visual preview v1.1](01-product/visual-preview.md)
 - [Visão do produto](01-product/vision.md)
 - [Roadmap atual](01-product/roadmap.md)
 - [Setup local](07-development/setup.md)

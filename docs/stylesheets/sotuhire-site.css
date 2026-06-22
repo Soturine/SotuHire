@@ -70,20 +70,23 @@
 .md-typeset .sotu-score-row {
   display: grid;
   gap: 0.6rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .md-typeset .sotu-score-row div {
+  align-items: center;
   background: #f8fbfa;
   border: 1px solid #e0ebe7;
   border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
   padding: 0.75rem;
 }
 
 .md-typeset .sotu-score-row strong {
   display: block;
   font-size: 1.55rem;
-  margin-top: 0.2rem;
+  margin: 0;
 }
 
 .md-typeset .sotu-mini-list {

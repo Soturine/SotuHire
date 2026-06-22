@@ -8,7 +8,9 @@ evidências públicas de portfolio e estratégia de candidatura sem inventar exp
 O produto ajuda a responder:
 
 ```text
-Esta vaga faz sentido para mim, quais são os gaps e o que posso ajustar com segurança?
+Esta vaga faz sentido para mim?
+Quais são os gaps?
+O que posso ajustar com segurança?
 ```
 
 ## Público-alvo
@@ -80,4 +82,3 @@ Toda sugestão de currículo deve separar:
 
 Credenciais, certificações, registros profissionais, empregos e formações nunca devem
 ser inferidos como existentes sem evidência.
-

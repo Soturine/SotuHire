@@ -26,7 +26,13 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 [Changelog](CHANGELOG.md) ·
 [Segurança e privacidade](docs/06-engineering/security-privacy.md)
 
-![Interface atual do SotuHire](docs/assets/screenshots/sotuhire-v0.9-extension-tab.png)
+## Preview
+
+![SotuHire v1.1 Streamlit Home](docs/assets/screenshots/sotuhire-v1.1-streamlit-home.png)
+
+![SotuHire v1.1 Match Engine](docs/assets/screenshots/sotuhire-v1.1-streamlit-match.png)
+
+![SotuHire v1.1 Dashboard](docs/assets/screenshots/sotuhire-v1.1-streamlit-dashboard.png)
 
 ## O Que O Projeto Faz
 

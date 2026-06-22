@@ -67,3 +67,26 @@ imagem atual para permanecer intuitivo; as demais ficam na documentação da ver
 
 O complemento GitHub/Portfólio adiciona cinco capturas: análise no popup, relatório de repositório,
 GitHub Profile Score, análise de commits e evidência de projeto.
+
+## Screenshots da v1.1.0
+
+A v1.1.0 separa duas famílias de captura:
+
+- Streamlit local: screenshots reais do app atual/dev usados no README raiz.
+- MkDocs/GitHub Pages: screenshots do site público estático usados em `visual-preview.md`.
+
+Para recapturar o app Streamlit:
+
+```bash
+streamlit run app.py
+python scripts/capture_streamlit_v1_1_screenshots.py --url http://localhost:8501
+```
+
+Para recapturar o site MkDocs:
+
+```bash
+mkdocs serve
+python scripts/capture_docs_screenshots.py --base-url http://127.0.0.1:8000/SotuHire/ --gif
+```
+
+Todas as imagens devem usar dados fictícios e não podem mostrar API keys, tokens ou currículos reais.
