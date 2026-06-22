@@ -9,7 +9,7 @@ def test_health_returns_version_capabilities_and_restricted_cors() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["ok"] is True
-    assert payload["data"]["version"] == "1.2.0"
+    assert payload["data"]["version"] == "1.3.0"
     assert "resume_extract" in payload["data"]["capabilities"]
     assert "*" not in payload["data"]["cors_allowed_origins"]
 

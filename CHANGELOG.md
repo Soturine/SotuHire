@@ -4,6 +4,49 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.3.0] - 2026-06-22
+
+### Adicionado
+
+- Frontend moderno em `apps/web`, integrado diretamente no repositório sem substituir a raiz.
+- Stack React, Vite, TypeScript, TanStack Router, TanStack Query, Tailwind CSS, Radix UI,
+  Recharts e lucide-react.
+- Modo Demo com dados fictícios e modo API Real consumindo `http://127.0.0.1:8787/api/v1`.
+- Client HTTP preparado para o envelope `{ ok, data, warnings, request_id }` da FastAPI local.
+- Telas de Home/Landing, Dashboard, Currículo, Vaga, Análise de Compatibilidade, Análise ATS,
+  Ajuste de Currículo, Análise de GitHub, Candidaturas, Inteligência de Candidaturas, Fontes e
+  Captura, Configurações e Privacidade.
+- Página **Fontes e Captura** integrada ao menu e à rota `/sources`.
+- UI de **IA e Providers** em Configurações, marcada como integração planejada com backend local.
+- Screenshots v1.3 do frontend moderno e walkthrough GIF em `docs/assets/screenshots`.
+- Documento de desenvolvimento `docs/07-development/v1.3.0-modern-web-frontend.md`.
+
+### Alterado
+
+- Versão do projeto e da API local atualizada para `1.3.0`.
+- README raiz atualizado com preview do frontend moderno, comandos `apps/web`, modo Demo/API Real
+  e limites de segurança.
+- Docs de frontend atualizados para refletir que o app moderno existe em `apps/web`.
+- Visual preview atualizado para screenshots v1.3.
+- Linguagem pública do produto alinhada para Análise de Compatibilidade, Pontuação de
+  compatibilidade, Aderência, Confiança e Risco.
+
+### Segurança
+
+- Nenhum segredo é colocado no frontend.
+- API keys não são persistidas em `localStorage` ou `sessionStorage`.
+- Scores reais continuam no backend/core; o frontend não move regra de negócio crítica.
+- O navegador autenticado autorizado existente foi exposto no frontend; ele exige login manual,
+  autorização explícita, não contorna CAPTCHA/checkpoint e não faz auto apply.
+- Streamlit, FastAPI, docs e testes existentes permanecem preservados.
+
+### Validação
+
+- Frontend: `npm install`, `npm run build`, `npm run lint` e `npm run typecheck`.
+- OpenAPI validado para `/api/v1/health`, `/api/v1/match/analyze`, `/api/v1/ats/analyze` e
+  `/api/v1/resume/tailor`.
+- Smoke visual com Playwright/Chrome local cobrindo as rotas principais e ações demo.
+
 ## [1.2.0] - 2026-06-22
 
 ### Adicionado
