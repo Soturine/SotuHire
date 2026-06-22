@@ -13,12 +13,12 @@ Responder perguntas como:
 - em quais etapas as candidaturas param?
 - o perfil esta evoluindo em direcao as vagas desejadas?
 
-## Disponivel na v1.2.0
+## Disponível na v1.3.0
 
 - total de vagas salvas;
 - total de candidaturas aplicadas;
 - vagas por status;
-- match medio por status;
+- compatibilidade média por status;
 - ATS medio;
 - taxa de resposta;
 - taxa de entrevista;
@@ -28,7 +28,7 @@ Responder perguntas como:
 - skills/requisitos ausentes mais frequentes;
 - gaps criticos recorrentes;
 - funil salvo -> aplicado -> resposta -> entrevista -> oferta;
-- fontes com volume, aplicacoes, entrevistas, match medio e top requirements.
+- fontes com volume, aplicacoes, entrevistas, compatibilidade média e top requirements.
 
 ## Funcoes de backend
 

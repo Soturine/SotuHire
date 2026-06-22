@@ -3,14 +3,14 @@
 ## Direção
 
 ```text
-Frontend moderno / Lovable
+Frontend moderno / apps/web
         -> API Contract
         -> FastAPI local /api/v1
         -> Core Python modules
 ```
 
-O Streamlit continua sendo o app local atual. A v1.2.0 adiciona a FastAPI local para
-um frontend moderno separado, sem remover o fluxo existente.
+O Streamlit continua disponível como modo local/dev. A v1.3.0 adiciona o frontend moderno em
+`apps/web`, consumindo a FastAPI local sem remover o fluxo existente.
 
 ## Responsabilidades do frontend
 
@@ -26,7 +26,7 @@ um frontend moderno separado, sem remover o fluxo existente.
 
 - extração de currículo e vaga;
 - IA opcional e fallback local;
-- matching, scoring e confidence;
+- Análise de Compatibilidade, scoring e confiança;
 - ATS review e Resume Tailor;
 - GitHub Analyzer e evidências de portfolio;
 - tracker, histórico e persistência;
@@ -43,8 +43,8 @@ origens conhecidas. O GitHub Pages continua estático e não executa backend.
 
 ## Modo recomendado de evolução
 
-1. Prototipar telas com os mocks oficiais.
-2. Validar navegação e estados visuais sem backend real.
-3. Usar `python scripts/run_api.py` para subir a API local.
-4. Trocar mocks por chamadas reais em `/api/v1`.
+1. Rodar a API local com `python scripts/run_api.py`.
+2. Rodar o app com `cd apps/web && npm run dev`.
+3. Usar Modo Demo para navegar com dados fictícios.
+4. Usar Modo API Real para consumir `/api/v1`.
 5. Manter os cálculos e regras críticas no core Python.

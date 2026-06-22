@@ -27,7 +27,7 @@ O que posso ajustar com segurança?
 - Upload ou colagem de currículo;
 - Perfil profissional;
 - Entrada de vaga;
-- Resultado de Match;
+- Análise de Compatibilidade;
 - ATS Review;
 - Resume Tailor;
 - GitHub Analyzer;
@@ -50,7 +50,7 @@ Essa liberdade não inclui reimplementar regra crítica no frontend.
 - não colocar API keys no frontend;
 - não colocar tokens GitHub, Gemini key ou segredos no site;
 - não usar dados reais nos mocks;
-- não calcular Match Score real no frontend;
+- não calcular pontuação real no frontend;
 - não recriar ATS, Resume Tailor, GitHub Analyzer ou IA no frontend;
 - não prometer backend no GitHub Pages;
 - não mover regras anti-invenção para JavaScript visual.
@@ -64,17 +64,16 @@ Lovable deve usar:
 - [frontend-rules.md](frontend-rules.md);
 - mocks em `docs/assets/mock-api/`.
 
-## Como conectar depois com a API real
+## Como conectar com a API real
 
-Desde a v1.2.0, a API real local existe em `apps/api`.
+Desde a v1.3.0, o frontend moderno existe em `apps/web` e a API real local existe em `apps/api`.
 
-1. Criar o frontend com dados mockados.
-2. Isolar a camada de dados em um client HTTP.
-3. Usar `http://127.0.0.1:8787/api/v1` em desenvolvimento local.
-4. Consultar `http://127.0.0.1:8787/openapi.json` para gerar ou validar types.
-5. Mapear cada tela para endpoint versionado.
-6. Tratar loading, erro, vazio e sucesso.
-7. Substituir mocks por `GET`/`POST`/`PATCH` reais sem recalcular regra critica no frontend.
+1. Usar `http://127.0.0.1:8787/api/v1` em desenvolvimento local.
+2. Consultar `http://127.0.0.1:8787/openapi.json` para gerar ou validar types.
+3. Mapear cada tela para endpoint versionado.
+4. Tratar loading, erro, vazio e sucesso.
+5. Manter mocks no Modo Demo.
+6. Usar `GET`/`POST`/`PATCH` reais no Modo API Real sem recalcular regra critica no frontend.
 
 Para subir a API:
 

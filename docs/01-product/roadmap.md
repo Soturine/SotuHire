@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.2.0 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.3.0 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,18 +8,18 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.2.0 |
+| Versão atual considerada | v1.3.0 |
 | Natureza da base atual | Produto local-first já funcional, não MVP inicial |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v1.3.0 Modern Web Frontend |
+| Próximo ciclo técnico | v1.4.0 Streamlit Legacy Mode |
 | Foco de produto | Copiloto de carreira multiárea |
-| Foco técnico imediato | Conectar frontend moderno aos contratos reais da API |
-| Grande lacuna atual | Frontend moderno ainda não consome a API real |
-| Risco principal | Reimplementar regra crítica no frontend visual |
+| Foco técnico imediato | Consolidar fronteira entre frontend moderno e Streamlit local/dev |
+| Grande lacuna atual | Settings/IA ainda dependem de endpoints seguros futuros |
+| Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
 
-## Estado atual — v1.2.0
+## Estado atual — v1.3.0
 
-A v1.2.0 mantém a base estável da v1.1.0 e adiciona uma FastAPI local para frontends modernos.
+A v1.3.0 mantém a base estável da v1.2.0 e adiciona o frontend moderno em `apps/web`.
 
 Ela já possui:
 
@@ -39,8 +39,8 @@ Ela já possui:
 - extensão assistiva;
 - Local Companion API;
 - análise inicial de GitHub e portfólio;
-- Match Engine 2.0 com requisitos, evidências, gaps críticos, confidence e explicação;
-- apresentação visual do Match Engine 2.0 no fluxo principal;
+- Análise de Compatibilidade com requisitos, evidências, gaps críticos, confiança e explicação;
+- apresentação visual da Análise de Compatibilidade no frontend moderno;
 - ATS e Resume Tailor usando sinais/evidências do match;
 - pesos por domínio profissional;
 - demos fictícias multiárea;
@@ -50,16 +50,18 @@ Ela já possui:
 - contratos de API real para Lovable/React;
 - FastAPI local em `apps/api`, com OpenAPI e endpoints `/api/v1`;
 - mocks JSON oficiais em `docs/assets/mock-api`;
-- demo estática v1.1 com contrato agora conectável a backend local;
-- estrutura reservada `apps/web`;
+- demo estática v1.1 com contrato conectável a backend local;
+- frontend moderno em `apps/web`, com modo Demo e modo API Real;
+- tela Fontes e Captura integrada ao menu e à rota `/sources`;
+- UI planejada de IA e Providers sem persistir segredos no frontend;
 - Gemini opcional;
 - documentação ampla;
 - testes automatizados;
 - workflows de qualidade e documentação.
 
-A base até a v1.2.0 prova que o SotuHire existe como produto multiárea demonstrável e já tem
-API versionada local. A partir daqui, o foco técnico deve ser frontend moderno e preservação do
-core como fonte de verdade.
+A base até a v1.3.0 prova que o SotuHire existe como produto multiárea demonstrável, com API
+versionada local e frontend moderno. A partir daqui, o foco técnico deve ser consolidar settings
+seguros, manter Streamlit como modo local/dev e preservar o core como fonte de verdade.
 
 ## Diagnóstico atual
 
@@ -73,11 +75,11 @@ core como fonte de verdade.
 
 ### O que ainda está fraco
 
-- A apresentação v2 já existe e começa a ganhar screenshots e walkthroughs mais atuais.
+- A apresentação web moderna já existe e tem screenshots e walkthroughs atuais.
 - Os parsers ainda carregam viés forte para tecnologia/dev.
 - A IA existe, mas ainda não opera por Prompt Registry completo.
 - Os prompts atuais implementados no código ainda são pequenos comparados à visão planejada.
-- A futura camada React/Lovable agora precisa consumir a API real em vez de depender apenas de mocks.
+- Settings/IA ainda precisam de endpoints seguros no backend local.
 - A documentação anterior misturava estado atual, histórico antigo e planos futuros.
 
 ### O que não deve acontecer agora
@@ -124,9 +126,41 @@ A evolução deve ser feita por camadas:
 | v1.0.0 | Generalist Career Intelligence Platform | Produto | Versão estável, demonstrável e multiárea. |
 | v1.1.0 | Professional Frontend Handoff and Product Site | Produto/docs | Site profissional, handoff Lovable, contratos e mocks. |
 | v1.2.0 | API Layer / FastAPI Foundation | Código | API HTTP versionada para consumir o core local-first. |
-| v1.3.0 | Modern Web Frontend | Frontend | Frontend moderno consumindo contratos reais. |
+| v1.3.0 | Modern Web Frontend | Frontend | Frontend moderno com modo Demo e API Real. |
 | v1.4.0 | Streamlit Legacy Mode | Produto | Streamlit mantido como modo local/dev legado. |
 | v2.0.0 | SaaS-ready Architecture | Arquitetura | Base pronta para opção SaaS sem abandonar local-first. |
+
+---
+
+# v1.3.0 — Modern Web Frontend / Lovable Integration
+
+## Objetivo
+
+Integrar o frontend moderno em `apps/web`, mantendo backend, Streamlit, docs e testes existentes.
+
+## Entregas
+
+- Criar app React/Vite em `apps/web`.
+- Implementar Home, Dashboard, Currículo, Vaga, Análise de Compatibilidade, ATS, Ajuste, GitHub,
+  Candidaturas, Inteligência, Fontes e Captura, Configurações e Privacidade.
+- Manter Modo Demo com dados fictícios.
+- Conectar Modo API Real a `http://127.0.0.1:8787/api/v1`.
+- Tratar envelope `{ ok, data, warnings, request_id }`.
+- Manter rodapé discreto com versão e API local.
+- Documentar IA e Providers como planejado para endpoints seguros futuros.
+- Gerar screenshots e GIF do frontend moderno.
+
+## Fora de escopo
+
+- Remover Streamlit.
+- Reimplementar score real no frontend.
+- Salvar API key no browser.
+- Implementar scraper autenticado, crawler logado, auto apply ou automação de plataformas.
+
+## Próximos ciclos
+
+- v1.4.0: Streamlit Legacy Mode e endpoints seguros de Settings/IA.
+- v2.0.0: SaaS-ready Architecture.
 
 ---
 
@@ -157,7 +191,6 @@ reimplementar regra de negócio no browser.
 
 ## Próximos ciclos
 
-- v1.3.0: Modern Web Frontend.
 - v1.4.0: Streamlit Legacy Mode.
 - v2.0.0: SaaS-ready Architecture.
 

@@ -1,7 +1,6 @@
-# API contract v1.2.0
+# API contract v1
 
-Este contrato descreve a FastAPI local implementada na v1.2.0 para consumo por Lovable,
-React, Vite, Next.js ou outro frontend moderno.
+Este contrato descreve a FastAPI local em `/api/v1` consumida pelo frontend moderno em `apps/web`.
 
 Base local padrao:
 
@@ -48,7 +47,8 @@ http://127.0.0.1:8787/docs
 - A API e local-first. Nao coloque Gemini key, GitHub token ou secrets no frontend.
 - Curriculo bruto entra somente no request necessario; respostas de extracao removem `raw_text`
   por default.
-- Regras de Match, ATS, Resume Tailor, GitHub Analyzer e Application Intelligence ficam no backend.
+- Regras de Análise de Compatibilidade, ATS, Resume Tailor, GitHub Analyzer e Application
+  Intelligence ficam no backend.
 
 ## GET /api/v1/health
 
@@ -60,7 +60,7 @@ Response `data`:
 {
   "status": "ok",
   "service": "sotuhire-api",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "local_first": true,
   "openapi_url": "/openapi.json",
   "docs_url": "/docs",
@@ -143,7 +143,7 @@ Warnings podem incluir dados ausentes como salario, empresa ou modalidade.
 
 ## POST /api/v1/match/analyze
 
-Calcula match usando o fluxo local estruturado e Match Engine 2.0.
+Calcula a Análise de Compatibilidade usando o fluxo local estruturado do backend/core.
 
 Request minimo:
 
@@ -171,7 +171,7 @@ Response `data`:
     "opportunity_fit_score": 70,
     "risk_score": 20,
     "recommendation": "apply_with_adjustments",
-    "analysis_version": "match_engine_v2",
+    "analysis_version": "compatibility_backend",
     "confidence_score": 0.66,
     "evidence_score": 72,
     "matched_requirements": [],
@@ -185,7 +185,7 @@ Response `data`:
 
 ## POST /api/v1/ats/analyze
 
-Classifica keywords ATS usando evidencia do Match Engine 2.0.
+Classifica keywords ATS usando evidências da análise de compatibilidade.
 
 Request:
 
@@ -442,6 +442,79 @@ Response `data`:
   ]
 }
 ```
+
+## GET /api/v1/sources/authenticated-browser/status
+
+Testa o Chromium dedicado via CDP local.
+
+Query:
+
+```txt
+browser_cdp_url=http://127.0.0.1:9222
+```
+
+Response `data`:
+
+```json
+{
+  "available": true,
+  "endpoint": "http://127.0.0.1:9222",
+  "browser": "Chrome/...",
+  "message": "Navegador autenticado conectado e pronto."
+}
+```
+
+## POST /api/v1/sources/authenticated-browser/launch
+
+Abre ou reutiliza um Chromium dedicado para login manual.
+
+Request:
+
+```json
+{
+  "start_url": "https://www.linkedin.com/jobs/",
+  "browser_cdp_url": "http://127.0.0.1:9222"
+}
+```
+
+## POST /api/v1/sources/authenticated-browser/collect
+
+Coleta uma fonte autenticada autorizada usando o conector existente. Requer confirmacao explicita.
+
+Request:
+
+```json
+{
+  "name": "LinkedIn autorizado",
+  "url": "https://www.linkedin.com/jobs/",
+  "browser_cdp_url": "http://127.0.0.1:9222",
+  "max_items": 20,
+  "max_pages": 3,
+  "authorized_use": true,
+  "authorization_reference": "uso pessoal autorizado"
+}
+```
+
+Response `data`:
+
+```json
+{
+  "new_count": 2,
+  "duplicate_count": 0,
+  "updated_count": 0,
+  "failures": [],
+  "opportunities": [
+    {
+      "title": "Backend Developer Python",
+      "company": "Empresa",
+      "source_url": "https://www.linkedin.com/jobs/...",
+      "confidence": 0.86
+    }
+  ]
+}
+```
+
+O endpoint nao automatiza login, nao contorna CAPTCHA/checkpoint e nao envia candidatura.
 
 ## Variaveis de ambiente
 

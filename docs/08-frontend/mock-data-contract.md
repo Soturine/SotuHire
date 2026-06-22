@@ -3,8 +3,8 @@
 Os mocks oficiais ficam em `docs/assets/mock-api/` e usam apenas dados fictícios.
 
 Eles existem para Lovable e outros frontends prototiparem telas reais, estados vazios e estados de
-erro sem depender da API local estar rodando. Desde a v1.2.0, a API real existe em `apps/api` e os
-mocks devem continuar alinhados ao contrato de `docs/08-frontend/api-contract.md`.
+erro sem depender da API local estar rodando. Desde a v1.3.0, o frontend moderno existe em
+`apps/web`; os mocks devem continuar alinhados ao contrato de `docs/08-frontend/api-contract.md`.
 
 ## Regras dos mocks
 
@@ -21,7 +21,7 @@ mocks devem continuar alinhados ao contrato de `docs/08-frontend/api-contract.md
 - `health.json`: status da API local.
 - `resume-extraction.json`: perfil profissional fictício extraído.
 - `job-extraction.json`: vaga fictícia estruturada.
-- `match-result.json`: resultado Match Engine 2.0.
+- `match-result.json`: resultado de Análise de Compatibilidade.
 - `ats-review.json`: revisão ATS com keywords por evidência.
 - `resume-tailor.json`: sugestões seguras de currículo.
 - `github-repo-analysis.json`: evidências de repositório público fictício.

@@ -1,11 +1,11 @@
 # Screen map
 
-Este mapa define telas futuras sem prender layout. Lovable pode escolher a experiência
-visual, desde que preserve dados, contratos e regras.
+Este mapa define as telas do frontend moderno integrado em `apps/web`. A experiência visual pode
+evoluir, desde que preserve dados, contratos e regras.
 
 ## 1. Landing / Home
 
-- Objetivo: apresentar SotuHire, local-first, Match Engine, GitHub Analyzer e demo estática.
+- Objetivo: apresentar SotuHire, local-first, Análise de Compatibilidade, GitHub Analyzer e demo.
 - Dados necessários: copy pública, links de docs, screenshots, release atual.
 - Endpoint futuro: nenhum obrigatório.
 - Estados vazios: não aplicável.
@@ -53,15 +53,15 @@ visual, desde que preserve dados, contratos e regras.
 - Liberdade visual: editor, URL input, preview e checklist.
 - Regras: não acessar área autenticada sem ação explícita da pessoa usuária.
 
-## 6. Resultado de Match
+## 6. Análise de Compatibilidade
 
-- Objetivo: mostrar Match Score, Confidence, Evidence Score, gaps e ações seguras.
+- Objetivo: mostrar Pontuação de compatibilidade, Confiança, evidência, gaps e ações seguras.
 - Dados necessários: análise de currículo, vaga e evidências.
 - Endpoint: `POST /api/v1/match/analyze`.
 - Estados vazios: currículo ou vaga ausente.
 - Estados de erro: extração falhou, evidência insuficiente, baixa confiança.
 - Liberdade visual: scorecards, breakdown, timeline, accordion e charts.
-- Regras: Match Score real vem do backend/core.
+- Regras: a pontuação real vem do backend/core.
 
 ## 7. ATS Review
 

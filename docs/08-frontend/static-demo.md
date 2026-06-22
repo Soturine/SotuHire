@@ -9,12 +9,12 @@ Ela não chama backend real, não processa currículo real e não executa IA.
 
 <section class="sotu-demo-grid">
   <article class="sotu-demo-card sotu-demo-card--strong">
-    <span class="sotu-label">Match Score</span>
+    <span class="sotu-label">Pontuação de compatibilidade</span>
     <strong data-sotu-count="78">78</strong>
     <p>Bom alinhamento para Backend Python, com evidências em currículo e GitHub.</p>
   </article>
   <article class="sotu-demo-card">
-    <span class="sotu-label">Confidence</span>
+    <span class="sotu-label">Confiança</span>
     <strong>0.66</strong>
     <p>Confiança moderada: há evidências úteis, mas gaps ainda precisam de validação.</p>
   </article>
@@ -24,7 +24,7 @@ Ela não chama backend real, não processa currículo real e não executa IA.
     <p>Keywords principais presentes; Docker e CI/CD só devem entrar se forem verdadeiros.</p>
   </article>
   <article class="sotu-demo-card">
-    <span class="sotu-label">Risk</span>
+    <span class="sotu-label">Risco</span>
     <strong data-sotu-count="18">18</strong>
     <p>Risco baixo, sem gap crítico de registro profissional neste cenário fictício.</p>
   </article>
@@ -79,7 +79,7 @@ Avisos:
 
 ## Kanban
 
-| Vaga | Fonte | Status | Match | ATS |
+| Vaga | Fonte | Status | Compatibilidade | ATS |
 |---|---:|---|---:|---:|
 | Backend Developer Python | LinkedIn | applied | 78 | 74 |
 | API Engineer | Gupy | interview | 84 | 79 |
@@ -118,5 +118,5 @@ Avisos:
 
 ## Limite da demo
 
-Esta página é uma vitrine estática. O app real continua local com Streamlit, e a API local v1.2.0
-fica disponível em `apps/api` para um frontend moderno futuro.
+Esta página é uma vitrine estática. O frontend moderno real fica em `apps/web`, o Streamlit
+continua local/dev e a API local fica disponível em `apps/api`.
