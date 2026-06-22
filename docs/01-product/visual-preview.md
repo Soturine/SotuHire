@@ -1,44 +1,77 @@
-# Visual preview v1.1
+# Visual preview v1.3
 
-Esta página registra o estado visual do app local Streamlit e do site/documentação na v1.1.0.
+Esta página registra o estado visual do frontend moderno do SotuHire na v1.3.0.
 
 As capturas usam apenas mocks e exemplos fictícios. Elas não exibem currículo real, token,
 API key, dados pessoais reais ou backend em execução no GitHub Pages.
 
-## App Streamlit local
+## Frontend moderno
 
-Estas imagens mostram o app real rodando localmente via Streamlit.
-
-![SotuHire v1.1 Streamlit Home](../assets/screenshots/sotuhire-v1.1-streamlit-home.png)
-
-![SotuHire v1.1 Match Engine](../assets/screenshots/sotuhire-v1.1-streamlit-match.png)
-
-![SotuHire v1.1 Dashboard](../assets/screenshots/sotuhire-v1.1-streamlit-dashboard.png)
-
-## Site público / GitHub Pages
-
-Estas imagens mostram a vitrine estática do MkDocs/GitHub Pages.
-
-### Home
-
-![SotuHire v1.1 Home](../assets/screenshots/sotuhire-v1.1-home.png)
-
-### Demo estática
-
-![SotuHire v1.1 Demo](../assets/screenshots/sotuhire-v1.1-demo.png)
-
-### Application Intelligence
-
-![Application Intelligence](../assets/screenshots/sotuhire-v1.1-application-intelligence.png)
-
-### Frontend handoff
-
-![Frontend handoff](../assets/screenshots/sotuhire-v1.1-frontend-handoff.png)
+O app moderno fica em `apps/web` e roda localmente com React/Vite. Ele possui modo Demo e modo API
+Real para a FastAPI local em `http://127.0.0.1:8787/api/v1`.
 
 ### Walkthrough
 
-![SotuHire site walkthrough](../assets/screenshots/sotuhire-v1.1-site-walkthrough.gif)
+![SotuHire v1.3 Web Walkthrough](../assets/screenshots/sotuhire-v1.3-web-walkthrough.gif)
 
-### Mobile
+### Home
 
-![SotuHire v1.1 Home mobile](../assets/screenshots/sotuhire-v1.1-home-mobile.png)
+![SotuHire v1.3 Web Home](../assets/screenshots/sotuhire-v1.3-web-home.png)
+
+### Dashboard
+
+![SotuHire v1.3 Web Dashboard](../assets/screenshots/sotuhire-v1.3-web-dashboard.png)
+
+### Currículo
+
+![SotuHire v1.3 Web Resume](../assets/screenshots/sotuhire-v1.3-web-resume.png)
+
+### Vaga
+
+![SotuHire v1.3 Web Job](../assets/screenshots/sotuhire-v1.3-web-job.png)
+
+### Análise de Compatibilidade
+
+![SotuHire v1.3 Web Compatibility](../assets/screenshots/sotuhire-v1.3-web-compatibility.png)
+
+### Análise ATS
+
+![SotuHire v1.3 Web ATS](../assets/screenshots/sotuhire-v1.3-web-ats.png)
+
+### Ajuste de Currículo
+
+![SotuHire v1.3 Web Tailor](../assets/screenshots/sotuhire-v1.3-web-tailor.png)
+
+### Análise de GitHub
+
+![SotuHire v1.3 Web GitHub](../assets/screenshots/sotuhire-v1.3-web-github.png)
+
+### Fontes e Captura
+
+![SotuHire v1.3 Web Sources](../assets/screenshots/sotuhire-v1.3-web-sources.png)
+
+### Candidaturas
+
+![SotuHire v1.3 Web Applications](../assets/screenshots/sotuhire-v1.3-web-applications.png)
+
+### Inteligência de Candidaturas
+
+![SotuHire v1.3 Web Intelligence](../assets/screenshots/sotuhire-v1.3-web-intelligence.png)
+
+### Configurações e IA
+
+![SotuHire v1.3 Web Settings AI](../assets/screenshots/sotuhire-v1.3-web-settings-ai.png)
+
+### Privacidade
+
+![SotuHire v1.3 Web Privacy](../assets/screenshots/sotuhire-v1.3-web-privacy.png)
+
+## Streamlit local/dev
+
+O Streamlit continua disponível como modo local/dev e não foi removido pela integração v1.3.0.
+
+![SotuHire v1.1 Streamlit Home](../assets/screenshots/sotuhire-v1.1-streamlit-home.png)
+
+![SotuHire v1.1 Streamlit Match](../assets/screenshots/sotuhire-v1.1-streamlit-match.png)
+
+![SotuHire v1.1 Streamlit Dashboard](../assets/screenshots/sotuhire-v1.1-streamlit-dashboard.png)

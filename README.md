@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.2.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.2.0)
+[![Release](https://img.shields.io/badge/release-v1.3.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.3.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -29,11 +29,13 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 
 ## Preview
 
-![SotuHire v1.1 Streamlit Home](docs/assets/screenshots/sotuhire-v1.1-streamlit-home.png)
+![SotuHire v1.3 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.3-web-walkthrough.gif)
 
-![SotuHire v1.1 Match Engine](docs/assets/screenshots/sotuhire-v1.1-streamlit-match.png)
+![SotuHire v1.3 Web Home](docs/assets/screenshots/sotuhire-v1.3-web-home.png)
 
-![SotuHire v1.1 Dashboard](docs/assets/screenshots/sotuhire-v1.1-streamlit-dashboard.png)
+![SotuHire v1.3 Web Dashboard](docs/assets/screenshots/sotuhire-v1.3-web-dashboard.png)
+
+![SotuHire v1.3 Web Compatibility](docs/assets/screenshots/sotuhire-v1.3-web-compatibility.png)
 
 ## O Que O Projeto Faz
 
@@ -42,9 +44,10 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - interpreta descrições de vagas e publicações com oportunidades;
 - possui base de extração estruturada por IA com JSON Guard, Pydantic e fallback local;
 - classifica domínios e requisitos multiárea com Domain Intelligence inicial;
-- executa Match Engine 2.0 com requisitos, evidências, gaps críticos, confidence e explicação;
+- executa Análise de Compatibilidade com requisitos, evidências, gaps críticos, confiança e
+  explicação;
 - ajusta pesos de matching por domínio profissional;
-- calcula Match Score, ATS Score, Opportunity Fit Score e Risk Score;
+- calcula Pontuação de compatibilidade, ATS, Aderência e Risco no backend/core;
 - explica pontos fortes, gaps, riscos e palavras-chave ausentes;
 - sugere adaptações de currículo sem inventar experiências;
 - oferece análise local por padrão e Gemini opcional;
@@ -97,7 +100,7 @@ O app completo continua local:
 streamlit run app.py
 ```
 
-### API local v1.2.0
+### API local v1.3.0
 
 Para conectar um frontend moderno ou inspecionar o OpenAPI:
 
@@ -116,16 +119,41 @@ http://127.0.0.1:8787/docs
 A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
 [Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
 
-### Frontend moderno futuro
+### Frontend moderno v1.3.0
 
-O Streamlit continua sendo o app local atual/dev. A identidade futura do produto pode ser um
-frontend moderno separado, criado com Lovable, React, Vite, Next.js ou outro stack.
+O frontend moderno fica em `apps/web` e roda como app React/Vite separado.
 
-Esse frontend pode redesenhar toda a experiência visual, mas deve consumir contratos em
-[`docs/08-frontend`](docs/08-frontend/README.md) e a API local em `apps/api`, sem reimplementar regra
-de negócio crítica.
-Matching, ATS, Resume Tailor, GitHub Analyzer, validações fortes, privacidade e regras
-anti-invenção continuam no backend/core.
+```bash
+cd apps/web
+npm install
+npm run dev
+```
+
+Build e validação do frontend:
+
+```bash
+cd apps/web
+npm run build
+npm run lint
+npm run typecheck
+```
+
+O app tem **Modo Demo** com dados fictícios e **Modo API Real** usando
+`http://127.0.0.1:8787/api/v1`. Para configurar localmente:
+
+```env
+VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
+```
+
+Streamlit continua disponível como modo local/dev:
+
+```bash
+streamlit run app.py
+```
+
+O frontend não salva segredos, não persiste API key em storage do navegador e não calcula score
+real no browser. Análise de Compatibilidade, ATS, Resume Tailor, GitHub Analyzer, validações
+fortes, privacidade e regras anti-invenção continuam no backend/core.
 
 ## Instalação
 
@@ -269,7 +297,7 @@ automaticamente.
 | `modules/analyzer`, `modules/ats`, `modules/preferences` | Scores, recomendação, riscos e aderência às preferências. |
 | `modules/ai` | Providers, diagnóstico, Gemini opcional, Prompt Registry, JSON Guard e extração estruturada. |
 | `modules/domain_intelligence` | Classificação multiárea, aliases, requisitos e sinais de profissões regulamentadas. |
-| `modules/matching` | Match Engine 2.0, evidências, requisitos, pesos por domínio, transferable skills, scoring, risk adjustment e explanation builder. |
+| `modules/matching` | Análise de Compatibilidade, evidências, requisitos, pesos por domínio, competências transferíveis, scoring, risk adjustment e explanation builder. |
 | `modules/resume_tailor` | Sugestões rastreáveis para adaptar o currículo com evidências do match. |
 | `modules/scraping`, `modules/opportunities` | Conectores, coleta, deduplicação e armazenamento de oportunidades. |
 | `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
@@ -280,7 +308,7 @@ automaticamente.
 | `browser-extension` | Extensão assistiva multiportal e análise GitHub/portfólio no navegador. |
 | `modules/portfolio` | Amostragem, commits, scores e evidências de GitHub/projetos/portfólio. |
 | `modules/ui` | Fluxos Streamlit rápido e avançado. |
-| `apps/web` | Espaço reservado para futuro frontend moderno. |
+| `apps/web` | Frontend moderno React/Vite com modo Demo e modo API Real. |
 
 Arquitetura resumida:
 
@@ -288,7 +316,7 @@ Arquitetura resumida:
 currículo + vaga + preferências
         -> parsers e schemas
         -> recuperação de evidências da memória local
-        -> Match Engine 2.0, regras, scores e IA opcional
+        -> Análise de Compatibilidade, regras, scores e IA opcional
         -> análise explicável e Resume Tailor
         -> tracker, histórico e dashboard
 
@@ -352,13 +380,15 @@ mkdocs serve
 - parsers de currículo e vaga;
 - Prompt Registry, JSON Guard e schemas Pydantic para extração estruturada;
 - Domain Intelligence inicial para vagas e currículos multiárea;
-- Match Engine 2.0 com requisitos obrigatórios/desejáveis, evidências, gaps críticos, confidence e
-  explicações;
+- Análise de Compatibilidade com requisitos obrigatórios/desejáveis, evidências, gaps críticos,
+  confiança e explicações;
 - pesos de match por domínio, ATS evidence review e Resume Tailor seguro;
 - GitHub Pages como site estático de documentação/demo;
 - home profissional do GitHub Pages, demo estática v1.1 e handoff frontend-ready;
 - contratos API e mocks para Lovable/React em `docs/08-frontend` e `docs/assets/mock-api`;
 - FastAPI local em `apps/api`, OpenAPI, endpoints `/api/v1` e Application Intelligence;
+- frontend moderno em `apps/web`, com Home, Dashboard, Currículo, Vaga, Compatibilidade, ATS,
+  Ajuste, GitHub, Candidaturas, Inteligência, Fontes e Captura, Configurações e Privacidade;
 - demos fictícias multiárea em `examples/`;
 - scores explicáveis e Resume Tailor;
 - tracker, histórico e dashboard;
@@ -367,12 +397,11 @@ mkdocs serve
 - extensão assistiva multiportal, Local Companion API e importação paginada deduplicada;
 - calibração da memória, feedback de evidência e ranking de requisitos.
 - análise de GitHub, portfólio, READMEs e commits com evidências de projeto.
-- GitHub Analyzer 2.0 com GitHub API pública, tree builder, sampler, dependency graph, evidence
+- GitHub Analyzer com GitHub API pública, tree builder, sampler, dependency graph, evidence
   index, scoring calculado por código e fallback local.
 
 ### Próximos passos
 
-- v1.3.0: Modern Web Frontend;
 - v1.4.0: Streamlit Legacy Mode;
 - v2.0.0: SaaS-ready Architecture;
 - evoluir pesos por domínio para configuração externa se o uso real justificar.
