@@ -1,0 +1,27 @@
+{
+  "repo": {
+    "owner": "example",
+    "name": "fictitious-api-lab",
+    "url": "https://github.com/example/fictitious-api-lab",
+    "visibility": "public"
+  },
+  "quality_score": 81,
+  "evidence_score": 76,
+  "languages": [
+    {"name": "Python", "percent": 86},
+    {"name": "Markdown", "percent": 10},
+    {"name": "Dockerfile", "percent": 4}
+  ],
+  "positive_signals": [
+    "README com instalacao e exemplos.",
+    "Testes automatizados com Pytest.",
+    "Estrutura clara de API e camada de servicos."
+  ],
+  "risks": [
+    "Docker aparece no repositorio, mas nao no curriculo ficticio."
+  ],
+  "portfolio_suggestions": [
+    "Adicionar screenshot ou diagrama simples da arquitetura.",
+    "Explicar tradeoffs tecnicos no README."
+  ]
+}

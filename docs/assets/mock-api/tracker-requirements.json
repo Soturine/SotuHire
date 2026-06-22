@@ -1,0 +1,57 @@
+{
+  "top_requirements": [
+    {
+      "name": "Python",
+      "count": 12,
+      "status_scope": "applied",
+      "sources": ["LinkedIn", "Gupy"],
+      "candidate_has_evidence": true
+    },
+    {
+      "name": "FastAPI",
+      "count": 8,
+      "status_scope": "applied",
+      "sources": ["LinkedIn", "Company career page"],
+      "candidate_has_evidence": true
+    },
+    {
+      "name": "Docker",
+      "count": 7,
+      "status_scope": "saved",
+      "sources": ["Gupy", "LinkedIn"],
+      "candidate_has_evidence": false
+    },
+    {
+      "name": "Cloud",
+      "count": 6,
+      "status_scope": "high_match",
+      "sources": ["LinkedIn", "Company career page"],
+      "candidate_has_evidence": false
+    }
+  ],
+  "critical_gaps": [
+    {
+      "name": "Docker",
+      "count": 7,
+      "severity": "medium",
+      "safe_action": "Se tiver experiencia real, evidencie no curriculo."
+    },
+    {
+      "name": "Cloud",
+      "count": 6,
+      "severity": "medium",
+      "safe_action": "Tratar como gap real ate existir projeto, curso ou experiencia verificavel."
+    }
+  ],
+  "requirements_by_source": [
+    {"source": "LinkedIn", "requirement": "Python", "count": 6},
+    {"source": "LinkedIn", "requirement": "Docker", "count": 4},
+    {"source": "Gupy", "requirement": "SQL", "count": 5},
+    {"source": "Company career page", "requirement": "FastAPI", "count": 3}
+  ],
+  "trend_over_time": [
+    {"month": "2026-04", "requirement": "Docker", "count": 3},
+    {"month": "2026-05", "requirement": "Docker", "count": 5},
+    {"month": "2026-06", "requirement": "Docker", "count": 7}
+  ]
+}

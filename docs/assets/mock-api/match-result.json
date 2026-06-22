@@ -1,0 +1,57 @@
+{
+  "analysis_version": "match_engine_v2",
+  "match_score": 78,
+  "confidence_score": 0.66,
+  "evidence_score": 72,
+  "ats_score": 74,
+  "opportunity_fit_score": 81,
+  "risk_score": 18,
+  "domain": "technology",
+  "matched_requirements": [
+    {
+      "name": "Python",
+      "category": "required_skill",
+      "evidence": [
+        "Curriculo cita Python em experiencia backend.",
+        "Repositorio fictitious-api-lab usa Python."
+      ]
+    },
+    {
+      "name": "FastAPI",
+      "category": "required_skill",
+      "evidence": [
+        "Projeto fictitious-api-lab cita FastAPI."
+      ]
+    },
+    {
+      "name": "Testes automatizados",
+      "category": "required_skill",
+      "evidence": [
+        "Curriculo cita Pytest e revisoes de qualidade."
+      ]
+    }
+  ],
+  "partial_requirements": [
+    {
+      "name": "Docker",
+      "category": "preferred_skill",
+      "reason": "A vaga pede Docker, mas o curriculo ficticio nao evidencia experiencia direta."
+    }
+  ],
+  "missing_requirements": [
+    {
+      "name": "Cloud",
+      "category": "preferred_skill",
+      "reason": "Nenhuma evidencia explicita encontrada."
+    }
+  ],
+  "critical_gaps": [],
+  "transferable_skills": [
+    "Experiencia com APIs pode apoiar onboarding em servicos cloud.",
+    "Testes automatizados ajudam a demonstrar maturidade de engenharia."
+  ],
+  "safe_actions": [
+    "Se tiver experiencia real com Docker, descreva onde usou e qual problema resolveu.",
+    "Nao declare Cloud sem projeto, curso, certificacao ou uso real verificavel."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "name": "LinkedIn",
+      "saved": 8,
+      "applied": 4,
+      "interviews": 1,
+      "average_match": 76,
+      "top_requirements": ["Python", "Docker", "SQL"]
+    },
+    {
+      "name": "Gupy",
+      "saved": 5,
+      "applied": 3,
+      "interviews": 1,
+      "average_match": 69,
+      "top_requirements": ["SQL", "FastAPI", "Testes"]
+    },
+    {
+      "name": "Company career page",
+      "saved": 5,
+      "applied": 2,
+      "interviews": 0,
+      "average_match": 73,
+      "top_requirements": ["APIs", "Cloud", "Observabilidade"]
+    }
+  ]
+}

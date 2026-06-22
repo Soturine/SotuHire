@@ -1,0 +1,49 @@
+{
+  "profile": {
+    "id": "profile_demo_backend_001",
+    "name": "Pessoa Ficticia",
+    "headline": "Desenvolvedora Backend Python",
+    "location": "Remoto - Brasil",
+    "seniority": "pleno",
+    "summary": "Perfil ficticio com experiencia em APIs, testes e integracoes.",
+    "skills": [
+      "Python",
+      "FastAPI",
+      "SQL",
+      "Pytest",
+      "APIs REST",
+      "Git"
+    ],
+    "experience": [
+      {
+        "role": "Backend Developer",
+        "company": "Empresa Exemplo Alpha",
+        "period": "2022-2026",
+        "highlights": [
+          "Construiu APIs internas com Python e testes automatizados.",
+          "Participou de revisoes de codigo e monitoramento de erros."
+        ]
+      }
+    ],
+    "education": [
+      {
+        "name": "Tecnologia em Analise e Desenvolvimento de Sistemas",
+        "institution": "Faculdade Ficticia Central",
+        "status": "completed"
+      }
+    ],
+    "projects": [
+      {
+        "name": "fictitious-api-lab",
+        "description": "API de estudo com FastAPI, SQL e testes.",
+        "links": [
+          "https://github.com/example/fictitious-api-lab"
+        ]
+      }
+    ]
+  },
+  "confidence": 0.84,
+  "warnings": [
+    "Docker aparece em uma vaga relacionada, mas nao foi evidenciado neste curriculo ficticio."
+  ]
+}

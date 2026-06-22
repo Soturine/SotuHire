@@ -1,0 +1,33 @@
+{
+  "safe_keywords": [
+    "Python",
+    "FastAPI",
+    "SQL",
+    "Pytest",
+    "APIs REST"
+  ],
+  "suggested_bullets": [
+    "Desenvolveu APIs REST em Python com FastAPI, SQL e testes automatizados.",
+    "Apoiou melhorias de qualidade com Pytest, revisao de codigo e monitoramento de erros.",
+    "Manteve documentacao tecnica para facilitar manutencao e onboarding."
+  ],
+  "conditional_suggestions": [
+    {
+      "keyword": "Docker",
+      "text": "Se tiver experiencia real, cite ambiente, imagem, compose ou pipeline em que usou Docker."
+    },
+    {
+      "keyword": "CI/CD",
+      "text": "Se tiver participado de pipelines, descreva ferramenta e impacto."
+    }
+  ],
+  "warnings": [
+    "Nao inventar Cloud, Kubernetes, certificacoes ou cargos.",
+    "Validar manualmente cada bullet antes de usar em candidatura real."
+  ],
+  "evidence_used": [
+    "Curriculo ficticio",
+    "Repositorio publico ficticio",
+    "Descricao de vaga ficticia"
+  ]
+}

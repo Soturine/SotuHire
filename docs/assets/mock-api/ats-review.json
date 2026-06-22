@@ -1,0 +1,22 @@
+{
+  "ats_score": 74,
+  "present": [
+    "Python",
+    "FastAPI",
+    "SQL",
+    "Pytest",
+    "APIs REST"
+  ],
+  "missing_but_safe_to_add_if_true": [
+    "Docker",
+    "CI/CD"
+  ],
+  "missing_without_evidence": [
+    "Cloud",
+    "Kubernetes"
+  ],
+  "warnings": [
+    "Adicionar Docker somente se houver experiencia real.",
+    "Nao declarar Kubernetes sem evidencia."
+  ]
+}

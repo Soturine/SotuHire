@@ -1,0 +1,15 @@
+{
+  "stages": [
+    {"status": "saved", "label": "Salvas", "count": 18},
+    {"status": "applied", "label": "Aplicadas", "count": 9},
+    {"status": "response", "label": "Com resposta", "count": 3},
+    {"status": "interview", "label": "Entrevistas", "count": 2},
+    {"status": "offer", "label": "Oferta", "count": 1}
+  ],
+  "conversion_rates": [
+    {"from": "saved", "to": "applied", "rate": 0.5},
+    {"from": "applied", "to": "response", "rate": 0.33},
+    {"from": "response", "to": "interview", "rate": 0.66},
+    {"from": "interview", "to": "offer", "rate": 0.5}
+  ]
+}

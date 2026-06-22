@@ -1,0 +1,30 @@
+{
+  "job": {
+    "id": "job_demo_backend_001",
+    "title": "Backend Developer Python",
+    "company": "Empresa Ficticia Delta",
+    "source": "LinkedIn",
+    "modality": "remote",
+    "seniority": "pleno",
+    "domain": "technology",
+    "required_skills": [
+      "Python",
+      "FastAPI",
+      "SQL",
+      "Testes automatizados"
+    ],
+    "preferred_skills": [
+      "Docker",
+      "Cloud",
+      "CI/CD"
+    ],
+    "responsibilities": [
+      "Desenvolver APIs REST.",
+      "Escrever testes automatizados.",
+      "Apoiar melhorias de observabilidade."
+    ],
+    "sensitive_requirements": []
+  },
+  "confidence": 0.87,
+  "warnings": []
+}

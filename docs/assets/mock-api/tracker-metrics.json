@@ -1,0 +1,26 @@
+{
+  "total_saved": 18,
+  "total_applied": 9,
+  "by_status": {
+    "saved": 6,
+    "applied": 9,
+    "interview": 2,
+    "offer": 1,
+    "rejected": 3
+  },
+  "average_match_by_status": {
+    "saved": 68,
+    "applied": 75,
+    "interview": 82,
+    "offer": 88
+  },
+  "average_ats": 73,
+  "response_rate": 0.33,
+  "interview_rate": 0.22,
+  "offer_rate": 0.05,
+  "weekly_applications": [
+    {"week": "2026-W22", "count": 2},
+    {"week": "2026-W23", "count": 3},
+    {"week": "2026-W24", "count": 4}
+  ]
+}
