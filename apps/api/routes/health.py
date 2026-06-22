@@ -27,6 +27,7 @@ def health(request: Request) -> ApiEnvelope[HealthResponse]:
                 "github_repo_analyze",
                 "tracker_jobs",
                 "application_intelligence",
+                "authenticated_browser_sources",
             ],
             cors_allowed_origins=settings.allowed_origins,
         )

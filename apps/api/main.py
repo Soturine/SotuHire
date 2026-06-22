@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from apps.api.config import ApiSettings
-from apps.api.routes import analysis, health, tracker
+from apps.api.routes import analysis, health, sources, tracker
 from apps.api.schemas.common import ApiError, ErrorEnvelope
 
 
@@ -31,6 +31,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(health.router)
     app.include_router(analysis.router)
     app.include_router(tracker.router)
+    app.include_router(sources.router)
     _install_exception_handlers(app)
     return app
 
