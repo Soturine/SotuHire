@@ -18,6 +18,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ### Alterado
 
+- Versão do projeto atualizada para `1.1.0`.
 - `docs/README.md` passou a ser índice documental do repositório, enquanto `docs/index.md` virou a
   home do site.
 - Roadmap atualizado com v1.1.0, v1.2.0, v1.3.0, v1.4.0 e v2.0.0.
