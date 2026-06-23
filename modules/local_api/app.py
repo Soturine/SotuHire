@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import cast
 
@@ -67,8 +68,9 @@ def sanitize_capture(payload: BrowserCapturePayload) -> BrowserCapturePayload:
 class CompanionCaptureStore:
     """Small atomic JSONL store for browser captures."""
 
-    def __init__(self, path: str | Path = "data/companion/captures.jsonl") -> None:
-        self.path = Path(path)
+    def __init__(self, path: str | Path | None = None) -> None:
+        base = Path(os.getenv("SOTUHIRE_DATA_DIR", "data"))
+        self.path = Path(path) if path is not None else base / "companion" / "captures.jsonl"
 
     def list(self) -> list[CompanionCaptureRecord]:
         if not self.path.exists():
