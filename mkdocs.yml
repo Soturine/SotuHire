@@ -192,6 +192,7 @@ nav:
       - v1.4.0 Web-first Launcher: 07-development/v1.4.0-web-first-local-launcher.md
       - v1.5.0 Integration Audit: 07-development/v1.5.0-integration-audit.md
       - v1.5.0 Full Web Integration: 07-development/v1.5.0-full-web-integration.md
+      - v1.5.1 Product Readiness Audit: 07-development/v1.5.1-product-readiness-audit.md
   - Frontend:
       - Overview: 08-frontend/README.md
       - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md
