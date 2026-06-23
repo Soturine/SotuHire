@@ -11,13 +11,14 @@ import {
   Trash2,
   WifiOff,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { useApiStatus } from "@/components/api-mode-badge";
 import { useApi } from "@/lib/api/hooks";
 import { DEFAULT_API_URL, useApiMode } from "@/lib/api/mode";
-import { useQuery } from "@tanstack/react-query";
+import type { AiProvider, AiSettings, AiSettingsStatus } from "@/lib/api/types";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/settings")({
@@ -104,7 +105,7 @@ function SettingsPage() {
 
         <SectionCard title="Sobre">
           <div className="grid gap-3 text-sm">
-            <Item k="Versão" v="v1.3.0" />
+            <Item k="Versão" v="v1.4.0" />
             <Item k="Local-first" v="Sim" />
             <Item k="Segredos no cliente" v="Nenhum" />
             <Item k="Contrato da API" v="v1" />
@@ -194,15 +195,18 @@ function ApiStatusPanel({
 
 // ---------------- AI Providers ----------------
 
-type Provider = "local" | "gemini" | "openai";
-type AiStatus = "idle" | "testing" | "configured" | "error";
+type AiUiStatus = "idle" | "testing" | "ready" | "configured" | "planned" | "error";
 
 function AiProvidersCard() {
-  const [provider, setProvider] = useState<Provider>("local");
+  const { mode, baseUrl } = useApiMode();
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const aiQueryKey = ["ai-settings", mode, baseUrl];
+  const [provider, setProvider] = useState<AiProvider>("local");
   const [apiKey, setApiKey] = useState("");
   const [model, setModel] = useState("gemini-2.5-flash");
   const [showKey, setShowKey] = useState(false);
-  const [status, setStatus] = useState<AiStatus>("idle");
+  const [status, setStatus] = useState<AiUiStatus>("idle");
   const [toggles, setToggles] = useState({
     enabled: false,
     match: true,
@@ -212,13 +216,95 @@ function AiProvidersCard() {
     memory: false,
   });
 
-  const callPlanned = async (label: string) => {
-    // The backend endpoints are planned. Frontend never stores the key.
-    setStatus("testing");
-    await new Promise((r) => setTimeout(r, 700));
-    setStatus(provider === "local" ? "idle" : "configured");
-    toast.message(label, { description: "Endpoint planejado — frontend não armazena segredos." });
-  };
+  const settingsQ = useQuery({
+    queryKey: aiQueryKey,
+    queryFn: () => api.aiSettings(),
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!settingsQ.data) return;
+    const data = settingsQ.data;
+    setProvider(data.provider);
+    setModel(data.model || defaultModel(data.provider));
+    setStatus(statusFromSettings(data));
+    setToggles({
+      enabled: data.use_ai,
+      match: data.allow_match,
+      ats: data.allow_ats,
+      tailor: data.allow_tailor,
+      github: data.allow_github,
+      memory: data.allow_memory_context,
+    });
+  }, [settingsQ.data]);
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      api.aiSettingsSave({
+        provider,
+        model: provider === "local" ? "local" : model,
+        api_key: provider === "gemini" && apiKey.trim() ? apiKey.trim() : undefined,
+        use_ai: toggles.enabled,
+        allow_match: toggles.match,
+        allow_ats: toggles.ats,
+        allow_tailor: toggles.tailor,
+        allow_github: toggles.github,
+        allow_memory_context: toggles.memory,
+      }),
+    onSuccess: (data) => {
+      setApiKey("");
+      setStatus(statusFromSettings(data));
+      queryClient.setQueryData(aiQueryKey, data);
+      toast.success("Configuração salva no backend local.");
+    },
+    onError: (error) => {
+      setStatus("error");
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível salvar a configuração.",
+      );
+    },
+  });
+
+  const testMutation = useMutation({
+    mutationFn: () =>
+      api.aiSettingsTest({
+        provider,
+        model: provider === "local" ? "local" : model,
+        api_key: provider === "gemini" && apiKey.trim() ? apiKey.trim() : undefined,
+      }),
+    onMutate: () => {
+      setStatus("testing");
+    },
+    onSuccess: (data) => {
+      setStatus(statusFromTest(data.status, data.success));
+      if (data.success) {
+        toast.success(data.message || "Provider configurado com sucesso.");
+      } else {
+        toast.warning(data.message || "Não foi possível testar o provider.");
+      }
+    },
+    onError: (error) => {
+      setStatus("error");
+      toast.error(error instanceof Error ? error.message : "Não foi possível testar o provider.");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.aiSettingsDelete(),
+    onSuccess: (data) => {
+      setApiKey("");
+      setStatus(statusFromSettings(data));
+      queryClient.setQueryData(aiQueryKey, data);
+      toast.success("Chave removida do backend local.");
+    },
+    onError: (error) => {
+      setStatus("error");
+      toast.error(error instanceof Error ? error.message : "Não foi possível remover a chave.");
+    },
+  });
+
+  const providerAllowsKey = provider === "gemini";
+  const busy = saveMutation.isPending || testMutation.isPending || deleteMutation.isPending;
 
   return (
     <SectionCard
@@ -237,17 +323,20 @@ function AiProvidersCard() {
               Provider
             </label>
             <div className="mt-1.5 grid grid-cols-3 gap-2">
-              {(["local", "gemini", "openai"] as Provider[]).map((p) => (
+              {(["local", "gemini", "openai_future"] as AiProvider[]).map((p) => (
                 <button
                   key={p}
-                  onClick={() => setProvider(p)}
+                  onClick={() => {
+                    setProvider(p);
+                    setModel(defaultModel(p));
+                  }}
                   className={`rounded-md border px-3 py-2 text-xs font-medium capitalize transition-colors ${
                     provider === p
                       ? "border-accent/50 bg-accent/10 text-foreground"
                       : "border-input bg-background hover:bg-muted"
                   }`}
                 >
-                  {p === "openai" ? "OpenAI (futuro)" : p}
+                  {providerLabel(p)}
                 </button>
               ))}
             </div>
@@ -260,13 +349,15 @@ function AiProvidersCard() {
             <div className="mt-1.5 flex gap-2">
               <div className="relative flex-1">
                 <input
-                  type="password"
+                  type={showKey ? "text" : "password"}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   placeholder={
-                    provider === "local" ? "Não necessário no modo Local" : "sk-… ou AIza…"
+                    providerAllowsKey
+                      ? "Cole a chave Gemini para salvar no backend"
+                      : "Não necessário"
                   }
-                  disabled={provider === "local"}
+                  disabled={!providerAllowsKey}
                   className="w-full rounded-md border border-input bg-background px-3 py-2 pr-9 font-mono text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20 disabled:opacity-50"
                 />
                 <button
@@ -298,32 +389,45 @@ function AiProvidersCard() {
 
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => callPlanned("Conexão testada")}
+              onClick={() => testMutation.mutate()}
+              disabled={busy}
               className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"
             >
+              {testMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Testar conexão
             </button>
             <button
-              onClick={() => {
-                callPlanned("Salvo no backend local");
-                setApiKey("");
-              }}
+              onClick={() => saveMutation.mutate()}
+              disabled={busy}
               className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
+              {saveMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               Salvar no backend local
             </button>
             <button
-              onClick={() => {
-                setStatus("idle");
-                setApiKey("");
-                toast.success("Chave removida do backend (planejado).");
-              }}
+              onClick={() => deleteMutation.mutate()}
+              disabled={busy}
               className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
             >
               <Trash2 className="h-3.5 w-3.5" /> Remover chave
             </button>
             <StatusPill status={status} />
           </div>
+          {settingsQ.data?.updated_at && (
+            <p className="text-[11px] text-muted-foreground">
+              Atualizado em {new Date(settingsQ.data.updated_at).toLocaleString("pt-BR")}.
+            </p>
+          )}
+          {settingsQ.isError && (
+            <p className="rounded-md bg-muted/50 p-2 text-[11px] text-muted-foreground">
+              API offline ou sem resposta. A tela continua funcionando em modo Demo/mock.
+            </p>
+          )}
+          {settingsQ.data?.warnings?.map((warning) => (
+            <p key={warning} className="rounded-md bg-warning/10 p-2 text-[11px] text-warning">
+              {warning}
+            </p>
+          ))}
         </div>
 
         <div className="space-y-3">
@@ -374,7 +478,7 @@ function AiProvidersCard() {
 
           <details className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
             <summary className="cursor-pointer font-medium text-foreground">
-              Endpoints planejados
+              Endpoints ativos no backend local
             </summary>
             <ul className="mt-2 space-y-0.5 font-mono">
               <li>GET /api/v1/settings/ai</li>
@@ -390,11 +494,13 @@ function AiProvidersCard() {
   );
 }
 
-function StatusPill({ status }: { status: AiStatus }) {
+function StatusPill({ status }: { status: AiUiStatus }) {
   const cfg = {
     idle: { cls: "bg-muted text-muted-foreground", label: "Não configurado" },
     testing: { cls: "bg-muted text-muted-foreground", label: "Testando…" },
+    ready: { cls: "bg-success/15 text-success", label: "Pronto local" },
     configured: { cls: "bg-success/15 text-success", label: "Configurado" },
+    planned: { cls: "bg-warning/15 text-warning", label: "Planejado" },
     error: { cls: "bg-destructive/15 text-destructive", label: "Erro" },
   }[status];
   return (
@@ -453,7 +559,7 @@ function ModeCard({
 }: {
   active: boolean;
   onClick: () => void;
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   desc: string;
   tone: "warning" | "success";
@@ -482,6 +588,32 @@ function ModeCard({
       <p className="mt-2 text-xs text-muted-foreground">{desc}</p>
     </button>
   );
+}
+
+function providerLabel(provider: AiProvider): string {
+  if (provider === "openai_future") return "OpenAI (futuro)";
+  if (provider === "gemini") return "Gemini";
+  return "Local";
+}
+
+function defaultModel(provider: AiProvider): string {
+  if (provider === "local") return "local";
+  if (provider === "gemini") return "gemini-2.5-flash";
+  return "planned";
+}
+
+function statusFromSettings(settings: AiSettings): AiUiStatus {
+  if (settings.status === "planned") return "planned";
+  if (settings.status === "error") return "error";
+  if (settings.status === "ready") return "ready";
+  return settings.configured ? "configured" : "idle";
+}
+
+function statusFromTest(status: AiSettingsStatus, success: boolean): AiUiStatus {
+  if (status === "planned") return "planned";
+  if (status === "ready") return "ready";
+  if (success) return "configured";
+  return "error";
 }
 
 function Item({ k, v }: { k: string; v: string }) {

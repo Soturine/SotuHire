@@ -1,5 +1,6 @@
 import type {
   AtsReview,
+  AiSettings,
   GithubReport,
   Health,
   JobPosting,
@@ -15,7 +16,7 @@ import type {
 
 export const mockHealth: Health = {
   status: "ok",
-  version: "1.3.0",
+  version: "1.4.0",
   local_first: true,
   environment: "mock",
   capabilities: [
@@ -28,6 +29,20 @@ export const mockHealth: Health = {
     "tracker_jobs",
     "application_intelligence",
   ],
+};
+
+export const mockAiSettings: AiSettings = {
+  provider: "local",
+  model: "local",
+  configured: true,
+  status: "ready",
+  use_ai: false,
+  allow_match: true,
+  allow_ats: true,
+  allow_tailor: true,
+  allow_github: true,
+  allow_memory_context: false,
+  warnings: [],
 };
 
 export const mockResume: ResumeProfile = {
