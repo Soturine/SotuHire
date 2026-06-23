@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { ProviderBadge } from "@/components/provider-badge";
+import { ActionableInsights } from "@/components/actionable-insights";
+import { AnalysisStateNote, ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { ScoreRing } from "@/components/score-ring";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -161,6 +162,12 @@ function AtsPage() {
                   />
                 </div>
               </div>
+              <AnalysisStateNote
+                provider={r.provider_used}
+                mode={r.analysis_mode}
+                fallback={r.fallback_used}
+                warnings={r.warnings}
+              />
             </SectionCard>
 
             <div className="grid gap-6 lg:grid-cols-3">
@@ -195,6 +202,26 @@ function AtsPage() {
                 </ul>
               </SectionCard>
             )}
+
+            <ActionableInsights
+              title="Assistente de ação ATS"
+              strengths={r.present.slice(0, 6)}
+              gaps={r.missing_but_safe_to_add_if_true}
+              suggestions={[
+                ...r.missing_but_safe_to_add_if_true.map(
+                  (item) => `Adicionar ${item} somente se houver evidência real no currículo.`,
+                ),
+                ...(r.ai_insights ?? []),
+              ]}
+              risks={r.warnings ?? []}
+              nextActions={[
+                "Copiar keywords seguras para revisar manualmente.",
+                "Enviar itens com evidência para Ajuste de Currículo.",
+                "Manter lacunas sem evidência fora da candidatura.",
+              ]}
+              doNotAdd={r.missing_without_evidence}
+              actions={[{ label: "Enviar para ajustes", to: "/tailor", icon: "send" }]}
+            />
 
             {r.warnings && r.warnings.length > 0 && (
               <SectionCard title="Avisos de integridade">

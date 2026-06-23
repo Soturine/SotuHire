@@ -13,6 +13,7 @@ import {
   Lock,
 } from "lucide-react";
 import { ApiModeBadge } from "@/components/api-mode-badge";
+import { GuidedFlow } from "@/components/guided-flow";
 import { API_LOCAL_HOST, APP_VERSION } from "@/lib/labels";
 
 export const Route = createFileRoute("/")({
@@ -175,6 +176,27 @@ function Landing() {
             </div>
           </div>
         </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-16">
+        <div className="mb-8 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+          <div>
+            <h2 className="text-display text-3xl">
+              Fluxo guiado para sair da vaga bruta ao Kanban.
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
+              O app moderno guia cada etapa sem mover score final ou regra de negócio para o
+              frontend.
+            </p>
+          </div>
+          <Link
+            to="/dashboard"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+          >
+            Abrir fluxo no dashboard <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+        <GuidedFlow />
       </section>
 
       {/* Features */}

@@ -12,7 +12,8 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { ProviderBadge } from "@/components/provider-badge";
+import { ActionableInsights } from "@/components/actionable-insights";
+import { AnalysisStateNote, ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { ScoreRing } from "@/components/score-ring";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -208,6 +209,14 @@ function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult 
             </div>
           </div>
         )}
+        {meta && (
+          <AnalysisStateNote
+            provider={meta.provider_used}
+            mode={meta.analysis_mode}
+            fallback={meta.fallback_used}
+            model={meta.model}
+          />
+        )}
       </SectionCard>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -250,6 +259,30 @@ function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult 
           </ul>
         </SectionCard>
       )}
+
+      <ActionableInsights
+        title="Assistente de ação para compatibilidade"
+        strengths={[
+          ...a.matched_requirements.slice(0, 4).map((item) => item.name),
+          ...(a.transferable_skills ?? []).slice(0, 2),
+        ]}
+        gaps={[
+          ...a.partial_requirements.slice(0, 3).map((item) => item.name),
+          ...a.missing_requirements.slice(0, 3).map((item) => item.name),
+        ]}
+        suggestions={a.safe_actions}
+        risks={a.critical_gaps.map((item) => item.reason || item.name)}
+        nextActions={[
+          "Revisar evidências reais antes de editar o currículo.",
+          "Rodar Análise ATS para separar keywords seguras das sem evidência.",
+          "Salvar a oportunidade no tracker se a aderência fizer sentido.",
+        ]}
+        doNotAdd={a.missing_requirements.slice(0, 4).map((item) => item.name)}
+        actions={[
+          { label: "Enviar para ajustes", to: "/tailor", icon: "send" },
+          { label: "Salvar em candidatura", to: "/tracker", icon: "save" },
+        ]}
+      />
 
       <div className="grid gap-6 lg:grid-cols-2">
         <SectionCard title="Ações seguras" description="Sem inventar experiência ou credencial">

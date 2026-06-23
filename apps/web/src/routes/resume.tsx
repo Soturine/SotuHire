@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { FileText, Sparkles, Upload } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { ProviderBadge } from "@/components/provider-badge";
+import { AnalysisStateNote, ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
@@ -139,7 +139,14 @@ function ResumePage() {
               }
             />
           ) : (
-            <ProfileView profile={profile} />
+            <>
+              <ProfileView profile={profile} />
+              <AnalysisStateNote
+                provider={mut.data?.provider_used}
+                mode={mut.data?.analysis_mode}
+                fallback={mut.data?.fallback_used}
+              />
+            </>
           )}
         </SectionCard>
       </div>

@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation } from "@tanstack/react-query";
-import { AlertTriangle, CheckCircle2, Github, Lightbulb } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Github, Lightbulb, PlayCircle } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { ProviderBadge } from "@/components/provider-badge";
+import { ActionableInsights } from "@/components/actionable-insights";
+import { AnalysisStateNote, ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { ScoreRing } from "@/components/score-ring";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -27,10 +28,24 @@ function GhPage() {
 
   const r = mut.data?.report;
 
+  const runDemo = () => {
+    setUrl("https://github.com/example/fictitious-api-lab");
+    setRole("Backend Python");
+    setTimeout(() => mut.mutate(), 50);
+  };
+
   return (
     <AppShell
       title="Análise de GitHub"
       description="Use seu repositório público como evidência técnica."
+      actions={
+        <button
+          onClick={runDemo}
+          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-card px-3 py-1.5 text-xs font-medium hover:bg-muted"
+        >
+          <PlayCircle className="h-3.5 w-3.5" /> Rodar demo
+        </button>
+      }
     >
       <SectionCard>
         <div className="grid gap-3 sm:grid-cols-[2fr_1fr_auto]">
@@ -124,6 +139,11 @@ function GhPage() {
                   </div>
                 </div>
               </div>
+              <AnalysisStateNote
+                provider={mut.data?.provider_used}
+                mode={mut.data?.analysis_mode}
+                fallback={mut.data?.fallback_used}
+              />
             </SectionCard>
 
             <div className="grid gap-6 lg:grid-cols-2">
@@ -174,6 +194,21 @@ function GhPage() {
                 ))}
               </ul>
             </SectionCard>
+
+            <ActionableInsights
+              title="Assistente de ação para GitHub"
+              strengths={r.positive_signals}
+              gaps={r.portfolio_suggestions}
+              suggestions={r.portfolio_suggestions}
+              risks={r.risks}
+              nextActions={[
+                "Atualizar README com contexto verificável do projeto.",
+                "Usar evidências do repositório apenas quando conectarem com a vaga.",
+                "Salvar candidatura se o portfólio reforçar os requisitos principais.",
+              ]}
+              doNotAdd={r.risks}
+              actions={[{ label: "Salvar em candidatura", to: "/tracker", icon: "save" }]}
+            />
           </div>
         ) : null}
       </div>

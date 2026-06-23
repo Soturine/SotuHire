@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useApi } from "@/lib/api/hooks";
 import { AppShell } from "@/components/app-shell";
+import { GuidedFlow } from "@/components/guided-flow";
 import { StatCard } from "@/components/stat-card";
 import { SectionCard } from "@/components/section-card";
 import { ScoreRing } from "@/components/score-ring";
@@ -108,33 +109,11 @@ function Dashboard() {
           )}
         </div>
 
-        {/* Guided flow */}
         <SectionCard
-          title="Próxima ação"
-          description="Fluxo guiado SotuHire — siga os passos na ordem."
+          title="Fluxo guiado"
+          description="Siga o caminho principal: currículo, vaga, compatibilidade, ATS, ajuste, portfólio e tracker."
         >
-          <ol className="grid gap-2 sm:grid-cols-2 lg:grid-cols-6">
-            {[
-              { n: 1, to: "/resume", label: "Currículo" },
-              { n: 2, to: "/job", label: "Vaga" },
-              { n: 3, to: "/match", label: "Compatibilidade" },
-              { n: 4, to: "/ats", label: "ATS" },
-              { n: 5, to: "/tailor", label: "Ajuste" },
-              { n: 6, to: "/tracker", label: "Candidaturas" },
-            ].map((step) => (
-              <li key={step.n}>
-                <Link
-                  to={step.to}
-                  className="group flex h-full items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 transition-all hover:border-accent/40 hover:bg-accent/5"
-                >
-                  <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-muted text-xs font-bold text-muted-foreground group-hover:bg-accent group-hover:text-accent-foreground">
-                    {step.n}
-                  </span>
-                  <span className="text-sm font-medium">{step.label}</span>
-                </Link>
-              </li>
-            ))}
-          </ol>
+          <GuidedFlow compact />
         </SectionCard>
 
         {/* KPIs */}

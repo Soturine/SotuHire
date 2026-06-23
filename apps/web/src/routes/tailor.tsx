@@ -3,7 +3,8 @@ import { useMutation } from "@tanstack/react-query";
 import { AlertTriangle, PlayCircle, RotateCcw, ShieldAlert, Sparkles, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
-import { ProviderBadge } from "@/components/provider-badge";
+import { ActionableInsights } from "@/components/actionable-insights";
+import { AnalysisStateNote, ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
@@ -145,6 +146,12 @@ function TailorPage() {
                   </li>
                 ))}
               </ul>
+              <AnalysisStateNote
+                provider={mut.data?.provider_used}
+                mode={mut.data?.analysis_mode}
+                fallback={mut.data?.fallback_used}
+                warnings={t.warnings}
+              />
             </SectionCard>
 
             <div className="grid gap-6 lg:grid-cols-2">
@@ -193,6 +200,21 @@ function TailorPage() {
                 </ul>
               </SectionCard>
             )}
+
+            <ActionableInsights
+              title="Assistente de ação para ajuste"
+              strengths={t.safe_keywords}
+              gaps={t.conditional_suggestions.map((item) => item.keyword)}
+              suggestions={[...t.suggested_bullets, ...(mut.data?.ai_suggestions ?? [])]}
+              risks={t.warnings}
+              nextActions={[
+                "Revisar cada bullet antes de usar em candidatura real.",
+                "Copiar apenas sugestões que representem experiência real.",
+                "Salvar a versão final na candidatura correspondente.",
+              ]}
+              doNotAdd={t.conditional_suggestions.map((item) => item.text)}
+              actions={[{ label: "Salvar em candidatura", to: "/tracker", icon: "save" }]}
+            />
 
             {t.warnings.length > 0 && (
               <SectionCard title="Avisos">
