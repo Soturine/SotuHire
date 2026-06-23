@@ -4,6 +4,43 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.5.0] - 2026-06-23
+
+### Adicionado
+
+- Roteamento backend-side de IA opcional por área para currículo, vaga, compatibilidade, ATS,
+  Tailor e GitHub.
+- Prompts `match_analysis_evidence_based_v1`, `ats_analysis_v1`, `resume_tailor_v1` e
+  `career_advice_v1` no Prompt Registry programático.
+- Badges de provider/fallback no frontend moderno.
+- Ponte FastAPI `/api/v1/extension/*` para capturas locais da Local Companion API.
+- Painel **Extensão Local** em **Fontes e Captura**.
+- Flag `-WithCompanion` no launcher web-first.
+- Auditoria de integração v1.5 e mapa de integração de módulos.
+- Testes de roteamento de IA, fallback local e ponte da extensão.
+
+### Alterado
+
+- Launcher Windows consolidado em `scripts/windows/start-sotuhire.ps1`.
+- Wrappers `scripts/windows/start-api.ps1` e `scripts/windows/start-web.ps1` removidos por serem
+  apenas delegadores.
+- Frontend mostra quando uma análise usou local, Gemini ou fallback local.
+- Local Companion capture store respeita `SOTUHIRE_DATA_DIR` para testes isolados.
+- Versão do projeto, API e frontend atualizada para `1.5.0`.
+
+### Segurança
+
+- A chave de IA continua armazenada apenas no backend local e nunca retorna ao frontend.
+- Gemini falha com fallback local e warning, sem quebrar análises.
+- Scores finais continuam no backend/core.
+- Nenhum fluxo de authenticated browser, Chromium/CDP, scraper autenticado, crawler logado ou
+  auto-apply foi alterado.
+
+### Validação
+
+- Testes backend adicionados para rota Gemini fake, fallback e bridge da extensão.
+- Smoke/E2E frontend cobre o painel **Extensão Local**.
+
 ## [1.4.0] - 2026-06-22
 
 ### Adicionado
