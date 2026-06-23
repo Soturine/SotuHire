@@ -76,6 +76,7 @@ nav:
       - Local companion app: 02-architecture/local-companion-app.md
       - Local Companion API: 02-architecture/local-companion-api.md
       - Frontend API Layer: 02-architecture/frontend-api-layer.md
+      - Mapa de integração de módulos: 02-architecture/module-integration-map.md
       - Background jobs: 02-architecture/background-jobs.md
       - Parsers: 02-architecture/parsers.md
       - Semântica do parser: 02-architecture/parser-semantics.md
@@ -189,6 +190,8 @@ nav:
       - v1.2.0 API Layer: 07-development/v1.2.0-api-layer.md
       - v1.3.0 Modern Web Frontend: 07-development/v1.3.0-modern-web-frontend.md
       - v1.4.0 Web-first Launcher: 07-development/v1.4.0-web-first-local-launcher.md
+      - v1.5.0 Integration Audit: 07-development/v1.5.0-integration-audit.md
+      - v1.5.0 Full Web Integration: 07-development/v1.5.0-full-web-integration.md
   - Frontend:
       - Overview: 08-frontend/README.md
       - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md
