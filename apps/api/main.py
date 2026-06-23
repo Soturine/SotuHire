@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 
 from apps.api.config import ApiSettings
 from apps.api.routes import analysis, health, sources, tracker
+from apps.api.routes import settings as settings_routes
 from apps.api.schemas.common import ApiError, ErrorEnvelope
 
 
@@ -25,12 +26,13 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=resolved.allowed_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"],
     )
     app.include_router(health.router)
     app.include_router(analysis.router)
     app.include_router(tracker.router)
+    app.include_router(settings_routes.router)
     app.include_router(sources.router)
     _install_exception_handlers(app)
     return app
