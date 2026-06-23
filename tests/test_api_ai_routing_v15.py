@@ -150,6 +150,85 @@ def test_match_toggle_false_keeps_analysis_local(tmp_path: Path, monkeypatch) ->
     assert any("IA desativada para match" in item for item in payload["warnings"])
 
 
+def test_area_toggles_keep_ats_tailor_and_github_local(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    monkeypatch.setattr("apps.api.services.ai_settings.GeminiProvider", FakeGeminiProvider)
+    captured: dict[str, object] = {}
+
+    def fake_github_analysis(value: str, **kwargs):
+        captured["provider"] = kwargs.get("provider")
+        fallback_payload = ProjectAnalysisPayload(
+            url="https://github.com/example/fictitious-api",
+            owner="example",
+            repo="fictitious-api",
+            title="Fictitious API",
+            page_type="github_repo",
+            visible_text="FastAPI project with README and tests.",
+            readme_text="# Fictitious API\nFastAPI project.",
+            files_sampled=["README.md", "pyproject.toml", "tests/test_api.py"],
+            languages=["Python"],
+            topics=["api", "career"],
+        )
+        report = real_github_analysis("not-a-github-url", fallback_payload=fallback_payload)
+        return report.model_copy(update={"provider_used": "local", "fallback_used": False})
+
+    monkeypatch.setattr(
+        "apps.api.services.analysis.analyze_github_repository", fake_github_analysis
+    )
+    client = api_client()
+    _save_gemini_settings(client, allow_ats=False, allow_tailor=False, allow_github=False)
+
+    ats = client.post(
+        "/api/v1/ats/analyze",
+        json={
+            "resume_text": RESUME_TEXT,
+            "job_text": JOB_TEXT,
+            "job_keywords": ["Python", "Docker", "Kubernetes"],
+        },
+    )
+    tailor = client.post(
+        "/api/v1/resume/tailor",
+        json={
+            "target_role": "Desenvolvedor Backend Python",
+            "job_text": JOB_TEXT,
+            "evidence_text": RESUME_TEXT,
+        },
+    )
+    github = client.post(
+        "/api/v1/github/repo/analyze",
+        json={
+            "repo_url": "https://github.com/example/fictitious-api",
+            "fallback_payload": {
+                "url": "https://github.com/example/fictitious-api",
+                "owner": "example",
+                "repo": "fictitious-api",
+                "title": "Fictitious API",
+                "page_type": "github_repo",
+                "visible_text": "FastAPI project with README and tests.",
+                "readme_text": "# Fictitious API\nFastAPI project.",
+                "files_sampled": ["README.md", "pyproject.toml", "tests/test_api.py"],
+                "languages": ["Python"],
+                "topics": ["api", "career"],
+            },
+        },
+    )
+
+    assert ats.status_code == 200
+    assert ats.json()["data"]["provider_used"] == "local"
+    assert not ats.json()["data"]["ai_insights"]
+    assert any("IA desativada para ats" in item for item in ats.json()["warnings"])
+
+    assert tailor.status_code == 200
+    assert tailor.json()["data"]["provider_used"] == "local"
+    assert not tailor.json()["data"]["ai_suggestions"]
+    assert any("IA desativada para tailor" in item for item in tailor.json()["warnings"])
+
+    assert github.status_code == 200
+    assert captured["provider"] is None
+    assert github.json()["data"]["provider_used"] == "local"
+    assert any("IA desativada para github" in item for item in github.json()["warnings"])
+
+
 def test_ats_and_tailor_use_gemini_prompts_without_leaking_key(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
     monkeypatch.setattr("apps.api.services.ai_settings.GeminiProvider", FakeGeminiProvider)
