@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versão `v1.4.0`.
+Frontend moderno do SotuHire em `apps/web` para a versão `v1.5.0`.
 
 ## Stack
 
@@ -28,6 +28,7 @@ O launcher sobe:
 - API: `http://127.0.0.1:8787`
 - API docs: `http://127.0.0.1:8787/docs`
 - Frontend: `http://localhost:5173`
+- Local Companion opcional: `http://127.0.0.1:8765`
 
 Manual:
 
@@ -46,6 +47,12 @@ npm run build
 npm run lint
 npm run typecheck
 npm run test:e2e
+```
+
+Para iniciar também a Local Companion API usada pela extensão assistiva:
+
+```powershell
+.\start-sotuhire.ps1 -WithCompanion
 ```
 
 ## Configuração da API
@@ -110,8 +117,11 @@ data/secrets/ai-provider.local.json
 Providers:
 
 - `local`: sem chamada externa.
-- `gemini`: usa a integração backend existente quando há chave local.
+- `gemini`: usa a integração backend existente quando há chave local e o toggle da área está ativo.
 - `openai_future`: aparece como planejado.
+
+As telas de Currículo, Vaga, Compatibilidade, ATS, Tailor e GitHub mostram badges de provider. Se o
+Gemini falhar, a API retorna fallback local com warning.
 
 ## Fontes e Captura
 
@@ -122,9 +132,13 @@ A tela **Fontes e Captura** inclui o fluxo `AUTHENTICATED_BROWSER` existente no 
 - exige confirmação de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-A v1.4.0 não altera o scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
+A v1.5.0 não altera o scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
 regras protegidas. O fluxo não automatiza login, não contorna CAPTCHA/checkpoint e não envia
 candidatura.
+
+A v1.5.0 também adiciona o painel **Extensão Local**, que consulta `/api/v1/extension/status` e
+`/api/v1/extension/captures` para mostrar capturas já salvas pela Local Companion API. O painel pode
+importar uma captura para Vaga ou Candidaturas sem controlar contas de terceiros.
 
 ## Segurança e limites
 

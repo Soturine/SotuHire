@@ -1,6 +1,6 @@
 # Frontend moderno
 
-A v1.4.0 consolida o frontend moderno do SotuHire em `apps/web` como experiência local principal.
+A v1.5.0 consolida o frontend moderno do SotuHire em `apps/web` como experiência local principal.
 O app usa React, Vite, TypeScript, TanStack Router, TanStack Query, Tailwind CSS, Radix UI, Recharts
 e lucide-react. Ele roda separado do Streamlit e consome a FastAPI local em `/api/v1` quando o modo
 API Real está ativo.
@@ -30,6 +30,12 @@ npm run build
 npm run lint
 npm run typecheck
 npm run test:e2e
+```
+
+Para iniciar também a Local Companion API:
+
+```powershell
+.\start-sotuhire.ps1 -WithCompanion
 ```
 
 ## Modos
@@ -67,8 +73,11 @@ APIs oficiais quando disponíveis.
 
 O fluxo `AUTHENTICATED_BROWSER` existente no backend local também aparece nessa tela. Ele testa o CDP
 local, abre um Chromium dedicado para login manual e exige confirmação de uso autorizado antes da
-coleta. A v1.4.0 não alterou o scraper autenticado, Chromium/CDP, crawler logado ou docs protegidos.
+coleta. A v1.5.0 não alterou o scraper autenticado, Chromium/CDP, crawler logado ou docs protegidos.
 O fluxo não contorna CAPTCHA/checkpoint, não automatiza candidatura e não faz auto-apply.
+
+O painel **Extensão Local** consulta capturas já salvas pela Local Companion API e permite importar
+uma captura para Vaga ou Candidaturas. Ele não controla sites de terceiros.
 
 ## IA e Providers
 
@@ -92,6 +101,9 @@ Providers:
 - `local`: sem chamada externa.
 - `gemini`: usa a integração backend existente quando há chave.
 - `openai_future`: planejado para versão futura.
+
+Na v1.5.0, os toggles em Configurações controlam o roteamento de IA no backend. As telas mostram
+badges de provider e fallback, mas a regra de negócio e os scores finais seguem no Python.
 
 ## Streamlit legado/dev
 

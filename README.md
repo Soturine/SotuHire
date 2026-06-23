@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.4.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.4.0)
+[![Release](https://img.shields.io/badge/release-v1.5.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.5.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -29,15 +29,17 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 
 ## Preview
 
-![SotuHire v1.3 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.3-web-walkthrough.gif)
+![SotuHire v1.5 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.5-web-walkthrough.gif)
 
-![SotuHire v1.3 Web Home](docs/assets/screenshots/sotuhire-v1.3-web-home.png)
+![SotuHire v1.5 Web Home](docs/assets/screenshots/sotuhire-v1.5-web-home.png)
 
-![SotuHire v1.3 Web Dashboard](docs/assets/screenshots/sotuhire-v1.3-web-dashboard.png)
+![SotuHire v1.5 Web Dashboard](docs/assets/screenshots/sotuhire-v1.5-web-dashboard.png)
 
-![SotuHire v1.3 Web Compatibility](docs/assets/screenshots/sotuhire-v1.3-web-compatibility.png)
+![SotuHire v1.5 Web Compatibility](docs/assets/screenshots/sotuhire-v1.5-web-compatibility-ai.png)
 
-![SotuHire v1.4 Web Settings AI](docs/assets/screenshots/sotuhire-v1.4-web-settings-ai.png)
+![SotuHire v1.5 Web Sources Extension](docs/assets/screenshots/sotuhire-v1.5-web-sources-extension.png)
+
+![SotuHire v1.5 Web Settings AI](docs/assets/screenshots/sotuhire-v1.5-web-settings-ai.png)
 
 ## O Que O Projeto Faz
 
@@ -114,9 +116,13 @@ Flags úteis:
 .\start-sotuhire.ps1 -ApiOnly
 .\start-sotuhire.ps1 -WebOnly
 .\start-sotuhire.ps1 -Production
+.\start-sotuhire.ps1 -WithCompanion
 ```
 
-### API local v1.4.0
+`-WithCompanion` inicia a Local Companion API existente em `127.0.0.1:8765` para a extensão
+assistiva. Isso não abre navegador autenticado, não faz login e não altera Chromium/CDP.
+
+### API local v1.5.0
 
 Para conectar um frontend moderno ou inspecionar o OpenAPI:
 
@@ -135,7 +141,7 @@ http://127.0.0.1:8787/docs
 A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
 [Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
 
-### Frontend moderno v1.4.0
+### Frontend moderno v1.5.0
 
 O frontend moderno fica em `apps/web` e roda como app React/Vite separado.
 
@@ -178,6 +184,10 @@ enviada apenas para a FastAPI local, fica no backend em `data/secrets/ai-provide
 caminho é ignorado pelo Git. A API nunca retorna a chave para o frontend; ela retorna apenas
 provider, modelo, status, toggles, warnings e data de atualização.
 
+Na v1.5.0, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
+Análise de Compatibilidade, ATS, Ajuste de Currículo e GitHub. Se Gemini falhar, o SotuHire retorna
+fallback local com warning e mantém os scores finais no backend/core.
+
 Endpoints:
 
 ```text
@@ -187,6 +197,22 @@ POST   /api/v1/settings/ai
 POST   /api/v1/settings/ai/test
 DELETE /api/v1/settings/ai
 ```
+
+### Extensão Local no frontend
+
+A tela **Fontes e Captura** inclui o painel **Extensão Local**, que consulta capturas já salvas pela
+Local Companion API e permite importar para Vaga, GitHub ou Candidaturas:
+
+```text
+GET  /api/v1/extension/status
+GET  /api/v1/extension/captures
+POST /api/v1/extension/import/job
+POST /api/v1/extension/import/github
+POST /api/v1/extension/import/tracker
+```
+
+Esse painel não cria crawler logado novo, não automatiza login, não faz auto-apply e não mexe no
+fluxo de navegador autenticado existente.
 
 ## Instalação
 

@@ -1,14 +1,15 @@
 # Frontend API Layer
 
 A camada FastAPI local em `apps/api` conecta o frontend moderno ao core Python sem mover regra
-crítica para JavaScript. Na v1.4.0, ela também expõe configurações locais seguras de IA para a tela
-**Configurações → IA e Providers**.
+crítica para JavaScript. Na v1.5.0, ela também roteia IA opcional por área e expõe uma ponte segura
+para capturas locais da extensão assistiva.
 
 ## Objetivo
 
 - expor contratos HTTP versionados em `/api/v1`;
 - manter Streamlit como modo legado/dev/local debug;
 - manter Local Companion API como ponte da extensao assistiva;
+- expor capturas da extensao no frontend moderno sem mexer em Chromium/CDP ou scraping autenticado;
 - preparar Lovable, React, Vite ou Next.js para consumir endpoints reais;
 - preservar privacidade local-first e anti-fabrication.
 
@@ -87,6 +88,12 @@ biblioteca padrao do Python e endpoints `/capture/*`.
 - `POST /api/v1/settings/ai`
 - `POST /api/v1/settings/ai/test`
 - `DELETE /api/v1/settings/ai`
+- `GET /api/v1/extension/status`
+- `GET /api/v1/extension/captures`
+- `GET /api/v1/extension/profile-analysis`
+- `POST /api/v1/extension/import/job`
+- `POST /api/v1/extension/import/github`
+- `POST /api/v1/extension/import/tracker`
 
 ## Configurações de IA
 
@@ -109,6 +116,30 @@ data/secrets/ai-provider.local.json
 
 `data/` e os arquivos locais de segredo são ignorados pelo Git. O provider `local` não faz chamada
 externa, `gemini` usa a integração backend existente e `openai_future` permanece planejado.
+
+## Roteamento de provider v1.5
+
+As análises usam `apps/api/services/ai_settings.py` para escolher o runtime:
+
+- `use_ai=false`, provider `local` ou toggle desligado: caminho local determinístico;
+- `provider=gemini`, chave configurada e toggle ligado: provider Gemini no backend;
+- falha de Gemini: fallback local com warning no envelope;
+- `openai_future`: planejado, sem chamada externa.
+
+Prompts usados por código:
+
+- `resume_extraction_v1`;
+- `job_extraction_multi_domain_v1`;
+- `match_analysis_evidence_based_v1`;
+- `ats_analysis_v1`;
+- `resume_tailor_v1`;
+- `github_repo_analysis_v2`.
+
+## Ponte da extensão local v1.5
+
+Os endpoints `/api/v1/extension/*` leem capturas já salvas pela Local Companion API e permitem
+importação para Vaga, GitHub ou Candidaturas. Eles não abrem navegador, não fazem login, não
+automatizam portais e não substituem a Local Companion API em `127.0.0.1:8765`.
 
 ## Segurança
 

@@ -60,7 +60,7 @@ Response `data`:
 {
   "status": "ok",
   "service": "sotuhire-api",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "local_first": true,
   "openapi_url": "/openapi.json",
   "docs_url": "/docs",
@@ -73,7 +73,8 @@ Response `data`:
     "github_repo_analyze",
     "tracker_jobs",
     "application_intelligence",
-    "ai_settings"
+    "ai_settings",
+    "extension_bridge"
   ]
 }
 ```
@@ -179,7 +180,12 @@ Response `data`:
     "projects": [],
     "raw_text": ""
   },
-  "confidence": 0.85
+  "confidence": 0.85,
+  "provider_used": "local",
+  "requested_provider": "local",
+  "analysis_mode": "local",
+  "fallback_used": false,
+  "low_confidence_fields": []
 }
 ```
 
@@ -210,7 +216,12 @@ Response `data`:
     "ats_keywords": ["backend", "python"],
     "raw_text": ""
   },
-  "confidence": 0.75
+  "confidence": 0.75,
+  "provider_used": "local",
+  "requested_provider": "local",
+  "analysis_mode": "local",
+  "fallback_used": false,
+  "low_confidence_fields": []
 }
 ```
 
@@ -239,6 +250,9 @@ Response `data`:
 ```json
 {
   "provider_used": "local",
+  "requested_provider": "local",
+  "analysis_mode": "local",
+  "fallback_used": false,
   "local_first": true,
   "analysis": {
     "match_score": 78,
@@ -590,6 +604,50 @@ Response `data`:
 ```
 
 O endpoint nao automatiza login, nao contorna CAPTCHA/checkpoint e nao envia candidatura.
+
+## GET /api/v1/extension/status
+
+Retorna status seguro da ponte FastAPI com a Local Companion API.
+
+```json
+{
+  "available": true,
+  "companion_url": "http://127.0.0.1:8765",
+  "capture_count": 2,
+  "last_capture_at": "2026-06-23T12:00:00+00:00",
+  "message": "Local Companion conectado ao backend FastAPI."
+}
+```
+
+## GET /api/v1/extension/captures
+
+Lista capturas locais recentes salvas pela extensao assistiva.
+
+```json
+{
+  "captures": [
+    {
+      "id": "capture_demo",
+      "title": "Backend Python Demo",
+      "company": "Empresa Ficticia",
+      "url": "https://example.invalid/jobs/backend",
+      "domain": "example.invalid",
+      "status": "captured"
+    }
+  ]
+}
+```
+
+## POST /api/v1/extension/import/job
+
+Importa uma captura local para o formato de Vaga. Tambem existem:
+
+```txt
+POST /api/v1/extension/import/github
+POST /api/v1/extension/import/tracker
+```
+
+Esses endpoints nao abrem navegador, nao fazem login e nao automatizam sites de terceiros.
 
 ## Variaveis de ambiente
 
