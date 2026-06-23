@@ -37,6 +37,11 @@ class ResumeExtractResponse(BaseModel):
 
     profile: ResumeProfileSchema
     confidence: float = Field(ge=0, le=1)
+    provider_used: str = "local"
+    requested_provider: str = "local"
+    analysis_mode: Literal["local", "ai", "fallback"] = "local"
+    fallback_used: bool = False
+    low_confidence_fields: list[str] = Field(default_factory=list)
 
 
 class JobExtractRequest(BaseModel):
@@ -57,6 +62,11 @@ class JobExtractResponse(BaseModel):
 
     job: JobPostingSchema
     confidence: float = Field(ge=0, le=1)
+    provider_used: str = "local"
+    requested_provider: str = "local"
+    analysis_mode: Literal["local", "ai", "fallback"] = "local"
+    fallback_used: bool = False
+    low_confidence_fields: list[str] = Field(default_factory=list)
 
 
 class MatchAnalyzeRequest(BaseModel):
@@ -81,7 +91,12 @@ class MatchAnalyzeResponse(BaseModel):
 
     analysis: JobAnalysisSchema
     provider_used: str = "local"
+    requested_provider: str = "local"
+    analysis_mode: Literal["local", "ai", "fallback"] = "local"
+    fallback_used: bool = False
     local_first: bool = True
+    model: str = ""
+    memory_shared_with_provider: bool = False
 
 
 class AtsAnalyzeRequest(BaseModel):
@@ -105,6 +120,12 @@ class AtsAnalyzeResponse(BaseModel):
     present: list[str] = Field(default_factory=list)
     missing_but_safe_to_add_if_true: list[str] = Field(default_factory=list)
     missing_without_evidence: list[str] = Field(default_factory=list)
+    provider_used: str = "local"
+    requested_provider: str = "local"
+    analysis_mode: Literal["local", "ai", "fallback"] = "local"
+    fallback_used: bool = False
+    ai_insights: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
 
 
 class ResumeTailorRequest(BaseModel):
@@ -127,6 +148,11 @@ class ResumeTailorResponse(BaseModel):
 
     tailor: ResumeTailorOutput
     safe_to_export: bool = False
+    provider_used: str = "local"
+    requested_provider: str = "local"
+    analysis_mode: Literal["local", "ai", "fallback"] = "local"
+    fallback_used: bool = False
+    ai_suggestions: list[str] = Field(default_factory=list)
 
 
 class GitHubRepoAnalyzeRequest(BaseModel):
@@ -168,6 +194,10 @@ class GitHubRepoAnalyzeResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     report: GitHubAnalyzerReport
+    provider_used: str = "local"
+    requested_provider: str = "local"
+    analysis_mode: Literal["local", "ai", "fallback"] = "local"
+    fallback_used: bool = False
 
 
 class TrackerJobCreateRequest(BaseModel):

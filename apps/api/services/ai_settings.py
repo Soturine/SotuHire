@@ -9,9 +9,10 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from modules.ai import setup as ai_setup
+from modules.ai.providers import AIProvider, GeminiProvider, MockProvider
 from pydantic import ValidationError
 
 from apps.api.schemas.settings import (
@@ -25,6 +26,7 @@ from apps.api.schemas.settings import (
 AI_TEST_TIMEOUT_SECONDS = 8
 SETTINGS_RELATIVE_PATH = Path("settings") / "ai-settings.json"
 SECRETS_RELATIVE_PATH = Path("secrets") / "ai-provider.local.json"
+AiFeature = Literal["resume", "job", "match", "ats", "tailor", "github", "career_advice"]
 
 
 @dataclass(frozen=True)
@@ -33,6 +35,31 @@ class AiSettingsPaths:
 
     settings: Path
     secrets: Path
+
+
+@dataclass(frozen=True)
+class AiRuntime:
+    """Internal provider selection result. Never serialize this object to clients."""
+
+    provider: AIProvider
+    provider_name: str
+    requested_provider: AiProvider
+    model: str
+    use_ai: bool
+    configured: bool
+    allowed: bool
+    allow_memory_context: bool
+    warnings: tuple[str, ...] = ()
+
+    @property
+    def fallback_used(self) -> bool:
+        return self.requested_provider != "local" and self.provider_name == "local"
+
+    @property
+    def analysis_mode(self) -> str:
+        if self.provider_name == "local":
+            return "fallback" if self.fallback_used else "local"
+        return "ai"
 
 
 def get_ai_settings() -> AiSettingsResponse:
@@ -58,6 +85,11 @@ def test_ai_settings(payload: AiSettingsTestRequest) -> AiSettingsTestResponse:
 def delete_ai_settings_secret() -> AiSettingsResponse:
     """Remove the stored AI provider key without exposing it."""
     return AiSettingsStore.from_env().delete_secret()
+
+
+def get_ai_runtime(feature: AiFeature) -> AiRuntime:
+    """Return an internal provider for one analysis area."""
+    return AiSettingsStore.from_env().runtime(feature)
 
 
 class AiSettingsStore:
@@ -164,6 +196,70 @@ class AiSettingsStore:
         self._delete_secret_file()
         self._write_json(self.paths.settings, metadata)
         return self._to_response(metadata)
+
+    def runtime(self, feature: AiFeature) -> AiRuntime:
+        metadata = self._read_metadata()
+        settings = self._to_response(metadata)
+        warnings = list(settings.warnings)
+        allowed = _feature_allowed(settings, feature)
+        requested_provider = settings.provider
+
+        if not settings.use_ai or requested_provider == "local" or not allowed:
+            if settings.use_ai and requested_provider != "local" and not allowed:
+                warnings.append(f"IA desativada para {feature}; usei analise local.")
+            return AiRuntime(
+                provider=MockProvider(),
+                provider_name="local",
+                requested_provider=requested_provider,
+                model="local",
+                use_ai=settings.use_ai,
+                configured=settings.configured,
+                allowed=allowed,
+                allow_memory_context=False,
+                warnings=tuple(warnings),
+            )
+
+        if requested_provider == "openai_future":
+            warnings.append("OpenAI ainda esta planejado; usei analise local.")
+            return AiRuntime(
+                provider=MockProvider(),
+                provider_name="local",
+                requested_provider=requested_provider,
+                model="local",
+                use_ai=settings.use_ai,
+                configured=False,
+                allowed=allowed,
+                allow_memory_context=False,
+                warnings=tuple(warnings),
+            )
+
+        api_key = self._read_secret_for_provider("gemini")
+        if not api_key:
+            warnings.append("Gemini sem chave no backend local; usei analise local.")
+            return AiRuntime(
+                provider=MockProvider(),
+                provider_name="local",
+                requested_provider="gemini",
+                model="local",
+                use_ai=settings.use_ai,
+                configured=False,
+                allowed=allowed,
+                allow_memory_context=False,
+                warnings=tuple(warnings),
+            )
+
+        provider = GeminiProvider(api_key=api_key, model=settings.model)
+        return AiRuntime(
+            provider=provider,
+            provider_name=provider.name,
+            requested_provider="gemini",
+            model=provider.model,
+            use_ai=settings.use_ai,
+            configured=True,
+            allowed=allowed,
+            allow_memory_context=settings.allow_memory_context,
+            warnings=tuple(warnings),
+        )
 
     def _to_response(self, metadata: dict[str, Any]) -> AiSettingsResponse:
         provider = _provider(metadata.get("provider"))
@@ -279,6 +375,18 @@ def _default_model(provider: AiProvider, model: str | None = None) -> str:
 
 def _bool(value: object, fallback: bool) -> bool:
     return value if isinstance(value, bool) else fallback
+
+
+def _feature_allowed(settings: AiSettingsResponse, feature: AiFeature) -> bool:
+    if feature == "match":
+        return settings.allow_match
+    if feature == "ats":
+        return settings.allow_ats
+    if feature == "tailor":
+        return settings.allow_tailor
+    if feature == "github":
+        return settings.allow_github
+    return True
 
 
 def _utc_now() -> str:

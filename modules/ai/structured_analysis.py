@@ -77,11 +77,12 @@ def analyze_structured(
         else ""
     )
     try:
-        analysis = selected.analyze(
-            resume_text,
-            job_text,
-            preferences,
-            job_details,
+        analysis = _run_provider_analysis(
+            selected=selected,
+            resume_text=resume_text,
+            job_text=job_text,
+            preferences=preferences,
+            job_details=job_details,
             memory_context=provider_memory_context,
         )
         analysis = _enhance_with_match_engine_v2(
@@ -144,6 +145,45 @@ def analyze_structured(
             memory_used=bool(evidence),
             memory_shared_with_provider=False,
         )
+
+
+def _run_provider_analysis(
+    *,
+    selected: AIProvider,
+    resume_text: str,
+    job_text: str,
+    preferences: UserPreferences | None,
+    job_details: dict[str, object] | None,
+    memory_context: str,
+) -> JobAnalysisSchema:
+    """Use the prompt registry when structured generation is available."""
+    if selected.name != "local":
+        try:
+            from modules.ai.prompt_loader import default_prompt_registry
+
+            spec = default_prompt_registry().get("match_analysis_evidence_based_v1")
+            output = selected.generate_structured(
+                spec,
+                {
+                    "resume_text": resume_text,
+                    "job_text": job_text,
+                    "preferences": (preferences or UserPreferences()).model_dump(mode="json"),
+                    "job_details": job_details or {},
+                    "memory_context": memory_context,
+                    "language": "pt-BR",
+                },
+            )
+            return JobAnalysisSchema.model_validate(output)
+        except Exception:
+            # Let the caller handle diagnostics and deterministic fallback.
+            raise
+    return selected.analyze(
+        resume_text,
+        job_text,
+        preferences,
+        job_details,
+        memory_context=memory_context,
+    )
 
 
 def _enhance_with_match_engine_v2(

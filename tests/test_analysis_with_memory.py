@@ -28,6 +28,13 @@ class RecordingGeminiProvider(AIProvider):
             recommendation="apply_with_adjustments",
         )
 
+    def generate_structured(self, prompt, payload: dict[str, object]) -> JobAnalysisSchema:
+        return self.analyze(
+            str(payload.get("resume_text", "")),
+            str(payload.get("job_text", "")),
+            memory_context=str(payload.get("memory_context", "")),
+        )
+
 
 def _evidence() -> list[CareerEvidence]:
     return [

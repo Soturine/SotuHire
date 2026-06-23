@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from fastapi import HTTPException
-from modules.ai.providers import MockProvider
+from modules.ai.prompt_loader import default_prompt_registry
+from modules.ai.schemas.analysis_insights import AtsAiReviewOutput, ResumeTailorAiOutput
 from modules.ai.structured_analysis import analyze_structured
+from modules.ai.structured_job_extractor import extract_structured_job
+from modules.ai.structured_resume_extractor import extract_structured_resume
 from modules.ats.match_keywords import review_keywords_with_match
 from modules.github_analyzer.analyzer_service import analyze_github_repository
 from modules.github_analyzer.exceptions import GitHubAnalyzerError
@@ -28,25 +33,92 @@ from apps.api.schemas.analysis import (
     ResumeTailorRequest,
     ResumeTailorResponse,
 )
+from apps.api.services.ai_settings import get_ai_runtime
 
 
 def extract_resume(request: ResumeExtractRequest) -> tuple[ResumeExtractResponse, list[str]]:
     """Parse a resume and return warnings separately for the API envelope."""
-    profile = parse_resume_text(request.resume_text, source_type=request.source_type)
-    warnings: list[str] = []
+    runtime = get_ai_runtime("resume")
+    warnings = list(runtime.warnings)
+    low_confidence: list[str] = []
+    provider_used = runtime.provider_name
+    requested_provider = runtime.requested_provider
+    fallback_used = runtime.fallback_used
+
+    if runtime.use_ai and runtime.provider_name != "local":
+        result = extract_structured_resume(
+            request.resume_text,
+            file_type=request.source_type,
+            provider=runtime.provider,
+        )
+        profile = result.local_profile
+        provider_used = result.provider
+        requested_provider = result.requested_provider
+        fallback_used = result.fallback_used
+        low_confidence = result.low_confidence_fields
+        if result.warning:
+            warnings.append(_safe_provider_warning("Curriculo", result.warning))
+    else:
+        profile = parse_resume_text(request.resume_text, source_type=request.source_type)
+
     if not profile.skills and not profile.experiences:
         warnings.append("Poucas evidencias estruturadas foram detectadas no curriculo.")
     if not request.include_raw_text:
         profile = profile.model_copy(update={"raw_text": ""})
-    return ResumeExtractResponse(profile=profile, confidence=_resume_confidence(profile)), warnings
+    return (
+        ResumeExtractResponse(
+            profile=profile,
+            confidence=_resume_confidence(profile),
+            provider_used=provider_used,
+            requested_provider=str(requested_provider),
+            analysis_mode=_analysis_mode(provider_used, fallback_used),
+            fallback_used=fallback_used,
+            low_confidence_fields=low_confidence,
+        ),
+        warnings,
+    )
 
 
 def extract_job(request: JobExtractRequest) -> tuple[JobExtractResponse, list[str]]:
     """Parse a job description and return warnings separately for the API envelope."""
-    job = parse_job_description(request.job_text)
+    runtime = get_ai_runtime("job")
+    warnings = list(runtime.warnings)
+    low_confidence: list[str] = []
+    provider_used = runtime.provider_name
+    requested_provider = runtime.requested_provider
+    fallback_used = runtime.fallback_used
+
+    if runtime.use_ai and runtime.provider_name != "local":
+        result = extract_structured_job(
+            request.job_text,
+            source={"url": request.source_url} if request.source_url else {},
+            provider=runtime.provider,
+        )
+        job = result.local_job
+        provider_used = result.provider
+        requested_provider = result.requested_provider
+        fallback_used = result.fallback_used
+        low_confidence = result.low_confidence_fields
+        if result.warning:
+            warnings.append(_safe_provider_warning("Vaga", result.warning))
+    else:
+        job = parse_job_description(request.job_text)
+
     if not request.include_raw_text:
         job = job.model_copy(update={"raw_text": ""})
-    return JobExtractResponse(job=job, confidence=_job_confidence(job)), list(job.risk_flags)
+    warnings.extend(job.risk_flags)
+    return (
+        JobExtractResponse(
+            job=job,
+            confidence=_job_confidence(job),
+            provider_used=provider_used,
+            requested_provider=str(requested_provider),
+            analysis_mode=_analysis_mode(provider_used, fallback_used),
+            fallback_used=fallback_used,
+            low_confidence_fields=low_confidence,
+        ),
+        warnings,
+    )
 
 
 def analyze_match(request: MatchAnalyzeRequest) -> tuple[MatchAnalyzeResponse, list[str]]:
@@ -62,19 +134,26 @@ def analyze_match(request: MatchAnalyzeRequest) -> tuple[MatchAnalyzeResponse, l
         github_evidence=request.github_evidence,
         portfolio_evidence=request.portfolio_evidence,
     )
+    runtime = get_ai_runtime("match")
     result = analyze_structured(
         resume_text,
         job_text,
         preferences=request.preferences,
         job_details=(request.job.model_dump() if request.job else None),
-        provider=MockProvider(),
+        provider=runtime.provider,
+        share_memory_with_provider=runtime.allow_memory_context,
     )
-    warnings = [result.warning] if result.warning else []
+    warnings = [*runtime.warnings, *([result.warning] if result.warning else [])]
     return (
         MatchAnalyzeResponse(
             analysis=result.analysis,
             provider_used=result.provider,
-            local_first=True,
+            requested_provider=result.requested_provider,
+            analysis_mode=_analysis_mode(result.provider, result.fallback_used),
+            fallback_used=result.fallback_used,
+            local_first=result.provider == "local",
+            model=result.model,
+            memory_shared_with_provider=result.memory_shared_with_provider,
         ),
         warnings,
     )
@@ -103,12 +182,55 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
             ]
         )
     review = review_keywords_with_match(analysis, keywords)
+    runtime = get_ai_runtime("ats")
+    warnings.extend(runtime.warnings)
+    provider_used = runtime.provider_name
+    fallback_used = runtime.fallback_used
+    ai_insights: list[str] = []
+
+    if runtime.use_ai and runtime.provider_name != "local":
+        try:
+            spec = default_prompt_registry().get("ats_analysis_v1")
+            output = runtime.provider.generate_structured(
+                spec,
+                {
+                    "resume_text": request.resume_text,
+                    "job_text": request.job_text,
+                    "keywords": keywords,
+                    "deterministic_review": {
+                        "ats_score": analysis.ats_score,
+                        "present": review.present,
+                        "missing_but_safe_to_add_if_true": review.missing_but_safe_to_add_if_true,
+                        "missing_without_evidence": review.missing_without_evidence,
+                    },
+                    "language": "pt-BR",
+                },
+            )
+            ai_review = AtsAiReviewOutput.model_validate(output)
+            ai_insights = _unique(
+                [
+                    *ai_review.keyword_observations,
+                    *ai_review.safe_to_add_if_true,
+                ]
+            )[:8]
+            warnings.extend(ai_review.warnings)
+        except Exception:
+            provider_used = "local"
+            fallback_used = True
+            warnings.append("Gemini falhou na Analise ATS; mantive a revisao local.")
+
     return (
         AtsAnalyzeResponse(
             ats_score=analysis.ats_score,
             present=review.present,
             missing_but_safe_to_add_if_true=review.missing_but_safe_to_add_if_true,
             missing_without_evidence=review.missing_without_evidence,
+            provider_used=provider_used,
+            requested_provider=str(runtime.requested_provider),
+            analysis_mode=_analysis_mode(provider_used, fallback_used),
+            fallback_used=fallback_used,
+            ai_insights=ai_insights,
+            warnings=warnings,
         ),
         warnings,
     )
@@ -123,8 +245,51 @@ def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, l
         evidence_text=request.evidence_text,
         match_analysis=request.match_analysis,
     )
-    return ResumeTailorResponse(tailor=tailor, safe_to_export=tailor.is_safe_to_export()), list(
-        tailor.warnings
+    runtime = get_ai_runtime("tailor")
+    warnings = [*tailor.warnings, *runtime.warnings]
+    provider_used = runtime.provider_name
+    fallback_used = runtime.fallback_used
+    ai_suggestions: list[str] = []
+
+    if runtime.use_ai and runtime.provider_name != "local":
+        try:
+            spec = default_prompt_registry().get("resume_tailor_v1")
+            output = runtime.provider.generate_structured(
+                spec,
+                {
+                    "target_role": request.target_role,
+                    "target_company": request.target_company or "",
+                    "job_text": request.job_text,
+                    "evidence_text": request.evidence_text,
+                    "deterministic_tailor": tailor.model_dump(mode="json"),
+                    "language": "pt-BR",
+                },
+            )
+            ai_tailor = ResumeTailorAiOutput.model_validate(output)
+            ai_suggestions = _unique(
+                [
+                    *ai_tailor.suggested_bullets,
+                    *ai_tailor.conditional_suggestions,
+                    *ai_tailor.safe_keywords,
+                ]
+            )[:10]
+            warnings.extend(ai_tailor.warnings)
+        except Exception:
+            provider_used = "local"
+            fallback_used = True
+            warnings.append("Gemini falhou no Ajuste de Curriculo; mantive sugestoes locais.")
+
+    return (
+        ResumeTailorResponse(
+            tailor=tailor,
+            safe_to_export=tailor.is_safe_to_export(),
+            provider_used=provider_used,
+            requested_provider=str(runtime.requested_provider),
+            analysis_mode=_analysis_mode(provider_used, fallback_used),
+            fallback_used=fallback_used,
+            ai_suggestions=ai_suggestions,
+        ),
+        warnings,
     )
 
 
@@ -132,16 +297,35 @@ def analyze_github_repo(
     request: GitHubRepoAnalyzeRequest,
 ) -> tuple[GitHubRepoAnalyzeResponse, list[str]]:
     """Analyze a public GitHub repository through the existing analyzer."""
+    runtime = get_ai_runtime("github")
     try:
         report = analyze_github_repository(
             request.repo_url,
+            provider=runtime.provider if runtime.provider_name != "local" else None,
             analysis_input=request.to_analysis_input(),
             fallback_payload=request.fallback_payload,
         )
     except GitHubAnalyzerError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
-    warnings = ["Analise GitHub usou fallback local."] if report.fallback_used else []
-    return GitHubRepoAnalyzeResponse(report=report), warnings
+    provider_used = report.provider_used
+    fallback_used = report.fallback_used or (
+        runtime.provider_name != "local" and not provider_used.startswith("gemini")
+    )
+    warnings = [*runtime.warnings]
+    if report.fallback_used:
+        warnings.append("Analise GitHub usou fallback local.")
+    if fallback_used and runtime.provider_name != "local" and not report.fallback_used:
+        warnings.append("Gemini nao retornou analise GitHub estruturada; usei analise local.")
+    return (
+        GitHubRepoAnalyzeResponse(
+            report=report,
+            provider_used=provider_used,
+            requested_provider=str(runtime.requested_provider),
+            analysis_mode=_analysis_mode(provider_used, fallback_used),
+            fallback_used=fallback_used,
+        ),
+        warnings,
+    )
 
 
 def _resume_confidence(profile: ResumeProfileSchema) -> float:
@@ -218,3 +402,15 @@ def _append_evidence(
 
 def _unique(items: list[str]) -> list[str]:
     return list(dict.fromkeys(item.strip() for item in items if item.strip()))
+
+
+def _analysis_mode(provider_used: str, fallback_used: bool) -> Literal["local", "ai", "fallback"]:
+    if fallback_used:
+        return "fallback"
+    return "local" if provider_used.startswith("local") else "ai"
+
+
+def _safe_provider_warning(context: str, warning: str) -> str:
+    if "Gemini" in warning:
+        return f"{context}: Gemini indisponivel; usei fallback local."
+    return f"{context}: provider opcional indisponivel; usei fallback local."

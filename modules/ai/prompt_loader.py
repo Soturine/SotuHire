@@ -91,6 +91,86 @@ Dependency graph:
 Return only JSON matching the expected schema.
 """
 
+MATCH_ANALYSIS_SYSTEM_PROMPT = (
+    "You analyze resume/job compatibility for SotuHire using only provided evidence. "
+    "Return valid JSON only. Do not invent jobs, education, skills, certifications, "
+    "licenses, metrics or outcomes. Scores must be conservative and explainable. "
+    "Missing evidence is a gap, not a fact about the candidate."
+)
+
+MATCH_ANALYSIS_USER_TEMPLATE = """Analyze compatibility and return JSON matching the schema.
+
+Preferences:
+{preferences}
+
+Job details:
+{job_details}
+
+Authorized memory context:
+{memory_context}
+
+RESUME:
+{resume_text}
+
+JOB:
+{job_text}
+"""
+
+ATS_ANALYSIS_SYSTEM_PROMPT = (
+    "You review ATS keyword alignment using only the resume, job text and deterministic "
+    "keyword review already provided. Return valid JSON only. Never recommend adding a "
+    "claim unless the user confirms it is true."
+)
+
+ATS_ANALYSIS_USER_TEMPLATE = """Review ATS evidence and return JSON matching the schema.
+
+Deterministic review:
+{deterministic_review}
+
+Keywords:
+{keywords}
+
+RESUME:
+{resume_text}
+
+JOB:
+{job_text}
+"""
+
+RESUME_TAILOR_SYSTEM_PROMPT = (
+    "You suggest resume tailoring improvements for SotuHire. Use only evidence supplied "
+    "by the user. Return valid JSON only. Do not invent experience, credentials, tools, "
+    "companies, numbers or achievements. Conditional suggestions must be clearly marked."
+)
+
+RESUME_TAILOR_USER_TEMPLATE = """Suggest safe resume tailoring ideas and return JSON matching the schema.
+
+Target role: {target_role}
+Target company: {target_company}
+Deterministic tailor:
+{deterministic_tailor}
+
+JOB:
+{job_text}
+
+EVIDENCE:
+{evidence_text}
+"""
+
+CAREER_ADVICE_SYSTEM_PROMPT = (
+    "You provide cautious career guidance using only supplied SotuHire evidence. "
+    "Return valid JSON only and separate safe actions from uncertain observations."
+)
+
+CAREER_ADVICE_USER_TEMPLATE = """Provide safe career insights and return JSON matching the schema.
+
+Context:
+{context}
+
+Evidence:
+{evidence}
+"""
+
 
 def initial_prompt_specs(
     schema_overrides: dict[str, type[BaseModel]] | None = None,
@@ -134,6 +214,42 @@ def initial_prompt_specs(
             temperature=0.1,
             mode="github_repo_analysis",
         ),
+        PromptSpec(
+            prompt_id="match_analysis_evidence_based_v1",
+            version="1.0.0",
+            system_prompt=MATCH_ANALYSIS_SYSTEM_PROMPT,
+            user_template=MATCH_ANALYSIS_USER_TEMPLATE,
+            output_schema=schemas["match_analysis_evidence_based_v1"],
+            temperature=0.1,
+            mode="match_analysis",
+        ),
+        PromptSpec(
+            prompt_id="ats_analysis_v1",
+            version="1.0.0",
+            system_prompt=ATS_ANALYSIS_SYSTEM_PROMPT,
+            user_template=ATS_ANALYSIS_USER_TEMPLATE,
+            output_schema=schemas["ats_analysis_v1"],
+            temperature=0.1,
+            mode="ats_analysis",
+        ),
+        PromptSpec(
+            prompt_id="resume_tailor_v1",
+            version="1.0.0",
+            system_prompt=RESUME_TAILOR_SYSTEM_PROMPT,
+            user_template=RESUME_TAILOR_USER_TEMPLATE,
+            output_schema=schemas["resume_tailor_v1"],
+            temperature=0.1,
+            mode="resume_tailor",
+        ),
+        PromptSpec(
+            prompt_id="career_advice_v1",
+            version="1.0.0",
+            system_prompt=CAREER_ADVICE_SYSTEM_PROMPT,
+            user_template=CAREER_ADVICE_USER_TEMPLATE,
+            output_schema=schemas["career_advice_v1"],
+            temperature=0.1,
+            mode="career_advice",
+        ),
     ]
 
 
@@ -143,14 +259,24 @@ def default_prompt_registry() -> PromptRegistry:
 
 
 def _default_schemas() -> dict[str, type[BaseModel]]:
+    from modules.ai.schemas.analysis_insights import (
+        AtsAiReviewOutput,
+        ResumeTailorAiOutput,
+        SafeAiInsightOutput,
+    )
     from modules.ai.schemas.domain_classification import DomainClassificationOutput
     from modules.ai.schemas.job_extraction import JobExtractionOutput
     from modules.ai.schemas.resume_extraction import ResumeExtractionOutput
     from modules.github_analyzer.schemas import GitHubRepoAnalysisOutput
+    from modules.schemas.job_analysis import JobAnalysisSchema
 
     return {
         "resume_extraction_v1": ResumeExtractionOutput,
         "job_extraction_multi_domain_v1": JobExtractionOutput,
         "domain_classification_v1": DomainClassificationOutput,
         "github_repo_analysis_v2": GitHubRepoAnalysisOutput,
+        "match_analysis_evidence_based_v1": JobAnalysisSchema,
+        "ats_analysis_v1": AtsAiReviewOutput,
+        "resume_tailor_v1": ResumeTailorAiOutput,
+        "career_advice_v1": SafeAiInsightOutput,
     }
