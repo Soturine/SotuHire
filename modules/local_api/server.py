@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import threading
+import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from modules.local_api.app import LocalCompanionApp
@@ -94,3 +95,18 @@ def server_status() -> dict[str, object]:
         "host": DEFAULT_HOST,
         "port": _server.server_port if _server is not None else DEFAULT_PORT,
     }
+
+
+def run_forever() -> None:
+    """Run the local companion server until interrupted."""
+    start_server()
+    print(f"SotuHire Local Companion API: http://{DEFAULT_HOST}:{DEFAULT_PORT}/health")
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        stop_server()
+
+
+if __name__ == "__main__":
+    run_forever()

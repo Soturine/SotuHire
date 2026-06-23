@@ -4,7 +4,8 @@ param(
     [switch]$SkipInstall,
     [switch]$ApiOnly,
     [switch]$WebOnly,
-    [switch]$Production
+    [switch]$Production,
+    [switch]$WithCompanion
 )
 
 $ErrorActionPreference = "Stop"
@@ -14,6 +15,9 @@ $ApiUrl = "http://127.0.0.1:8787"
 $ApiHealthUrl = "$ApiUrl/api/v1/health"
 $ApiDocsUrl = "$ApiUrl/docs"
 $FrontendUrl = "http://localhost:5173"
+$FrontendHealthUrl = "http://127.0.0.1:5173"
+$CompanionUrl = "http://127.0.0.1:8765"
+$CompanionHealthUrl = "$CompanionUrl/health"
 $LogDir = Join-Path $Root ".sotuhire\logs"
 $Processes = @()
 
@@ -56,21 +60,21 @@ function Wait-Http {
     throw "Timeout aguardando $Name em $Url."
 }
 
-function Start-SotuProcess {
+function Start-SotuCommand {
     param(
         [string]$Name,
-        [string]$Script,
-        [string[]]$Arguments
+        [string]$WorkingDirectory,
+        [string]$Command
     )
     New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
     $PowerShellExe = (Get-Process -Id $PID).Path
     $StdOut = Join-Path $LogDir "$Name.out.log"
     $StdErr = Join-Path $LogDir "$Name.err.log"
-    $ArgumentList = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", $Script) + $Arguments
+    $ArgumentList = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $Command)
     $Process = Start-Process `
         -FilePath $PowerShellExe `
         -ArgumentList $ArgumentList `
-        -WorkingDirectory $Root `
+        -WorkingDirectory $WorkingDirectory `
         -PassThru `
         -WindowStyle Hidden `
         -RedirectStandardOutput $StdOut `
@@ -107,37 +111,61 @@ $env:SOTUHIRE_API_ALLOWED_ORIGINS = if ($env:SOTUHIRE_API_ALLOWED_ORIGINS) {
 
 Write-Host ""
 Write-Host "SotuHire local"
-Write-Host "API:       $ApiUrl"
-Write-Host "API docs:  $ApiDocsUrl"
-Write-Host "Frontend: $FrontendUrl"
-Write-Host "CORS:      $env:SOTUHIRE_API_ALLOWED_ORIGINS"
+Write-Host "API:          $ApiUrl"
+Write-Host "API docs:     $ApiDocsUrl"
+Write-Host "Frontend:    $FrontendUrl"
+if ($WithCompanion) {
+    Write-Host "Companion:   $CompanionUrl"
+}
+Write-Host "CORS:         $env:SOTUHIRE_API_ALLOWED_ORIGINS"
 Write-Host ""
 
 try {
     if (-not $WebOnly) {
-        $ApiScript = Join-Path $PSScriptRoot "start-api.ps1"
-        $Processes += Start-SotuProcess -Name "api" -Script $ApiScript -Arguments @("-Root", $Root)
+        $Processes += Start-SotuCommand `
+            -Name "api" `
+            -WorkingDirectory $Root `
+            -Command "python scripts/run_api.py"
         Wait-Http -Url $ApiHealthUrl -Name "API"
     }
 
+    if ($WithCompanion) {
+        $Processes += Start-SotuCommand `
+            -Name "companion" `
+            -WorkingDirectory $Root `
+            -Command "python -m modules.local_api.server"
+        Wait-Http -Url $CompanionHealthUrl -Name "Local Companion"
+    }
+
     if (-not $ApiOnly) {
-        $WebScript = Join-Path $PSScriptRoot "start-web.ps1"
-        $WebArgs = @("-Root", $Root)
-        if ($SkipInstall) {
-            $WebArgs += "-SkipInstall"
+        $WebRoot = Join-Path $Root "apps\web"
+        if (-not $SkipInstall -and -not (Test-Path (Join-Path $WebRoot "node_modules"))) {
+            Write-Host "[SotuHire] Instalando dependencias do frontend..."
+            Push-Location $WebRoot
+            try {
+                npm install
+                if ($LASTEXITCODE -ne 0) {
+                    throw "npm install falhou com codigo $LASTEXITCODE."
+                }
+            } finally {
+                Pop-Location
+            }
         }
-        if ($Production) {
-            $WebArgs += "-Production"
+
+        $WebCommand = if ($Production) {
+            "npm run build; if (`$LASTEXITCODE -ne 0) { exit `$LASTEXITCODE }; npm run preview -- --host 127.0.0.1 --port 5173"
+        } else {
+            "npm run dev -- --host 127.0.0.1 --port 5173"
         }
-        $Processes += Start-SotuProcess -Name "web" -Script $WebScript -Arguments $WebArgs
-        Wait-Http -Url $FrontendUrl -Name "Frontend"
+        $Processes += Start-SotuCommand -Name "web" -WorkingDirectory $WebRoot -Command $WebCommand
+        Wait-Http -Url $FrontendHealthUrl -Name "Frontend" -TimeoutSeconds 180
         if (-not $NoBrowser) {
             Start-Process $FrontendUrl
         }
     }
 
     Write-Host ""
-    Write-Host "[SotuHire] Pronto. Use Ctrl+C para parar API e frontend."
+    Write-Host "[SotuHire] Pronto. Use Ctrl+C para parar os processos."
     while ($true) {
         Start-Sleep -Seconds 1
         foreach ($Process in $Processes) {

@@ -4,7 +4,8 @@ param(
     [switch]$SkipInstall,
     [switch]$ApiOnly,
     [switch]$WebOnly,
-    [switch]$Production
+    [switch]$Production,
+    [switch]$WithCompanion
 )
 
 $Launcher = Join-Path $PSScriptRoot "scripts\windows\start-sotuhire.ps1"
