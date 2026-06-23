@@ -1,6 +1,7 @@
 # Frontend moderno
 
-A v1.5.0 consolida o frontend moderno do SotuHire em `apps/web` como experiência local principal.
+A v1.5.1 consolida o frontend moderno do SotuHire em `apps/web` como experiência local principal e
+adiciona polimento de produto, fluxo guiado, estados Local/IA/Fallback e E2E expandido.
 O app usa React, Vite, TypeScript, TanStack Router, TanStack Query, Tailwind CSS, Radix UI, Recharts
 e lucide-react. Ele roda separado do Streamlit e consome a FastAPI local em `/api/v1` quando o modo
 API Real está ativo.
@@ -73,11 +74,12 @@ APIs oficiais quando disponíveis.
 
 O fluxo `AUTHENTICATED_BROWSER` existente no backend local também aparece nessa tela. Ele testa o CDP
 local, abre um Chromium dedicado para login manual e exige confirmação de uso autorizado antes da
-coleta. A v1.5.0 não alterou o scraper autenticado, Chromium/CDP, crawler logado ou docs protegidos.
+coleta. A v1.5.1 não alterou o scraper autenticado, Chromium/CDP, crawler logado ou docs protegidos.
 O fluxo não contorna CAPTCHA/checkpoint, não automatiza candidatura e não faz auto-apply.
 
-O painel **Extensão Local** consulta capturas já salvas pela Local Companion API e permite importar
-uma captura para Vaga ou Candidaturas. Ele não controla sites de terceiros.
+O painel **Extensão Local** consulta capturas já salvas pela Local Companion API, mostra status,
+origem, data e tipo de captura, e permite importar uma captura para Vaga, GitHub Analysis ou
+Candidaturas. Ele não controla sites de terceiros.
 
 ## IA e Providers
 
@@ -102,8 +104,20 @@ Providers:
 - `gemini`: usa a integração backend existente quando há chave.
 - `openai_future`: planejado para versão futura.
 
-Na v1.5.0, os toggles em Configurações controlam o roteamento de IA no backend. As telas mostram
-badges de provider e fallback, mas a regra de negócio e os scores finais seguem no Python.
+Na v1.5.1, os toggles em Configurações controlam o roteamento de IA no backend. As telas mostram
+badges de **Análise local**, **Análise com IA** e **Fallback local**, mas a regra de negócio e os
+scores finais seguem no Python.
+
+## Testes e visual
+
+```powershell
+cd apps/web
+npm run test:e2e
+```
+
+O Playwright cobre fluxo guiado, demos de análise, IA Settings, Fontes e Captura, Kanban e ausência
+de branding legado. O spec visual gera a série `sotuhire-v1.5.1-web-*.png` em
+`docs/assets/screenshots/` com viewport fixo `1440x1000`.
 
 ## Streamlit legado/dev
 

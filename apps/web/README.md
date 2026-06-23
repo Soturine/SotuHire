@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versão `v1.5.0`.
+Frontend moderno do SotuHire em `apps/web` para a versão `v1.5.1`.
 
 ## Stack
 
@@ -120,8 +120,9 @@ Providers:
 - `gemini`: usa a integração backend existente quando há chave local e o toggle da área está ativo.
 - `openai_future`: aparece como planejado.
 
-As telas de Currículo, Vaga, Compatibilidade, ATS, Tailor e GitHub mostram badges de provider. Se o
-Gemini falhar, a API retorna fallback local com warning.
+As telas de Currículo, Vaga, Compatibilidade, ATS, Tailor e GitHub mostram badges de **Análise
+local**, **Análise com IA** e **Fallback local**. Se o Gemini falhar, a API retorna fallback local
+com warning.
 
 ## Fontes e Captura
 
@@ -132,13 +133,30 @@ A tela **Fontes e Captura** inclui o fluxo `AUTHENTICATED_BROWSER` existente no 
 - exige confirmação de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-A v1.5.0 não altera o scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
+A v1.5.1 não altera o scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
 regras protegidas. O fluxo não automatiza login, não contorna CAPTCHA/checkpoint e não envia
 candidatura.
 
-A v1.5.0 também adiciona o painel **Extensão Local**, que consulta `/api/v1/extension/status` e
-`/api/v1/extension/captures` para mostrar capturas já salvas pela Local Companion API. O painel pode
-importar uma captura para Vaga ou Candidaturas sem controlar contas de terceiros.
+A v1.5.1 melhora o painel **Extensão Local**, que consulta `/api/v1/extension/status` e
+`/api/v1/extension/captures` para mostrar capturas já salvas pela Local Companion API. O painel
+mostra status do companion, origem, data, tipo de captura e pode importar uma captura para Vaga,
+GitHub Analysis ou Candidaturas sem controlar contas de terceiros.
+
+## Testes e screenshots
+
+```powershell
+cd apps/web
+npm run test:e2e
+```
+
+O Playwright cobre Home, Dashboard, fluxo guiado, demos de análise, IA Settings, Fontes e Captura,
+Kanban e ausência de branding legado público. O spec `visual-capture.spec.ts` gera screenshots em:
+
+```txt
+docs/assets/screenshots/sotuhire-v1.5.1-web-*.png
+```
+
+Todos usam viewport `1440x1000`, `deviceScaleFactor=1` e `fullPage=false`.
 
 ## Segurança e limites
 
