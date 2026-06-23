@@ -42,16 +42,36 @@ python -m pip install --upgrade pip
 
 ## App
 
-Rodar Streamlit:
+Fluxo local principal:
 
-```bash
+```powershell
+.\start-sotuhire.ps1
+```
+
+Sem abrir navegador:
+
+```powershell
+.\start-sotuhire.ps1 -NoBrowser
+```
+
+Rodar Streamlit legado/dev:
+
+```powershell
 streamlit run app.py
 ```
 
 Rodar FastAPI local:
 
-```bash
+```powershell
 python scripts/run_api.py
+```
+
+Rodar frontend moderno manualmente:
+
+```powershell
+cd apps/web
+npm install
+npm run dev
 ```
 
 OpenAPI:

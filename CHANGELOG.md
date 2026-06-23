@@ -4,6 +4,42 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.4.0] - 2026-06-22
+
+### Adicionado
+
+- Launcher web-first para Windows com `.\start-sotuhire.ps1`.
+- Scripts `scripts/windows/start-sotuhire.ps1`, `start-api.ps1` e `start-web.ps1`.
+- Documentação de scripts em `scripts/README.md`.
+- Endpoints seguros de IA em `/api/v1/settings/ai`.
+- Armazenamento backend-side local para metadados e segredo de provider.
+- Integração real da tela **Configurações → IA e Providers** com a FastAPI local.
+- Smoke/E2E com Playwright em `apps/web`.
+- Documento `docs/07-development/v1.4.0-web-first-local-launcher.md`.
+
+### Alterado
+
+- Frontend moderno em `apps/web` documentado como experiência local principal.
+- Streamlit documentado como modo legado/dev/local debug, sem remoção de `app.py`.
+- Versão do projeto, API e frontend atualizada para `1.4.0`.
+- README raiz, docs de frontend e arquitetura atualizados para o fluxo web-first.
+
+### Segurança
+
+- A chave de IA fica apenas no backend local, em `data/secrets/ai-provider.local.json`.
+- A API nunca retorna a chave para o frontend.
+- O frontend não salva chave em `localStorage` ou `sessionStorage`.
+- `data/`, `.env.local`, `apps/web/.env.local` e logs locais do launcher são ignorados pelo Git.
+- Nenhum fluxo de authenticated browser, Chromium/CDP, scraper autenticado, crawler logado ou
+  auto-apply foi alterado.
+
+### Validação
+
+- Testes de API dedicados para `settings/ai`.
+- OpenAPI validado para `/api/v1/settings/ai`, `/api/v1/settings/ai/status` e
+  `/api/v1/settings/ai/test`.
+- Frontend: `npm run build`, `npm run lint`, `npm run typecheck` e `npm run test:e2e`.
+
 ## [1.3.0] - 2026-06-22
 
 ### Adicionado

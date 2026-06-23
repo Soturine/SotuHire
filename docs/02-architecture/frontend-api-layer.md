@@ -1,26 +1,27 @@
 # Frontend API Layer
 
-A v1.2.0 adiciona uma camada FastAPI local em `apps/api`. Ela existe para conectar um frontend
-moderno ao core Python sem mover regra critica para JavaScript.
+A camada FastAPI local em `apps/api` conecta o frontend moderno ao core Python sem mover regra
+crítica para JavaScript. Na v1.4.0, ela também expõe configurações locais seguras de IA para a tela
+**Configurações → IA e Providers**.
 
 ## Objetivo
 
 - expor contratos HTTP versionados em `/api/v1`;
-- manter Streamlit como app local atual/dev;
+- manter Streamlit como modo legado/dev/local debug;
 - manter Local Companion API como ponte da extensao assistiva;
 - preparar Lovable, React, Vite ou Next.js para consumir endpoints reais;
 - preservar privacidade local-first e anti-fabrication.
 
 ## Entrada
 
-```bash
+```powershell
 python scripts/run_api.py
 ```
 
-Ou diretamente:
+Fluxo web-first:
 
-```bash
-uvicorn apps.api.main:app --host 127.0.0.1 --port 8787
+```powershell
+.\start-sotuhire.ps1
 ```
 
 OpenAPI:
@@ -65,7 +66,7 @@ Use `SOTUHIRE_API_ALLOWED_ORIGINS` para alterar a lista.
 As duas sao locais. A Frontend API usa FastAPI e OpenAPI. A Local Companion API continua usando
 biblioteca padrao do Python e endpoints `/capture/*`.
 
-## Endpoints v1.2.0
+## Endpoints `/api/v1`
 
 - `GET /api/v1/health`
 - `POST /api/v1/resume/extract`
@@ -81,15 +82,45 @@ biblioteca padrao do Python e endpoints `/capture/*`.
 - `GET /api/v1/tracker/requirements`
 - `GET /api/v1/tracker/funnel`
 - `GET /api/v1/tracker/sources`
+- `GET /api/v1/settings/ai`
+- `GET /api/v1/settings/ai/status`
+- `POST /api/v1/settings/ai`
+- `POST /api/v1/settings/ai/test`
+- `DELETE /api/v1/settings/ai`
+
+## Configurações de IA
+
+Os endpoints `settings/ai` retornam apenas dados seguros:
+
+- `provider`;
+- `model`;
+- `configured`;
+- `status`;
+- toggles de uso por módulo;
+- warnings;
+- `updated_at`.
+
+A chave nunca é retornada ao frontend. O armazenamento local separa metadados e segredo:
+
+```txt
+data/settings/ai-settings.json
+data/secrets/ai-provider.local.json
+```
+
+`data/` e os arquivos locais de segredo são ignorados pelo Git. O provider `local` não faz chamada
+externa, `gemini` usa a integração backend existente e `openai_future` permanece planejado.
 
 ## Segurança
 
 - nao expor API keys no frontend;
+- nao retornar API keys nos endpoints `settings/ai`;
+- nao salvar API keys em `localStorage` ou `sessionStorage`;
 - nao usar `*` no CORS por default;
 - nao salvar curriculo bruto em records do tracker;
 - nao calcular Match Score real no frontend;
 - nao inferir credenciais, empregos, formacoes ou certificacoes sem evidencia;
 - usar `fallback_payload` do GitHub Analyzer apenas com dados publicos/capturados conscientemente.
+- nao alterar scraper autenticado, Chromium/CDP, crawler logado ou auto-apply neste layer.
 
 ## Contratos relacionados
 

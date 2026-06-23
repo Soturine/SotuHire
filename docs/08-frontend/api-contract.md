@@ -60,7 +60,7 @@ Response `data`:
 {
   "status": "ok",
   "service": "sotuhire-api",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "local_first": true,
   "openapi_url": "/openapi.json",
   "docs_url": "/docs",
@@ -72,10 +72,85 @@ Response `data`:
     "resume_tailor",
     "github_repo_analyze",
     "tracker_jobs",
-    "application_intelligence"
+    "application_intelligence",
+    "ai_settings"
   ]
 }
 ```
+
+## GET /api/v1/settings/ai
+
+Retorna a configuração segura de IA. Nunca retorna a chave.
+
+Response `data`:
+
+```json
+{
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "configured": true,
+  "status": "configured",
+  "use_ai": true,
+  "allow_match": true,
+  "allow_ats": true,
+  "allow_tailor": true,
+  "allow_github": true,
+  "allow_memory_context": false,
+  "updated_at": "2026-06-22T23:00:00+00:00",
+  "warnings": []
+}
+```
+
+## GET /api/v1/settings/ai/status
+
+Mesmo payload seguro de `GET /settings/ai`, usado para atualização de status.
+
+## POST /api/v1/settings/ai
+
+Salva provider, modelo, toggles e, opcionalmente, uma chave no backend local.
+
+Request:
+
+```json
+{
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "api_key": "NAO_USE_CHAVE_REAL_EM_DOCS",
+  "use_ai": true,
+  "allow_match": true,
+  "allow_ats": true,
+  "allow_tailor": true,
+  "allow_github": true,
+  "allow_memory_context": false
+}
+```
+
+Response: mesmo payload seguro de `GET /settings/ai`, sem `api_key`.
+
+## POST /api/v1/settings/ai/test
+
+Testa o provider selecionado.
+
+- `local`: retorna sucesso sem chamada externa.
+- `gemini`: usa chave recém-enviada ou chave local já salva.
+- `openai_future`: retorna status planejado.
+
+Response `data`:
+
+```json
+{
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "success": true,
+  "configured": true,
+  "status": "configured",
+  "message": "Provider configurado com sucesso."
+}
+```
+
+## DELETE /api/v1/settings/ai
+
+Remove a chave local do backend. Não remove o frontend nem retorna segredo.
 
 ## POST /api/v1/resume/extract
 

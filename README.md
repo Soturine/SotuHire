@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.3.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.3.0)
+[![Release](https://img.shields.io/badge/release-v1.4.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.4.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -37,6 +37,8 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 
 ![SotuHire v1.3 Web Compatibility](docs/assets/screenshots/sotuhire-v1.3-web-compatibility.png)
 
+![SotuHire v1.4 Web Settings AI](docs/assets/screenshots/sotuhire-v1.4-web-settings-ai.png)
+
 ## O Que O Projeto Faz
 
 - lê currículos em TXT, PDF e DOCX;
@@ -67,7 +69,7 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 - transforma projetos em evidências reutilizáveis para vagas, memória e perfil profissional;
 - oferece análise standalone na extensão ou análise conectada ao SotuHire local.
 - publica documentação e demo estática no GitHub Pages.
-- documenta contratos, mocks e handoff para um frontend moderno futuro.
+- documenta contratos, mocks e handoff para o frontend moderno web-first.
 - expõe FastAPI local em `/api/v1` para frontend moderno, com OpenAPI.
 
 ## Como Usar
@@ -94,17 +96,31 @@ O site em [soturine.github.io/SotuHire](https://soturine.github.io/SotuHire/) é
 documentação, visão de produto e demos. Ele não roda Python, Streamlit, IA, Local Companion API ou
 backend.
 
-O app completo continua local:
+O fluxo local principal agora é web-first:
 
-```bash
-streamlit run app.py
+```powershell
+.\start-sotuhire.ps1
 ```
 
-### API local v1.3.0
+O launcher sobe a API local em `http://127.0.0.1:8787`, o frontend moderno em
+`http://localhost:5173`, espera `/api/v1/health` e abre o navegador. Use `Ctrl+C` para encerrar API
+e frontend.
+
+Flags úteis:
+
+```powershell
+.\start-sotuhire.ps1 -NoBrowser
+.\start-sotuhire.ps1 -SkipInstall
+.\start-sotuhire.ps1 -ApiOnly
+.\start-sotuhire.ps1 -WebOnly
+.\start-sotuhire.ps1 -Production
+```
+
+### API local v1.4.0
 
 Para conectar um frontend moderno ou inspecionar o OpenAPI:
 
-```bash
+```powershell
 python scripts/run_api.py
 ```
 
@@ -119,11 +135,11 @@ http://127.0.0.1:8787/docs
 A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
 [Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
 
-### Frontend moderno v1.3.0
+### Frontend moderno v1.4.0
 
 O frontend moderno fica em `apps/web` e roda como app React/Vite separado.
 
-```bash
+```powershell
 cd apps/web
 npm install
 npm run dev
@@ -147,13 +163,30 @@ VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
 
 Streamlit continua disponível como modo local/dev:
 
-```bash
+```powershell
 streamlit run app.py
 ```
 
-O frontend não salva segredos, não persiste API key em storage do navegador e não calcula score
-real no browser. Análise de Compatibilidade, ATS, Resume Tailor, GitHub Analyzer, validações
-fortes, privacidade e regras anti-invenção continuam no backend/core.
+O frontend não salva segredos, não persiste API key em storage do navegador e não calcula score real
+no browser. Análise de Compatibilidade, ATS, Resume Tailor, GitHub Analyzer, validações fortes,
+privacidade e regras anti-invenção continuam no backend/core.
+
+### IA e Providers
+
+A tela **Configurações → IA e Providers** chama endpoints reais em `/api/v1/settings/ai`. A chave é
+enviada apenas para a FastAPI local, fica no backend em `data/secrets/ai-provider.local.json` e esse
+caminho é ignorado pelo Git. A API nunca retorna a chave para o frontend; ela retorna apenas
+provider, modelo, status, toggles, warnings e data de atualização.
+
+Endpoints:
+
+```text
+GET    /api/v1/settings/ai
+GET    /api/v1/settings/ai/status
+POST   /api/v1/settings/ai
+POST   /api/v1/settings/ai/test
+DELETE /api/v1/settings/ai
+```
 
 ## Instalação
 
@@ -184,14 +217,18 @@ Ative o ambiente virtual:
 source .venv/bin/activate
 ```
 
-Instale e abra o app:
+Instale as dependências Python e abra o fluxo web-first:
 
-```bash
+```powershell
 pip install -r docs/requirements/requirements.txt
-streamlit run app.py
+.\start-sotuhire.ps1
 ```
 
-O Streamlit mostrará o endereço local, normalmente `http://localhost:8501`.
+O Streamlit continua disponível como modo legado/dev/local debug:
+
+```powershell
+streamlit run app.py
+```
 
 ## Configuração
 
@@ -221,7 +258,8 @@ GEMINI_API_KEY=sua_chave
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
-Também é possível configurar e testar a chave pela seção **Configurar IA** dentro do app.
+Também é possível configurar e testar a chave pela seção **Configurações → IA e Providers** no
+frontend moderno.
 
 Por padrão, o Gemini não recebe a memória local. Para usá-la no aprimoramento da análise,
 habilite explicitamente **Enviar contexto relevante para Gemini**. Somente as evidências

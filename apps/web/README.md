@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire integrado em `apps/web` para a versão `v1.3.0`.
+Frontend moderno do SotuHire em `apps/web` para a versão `v1.4.0`.
 
 ## Stack
 
@@ -13,18 +13,26 @@ Frontend moderno do SotuHire integrado em `apps/web` para a versão `v1.3.0`.
 - Radix UI
 - Recharts
 - lucide-react
+- Playwright para smoke/E2E
 
 ## Rodar localmente
 
-Na raiz do repositório:
+Fluxo principal, a partir da raiz do repositório:
 
-```bash
-python scripts/run_api.py
+```powershell
+.\start-sotuhire.ps1
 ```
 
-Em outro terminal:
+O launcher sobe:
 
-```bash
+- API: `http://127.0.0.1:8787`
+- API docs: `http://127.0.0.1:8787/docs`
+- Frontend: `http://localhost:5173`
+
+Manual:
+
+```powershell
+python scripts/run_api.py
 cd apps/web
 npm install
 npm run dev
@@ -32,16 +40,17 @@ npm run dev
 
 Build e validação:
 
-```bash
+```powershell
 cd apps/web
 npm run build
 npm run lint
 npm run typecheck
+npm run test:e2e
 ```
 
 ## Configuração da API
 
-Crie um `.env` local se quiser trocar a URL padrão:
+Crie um `.env.local` local se quiser trocar a URL padrão:
 
 ```env
 VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
@@ -54,7 +63,8 @@ O padrão do app é `http://127.0.0.1:8787/api/v1`.
 - **Modo Demo:** usa dados fictícios locais para explorar todas as telas.
 - **Modo API Real:** consulta a FastAPI local em `/api/v1` e espera o envelope `{ ok, data, warnings, request_id }`.
 
-O frontend não calcula score real, não move regra de negócio para o cliente e não salva segredos. A URL e o modo selecionados ficam apenas no estado da sessão aberta do app.
+O frontend não calcula score real, não move regra de negócio para o cliente e não salva segredos. A
+URL e o modo selecionados ficam apenas no estado da sessão aberta do app.
 
 ## Telas
 
@@ -74,35 +84,53 @@ O frontend não calcula score real, não move regra de negócio para o cliente e
 
 ## IA e Providers
 
-A seção **IA e Providers** em Configurações é uma UI planejada para integração segura com backend local. A chave é mascarada, não é persistida no frontend e deve ser tratada pelo backend quando os endpoints de configuração forem implementados.
-
-Endpoints planejados para `v1.4.0`:
+A seção **IA e Providers** em Configurações usa endpoints reais da API local:
 
 ```txt
 GET /api/v1/settings/ai
+GET /api/v1/settings/ai/status
 POST /api/v1/settings/ai
 POST /api/v1/settings/ai/test
 DELETE /api/v1/settings/ai
-GET /api/v1/settings/ai/status
 ```
 
-## Segurança e limites
+A chave digitada é enviada somente para o backend local e limpa do estado do componente após salvar.
+Ela não é persistida em `localStorage`, `sessionStorage` ou bundle público. A API nunca retorna a
+chave; retorna apenas provider, modelo, `configured`, `status`, toggles, warnings e `updated_at`.
 
-## Navegador autenticado autorizado
+Armazenamento local backend-side:
+
+```txt
+data/settings/ai-settings.json
+data/secrets/ai-provider.local.json
+```
+
+`data/` e os arquivos locais de segredo são ignorados pelo Git.
+
+Providers:
+
+- `local`: sem chamada externa.
+- `gemini`: usa a integração backend existente quando há chave local.
+- `openai_future`: aparece como planejado.
+
+## Fontes e Captura
 
 A tela **Fontes e Captura** inclui o fluxo `AUTHENTICATED_BROWSER` existente no backend local:
 
 - testa o CDP local em `http://127.0.0.1:9222`;
 - abre um Chromium dedicado para login manual;
-- exige confirmacao de uso autorizado antes de coletar;
+- exige confirmação de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-O fluxo nao automatiza login, nao contorna CAPTCHA/checkpoint e nao envia candidatura.
+A v1.4.0 não altera o scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
+regras protegidas. O fluxo não automatiza login, não contorna CAPTCHA/checkpoint e não envia
+candidatura.
 
-## Seguranca e limites
+## Segurança e limites
 
 - Sem auto apply.
 - Sem automação de LinkedIn, Gupy ou plataformas similares.
 - Sem API keys em `localStorage`, `sessionStorage` ou bundle público.
 - GitHub Pages continua estático/demo-oriented.
 - Backend/core continuam responsáveis por regras, score e validações.
+- Streamlit permanece disponível como modo legado/dev/local debug.

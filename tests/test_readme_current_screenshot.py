@@ -8,6 +8,7 @@ def test_readme_references_current_web_screenshots_and_changelog():
         Path("docs/assets/screenshots/sotuhire-v1.3-web-home.png"),
         Path("docs/assets/screenshots/sotuhire-v1.3-web-dashboard.png"),
         Path("docs/assets/screenshots/sotuhire-v1.3-web-compatibility.png"),
+        Path("docs/assets/screenshots/sotuhire-v1.4-web-settings-ai.png"),
     ]
 
     for screenshot in screenshots:

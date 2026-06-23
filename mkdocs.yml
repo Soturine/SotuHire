@@ -55,7 +55,7 @@ nav:
       - Atualização pós-v0.9.0: 00-audit/v0.9-roadmap-docs-update-summary.md
   - Produto:
       - Visão: 01-product/vision.md
-      - Visual preview v1.3: 01-product/visual-preview.md
+      - Visual preview v1.3/v1.4: 01-product/visual-preview.md
       - Demo v1.0: 01-product/v1-demo.md
       - GitHub Pages vs app local: 01-product/github-pages-site.md
       - Estratégia multiárea: 01-product/multi-domain-product-strategy.md
@@ -188,6 +188,7 @@ nav:
       - v1.0.0 Stable Release: 07-development/v1.0.0-stable-release.md
       - v1.2.0 API Layer: 07-development/v1.2.0-api-layer.md
       - v1.3.0 Modern Web Frontend: 07-development/v1.3.0-modern-web-frontend.md
+      - v1.4.0 Web-first Launcher: 07-development/v1.4.0-web-first-local-launcher.md
   - Frontend:
       - Overview: 08-frontend/README.md
       - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md
