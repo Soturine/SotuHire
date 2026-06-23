@@ -12,11 +12,12 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { ScoreRing } from "@/components/score-ring";
 import { ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
-import type { MatchAnalysis, MatchRequirement } from "@/lib/api/types";
+import type { MatchAnalysis, MatchAnalyzeResult, MatchRequirement } from "@/lib/api/types";
 import { SAMPLE_JOB, SAMPLE_RESUME } from "@/mocks/samples";
 import { toast } from "sonner";
 
@@ -130,7 +131,7 @@ function MatchPage() {
         ) : mut.isError ? (
           <ErrorState error={mut.error} onRetry={() => mut.mutate()} />
         ) : a ? (
-          <MatchResult a={a} />
+          <MatchResult a={a} meta={mut.data} />
         ) : (
           <SectionCard>
             <div className="grid gap-4 sm:grid-cols-3">
@@ -155,11 +156,24 @@ function MatchPage() {
   );
 }
 
-function MatchResult({ a }: { a: MatchAnalysis }) {
+function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult }) {
   return (
     <div className="space-y-6">
       {/* Score grid */}
-      <SectionCard title="Pontuações" description="Visão consolidada da análise">
+      <SectionCard
+        title="Pontuações"
+        description="Visão consolidada da análise"
+        actions={
+          meta ? (
+            <ProviderBadge
+              provider={meta.provider_used}
+              mode={meta.analysis_mode}
+              fallback={meta.fallback_used}
+              model={meta.model}
+            />
+          ) : undefined
+        }
+      >
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
           <ScoreRing
             value={a.match_score}

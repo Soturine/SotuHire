@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AlertTriangle, CheckCircle2, Github, Lightbulb } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { ScoreRing } from "@/components/score-ring";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -70,14 +71,21 @@ function GhPage() {
               }
               description={r.repo.url}
               actions={
-                <a
-                  href={r.repo.url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-xs font-medium text-accent hover:underline"
-                >
-                  Abrir no GitHub →
-                </a>
+                <div className="flex items-center gap-2">
+                  <ProviderBadge
+                    provider={mut.data?.provider_used}
+                    mode={mut.data?.analysis_mode}
+                    fallback={mut.data?.fallback_used}
+                  />
+                  <a
+                    href={r.repo.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-medium text-accent hover:underline"
+                  >
+                    Abrir no GitHub →
+                  </a>
+                </div>
               }
             >
               <div className="grid gap-6 sm:grid-cols-[auto_1fr] sm:items-center">

@@ -17,6 +17,16 @@ export interface Health {
   capabilities: string[];
 }
 
+export type AnalysisMode = "local" | "ai" | "fallback";
+
+export interface AnalysisMeta {
+  provider_used?: string;
+  requested_provider?: string;
+  analysis_mode?: AnalysisMode;
+  fallback_used?: boolean;
+  model?: string;
+}
+
 export type AiProvider = "local" | "gemini" | "openai_future";
 export type AiSettingsStatus = "ready" | "configured" | "not_configured" | "planned" | "error";
 
@@ -76,6 +86,12 @@ export interface ResumeProfile {
   projects?: Array<{ name: string; description?: string; links?: string[] }>;
 }
 
+export interface ResumeExtractResult extends AnalysisMeta {
+  profile: ResumeProfile;
+  confidence: number;
+  low_confidence_fields?: string[];
+}
+
 export interface JobPosting {
   id?: string;
   title: string;
@@ -89,6 +105,12 @@ export interface JobPosting {
   desired_skills?: string[];
   ats_keywords?: string[];
   responsibilities?: string[];
+}
+
+export interface JobExtractResult extends AnalysisMeta {
+  job: JobPosting;
+  confidence: number;
+  low_confidence_fields?: string[];
 }
 
 export interface MatchRequirement {
@@ -116,12 +138,19 @@ export interface MatchAnalysis {
   safe_actions: string[];
 }
 
-export interface AtsReview {
+export interface MatchAnalyzeResult extends AnalysisMeta {
+  local_first: boolean;
+  memory_shared_with_provider?: boolean;
+  analysis: MatchAnalysis;
+}
+
+export interface AtsReview extends AnalysisMeta {
   ats_score: number;
   present: string[];
   missing_but_safe_to_add_if_true: string[];
   missing_without_evidence: string[];
   warnings?: string[];
+  ai_insights?: string[];
 }
 
 export interface ResumeTailor {
@@ -132,6 +161,12 @@ export interface ResumeTailor {
   evidence_used?: string[];
 }
 
+export interface ResumeTailorResult extends AnalysisMeta {
+  safe_to_export: boolean;
+  tailor: ResumeTailor;
+  ai_suggestions?: string[];
+}
+
 export interface GithubReport {
   repo: { owner: string; name: string; url: string; visibility?: string };
   quality_score: number;
@@ -140,6 +175,10 @@ export interface GithubReport {
   positive_signals: string[];
   risks: string[];
   portfolio_suggestions: string[];
+}
+
+export interface GithubAnalyzeResult extends AnalysisMeta {
+  report: GithubReport;
 }
 
 export type TrackerStatus =
@@ -230,4 +269,40 @@ export interface AuthenticatedBrowserCollectResult {
     source_url?: string;
     confidence: number;
   }>;
+}
+
+export interface ExtensionStatus {
+  available: boolean;
+  companion_url: string;
+  capture_count: number;
+  last_capture_at?: string;
+  message?: string;
+}
+
+export interface ExtensionCapture {
+  id: string;
+  title: string;
+  company?: string;
+  url: string;
+  domain?: string;
+  status: string;
+  tracker_id?: string;
+  updated_at?: string;
+}
+
+export interface ExtensionCapturesResult {
+  captures: ExtensionCapture[];
+}
+
+export interface ExtensionImportJobResult {
+  capture_id: string;
+  job: JobPosting;
+  message: string;
+}
+
+export interface ExtensionImportTrackerResult {
+  capture_id: string;
+  tracker_id?: string;
+  message: string;
+  provider: string;
 }

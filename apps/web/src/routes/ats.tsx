@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { ScoreRing } from "@/components/score-ring";
 import { ErrorState, LoadingState } from "@/components/states";
@@ -126,7 +127,18 @@ function AtsPage() {
           <ErrorState error={mut.error} onRetry={() => mut.mutate()} />
         ) : r ? (
           <div className="space-y-6">
-            <SectionCard title="Pontuação ATS">
+            <SectionCard
+              title="Pontuação ATS"
+              actions={
+                r ? (
+                  <ProviderBadge
+                    provider={r.provider_used}
+                    mode={r.analysis_mode}
+                    fallback={r.fallback_used}
+                  />
+                ) : undefined
+              }
+            >
               <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <ScoreRing
                   value={r.ats_score}
@@ -171,6 +183,18 @@ function AtsPage() {
                 tone="destructive"
               />
             </div>
+
+            {r.ai_insights && r.ai_insights.length > 0 && (
+              <SectionCard title="Insights da IA">
+                <ul className="space-y-2 text-sm">
+                  {r.ai_insights.map((item, i) => (
+                    <li key={i} className="rounded-md border border-border bg-muted/30 p-3">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </SectionCard>
+            )}
 
             {r.warnings && r.warnings.length > 0 && (
               <SectionCard title="Avisos de integridade">

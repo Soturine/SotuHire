@@ -60,3 +60,15 @@ test("settings exposes AI providers without persisting browser secrets", async (
   expect(storage.local.join("\n")).not.toMatch(/api|key|gemini|openai/i);
   expect(storage.session.join("\n")).not.toMatch(/api|key|gemini|openai/i);
 });
+
+test("sources page shows local extension bridge panel", async ({ page }) => {
+  await page.goto("/sources");
+
+  await expect(page.getByText("Extensão Local", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Capturas recentes/i)).toBeVisible();
+  await expect(
+    page.locator("#authenticated-browser").getByText("Navegador autenticado autorizado", {
+      exact: true,
+    }),
+  ).toBeVisible();
+});

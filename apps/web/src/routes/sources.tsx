@@ -3,9 +3,12 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  Database,
   ExternalLink,
   Monitor,
+  PlugZap,
   RefreshCw,
+  Save,
   ShieldAlert,
   Terminal,
 } from "lucide-react";
@@ -17,8 +20,10 @@ import { useApi } from "@/lib/api/hooks";
 import type {
   AuthenticatedBrowserCollectResult,
   AuthenticatedBrowserStatus,
+  ExtensionCapture,
 } from "@/lib/api/types";
 import { SOURCE_CARDS, SOURCE_FLOW } from "@/mocks/sources";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/sources")({
@@ -86,6 +91,19 @@ function SourcesPage() {
         </div>
 
         <SectionCard
+          id="local-extension"
+          title={
+            <span className="flex items-center gap-2">
+              <PlugZap className="h-4 w-4 text-accent" />
+              Extensão Local
+            </span>
+          }
+          description="Capturas já enviadas pela extensão assistiva para a Local Companion API."
+        >
+          <LocalExtensionPanel />
+        </SectionCard>
+
+        <SectionCard
           id="authenticated-browser"
           title={
             <span className="flex items-center gap-2">
@@ -133,6 +151,172 @@ function SourcesPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function LocalExtensionPanel() {
+  const api = useApi();
+  const statusQ = useQuery({
+    queryKey: ["extension-status"],
+    queryFn: () => api.extensionStatus(),
+    retry: false,
+  });
+  const capturesQ = useQuery({
+    queryKey: ["extension-captures"],
+    queryFn: () => api.extensionCaptures(),
+    retry: false,
+  });
+
+  const importJob = useMutation({
+    mutationFn: (captureId: string) => api.extensionImportJob(captureId),
+    onSuccess: (data) => toast.success(data.message || "Captura enviada para Vaga."),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel importar a vaga."),
+  });
+
+  const importTracker = useMutation({
+    mutationFn: (captureId: string) => api.extensionImportTracker(captureId),
+    onSuccess: (data) => toast.success(data.message || "Captura salva em Candidaturas."),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel salvar no tracker."),
+  });
+
+  const captures = capturesQ.data?.captures ?? [];
+  const busy = importJob.isPending || importTracker.isPending;
+
+  return (
+    <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="space-y-3">
+        <div
+          className={`rounded-lg border p-3 ${
+            statusQ.isError ? "border-warning/30 bg-warning/5" : "border-success/30 bg-success/5"
+          }`}
+        >
+          <div className="flex items-start gap-2">
+            {statusQ.isFetching ? (
+              <RefreshCw className="mt-0.5 h-4 w-4 animate-spin text-warning" />
+            ) : (
+              <Database className="mt-0.5 h-4 w-4 text-success" />
+            )}
+            <div>
+              <div className="text-sm font-semibold">
+                {statusQ.isError ? "Companion indisponivel" : "Companion conectado"}
+              </div>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {statusQ.data?.message ||
+                  "Leia capturas locais da extensao sem expor segredos ao frontend."}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            <InfoTile label="Capturas" value={String(statusQ.data?.capture_count ?? 0)} />
+            <InfoTile label="API local" value={statusQ.data?.companion_url ?? "127.0.0.1:8765"} />
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+          A extensão continua usando a Local Companion API existente. Esta tela apenas consulta e
+          importa capturas já salvas localmente.
+        </div>
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Capturas recentes
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              statusQ.refetch();
+              capturesQ.refetch();
+            }}
+            className="rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted"
+          >
+            Atualizar
+          </button>
+        </div>
+
+        {capturesQ.isFetching ? (
+          <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+            Carregando capturas locais...
+          </div>
+        ) : captures.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+            Nenhuma captura local encontrada. Use a extensão assistiva ou rode em modo Demo para ver
+            exemplos fictícios.
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {captures.map((capture) => (
+              <ExtensionCaptureRow
+                key={capture.id}
+                capture={capture}
+                busy={busy}
+                onImportJob={() => importJob.mutate(capture.id)}
+                onImportTracker={() => importTracker.mutate(capture.id)}
+              />
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ExtensionCaptureRow({
+  capture,
+  busy,
+  onImportJob,
+  onImportTracker,
+}: {
+  capture: ExtensionCapture;
+  busy: boolean;
+  onImportJob: () => void;
+  onImportTracker: () => void;
+}) {
+  return (
+    <li className="rounded-lg border border-border bg-background p-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="truncate text-sm font-semibold">{capture.title}</div>
+          <div className="mt-0.5 truncate text-xs text-muted-foreground">
+            {capture.company || capture.domain || "Fonte local"} · {capture.status}
+          </div>
+          {capture.url && (
+            <a
+              href={capture.url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-accent hover:underline"
+            >
+              <ExternalLink className="h-3 w-3 shrink-0" />
+              <span className="truncate">{capture.url}</span>
+            </a>
+          )}
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={onImportJob}
+            disabled={busy}
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+          >
+            <ArrowRight className="h-3 w-3" />
+            Vaga
+          </button>
+          <button
+            type="button"
+            onClick={onImportTracker}
+            disabled={busy}
+            className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            <Save className="h-3 w-3" />
+            Candidaturas
+          </button>
+        </div>
+      </div>
+    </li>
   );
 }
 

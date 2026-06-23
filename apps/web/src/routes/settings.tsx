@@ -17,6 +17,7 @@ import { SectionCard } from "@/components/section-card";
 import { useApiStatus } from "@/components/api-mode-badge";
 import { useApi } from "@/lib/api/hooks";
 import { DEFAULT_API_URL, useApiMode } from "@/lib/api/mode";
+import { APP_VERSION } from "@/lib/labels";
 import type { AiProvider, AiSettings, AiSettingsStatus } from "@/lib/api/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -105,7 +106,7 @@ function SettingsPage() {
 
         <SectionCard title="Sobre">
           <div className="grid gap-3 text-sm">
-            <Item k="Versão" v="v1.4.0" />
+            <Item k="Versão" v={`v${APP_VERSION}`} />
             <Item k="Local-first" v="Sim" />
             <Item k="Segredos no cliente" v="Nenhum" />
             <Item k="Contrato da API" v="v1" />

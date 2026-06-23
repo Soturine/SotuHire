@@ -3,6 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import { AlertTriangle, PlayCircle, RotateCcw, ShieldAlert, Sparkles, Wand2 } from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
@@ -127,6 +128,15 @@ function TailorPage() {
                 </span>
               }
               description="Baseados na sua evidência. Pode usar à vontade."
+              actions={
+                mut.data ? (
+                  <ProviderBadge
+                    provider={mut.data.provider_used}
+                    mode={mut.data.analysis_mode}
+                    fallback={mut.data.fallback_used}
+                  />
+                ) : undefined
+              }
             >
               <ul className="space-y-2">
                 {t.suggested_bullets.map((b, i) => (
@@ -171,6 +181,18 @@ function TailorPage() {
                 )}
               </SectionCard>
             </div>
+
+            {mut.data?.ai_suggestions && mut.data.ai_suggestions.length > 0 && (
+              <SectionCard title="Sugestões adicionais da IA">
+                <ul className="space-y-2 text-sm">
+                  {mut.data.ai_suggestions.map((item, i) => (
+                    <li key={i} className="rounded-md border border-border bg-muted/30 p-3">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </SectionCard>
+            )}
 
             {t.warnings.length > 0 && (
               <SectionCard title="Avisos">

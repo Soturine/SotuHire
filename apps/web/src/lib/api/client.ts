@@ -9,13 +9,22 @@ import type {
   AtsReview,
   AuthenticatedBrowserCollectResult,
   AuthenticatedBrowserStatus,
+  ExtensionCapturesResult,
+  ExtensionImportJobResult,
+  ExtensionImportTrackerResult,
+  ExtensionStatus,
+  GithubAnalyzeResult,
   GithubReport,
   Health,
+  JobExtractResult,
   JobPosting,
   MatchAnalysis,
+  MatchAnalyzeResult,
   MatchRequirement,
+  ResumeExtractResult,
   ResumeProfile,
   ResumeTailor,
+  ResumeTailorResult,
   TrackerFunnel,
   TrackerJob,
   TrackerMetrics,
@@ -143,7 +152,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
       ),
 
     resumeExtract: (resume_text: string) =>
-      call<{ profile: ResumeProfile; confidence: number }>(
+      call<ResumeExtractResult>(
         mode,
         baseUrl,
         "/resume/extract",
@@ -151,27 +160,48 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           method: "POST",
           body: JSON.stringify({ resume_text, source_type: "text", include_raw_text: false }),
         },
-        { profile: { ...mockResume }, confidence: 0.84 },
+        {
+          profile: { ...mockResume },
+          confidence: 0.84,
+          provider_used: "local",
+          requested_provider: "local",
+          analysis_mode: "local",
+          fallback_used: false,
+        },
         normalizeResumeExtract,
       ),
 
     jobExtract: (job_text: string, source_url?: string) =>
-      call<{ job: JobPosting; confidence: number }>(
+      call<JobExtractResult>(
         mode,
         baseUrl,
         "/job/extract",
         { method: "POST", body: JSON.stringify({ job_text, source_url, include_raw_text: false }) },
-        { job: { ...mockJob }, confidence: 0.8 },
+        {
+          job: { ...mockJob },
+          confidence: 0.8,
+          provider_used: "local",
+          requested_provider: "local",
+          analysis_mode: "local",
+          fallback_used: false,
+        },
         normalizeJobExtract,
       ),
 
     matchAnalyze: (payload: { resume_text: string; job_text: string }) =>
-      call<{ provider_used: string; local_first: boolean; analysis: MatchAnalysis }>(
+      call<MatchAnalyzeResult>(
         mode,
         baseUrl,
         "/match/analyze",
         { method: "POST", body: JSON.stringify(payload) },
-        { provider_used: "local", local_first: true, analysis: { ...mockMatch } },
+        {
+          provider_used: "local",
+          requested_provider: "local",
+          analysis_mode: "local",
+          fallback_used: false,
+          local_first: true,
+          analysis: { ...mockMatch },
+        },
         normalizeMatchEnvelope,
       ),
 
@@ -191,22 +221,36 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
       job_text?: string;
       evidence_text?: string;
     }) =>
-      call<{ safe_to_export: boolean; tailor: ResumeTailor }>(
+      call<ResumeTailorResult>(
         mode,
         baseUrl,
         "/resume/tailor",
         { method: "POST", body: JSON.stringify(payload) },
-        { safe_to_export: true, tailor: { ...mockTailor } },
+        {
+          safe_to_export: true,
+          tailor: { ...mockTailor },
+          provider_used: "local",
+          requested_provider: "local",
+          analysis_mode: "local",
+          fallback_used: false,
+          ai_suggestions: [],
+        },
         normalizeTailorEnvelope,
       ),
 
     githubAnalyze: (payload: { repo_url: string; target_role?: string }) =>
-      call<{ report: GithubReport }>(
+      call<GithubAnalyzeResult>(
         mode,
         baseUrl,
         "/github/repo/analyze",
         { method: "POST", body: JSON.stringify({ mode: "full", ...payload }) },
-        { report: { ...mockGithub } },
+        {
+          report: { ...mockGithub },
+          provider_used: "local",
+          requested_provider: "local",
+          analysis_mode: "local",
+          fallback_used: false,
+        },
         normalizeGithubEnvelope,
       ),
 
@@ -354,6 +398,78 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         },
         normalizeAuthenticatedBrowserCollect,
       ),
+
+    extensionStatus: () =>
+      call<ExtensionStatus>(
+        mode,
+        baseUrl,
+        "/extension/status",
+        undefined,
+        {
+          available: true,
+          companion_url: "http://127.0.0.1:8765",
+          capture_count: 2,
+          last_capture_at: new Date().toISOString(),
+          message: "Modo Demo: capturas ficticias da extensao local.",
+        },
+        normalizeExtensionStatus,
+      ),
+
+    extensionCaptures: () =>
+      call<ExtensionCapturesResult>(
+        mode,
+        baseUrl,
+        "/extension/captures",
+        undefined,
+        {
+          captures: [
+            {
+              id: "demo-capture-1",
+              title: "Backend Python Demo",
+              company: "Empresa Demo",
+              url: "https://example.invalid/jobs/backend",
+              domain: "example.invalid",
+              status: "captured",
+              updated_at: new Date().toISOString(),
+            },
+            {
+              id: "demo-capture-2",
+              title: "fictitious-api-lab",
+              company: "GitHub",
+              url: "https://github.com/example/fictitious-api-lab",
+              domain: "github.com",
+              status: "analyzed",
+              updated_at: new Date().toISOString(),
+            },
+          ],
+        },
+        normalizeExtensionCaptures,
+      ),
+
+    extensionImportJob: (capture_id: string) =>
+      call<ExtensionImportJobResult>(
+        mode,
+        baseUrl,
+        "/extension/import/job",
+        { method: "POST", body: JSON.stringify({ capture_id }) },
+        { capture_id, job: { ...mockJob }, message: "Modo Demo: captura enviada para Vaga." },
+        normalizeExtensionImportJob,
+      ),
+
+    extensionImportTracker: (capture_id: string) =>
+      call<ExtensionImportTrackerResult>(
+        mode,
+        baseUrl,
+        "/extension/import/tracker",
+        { method: "POST", body: JSON.stringify({ capture_id, privacy_acknowledged: true }) },
+        {
+          capture_id,
+          tracker_id: `job_${Math.random().toString(36).slice(2, 8)}`,
+          message: "Modo Demo: captura salva em Candidaturas.",
+          provider: "local",
+        },
+        normalizeExtensionImportTracker,
+      ),
   };
 }
 
@@ -362,7 +478,7 @@ function normalizeHealth(value: unknown): Health {
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "1.4.0",
+    version: asString(raw.version) || "1.5.0",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),
@@ -467,6 +583,10 @@ function normalizeAiStatus(value: unknown): AiSettingsStatus {
     : "not_configured";
 }
 
+function normalizeAnalysisMode(value: unknown): "local" | "ai" | "fallback" {
+  return value === "ai" || value === "fallback" || value === "local" ? value : "local";
+}
+
 function normalizeAuthenticatedBrowserStatus(value: unknown): AuthenticatedBrowserStatus {
   const raw = asRecord(value);
   return {
@@ -493,11 +613,16 @@ function normalizeAuthenticatedBrowserCollect(value: unknown): AuthenticatedBrow
   };
 }
 
-function normalizeResumeExtract(value: unknown): { profile: ResumeProfile; confidence: number } {
+function normalizeResumeExtract(value: unknown): ResumeExtractResult {
   const raw = asRecord(value);
   return {
     profile: normalizeResumeProfile(raw.profile),
     confidence: asNumber(raw.confidence, 0),
+    provider_used: asString(raw.provider_used) || "local",
+    requested_provider: asString(raw.requested_provider) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+    fallback_used: asBoolean(raw.fallback_used, false),
+    low_confidence_fields: stringList(raw.low_confidence_fields),
   };
 }
 
@@ -535,11 +660,16 @@ function normalizeResumeProfile(value: unknown): ResumeProfile {
   };
 }
 
-function normalizeJobExtract(value: unknown): { job: JobPosting; confidence: number } {
+function normalizeJobExtract(value: unknown): JobExtractResult {
   const raw = asRecord(value);
   return {
     job: normalizeJobPosting(raw.job),
     confidence: asNumber(raw.confidence, 0),
+    provider_used: asString(raw.provider_used) || "local",
+    requested_provider: asString(raw.requested_provider) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+    fallback_used: asBoolean(raw.fallback_used, false),
+    low_confidence_fields: stringList(raw.low_confidence_fields),
   };
 }
 
@@ -563,15 +693,16 @@ function normalizeJobPosting(value: unknown): JobPosting {
   };
 }
 
-function normalizeMatchEnvelope(value: unknown): {
-  provider_used: string;
-  local_first: boolean;
-  analysis: MatchAnalysis;
-} {
+function normalizeMatchEnvelope(value: unknown): MatchAnalyzeResult {
   const raw = asRecord(value);
   return {
     provider_used: asString(raw.provider_used) || "local",
+    requested_provider: asString(raw.requested_provider) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+    fallback_used: asBoolean(raw.fallback_used, false),
+    model: asString(raw.model),
     local_first: asBoolean(raw.local_first, true),
+    memory_shared_with_provider: asBoolean(raw.memory_shared_with_provider, false),
     analysis: normalizeMatch(raw.analysis),
   };
 }
@@ -609,17 +740,24 @@ function normalizeAts(value: unknown): AtsReview {
     missing_but_safe_to_add_if_true: stringList(raw.missing_but_safe_to_add_if_true),
     missing_without_evidence: stringList(raw.missing_without_evidence),
     warnings: stringList(raw.warnings),
+    ai_insights: stringList(raw.ai_insights),
+    provider_used: asString(raw.provider_used) || "local",
+    requested_provider: asString(raw.requested_provider) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+    fallback_used: asBoolean(raw.fallback_used, false),
   };
 }
 
-function normalizeTailorEnvelope(value: unknown): {
-  safe_to_export: boolean;
-  tailor: ResumeTailor;
-} {
+function normalizeTailorEnvelope(value: unknown): ResumeTailorResult {
   const raw = asRecord(value);
   return {
     safe_to_export: asBoolean(raw.safe_to_export, false),
     tailor: normalizeTailor(raw.tailor),
+    provider_used: asString(raw.provider_used) || "local",
+    requested_provider: asString(raw.requested_provider) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+    fallback_used: asBoolean(raw.fallback_used, false),
+    ai_suggestions: stringList(raw.ai_suggestions),
   };
 }
 
@@ -643,8 +781,15 @@ function normalizeTailor(value: unknown): ResumeTailor {
   };
 }
 
-function normalizeGithubEnvelope(value: unknown): { report: GithubReport } {
-  return { report: normalizeGithubReport(asRecord(value).report) };
+function normalizeGithubEnvelope(value: unknown): GithubAnalyzeResult {
+  const raw = asRecord(value);
+  return {
+    report: normalizeGithubReport(raw.report),
+    provider_used: asString(raw.provider_used) || "local",
+    requested_provider: asString(raw.requested_provider) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+    fallback_used: asBoolean(raw.fallback_used, false),
+  };
 }
 
 function normalizeGithubReport(value: unknown): GithubReport {
@@ -683,6 +828,52 @@ function normalizeGithubReport(value: unknown): GithubReport {
       raw.recommendations,
       verdict.next_3_actions,
     ),
+  };
+}
+
+function normalizeExtensionStatus(value: unknown): ExtensionStatus {
+  const raw = asRecord(value);
+  return {
+    available: asBoolean(raw.available, true),
+    companion_url: asString(raw.companion_url) || "http://127.0.0.1:8765",
+    capture_count: asNumber(raw.capture_count, 0),
+    last_capture_at: asString(raw.last_capture_at),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeExtensionCaptures(value: unknown): ExtensionCapturesResult {
+  const raw = asRecord(value);
+  return {
+    captures: objectList(raw.captures).map((item) => ({
+      id: asString(item.id),
+      title: asString(item.title) || "Captura sem titulo",
+      company: asString(item.company),
+      url: asString(item.url),
+      domain: asString(item.domain),
+      status: asString(item.status) || "captured",
+      tracker_id: asString(item.tracker_id),
+      updated_at: asString(item.updated_at),
+    })),
+  };
+}
+
+function normalizeExtensionImportJob(value: unknown): ExtensionImportJobResult {
+  const raw = asRecord(value);
+  return {
+    capture_id: asString(raw.capture_id),
+    job: normalizeJobPosting(raw.job),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeExtensionImportTracker(value: unknown): ExtensionImportTrackerResult {
+  const raw = asRecord(value);
+  return {
+    capture_id: asString(raw.capture_id),
+    tracker_id: asString(raw.tracker_id),
+    message: asString(raw.message),
+    provider: asString(raw.provider) || "local",
   };
 }
 
