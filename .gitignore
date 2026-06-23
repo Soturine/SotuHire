@@ -16,6 +16,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+!apps/web/src/lib/
+!apps/web/src/lib/**
 parts/
 sdist/
 var/
@@ -149,6 +151,7 @@ activemq-data/
 
 # Environments
 .env
+.env.local
 .envrc
 .venv
 env/
@@ -226,8 +229,12 @@ n8n_data/
 postgres_data/
 /storage/
 .cache/
+.sotuhire/
 /data/
+/data/settings/ai-settings.json
+/data/secrets/
 /exports/
+apps/web/.env.local
 
 # Generated resumes and sensitive exports
 outputs/*.docx
