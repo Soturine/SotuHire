@@ -1,10 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ShieldAlert, ArrowRight, CheckCircle2, Monitor, Terminal } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle2,
+  ExternalLink,
+  Monitor,
+  RefreshCw,
+  ShieldAlert,
+  Terminal,
+} from "lucide-react";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { SourceCardItem } from "@/components/source-card";
 import { useApi } from "@/lib/api/hooks";
+import type {
+  AuthenticatedBrowserCollectResult,
+  AuthenticatedBrowserStatus,
+} from "@/lib/api/types";
 import { SOURCE_CARDS, SOURCE_FLOW } from "@/mocks/sources";
 import { toast } from "sonner";
 
@@ -134,16 +147,22 @@ function AuthenticatedBrowserPanel() {
   const [busy, setBusy] = useState<"status" | "launch" | "collect" | "">("");
   const [statusMessage, setStatusMessage] = useState("Aguardando teste de conexao.");
   const [collected, setCollected] = useState(0);
+  const [browserStatus, setBrowserStatus] = useState<AuthenticatedBrowserStatus | null>(null);
+  const [lastResult, setLastResult] = useState<AuthenticatedBrowserCollectResult | null>(null);
+  const [lastActionAt, setLastActionAt] = useState("");
 
   const testStatus = async () => {
     setBusy("status");
     try {
       const status = await api.authenticatedBrowserStatus(cdpUrl);
+      setBrowserStatus(status);
+      setLastActionAt(formatTime());
       setStatusMessage(status.message || (status.available ? "Conexao CDP pronta." : "Offline."));
       toast[status.available ? "success" : "message"](
         status.available ? "CDP pronto" : "CDP offline",
       );
     } catch (error) {
+      setLastActionAt(formatTime());
       setStatusMessage(error instanceof Error ? error.message : "Falha ao testar CDP.");
       toast.error("Nao foi possivel testar o navegador.");
     } finally {
@@ -158,9 +177,12 @@ function AuthenticatedBrowserPanel() {
         start_url: startUrl,
         browser_cdp_url: cdpUrl,
       });
+      setBrowserStatus(status);
+      setLastActionAt(formatTime());
       setStatusMessage(status.message || "Navegador aberto para login manual.");
       toast.success("Navegador dedicado aberto");
     } catch (error) {
+      setLastActionAt(formatTime());
       setStatusMessage(error instanceof Error ? error.message : "Falha ao abrir navegador.");
       toast.error("Nao foi possivel abrir o navegador local.");
     } finally {
@@ -185,12 +207,15 @@ function AuthenticatedBrowserPanel() {
         authorization_reference: authorizationReference,
       });
       setCollected(result.new_count + result.updated_count);
+      setLastResult(result);
+      setLastActionAt(formatTime());
       setStatusMessage(
         result.failures[0] ||
           `Coleta concluida: ${result.new_count} novas, ${result.updated_count} atualizadas.`,
       );
       toast.success("Coleta finalizada");
     } catch (error) {
+      setLastActionAt(formatTime());
       setStatusMessage(error instanceof Error ? error.message : "Falha na coleta autorizada.");
       toast.error("Nao foi possivel coletar a fonte.");
     } finally {
@@ -206,6 +231,13 @@ function AuthenticatedBrowserPanel() {
           <InfoTile label="CDP local" value="127.0.0.1:9222" />
           <InfoTile label="Coletadas" value={String(collected)} />
         </div>
+
+        <AuthenticatedStatusSummary
+          status={browserStatus}
+          busy={busy}
+          message={statusMessage}
+          lastActionAt={lastActionAt}
+        />
 
         <div className="grid gap-3 sm:grid-cols-2">
           <Field
@@ -270,6 +302,8 @@ function AuthenticatedBrowserPanel() {
           {statusMessage}
         </p>
 
+        <AuthenticatedResultSummary result={lastResult} />
+
         <ol className="grid gap-2">
           {AUTH_BROWSER_STEPS.map((step, index) => (
             <li
@@ -317,6 +351,156 @@ function AuthenticatedBrowserPanel() {
           Abrir doc do fluxo autenticado
         </a>
       </div>
+    </div>
+  );
+}
+
+function AuthenticatedStatusSummary({
+  status,
+  busy,
+  message,
+  lastActionAt,
+}: {
+  status: AuthenticatedBrowserStatus | null;
+  busy: "status" | "launch" | "collect" | "";
+  message: string;
+  lastActionAt: string;
+}) {
+  const isBusy = Boolean(busy);
+  const isReady = status?.available;
+  const tone = isBusy
+    ? "border-warning/30 bg-warning/5"
+    : isReady
+      ? "border-success/30 bg-success/5"
+      : "border-border bg-background";
+  const label = isBusy
+    ? busy === "collect"
+      ? "Coletando"
+      : "Verificando"
+    : isReady
+      ? "CDP pronto"
+      : status
+        ? "CDP offline"
+        : "Nao testado";
+
+  return (
+    <div className={`rounded-lg border p-3 ${tone}`}>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-2">
+          {isBusy ? (
+            <RefreshCw className="mt-0.5 h-4 w-4 animate-spin text-warning" />
+          ) : isReady ? (
+            <CheckCircle2 className="mt-0.5 h-4 w-4 text-success" />
+          ) : (
+            <AlertTriangle className="mt-0.5 h-4 w-4 text-muted-foreground" />
+          )}
+          <div>
+            <div className="text-sm font-semibold">{label}</div>
+            <p className="mt-0.5 text-xs text-muted-foreground">{message}</p>
+          </div>
+        </div>
+        <div className="grid gap-1 text-right text-[11px] text-muted-foreground">
+          <span className="font-mono">{status?.endpoint || "http://127.0.0.1:9222"}</span>
+          <span>{status?.browser || "Chromium dedicado"}</span>
+          {lastActionAt && <span>Ultima acao: {lastActionAt}</span>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AuthenticatedResultSummary({
+  result,
+}: {
+  result: AuthenticatedBrowserCollectResult | null;
+}) {
+  if (!result) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+        Nenhuma coleta executada nesta sessao. Quando a coleta real terminar, os totais, falhas e
+        oportunidades retornadas aparecem aqui.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3 rounded-lg border border-border bg-background p-3">
+      <div className="grid gap-2 sm:grid-cols-3">
+        <MiniMetric label="Novas" value={result.new_count} />
+        <MiniMetric label="Atualizadas" value={result.updated_count} />
+        <MiniMetric label="Duplicadas" value={result.duplicate_count} />
+      </div>
+
+      {result.failures.length > 0 && (
+        <div className="rounded-md border border-warning/30 bg-warning/5 p-2 text-xs text-muted-foreground">
+          <div className="font-semibold text-foreground">Avisos da coleta</div>
+          <ul className="mt-1 space-y-1">
+            {result.failures.map((failure) => (
+              <li key={failure}>{failure}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {result.opportunities.length > 0 ? (
+        <div className="space-y-2">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Oportunidades retornadas
+          </div>
+          <ul className="space-y-2">
+            {result.opportunities.slice(0, 5).map((opportunity, index) => (
+              <li
+                key={`${opportunity.title}-${opportunity.source_url}-${index}`}
+                className="rounded-md border border-border bg-muted/30 p-2"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <div className="truncate text-xs font-semibold">{opportunity.title}</div>
+                    <div className="mt-0.5 truncate text-[11px] text-muted-foreground">
+                      {opportunity.company || "Empresa nao detectada"}
+                    </div>
+                  </div>
+                  <span className="rounded-md bg-background px-2 py-0.5 font-mono text-[11px] text-muted-foreground">
+                    {Math.round(opportunity.confidence * 100)}%
+                  </span>
+                </div>
+                {opportunity.source_url && (
+                  <a
+                    href={opportunity.source_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-accent hover:underline"
+                  >
+                    <ExternalLink className="h-3 w-3 shrink-0" />
+                    <span className="truncate">{opportunity.source_url}</span>
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+          {result.opportunities.length > 5 && (
+            <p className="text-[11px] text-muted-foreground">
+              Mostrando 5 de {result.opportunities.length} oportunidades retornadas.
+            </p>
+          )}
+        </div>
+      ) : (
+        <div className="rounded-md border border-border bg-muted/30 p-2 text-xs text-muted-foreground">
+          A coleta terminou sem oportunidades retornadas. Verifique login, URL inicial, limites e
+          mensagens de aviso.
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-md border border-border bg-muted/30 p-2">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1 font-mono text-lg font-semibold">{value}</div>
     </div>
   );
 }
@@ -392,4 +576,12 @@ function Command({ text }: { text: string }) {
   return (
     <code className="block rounded-md bg-muted px-2 py-1.5 text-muted-foreground">{text}</code>
   );
+}
+
+function formatTime() {
+  return new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  }).format(new Date());
 }
