@@ -285,8 +285,11 @@ export interface ExtensionCapture {
   company?: string;
   url: string;
   domain?: string;
+  kind?: string;
+  source?: string;
   status: string;
   tracker_id?: string;
+  captured_at?: string;
   updated_at?: string;
 }
 
@@ -305,4 +308,10 @@ export interface ExtensionImportTrackerResult {
   tracker_id?: string;
   message: string;
   provider: string;
+}
+
+export interface ExtensionImportGithubResult {
+  capture_id: string;
+  report?: GithubReport;
+  message: string;
 }

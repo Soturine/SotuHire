@@ -5,6 +5,7 @@ import {
   CheckCircle2,
   Database,
   ExternalLink,
+  Github,
   Monitor,
   PlugZap,
   RefreshCw,
@@ -181,15 +182,25 @@ function LocalExtensionPanel() {
       toast.error(error instanceof Error ? error.message : "Nao foi possivel salvar no tracker."),
   });
 
+  const importGithub = useMutation({
+    mutationFn: (captureId: string) => api.extensionImportGithub(captureId),
+    onSuccess: (data) => toast.success(data.message || "Captura enviada para GitHub Analysis."),
+    onError: (error) =>
+      toast.error(
+        error instanceof Error ? error.message : "Nao foi possivel enviar para GitHub Analysis.",
+      ),
+  });
+
   const captures = capturesQ.data?.captures ?? [];
-  const busy = importJob.isPending || importTracker.isPending;
+  const companionOffline = statusQ.isError || statusQ.data?.available === false;
+  const busy = importJob.isPending || importTracker.isPending || importGithub.isPending;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
       <div className="space-y-3">
         <div
           className={`rounded-lg border p-3 ${
-            statusQ.isError ? "border-warning/30 bg-warning/5" : "border-success/30 bg-success/5"
+            companionOffline ? "border-warning/30 bg-warning/5" : "border-success/30 bg-success/5"
           }`}
         >
           <div className="flex items-start gap-2">
@@ -200,7 +211,7 @@ function LocalExtensionPanel() {
             )}
             <div>
               <div className="text-sm font-semibold">
-                {statusQ.isError ? "Companion indisponivel" : "Companion conectado"}
+                {companionOffline ? "Companion offline" : "Companion conectado"}
               </div>
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {statusQ.data?.message ||
@@ -213,6 +224,13 @@ function LocalExtensionPanel() {
             <InfoTile label="API local" value={statusQ.data?.companion_url ?? "127.0.0.1:8765"} />
           </div>
         </div>
+
+        {companionOffline && (
+          <div className="rounded-lg border border-dashed border-warning/40 bg-warning/5 p-3 text-xs text-muted-foreground">
+            Companion offline: abra o Local Companion ou use o modo Demo para validar a interface
+            com capturas ficticias.
+          </div>
+        )}
 
         <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
           A extensão continua usando a Local Companion API existente. Esta tela apenas consulta e
@@ -255,6 +273,7 @@ function LocalExtensionPanel() {
                 busy={busy}
                 onImportJob={() => importJob.mutate(capture.id)}
                 onImportTracker={() => importTracker.mutate(capture.id)}
+                onImportGithub={() => importGithub.mutate(capture.id)}
               />
             ))}
           </ul>
@@ -269,19 +288,39 @@ function ExtensionCaptureRow({
   busy,
   onImportJob,
   onImportTracker,
+  onImportGithub,
 }: {
   capture: ExtensionCapture;
   busy: boolean;
   onImportJob: () => void;
   onImportTracker: () => void;
+  onImportGithub: () => void;
 }) {
+  const kind = capture.kind || (capture.url.includes("github.com") ? "github_repo" : "job");
+  const origin = capture.source || capture.domain || capture.company || "Fonte local";
+  const date = capture.captured_at || capture.updated_at;
+  const isGithub = kind === "github_repo" || capture.url.includes("github.com/");
   return (
-    <li className="rounded-lg border border-border bg-background p-3">
+    <li
+      data-testid="extension-capture-row"
+      className="rounded-lg border border-border bg-background p-3"
+    >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="truncate text-sm font-semibold">{capture.title}</div>
           <div className="mt-0.5 truncate text-xs text-muted-foreground">
             {capture.company || capture.domain || "Fonte local"} · {capture.status}
+          </div>
+          <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
+            <span className="rounded-md bg-muted px-2 py-0.5">Origem: {origin}</span>
+            <span className="rounded-md bg-muted px-2 py-0.5">
+              Tipo: {isGithub ? "GitHub/portfolio" : "Vaga"}
+            </span>
+            {date && (
+              <span className="rounded-md bg-muted px-2 py-0.5">
+                Data: {new Date(date).toLocaleString("pt-BR")}
+              </span>
+            )}
           </div>
           {capture.url && (
             <a
@@ -300,20 +339,34 @@ function ExtensionCaptureRow({
             type="button"
             onClick={onImportJob}
             disabled={busy}
+            data-testid="import-capture-job"
             className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
           >
             <ArrowRight className="h-3 w-3" />
-            Vaga
+            Importar para Vaga
           </button>
           <button
             type="button"
             onClick={onImportTracker}
             disabled={busy}
+            data-testid="import-capture-tracker"
             className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
           >
             <Save className="h-3 w-3" />
-            Candidaturas
+            Salvar em Candidaturas
           </button>
+          {isGithub && (
+            <button
+              type="button"
+              onClick={onImportGithub}
+              disabled={busy}
+              data-testid="import-capture-github"
+              className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+            >
+              <Github className="h-3 w-3" />
+              Enviar para GitHub Analysis
+            </button>
+          )}
         </div>
       </div>
     </li>

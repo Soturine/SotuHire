@@ -61,7 +61,7 @@ function TrackerPage() {
   });
 
   const create = useMutation({
-    mutationFn: (input: { title: string; company: string }) =>
+    mutationFn: (input: { title: string; company: string; source?: string; notes?: string }) =>
       api.trackerCreate({ ...input, status: "found" }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tracker-jobs", mode] });
@@ -134,6 +134,7 @@ function TrackerPage() {
           </div>
           <button
             onClick={() => setCreating(true)}
+            data-testid="new-application-button"
             className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-sm transition-all hover:opacity-90 hover:shadow-md"
           >
             <Plus className="h-3.5 w-3.5" /> Nova candidatura
@@ -152,6 +153,7 @@ function TrackerPage() {
           action={
             <button
               onClick={() => setCreating(true)}
+              data-testid="new-application-button"
               className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90"
             >
               <Plus className="h-3.5 w-3.5" /> Adicionar candidatura
@@ -217,6 +219,7 @@ function TrackerPage() {
                         return (
                           <div
                             key={c.id}
+                            data-testid={`kanban-column-${c.id}`}
                             onDragOver={(e) => {
                               e.preventDefault();
                               setDragOver(c.id);
@@ -276,6 +279,7 @@ function TrackerPage() {
 function JobCard({ job }: { job: TrackerJob }) {
   return (
     <div
+      data-testid="kanban-card"
       draggable
       onDragStart={(e) => {
         e.dataTransfer.setData("text/plain", job.id);
@@ -307,6 +311,17 @@ function JobCard({ job }: { job: TrackerJob }) {
           </span>
         )}
       </div>
+      <div className="mt-2 grid gap-1 text-[10px] text-muted-foreground">
+        <div className="flex items-center justify-between gap-2">
+          <span>Origem: {job.source ?? "-"}</span>
+          <span>{job.updated_at ? `Ultima analise: ${job.updated_at}` : "Sem analise"}</span>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <span>{job.created_at ? `Data: ${job.created_at}` : "Data nao informada"}</span>
+          <span>Score: {job.match_score ?? "-"}</span>
+        </div>
+        {job.notes && <p className="line-clamp-2 rounded bg-muted/60 p-1.5">{job.notes}</p>}
+      </div>
     </div>
   );
 }
@@ -333,17 +348,24 @@ function ListView({
         <tbody className="divide-y divide-border">
           {jobs.map((j) => (
             <tr key={j.id} className="transition-colors hover:bg-muted/40">
-              <td className="px-4 py-2.5 font-medium">{j.title}</td>
+              <td className="px-4 py-2.5">
+                <div className="font-medium">{j.title}</div>
+                <div className="mt-0.5 text-[11px] text-muted-foreground">
+                  {j.updated_at ? `Ultima analise: ${j.updated_at}` : "Sem analise"} ·{" "}
+                  {j.notes || "Sem notas"}
+                </div>
+              </td>
               <td className="hidden px-4 py-2.5 text-muted-foreground sm:table-cell">
                 {j.company}
               </td>
               <td className="hidden px-4 py-2.5 text-xs text-muted-foreground md:table-cell">
-                {j.source ?? "—"}
+                {j.source ?? "—"} {j.created_at ? `· ${j.created_at}` : ""}
               </td>
               <td className="px-4 py-2.5">
                 <select
                   value={j.status}
                   onChange={(e) => onChange(j.id, e.target.value as TrackerStatus)}
+                  data-testid="application-status-select"
                   className="rounded border border-input bg-background px-2 py-1 text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
                 >
                   {COLUMNS.map((c) => (
@@ -381,13 +403,18 @@ function CreateDialog({
   loading,
 }: {
   onCancel: () => void;
-  onSubmit: (v: { title: string; company: string }) => void;
+  onSubmit: (v: { title: string; company: string; source?: string; notes?: string }) => void;
   loading: boolean;
 }) {
   const [title, setTitle] = useState("");
   const [company, setCompany] = useState("");
+  const [source, setSource] = useState("Manual");
+  const [notes, setNotes] = useState("");
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4 backdrop-blur-sm animate-in fade-in duration-150">
+    <div
+      data-testid="create-application-dialog"
+      className="fixed inset-0 z-50 grid place-items-center bg-foreground/40 p-4 backdrop-blur-sm animate-in fade-in duration-150"
+    >
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-elevated)] animate-in zoom-in-95 duration-150">
         <h3 className="text-display text-lg">Nova candidatura</h3>
         <p className="mt-1 text-xs text-muted-foreground">Será criada no estágio Encontrada.</p>
@@ -404,6 +431,18 @@ function CreateDialog({
             placeholder="Empresa"
             className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
           />
+          <input
+            value={source}
+            onChange={(e) => setSource(e.target.value)}
+            placeholder="Origem"
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+          />
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Notas"
+            className="h-20 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+          />
         </div>
         <div className="mt-5 flex justify-end gap-2">
           <button
@@ -413,7 +452,8 @@ function CreateDialog({
             Cancelar
           </button>
           <button
-            onClick={() => onSubmit({ title, company })}
+            data-testid="create-application-submit"
+            onClick={() => onSubmit({ title, company, source, notes })}
             disabled={!title || !company || loading}
             className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90 disabled:opacity-50"
           >

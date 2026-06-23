@@ -10,6 +10,7 @@ import type {
   AuthenticatedBrowserCollectResult,
   AuthenticatedBrowserStatus,
   ExtensionCapturesResult,
+  ExtensionImportGithubResult,
   ExtensionImportJobResult,
   ExtensionImportTrackerResult,
   ExtensionStatus,
@@ -275,11 +276,13 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
             id: `job_${Math.random().toString(36).slice(2, 8)}`,
             title: payload.title ?? "Nova vaga",
             company: payload.company ?? "-",
+            source: payload.source,
             status: payload.status ?? "found",
             match_score: payload.match_score,
             ats_score: payload.ats_score,
             created_at: new Date().toISOString().slice(0, 10),
             updated_at: new Date().toISOString().slice(0, 10),
+            notes: payload.notes,
           },
         },
         normalizeTrackerJobEnvelope,
@@ -429,7 +432,10 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
               company: "Empresa Demo",
               url: "https://example.invalid/jobs/backend",
               domain: "example.invalid",
+              kind: "job",
+              source: "Extensao local demo",
               status: "captured",
+              captured_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },
             {
@@ -438,7 +444,10 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
               company: "GitHub",
               url: "https://github.com/example/fictitious-api-lab",
               domain: "github.com",
+              kind: "github_repo",
+              source: "Extensao local demo",
               status: "analyzed",
+              captured_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },
           ],
@@ -469,6 +478,20 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           provider: "local",
         },
         normalizeExtensionImportTracker,
+      ),
+
+    extensionImportGithub: (capture_id: string) =>
+      call<ExtensionImportGithubResult>(
+        mode,
+        baseUrl,
+        "/extension/import/github",
+        { method: "POST", body: JSON.stringify({ capture_id }) },
+        {
+          capture_id,
+          report: { ...mockGithub },
+          message: "Modo Demo: captura enviada para Analise de GitHub.",
+        },
+        normalizeExtensionImportGithub,
       ),
   };
 }
@@ -851,8 +874,11 @@ function normalizeExtensionCaptures(value: unknown): ExtensionCapturesResult {
       company: asString(item.company),
       url: asString(item.url),
       domain: asString(item.domain),
+      kind: asString(item.kind),
+      source: asString(item.source),
       status: asString(item.status) || "captured",
       tracker_id: asString(item.tracker_id),
+      captured_at: asString(item.captured_at),
       updated_at: asString(item.updated_at),
     })),
   };
@@ -874,6 +900,17 @@ function normalizeExtensionImportTracker(value: unknown): ExtensionImportTracker
     tracker_id: asString(raw.tracker_id),
     message: asString(raw.message),
     provider: asString(raw.provider) || "local",
+  };
+}
+
+function normalizeExtensionImportGithub(value: unknown): ExtensionImportGithubResult {
+  const raw = asRecord(value);
+  return {
+    capture_id: asString(raw.capture_id),
+    report: Object.keys(asRecord(raw.report)).length
+      ? normalizeGithubReport(raw.report)
+      : undefined,
+    message: asString(raw.message),
   };
 }
 
