@@ -4,6 +4,38 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.5.1] - 2026-06-23
+
+### Adicionado
+
+- Auditoria de prontidão de produto v1.5.1 com status real por funcionalidade.
+- Fluxo guiado web-first na Home e no Dashboard.
+- Blocos de recomendações acionáveis em Compatibilidade, ATS, Ajuste de Currículo e GitHub.
+- E2E expandido para demos, IA Settings, Fontes e Captura, Kanban e branding legado.
+- Screenshots v1.5.1 padronizados em `1440x1000` por Playwright.
+- GIF walkthrough v1.5.1 mais lento e legível.
+
+### Alterado
+
+- Badges e textos de Local/IA/Fallback padronizados nas telas de análise.
+- Painel **Extensão Local** mostra status do companion, origem, data, tipo e ações por captura.
+- Kanban mostra origem, score, última análise, notas e data nos cards/lista.
+- README raiz, `apps/web/README.md`, `scripts/README.md`, visual preview e mapa de integração
+  atualizados para v1.5.1.
+- Versão do projeto, API e frontend atualizada para `1.5.1`.
+
+### Segurança
+
+- A chave de IA continua backend-side e nunca retorna ao frontend.
+- Nenhum fluxo de authenticated browser, Chromium/CDP, scraper autenticado, crawler logado ou
+  auto-apply foi alterado.
+- Screenshots e mocks usam apenas dados fictícios.
+
+### Validação
+
+- Testes backend adicionais cobrem toggles de IA por área e importações fake da extensão.
+- Playwright cobre fluxo guiado, demos, IA Settings, Sources, Kanban e capturas visuais.
+
 ## [1.5.0] - 2026-06-23
 
 ### Adicionado

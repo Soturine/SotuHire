@@ -1,5 +1,6 @@
 {
   "name": "sotuhire-web",
+  "version": "1.5.1",
   "private": true,
   "sideEffects": false,
   "type": "module",
