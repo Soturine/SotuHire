@@ -1,14 +1,18 @@
 import { expect, test } from "@playwright/test";
 
-test("home and dashboard render without legacy branding", async ({ page }) => {
+test("home, dashboard and guided flow render without legacy branding", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { name: /SotuHire/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /SotuHire/i }).first()).toBeVisible();
+  await expect(page.getByTestId("guided-flow").first()).toBeVisible();
   await expect(page.locator("body")).not.toContainText("Career Compass");
+  await expect(page.locator("body")).not.toContainText("Match Engine 2.0");
 
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-  await expect(page.locator("body")).not.toContainText("Career Compass");
+  await expect(page.getByText("Fluxo guiado")).toBeVisible();
+  await expect(page.getByText("Adicionar curriculo")).toBeVisible();
+  await expect(page.getByText("Acompanhar no Kanban")).toBeVisible();
 });
 
 test("sidebar navigates across core screens", async ({ page }) => {
@@ -37,38 +41,89 @@ test("sidebar navigates across core screens", async ({ page }) => {
   }
 });
 
-test("compatibility demo shows a result", async ({ page }) => {
-  await page.goto("/match");
+test("analysis demo buttons show results", async ({ page }) => {
+  const demos = [
+    { path: "/resume", result: /Perfil extra.do|Pessoa Fict/ },
+    { path: "/job", result: /Vaga estruturada|Desenvolvedor Backend/ },
+    { path: "/match", result: /Requisitos atendidos|Assistente de a..o para compatibilidade/ },
+    { path: "/ats", result: /Pontua..o ATS|Assistente de a..o ATS/ },
+    { path: "/tailor", result: /Bullets seguros|Assistente de a..o para ajuste/ },
+    { path: "/github", result: /fictitious-api-lab|Assistente de a..o para GitHub/ },
+  ];
 
-  await page.getByRole("button", { name: /Rodar demo/i }).click();
-
-  await expect(page.getByText(/Requisitos atendidos/i)).toBeVisible();
-  await expect(page.getByText(/Ader.ncia/)).toBeVisible();
+  for (const demo of demos) {
+    await page.goto(demo.path);
+    await page
+      .getByRole("button", { name: /Rodar demo/i })
+      .first()
+      .click();
+    await expect(page.locator("body")).toContainText(demo.result);
+    await expect(
+      page.getByText(/An.lise local|An.lise com IA|Fallback local/i).first(),
+    ).toBeVisible();
+  }
 });
 
-test("settings exposes AI providers without persisting browser secrets", async ({ page }) => {
+test("settings AI flow uses backend status shape and never stores secrets in browser storage", async ({
+  page,
+}) => {
+  const fakeKey = "AIza-fake-playwright-secret";
   await page.goto("/settings");
 
   await expect(page.getByText("IA e Providers")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Gemini" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /OpenAI/i })).toBeVisible();
+  await expect(page.getByText("Permitir IA na Análise de Compatibilidade")).toBeVisible();
+  await page.getByRole("button", { name: "Gemini" }).click();
+  await page.getByPlaceholder(/Cole a chave Gemini/i).fill(fakeKey);
+  await page.getByRole("button", { name: /Testar conex/i }).click();
+  await expect(page.getByText(/Provider configurado com sucesso/i).first()).toBeVisible();
+  await page.getByRole("button", { name: /Salvar no backend local/i }).click();
+  await expect(page.getByPlaceholder(/Cole a chave Gemini/i)).toHaveValue("");
+  await page.getByRole("button", { name: /Remover chave/i }).click();
 
   const storage = await page.evaluate(() => ({
-    local: Object.keys(localStorage),
-    session: Object.keys(sessionStorage),
+    local: JSON.stringify(localStorage),
+    session: JSON.stringify(sessionStorage),
   }));
-  expect(storage.local.join("\n")).not.toMatch(/api|key|gemini|openai/i);
-  expect(storage.session.join("\n")).not.toMatch(/api|key|gemini|openai/i);
+  expect(storage.local).not.toContain(fakeKey);
+  expect(storage.session).not.toContain(fakeKey);
 });
 
-test("sources page shows local extension bridge panel", async ({ page }) => {
-  await page.goto("/sources");
+test("sources page handles local extension offline and fake capture imports", async ({ page }) => {
+  await page.goto("/settings");
+  await page.getByRole("button", { name: "API Real" }).click();
+  await page.getByRole("link", { name: /Fontes e Captura/i }).click();
+  await expect(page.getByText("Companion offline", { exact: true })).toBeVisible();
 
+  await page.getByRole("link", { name: /Configura/i }).click();
+  await page.getByRole("button", { name: "Demo" }).click();
+  await page.getByRole("link", { name: /Fontes e Captura/i }).click();
   await expect(page.getByText("Extensão Local", { exact: true })).toBeVisible();
-  await expect(page.getByText(/Capturas recentes/i)).toBeVisible();
-  await expect(
-    page.locator("#authenticated-browser").getByText("Navegador autenticado autorizado", {
-      exact: true,
-    }),
-  ).toBeVisible();
+  await expect(page.getByTestId("extension-capture-row").first()).toBeVisible();
+  await page.getByTestId("import-capture-job").first().click();
+  await expect(page.getByText(/Captura enviada|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("import-capture-tracker").first().click();
+  await expect(page.getByText(/Candidaturas|tracker/i).first()).toBeVisible();
+  await page.getByTestId("import-capture-github").first().click();
+  await expect(page.getByText(/GitHub Analysis|Analise de GitHub/i).first()).toBeVisible();
+});
+
+test("kanban creates and moves a fake application", async ({ page }) => {
+  await page.goto("/tracker");
+
+  await page.getByTestId("new-application-button").first().click();
+  const dialog = page.getByTestId("create-application-dialog");
+  await expect(dialog).toBeVisible();
+  await dialog.getByPlaceholder("Cargo").fill("Backend Python E2E");
+  await dialog.getByPlaceholder("Empresa").fill("Empresa Ficticia E2E");
+  await dialog.getByPlaceholder("Origem").fill("Manual E2E");
+  await dialog.getByPlaceholder("Notas").fill("Nota ficticia criada pelo smoke test.");
+  await page.getByTestId("create-application-submit").click();
+  await expect(page.getByTestId("create-application-dialog")).toBeHidden();
+
+  const firstCard = page.getByTestId("kanban-card").first();
+  await expect(firstCard).toBeVisible();
+  await firstCard.dragTo(page.getByTestId("kanban-column-interview"));
+  await page.getByRole("button", { name: /Lista/i }).click();
+  await page.getByTestId("application-status-select").first().selectOption("interview");
+  await expect(page.locator("body")).toContainText(/Ultima analise|Sem analise/);
 });

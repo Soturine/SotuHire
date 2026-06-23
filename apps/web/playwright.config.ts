@@ -9,7 +9,8 @@ export default defineConfig({
   use: {
     baseURL: "http://127.0.0.1:5173",
     channel: "chrome",
-    viewport: { width: 1366, height: 900 },
+    viewport: { width: 1440, height: 1000 },
+    deviceScaleFactor: 1,
     trace: "on-first-retry",
   },
   webServer: {
