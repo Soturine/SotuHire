@@ -1,5 +1,21 @@
 import { expect, test } from "@playwright/test";
 
+const coreScreens = [
+  { path: "/", heading: /SotuHire/i },
+  { path: "/dashboard", heading: "Dashboard" },
+  { path: "/resume", heading: /Curr.culo/ },
+  { path: "/job", heading: "Vaga" },
+  { path: "/match", heading: /Compatibilidade/ },
+  { path: "/ats", heading: /ATS/ },
+  { path: "/tailor", heading: /Ajuste/ },
+  { path: "/github", heading: /GitHub/ },
+  { path: "/tracker", heading: "Candidaturas" },
+  { path: "/intelligence", heading: /Intelig.ncia/ },
+  { path: "/sources", heading: "Fontes e Captura" },
+  { path: "/settings", heading: /Configura..es/ },
+  { path: "/privacy", heading: "Privacidade" },
+];
+
 test("home, dashboard and guided flow render without legacy branding", async ({ page }) => {
   await page.goto("/");
 
@@ -15,26 +31,28 @@ test("home, dashboard and guided flow render without legacy branding", async ({ 
   await expect(page.getByText("Acompanhar no Kanban")).toBeVisible();
 });
 
+test("core screens open in every configured browser", async ({ page }) => {
+  for (const screen of coreScreens) {
+    await page.goto(screen.path);
+    await expect(page.getByRole("heading", { name: screen.heading }).first()).toBeVisible();
+    await expect(page.locator("body")).not.toContainText("Career Compass");
+    await expect(page.locator("body")).not.toContainText("Match Engine 2.0");
+  }
+});
+
 test("sidebar navigates across core screens", async ({ page }) => {
   await page.goto("/dashboard");
 
   const routes = [
-    { label: "Curriculo", fallback: "Currículo", url: /\/resume$/, heading: /Curr.culo/ },
-    { label: "Vaga", url: /\/job$/, heading: "Vaga" },
-    { label: "Compatibilidade", url: /\/match$/, heading: /Compatibilidade/ },
-    { label: "Fontes e Captura", url: /\/sources$/, heading: "Fontes e Captura" },
-    {
-      label: "Configuracoes",
-      fallback: "Configurações",
-      url: /\/settings$/,
-      heading: /Configura..es/,
-    },
+    { label: /Curr.culo/i, url: /\/resume$/, heading: /Curr.culo/ },
+    { label: /Vaga/i, url: /\/job$/, heading: "Vaga" },
+    { label: /Compatibilidade/i, url: /\/match$/, heading: /Compatibilidade/ },
+    { label: /Fontes e Captura/i, url: /\/sources$/, heading: "Fontes e Captura" },
+    { label: /Configura..es/i, url: /\/settings$/, heading: /Configura..es/ },
   ];
 
   for (const route of routes) {
-    const link = page
-      .getByRole("link", { name: new RegExp(route.fallback ?? route.label, "i") })
-      .first();
+    const link = page.getByRole("link", { name: route.label }).first();
     await link.click();
     await expect(page).toHaveURL(route.url);
     await expect(page.getByRole("heading", { name: route.heading }).first()).toBeVisible();
@@ -59,7 +77,7 @@ test("analysis demo buttons show results", async ({ page }) => {
       .click();
     await expect(page.locator("body")).toContainText(demo.result);
     await expect(
-      page.getByText(/An.lise local|An.lise com IA|Fallback local/i).first(),
+      page.getByText(/Analise local|Analise com IA|Fallback local/i).first(),
     ).toBeVisible();
   }
 });
@@ -71,13 +89,16 @@ test("settings AI flow uses backend status shape and never stores secrets in bro
   await page.goto("/settings");
 
   await expect(page.getByText("IA e Providers")).toBeVisible();
-  await expect(page.getByText("Permitir IA na Análise de Compatibilidade")).toBeVisible();
+  await expect(page.getByText(/Permitir IA na An.lise de Compatibilidade/)).toBeVisible();
+  await expect(page.getByText(/Provider local/i).first()).toBeVisible();
   await page.getByRole("button", { name: "Gemini" }).click();
-  await page.getByPlaceholder(/Cole a chave Gemini/i).fill(fakeKey);
+  const keyInput = page.getByTestId("ai-api-key-input");
+  await expect(keyInput).toBeEnabled();
+  await keyInput.fill(fakeKey);
   await page.getByRole("button", { name: /Testar conex/i }).click();
   await expect(page.getByText(/Provider configurado com sucesso/i).first()).toBeVisible();
   await page.getByRole("button", { name: /Salvar no backend local/i }).click();
-  await expect(page.getByPlaceholder(/Cole a chave Gemini/i)).toHaveValue("");
+  await expect(keyInput).toHaveValue("");
   await page.getByRole("button", { name: /Remover chave/i }).click();
 
   const storage = await page.evaluate(() => ({
@@ -97,7 +118,7 @@ test("sources page handles local extension offline and fake capture imports", as
   await page.getByRole("link", { name: /Configura/i }).click();
   await page.getByRole("button", { name: "Demo" }).click();
   await page.getByRole("link", { name: /Fontes e Captura/i }).click();
-  await expect(page.getByText("Extensão Local", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Extens.o Local/).first()).toBeVisible();
   await expect(page.getByTestId("extension-capture-row").first()).toBeVisible();
   await page.getByTestId("import-capture-job").first().click();
   await expect(page.getByText(/Captura enviada|Modo Demo/i).first()).toBeVisible();
@@ -105,6 +126,8 @@ test("sources page handles local extension offline and fake capture imports", as
   await expect(page.getByText(/Candidaturas|tracker/i).first()).toBeVisible();
   await page.getByTestId("import-capture-github").first().click();
   await expect(page.getByText(/GitHub Analysis|Analise de GitHub/i).first()).toBeVisible();
+  await page.getByTestId("ignore-capture-local").first().click();
+  await expect(page.getByTestId("extension-capture-row")).toHaveCount(1);
 });
 
 test("kanban creates and moves a fake application", async ({ page }) => {
@@ -123,7 +146,32 @@ test("kanban creates and moves a fake application", async ({ page }) => {
   const firstCard = page.getByTestId("kanban-card").first();
   await expect(firstCard).toBeVisible();
   await firstCard.dragTo(page.getByTestId("kanban-column-interview"));
+  await expect(page.getByTestId("kanban-column-interview")).toContainText("Backend Python E2E");
   await page.getByRole("button", { name: /Lista/i }).click();
   await page.getByTestId("application-status-select").first().selectOption("interview");
   await expect(page.locator("body")).toContainText(/Ultima analise|Sem analise/);
+});
+
+test("responsive layouts avoid page-level horizontal overflow", async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "chromium",
+    "Responsive matrix is captured once in Chromium.",
+  );
+  const viewports = [
+    { width: 390, height: 844 },
+    { width: 768, height: 1024 },
+    { width: 1440, height: 1000 },
+  ];
+
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    for (const screen of coreScreens) {
+      await page.goto(screen.path);
+      await expect(page.getByRole("heading", { name: screen.heading }).first()).toBeVisible();
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - window.innerWidth,
+      );
+      expect(overflow).toBeLessThanOrEqual(2);
+    }
+  }
 });
