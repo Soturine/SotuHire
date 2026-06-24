@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.5.1-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.5.1)
+[![Release](https://img.shields.io/badge/release-v1.6.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.6.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -29,17 +29,17 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 
 ## Preview
 
-![SotuHire v1.5.1 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.5.1-web-walkthrough.gif)
+![SotuHire v1.6 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.6-web-walkthrough.gif)
 
-![SotuHire v1.5.1 Web Home](docs/assets/screenshots/sotuhire-v1.5.1-web-home.png)
+![SotuHire v1.6 Web Home](docs/assets/screenshots/sotuhire-v1.6-web-home.png)
 
-![SotuHire v1.5.1 Web Dashboard](docs/assets/screenshots/sotuhire-v1.5.1-web-dashboard.png)
+![SotuHire v1.6 Web Dashboard](docs/assets/screenshots/sotuhire-v1.6-web-dashboard.png)
 
-![SotuHire v1.5.1 Web Compatibility](docs/assets/screenshots/sotuhire-v1.5.1-web-compatibility.png)
+![SotuHire v1.6 Web Kanban](docs/assets/screenshots/sotuhire-v1.6-web-kanban.png)
 
-![SotuHire v1.5.1 Web Sources](docs/assets/screenshots/sotuhire-v1.5.1-web-sources.png)
+![SotuHire v1.6 Web Sources Extension](docs/assets/screenshots/sotuhire-v1.6-web-sources-extension.png)
 
-![SotuHire v1.5.1 Web Settings AI](docs/assets/screenshots/sotuhire-v1.5.1-web-settings-ai.png)
+![SotuHire v1.6 Web Settings AI](docs/assets/screenshots/sotuhire-v1.6-web-settings-ai.png)
 
 ## O Que O Projeto Faz
 
@@ -122,7 +122,7 @@ Flags úteis:
 `-WithCompanion` inicia a Local Companion API existente em `127.0.0.1:8765` para a extensão
 assistiva. Isso não abre navegador autenticado, não faz login e não altera Chromium/CDP.
 
-### API local v1.5.1
+### API local v1.6.0
 
 Para conectar um frontend moderno ou inspecionar o OpenAPI:
 
@@ -141,7 +141,7 @@ http://127.0.0.1:8787/docs
 A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
 [Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
 
-### Frontend moderno v1.5.1
+### Frontend moderno v1.6.0
 
 O frontend moderno fica em `apps/web` e roda como app React/Vite separado.
 
@@ -158,6 +158,7 @@ cd apps/web
 npm run build
 npm run lint
 npm run typecheck
+npm run test:e2e
 ```
 
 O app tem **Modo Demo** com dados fictícios e **Modo API Real** usando
@@ -166,6 +167,10 @@ O app tem **Modo Demo** com dados fictícios e **Modo API Real** usando
 ```env
 VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
 ```
+
+Na v1.6.0, `npm run test:e2e` roda a matriz Playwright em Chromium, Firefox e WebKit. O Kanban de
+Candidaturas suporta drag-and-drop com rollback em falha da API e mantém edição de status por select
+para teclado/mobile.
 
 Streamlit continua disponível como modo local/dev:
 
@@ -184,7 +189,7 @@ enviada apenas para a FastAPI local, fica no backend em `data/secrets/ai-provide
 caminho é ignorado pelo Git. A API nunca retorna a chave para o frontend; ela retorna apenas
 provider, modelo, status, toggles, warnings e data de atualização.
 
-Na v1.5.1, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
+Na v1.6.0, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
 Análise de Compatibilidade, ATS, Ajuste de Currículo e GitHub. Se Gemini falhar, o SotuHire retorna
 fallback local com warning e mantém os scores finais no backend/core.
 
