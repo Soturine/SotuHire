@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.5.1 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.6.0 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -71,7 +71,7 @@ A ponte lê o store local da Local Companion API e permite importar capturas par
 Candidaturas. Ela não reimplementa crawler logado, não controla contas de terceiros e não altera o
 browser autenticado existente.
 
-## UX web v1.5.1
+## UX web v1.6.0
 
 - Home e Dashboard exibem fluxo guiado de 8 passos.
 - Currículo, Vaga, Match, ATS, Tailor e GitHub exibem estado Local/IA/Fallback.
@@ -79,3 +79,13 @@ browser autenticado existente.
   ações e itens que não devem ser adicionados sem evidência.
 - Fontes e Captura mostra status do companion, últimas capturas, origem, data, tipo e ações.
 - Kanban mostra origem, score, última análise, notas e data.
+
+## Incrementos v1.6.0
+
+- Match, ATS, Tailor e GitHub adicionam explicabilidade de recomendacao, evidencias usadas,
+  prioridade de melhoria e botoes de copiar sugestoes/plano de acao.
+- O Kanban envia status reais do backend, usa drag-and-drop com rollback quando a API falha e mantem
+  alternativa por select para teclado/mobile.
+- A ponte da extensao inclui `kind`, `source` e `captured_at` para historico seguro de capturas.
+- Playwright cobre Chromium, Firefox e WebKit; responsividade mobile/tablet/desktop e capturas
+  visuais padronizadas rodam uma vez no Chromium.

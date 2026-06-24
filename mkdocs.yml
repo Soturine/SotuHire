@@ -1,4 +1,4 @@
-site_name: SotuHire Docs
+﻿site_name: SotuHire Docs
 site_description: Copiloto de carreira com IA, ATS, match, scraping responsável, RAG, perfil, portfólio e tracker.
 site_url: https://soturine.github.io/SotuHire/
 repo_url: https://github.com/Soturine/SotuHire
@@ -153,11 +153,11 @@ nav:
       - Security Privacy: 06-engineering/security-privacy.md
       - Avoid overengineering: 06-engineering/avoid-overengineering.md
   - Testes:
-      - Fixtures realistas: 06-testing/realistic-fixtures.md
-      - Testes de regressão: 06-testing/regression-testing.md
-      - Testes de screenshots: 06-testing/screenshot-testing.md
-      - Regressões da memória: 06-testing/memory-regression-tests.md
-      - Extensão assistiva: 06-testing/browser-extension-testing.md
+      - Fixtures realistas: 09-testing/realistic-fixtures.md
+      - Testes de regressão: 09-testing/regression-testing.md
+      - Testes de screenshots: 09-testing/screenshot-testing.md
+      - Regressões da memória: 09-testing/memory-regression-tests.md
+      - Extensão assistiva: 09-testing/browser-extension-testing.md
   - Desenvolvimento:
       - Setup: 07-development/setup.md
       - Commands: 07-development/commands.md
@@ -193,6 +193,7 @@ nav:
       - v1.5.0 Integration Audit: 07-development/v1.5.0-integration-audit.md
       - v1.5.0 Full Web Integration: 07-development/v1.5.0-full-web-integration.md
       - v1.5.1 Product Readiness Audit: 07-development/v1.5.1-product-readiness-audit.md
+      - v1.6.0 Stability and QA: 07-development/v1.6.0-stability-cross-browser-kanban.md
   - Frontend:
       - Overview: 08-frontend/README.md
       - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md
@@ -205,6 +206,6 @@ nav:
       - Frontend rules: 08-frontend/frontend-rules.md
       - Application Intelligence: 08-frontend/application-intelligence.md
   - Benchmark:
-      - Players e inspirações: 08-benchmark/players-and-inspirations.md
-      - Projetos de referência: 08-benchmark/reference-projects.md
-      - LA Jobs AI Claude: 08-benchmark/la-jobs-ai-claude.md
+      - Players e inspirações: 10-benchmark/players-and-inspirations.md
+      - Projetos de referência: 10-benchmark/reference-projects.md
+      - LA Jobs AI Claude: 10-benchmark/la-jobs-ai-claude.md

@@ -1,4 +1,4 @@
-# Relatório da atualização expandida
+﻿# Relatório da atualização expandida
 
 ## Resumo
 
@@ -32,7 +32,7 @@ Nenhum documento Markdown existente teve número de linhas reduzido nesta atuali
 - `docs/07-development/follow-up-assistant.md`
 - `docs/07-development/job-tracker-kanban.md`
 - `docs/07-development/profile-analyzer-roadmap.md`
-- `docs/08-benchmark/reference-projects.md`
+- `docs/10-benchmark/reference-projects.md`
 - `modules/__init__.py`
 - `modules/ai/__init__.py`
 - `modules/ai/provider.py`
@@ -77,7 +77,7 @@ Nenhum documento Markdown existente teve número de linhas reduzido nesta atuali
 - `docs/04-ai/structured-output-schema.md`
 - `docs/05-data-sources/scraping-strategy.md`
 - `docs/05-data-sources/source-connectors.md`
-- `docs/08-benchmark/players-and-inspirations.md`
+- `docs/10-benchmark/players-and-inspirations.md`
 - `docs/README.md`
 - `mkdocs.yml`
 - `pyproject.toml`

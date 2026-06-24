@@ -1,4 +1,4 @@
-# MVP Tailor/Fit Update Summary
+﻿# MVP Tailor/Fit Update Summary
 
 ```json
 {
@@ -22,7 +22,7 @@
     "docs/05-data-sources/jobspy-experimental-reference.md",
     "docs/07-development/mvp-core-implementation.md",
     "docs/07-development/resume-tailor-docx.md",
-    "docs/08-benchmark/la-jobs-ai-claude.md",
+    "docs/10-benchmark/la-jobs-ai-claude.md",
     "modules/analyzer/__init__.py",
     "modules/analyzer/recommendation.py",
     "modules/preferences/__init__.py",

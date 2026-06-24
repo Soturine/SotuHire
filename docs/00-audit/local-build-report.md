@@ -1,4 +1,4 @@
-# Local build report
+﻿# Local build report
 
 ## Atualização
 
@@ -21,7 +21,7 @@ docs/05-data-sources/scraping-strategy.md
 docs/05-data-sources/source-connectors.md
 docs/06-engineering/ruff.md
 docs/06-engineering/ci-cd.md
-docs/08-benchmark/players-and-inspirations.md
+docs/10-benchmark/players-and-inspirations.md
 pyproject.toml
 .github/workflows/ci.yml
 .pre-commit-config.yaml
