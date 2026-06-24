@@ -1,11 +1,11 @@
 # Scripts locais do SotuHire
 
-Este guia descreve os scripts locais da experiência web-first. O fluxo principal da v1.5.1 é o
+Este guia descreve os scripts locais da experiencia web-first. O fluxo principal da v1.6.0 e o
 frontend moderno em `apps/web` consumindo a FastAPI local em `apps/api`.
 
 ## Comando principal
 
-Na raiz do repositório:
+Na raiz do repositorio:
 
 ```powershell
 .\start-sotuhire.ps1
@@ -15,15 +15,30 @@ O launcher:
 
 - verifica se Python existe;
 - verifica se Node/npm existem;
-- confirma que o comando está na raiz do repositório;
+- confirma que o comando esta na raiz do repositorio;
 - configura CORS local;
+- detecta portas ocupadas e mostra processo/PID;
 - inicia a API com `python scripts/run_api.py`;
 - inicia o frontend com `npm run dev`;
-- roda `npm install` apenas quando necessário;
+- roda `npm install` apenas quando necessario;
 - espera `/api/v1/health`;
 - espera o Vite subir;
 - abre `http://localhost:5173`;
 - encerra processos filhos com `Ctrl+C`.
+
+Mensagens esperadas:
+
+```txt
+API iniciando...
+Frontend iniciando...
+Companion iniciando...
+API online
+Frontend online
+Companion online
+Abra: http://localhost:5173
+Docs API: http://127.0.0.1:8787/docs
+Pressione Ctrl+C para encerrar
+```
 
 ## URLs e portas
 
@@ -47,37 +62,37 @@ Chromium/CDP manual opcional: http://127.0.0.1:9222
 .\start-sotuhire.ps1 -WithCompanion
 ```
 
-- `-NoBrowser`: não abre o navegador automaticamente.
-- `-SkipInstall`: não roda `npm install`.
+- `-NoBrowser`: nao abre o navegador automaticamente.
+- `-SkipInstall`: nao roda `npm install`.
 - `-ApiOnly`: sobe apenas a API.
 - `-WebOnly`: sobe apenas o frontend.
 - `-Production`: usa build/preview do frontend.
-- `-WithCompanion`: inicia a Local Companion API existente para a extensão assistiva.
+- `-WithCompanion`: inicia a Local Companion API existente para a extensao assistiva.
 
-`-WithCompanion` não abre navegador autenticado, não faz login, não altera Chromium/CDP e não muda o
+`-WithCompanion` nao abre navegador autenticado, nao faz login, nao altera Chromium/CDP e nao muda o
 fluxo de coleta autenticada existente.
 
 ## PowerShell execution policy
 
-Se o PowerShell bloquear scripts locais, abra um terminal no repositório e use uma política apenas
-para a sessão atual:
+Se o PowerShell bloquear scripts locais, abra um terminal no repositorio e use uma politica apenas
+para a sessao atual:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\start-sotuhire.ps1
 ```
 
-Evite alterar a política global se não for necessário.
+Evite alterar a politica global se nao for necessario.
 
 ## CORS local
 
-O launcher configura por padrão:
+O launcher configura por padrao:
 
 ```txt
 SOTUHIRE_API_ALLOWED_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173
 ```
 
-Se a variável já existir no ambiente, o script respeita o valor informado.
+Se a variavel ja existir no ambiente, o script respeita o valor informado.
 
 ## Modo manual
 
@@ -95,7 +110,7 @@ npm install
 npm run dev
 ```
 
-Local Companion API, quando necessária para a extensão:
+Local Companion API, quando necessaria para a extensao:
 
 ```powershell
 python -m modules.local_api.server
@@ -108,26 +123,26 @@ ele. Logs locais ficam em `.sotuhire/logs/`.
 
 ## Streamlit
 
-O Streamlit continua disponível como modo legado/dev/debug local:
+O Streamlit continua disponivel como modo legado/dev/debug local:
 
 ```powershell
 streamlit run app.py
 ```
 
-Ele não é iniciado pelo launcher web-first.
+Ele nao e iniciado pelo launcher web-first.
 
 ## Erros comuns
 
-- **Python não encontrado**: instale Python 3.11+ e confira se `python` está no `PATH`.
-- **Node/npm não encontrados**: instale Node.js e rode novamente.
-- **Porta 8787 ocupada**: encerre o processo que está usando a porta da API.
+- **Python nao encontrado**: instale Python 3.11+ e confira se `python` esta no `PATH`.
+- **Node/npm nao encontrados**: instale Node.js e rode novamente.
+- **Porta 8787 ocupada**: o launcher mostra processo/PID. Encerre esse processo ou rode depois.
 - **Porta 5173 ocupada**: encerre outro Vite aberto ou rode o frontend manualmente em outra porta.
-- **Porta 8765 ocupada**: outra Local Companion API já está aberta; feche ou rode sem
+- **Porta 8765 ocupada**: outra Local Companion API ja esta aberta; feche ou rode sem
   `-WithCompanion`.
-- **Frontend não sobe**: rode `cd apps/web; npm install; npm run build` para ver o erro completo.
+- **Frontend nao sobe**: rode `cd apps/web; npm install; npm run build` para ver o erro completo.
 - **CORS no modo API Real**: confirme que a API foi iniciada pelo launcher ou defina
   `SOTUHIRE_API_ALLOWED_ORIGINS` com a origem do frontend.
 - **Companion offline**: rode `.\start-sotuhire.ps1 -WithCompanion` ou
   `python -m modules.local_api.server`.
-- **API health não responde**: verifique se `python scripts/run_api.py` sobe sem erro e se a porta
-  8787 está livre.
+- **API health nao responde**: verifique se `python scripts/run_api.py` sobe sem erro e se a porta
+  8787 esta livre.

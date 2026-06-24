@@ -50,7 +50,7 @@ function Wait-Http {
         try {
             $Response = Invoke-WebRequest -Uri $Url -UseBasicParsing -TimeoutSec 2
             if ($Response.StatusCode -ge 200 -and $Response.StatusCode -lt 500) {
-                Write-Host "[SotuHire] $Name pronto: $Url"
+                Write-Host "[SotuHire] $Name online: $Url"
                 return
             }
         } catch {
@@ -58,6 +58,27 @@ function Wait-Http {
         }
     }
     throw "Timeout aguardando $Name em $Url."
+}
+
+function Assert-PortFree {
+    param(
+        [int]$Port,
+        [string]$Label
+    )
+    $Connections = @(Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue)
+    if ($Connections.Count -eq 0) {
+        return
+    }
+    $Pids = $Connections | Select-Object -ExpandProperty OwningProcess -Unique
+    $Details = foreach ($ProcessId in $Pids) {
+        $Process = Get-Process -Id $ProcessId -ErrorAction SilentlyContinue
+        if ($Process) {
+            "$($Process.ProcessName) PID $ProcessId"
+        } else {
+            "PID $ProcessId"
+        }
+    }
+    throw "$Label nao pode iniciar: porta $Port ocupada por $($Details -join ', '). Feche o processo ou altere a porta antes de rodar novamente."
 }
 
 function Start-SotuCommand {
@@ -71,6 +92,7 @@ function Start-SotuCommand {
     $StdOut = Join-Path $LogDir "$Name.out.log"
     $StdErr = Join-Path $LogDir "$Name.err.log"
     $ArgumentList = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", $Command)
+    Write-Host "[SotuHire] $Name iniciando..."
     $Process = Start-Process `
         -FilePath $PowerShellExe `
         -ArgumentList $ArgumentList `
@@ -79,7 +101,7 @@ function Start-SotuCommand {
         -WindowStyle Hidden `
         -RedirectStandardOutput $StdOut `
         -RedirectStandardError $StdErr
-    Write-Host "[SotuHire] $Name iniciado (PID $($Process.Id)). Logs: $StdOut"
+    Write-Host "[SotuHire] $Name iniciado (PID $($Process.Id)). Logs: $StdOut / $StdErr"
     return $Process
 }
 
@@ -103,6 +125,16 @@ if (-not $ApiOnly) {
     Assert-Command -Name "npm" -Label "npm"
 }
 
+if (-not $WebOnly) {
+    Assert-PortFree -Port 8787 -Label "API"
+}
+if (-not $ApiOnly) {
+    Assert-PortFree -Port 5173 -Label "Frontend"
+}
+if ($WithCompanion) {
+    Assert-PortFree -Port 8765 -Label "Companion"
+}
+
 $env:SOTUHIRE_API_ALLOWED_ORIGINS = if ($env:SOTUHIRE_API_ALLOWED_ORIGINS) {
     $env:SOTUHIRE_API_ALLOWED_ORIGINS
 } else {
@@ -118,12 +150,13 @@ if ($WithCompanion) {
     Write-Host "Companion:   $CompanionUrl"
 }
 Write-Host "CORS:         $env:SOTUHIRE_API_ALLOWED_ORIGINS"
+Write-Host "Logs:         $LogDir"
 Write-Host ""
 
 try {
     if (-not $WebOnly) {
         $Processes += Start-SotuCommand `
-            -Name "api" `
+            -Name "API" `
             -WorkingDirectory $Root `
             -Command "python scripts/run_api.py"
         Wait-Http -Url $ApiHealthUrl -Name "API"
@@ -131,10 +164,10 @@ try {
 
     if ($WithCompanion) {
         $Processes += Start-SotuCommand `
-            -Name "companion" `
+            -Name "Companion" `
             -WorkingDirectory $Root `
             -Command "python -m modules.local_api.server"
-        Wait-Http -Url $CompanionHealthUrl -Name "Local Companion"
+        Wait-Http -Url $CompanionHealthUrl -Name "Companion"
     }
 
     if (-not $ApiOnly) {
@@ -157,7 +190,7 @@ try {
         } else {
             "npm run dev -- --host 127.0.0.1 --port 5173"
         }
-        $Processes += Start-SotuCommand -Name "web" -WorkingDirectory $WebRoot -Command $WebCommand
+        $Processes += Start-SotuCommand -Name "Frontend" -WorkingDirectory $WebRoot -Command $WebCommand
         Wait-Http -Url $FrontendHealthUrl -Name "Frontend" -TimeoutSeconds 180
         if (-not $NoBrowser) {
             Start-Process $FrontendUrl
@@ -165,7 +198,9 @@ try {
     }
 
     Write-Host ""
-    Write-Host "[SotuHire] Pronto. Use Ctrl+C para parar os processos."
+    Write-Host "Abra: $FrontendUrl"
+    Write-Host "Docs API: $ApiDocsUrl"
+    Write-Host "[SotuHire] Pronto. Pressione Ctrl+C para encerrar."
     while ($true) {
         Start-Sleep -Seconds 1
         foreach ($Process in $Processes) {
