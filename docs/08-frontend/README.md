@@ -1,10 +1,12 @@
 # Frontend moderno
 
-A v1.5.1 consolida o frontend moderno do SotuHire em `apps/web` como experiência local principal e
-adiciona polimento de produto, fluxo guiado, estados Local/IA/Fallback e E2E expandido.
+A v1.6.0 consolida o frontend moderno do SotuHire em `apps/web` como experiencia local principal,
+com QA cross-browser, responsividade validada, Kanban com drag-and-drop e estados de IA/fallback
+mais claros.
+
 O app usa React, Vite, TypeScript, TanStack Router, TanStack Query, Tailwind CSS, Radix UI, Recharts
 e lucide-react. Ele roda separado do Streamlit e consome a FastAPI local em `/api/v1` quando o modo
-API Real está ativo.
+API Real esta ativo.
 
 ## Como rodar
 
@@ -33,7 +35,7 @@ npm run typecheck
 npm run test:e2e
 ```
 
-Para iniciar também a Local Companion API:
+Para iniciar tambem a Local Companion API:
 
 ```powershell
 .\start-sotuhire.ps1 -WithCompanion
@@ -41,49 +43,65 @@ Para iniciar também a Local Companion API:
 
 ## Modos
 
-- **Modo Demo:** usa mocks fictícios locais e permite navegar sem backend ativo.
+- **Modo Demo:** usa mocks ficticios locais e permite navegar sem backend ativo.
 - **Modo API Real:** usa `http://127.0.0.1:8787/api/v1`.
-
-Configuração local opcional:
-
-```env
-VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
-```
 
 ## Telas integradas
 
 - Home/Landing
 - Dashboard
-- Currículo
+- Curriculo
 - Vaga
-- Análise de Compatibilidade
-- Análise ATS
-- Ajuste de Currículo
-- Análise de GitHub
+- Analise de Compatibilidade
+- Analise ATS
+- Ajuste de Curriculo
+- Analise de GitHub
 - Candidaturas
-- Inteligência de Candidaturas
+- Inteligencia de Candidaturas
 - Fontes e Captura
-- Configurações
+- Configuracoes
 - Privacidade
+
+## Cross-browser e responsividade
+
+`npm run test:e2e` roda Playwright em:
+
+```txt
+chromium
+firefox
+webkit
+```
+
+A matriz responsiva e capturada uma vez no Chromium:
+
+```txt
+Mobile: 390x844
+Tablet: 768x1024
+Desktop: 1440x1000
+```
+
+## Kanban
+
+O Kanban de Candidaturas usa status reais do backend, drag-and-drop visual, rollback se a API falhar
+e select de status como alternativa acessivel para teclado/mobile.
 
 ## Fontes e Captura
 
 A tela **Fontes e Captura** fica na rota `/sources` e no menu lateral. Ela organiza caminhos seguros
-para colar vaga manualmente, salvar link, importar arquivo, usar extensão assistida, radar público e
-APIs oficiais quando disponíveis.
+para colar vaga manualmente, salvar link, importar arquivo, usar extensao assistida, radar publico e
+APIs oficiais quando disponiveis.
 
-O fluxo `AUTHENTICATED_BROWSER` existente no backend local também aparece nessa tela. Ele testa o CDP
-local, abre um Chromium dedicado para login manual e exige confirmação de uso autorizado antes da
-coleta. A v1.5.1 não alterou o scraper autenticado, Chromium/CDP, crawler logado ou docs protegidos.
-O fluxo não contorna CAPTCHA/checkpoint, não automatiza candidatura e não faz auto-apply.
+O fluxo `AUTHENTICATED_BROWSER` existente no backend local tambem aparece nessa tela. A v1.6.0 nao
+alterou scraper autenticado, Chromium/CDP, crawler logado ou docs protegidos. O fluxo nao contorna
+CAPTCHA/checkpoint, nao automatiza candidatura e nao faz auto-apply.
 
-O painel **Extensão Local** consulta capturas já salvas pela Local Companion API, mostra status,
-origem, data e tipo de captura, e permite importar uma captura para Vaga, GitHub Analysis ou
-Candidaturas. Ele não controla sites de terceiros.
+O painel **Extensao Local** consulta capturas ja salvas pela Local Companion API, mostra status,
+ultima sincronizacao, origem, URL, data e tipo de captura, e permite importar uma captura para Vaga,
+GitHub Analysis ou Candidaturas. O botao Ignorar oculta a captura apenas na sessao da UI.
 
 ## IA e Providers
 
-A seção **IA e Providers** em Configurações usa endpoints reais do backend local:
+A secao **IA e Providers** em Configuracoes usa endpoints reais do backend local:
 
 ```txt
 GET /api/v1/settings/ai
@@ -93,20 +111,24 @@ POST /api/v1/settings/ai/test
 DELETE /api/v1/settings/ai
 ```
 
-A chave é enviada apenas para a FastAPI local e armazenada backend-side em
+A chave e enviada apenas para a FastAPI local e armazenada backend-side em
 `data/secrets/ai-provider.local.json`, com metadados seguros em `data/settings/ai-settings.json`.
-Esses caminhos são ignorados pelo Git. A chave nunca é retornada ao frontend, não aparece em mocks,
-prints ou docs e não é gravada em `localStorage`/`sessionStorage`.
+Esses caminhos sao ignorados pelo Git. A chave nunca e retornada ao frontend, nao aparece em mocks,
+prints ou docs e nao e gravada em `localStorage`/`sessionStorage`.
 
-Providers:
+Estados exibidos:
 
-- `local`: sem chamada externa.
-- `gemini`: usa a integração backend existente quando há chave.
-- `openai_future`: planejado para versão futura.
-
-Na v1.5.1, os toggles em Configurações controlam o roteamento de IA no backend. As telas mostram
-badges de **Análise local**, **Análise com IA** e **Fallback local**, mas a regra de negócio e os
-scores finais seguem no Python.
+```txt
+IA desativada
+Provider local
+Provider configurado
+Provider nao configurado
+Analisando com IA
+Fallback local
+Limite/erro do provider
+Timeout do provider
+Chave invalida
+```
 
 ## Testes e visual
 
@@ -115,42 +137,39 @@ cd apps/web
 npm run test:e2e
 ```
 
-O Playwright cobre fluxo guiado, demos de análise, IA Settings, Fontes e Captura, Kanban e ausência
-de branding legado. O spec visual gera a série `sotuhire-v1.5.1-web-*.png` em
-`docs/assets/screenshots/` com viewport fixo `1440x1000`.
+O Playwright cobre fluxo guiado, demos de analise, IA Settings, Fontes e Captura, Kanban,
+cross-browser e ausencia de branding legado. O spec visual gera a serie `sotuhire-v1.6-web-*.png`
+em `docs/assets/screenshots/` com viewport fixo `1440x1000`.
 
 ## Streamlit legado/dev
 
-O Streamlit continua disponível, mas não é o fluxo principal do frontend moderno:
+O Streamlit continua disponivel, mas nao e o fluxo principal do frontend moderno:
 
 ```powershell
 streamlit run app.py
 ```
 
-Use esse modo para debug local, validações antigas e fluxos de desenvolvimento que ainda dependem da
-interface Streamlit.
-
 ## Fronteira de responsabilidade
 
-O frontend exibe estados, coleta inputs e chama a API. O backend/core continua responsável por:
+O frontend exibe estados, coleta inputs e chama a API. O backend/core continua responsavel por:
 
-- extração de currículo e vaga;
-- Análise de Compatibilidade;
+- extracao de curriculo e vaga;
+- Analise de Compatibilidade;
 - ATS;
 - Resume Tailor;
 - GitHub Analyzer;
-- tracker, métricas e persistência;
-- configurações locais de IA e segredos;
-- validações fortes;
-- regras anti-invenção;
-- privacidade e retenção local.
+- tracker, metricas e persistencia;
+- configuracoes locais de IA e segredos;
+- validacoes fortes;
+- regras anti-invencao;
+- privacidade e retencao local.
 
 ## GitHub Pages
 
-O GitHub Pages continua estático e demo-oriented. Ele não roda Python, FastAPI, Streamlit, IA ou
+O GitHub Pages continua estatico e demo-oriented. Ele nao roda Python, FastAPI, Streamlit, IA ou
 storage local.
 
-## Referências
+## Referencias
 
 - [Arquitetura frontend](frontend-architecture.md)
 - [API contract](api-contract.md)

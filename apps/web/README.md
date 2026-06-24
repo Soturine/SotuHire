@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versão `v1.5.1`.
+Frontend moderno do SotuHire em `apps/web` para a versao `v1.6.0`.
 
 ## Stack
 
@@ -13,11 +13,11 @@ Frontend moderno do SotuHire em `apps/web` para a versão `v1.5.1`.
 - Radix UI
 - Recharts
 - lucide-react
-- Playwright para smoke/E2E
+- Playwright para smoke/E2E/cross-browser
 
 ## Rodar localmente
 
-Fluxo principal, a partir da raiz do repositório:
+Fluxo principal, a partir da raiz do repositorio:
 
 ```powershell
 .\start-sotuhire.ps1
@@ -39,7 +39,7 @@ npm install
 npm run dev
 ```
 
-Build e validação:
+Build e validacao:
 
 ```powershell
 cd apps/web
@@ -47,51 +47,52 @@ npm run build
 npm run lint
 npm run typecheck
 npm run test:e2e
+npm run test:e2e:cross-browser
 ```
 
-Para iniciar também a Local Companion API usada pela extensão assistiva:
+Para iniciar tambem a Local Companion API usada pela extensao assistiva:
 
 ```powershell
 .\start-sotuhire.ps1 -WithCompanion
 ```
 
-## Configuração da API
+## Configuracao da API
 
-Crie um `.env.local` local se quiser trocar a URL padrão:
+Crie um `.env.local` local se quiser trocar a URL padrao:
 
 ```env
 VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
 ```
 
-O padrão do app é `http://127.0.0.1:8787/api/v1`.
+O padrao do app e `http://127.0.0.1:8787/api/v1`.
 
 ## Modos
 
-- **Modo Demo:** usa dados fictícios locais para explorar todas as telas.
+- **Modo Demo:** usa dados ficticios locais para explorar todas as telas.
 - **Modo API Real:** consulta a FastAPI local em `/api/v1` e espera o envelope `{ ok, data, warnings, request_id }`.
 
-O frontend não calcula score real, não move regra de negócio para o cliente e não salva segredos. A
-URL e o modo selecionados ficam apenas no estado da sessão aberta do app.
+O frontend nao calcula score real, nao move regra de negocio para o cliente e nao salva segredos. A
+URL e o modo selecionados ficam apenas no estado da sessao aberta do app.
 
 ## Telas
 
 - Home/Landing
 - Dashboard
-- Currículo
+- Curriculo
 - Vaga
-- Análise de Compatibilidade
-- Análise ATS
-- Ajuste de Currículo
-- Análise de GitHub
+- Analise de Compatibilidade
+- Analise ATS
+- Ajuste de Curriculo
+- Analise de GitHub
 - Candidaturas
-- Inteligência de Candidaturas
+- Inteligencia de Candidaturas
 - Fontes e Captura
-- Configurações
+- Configuracoes
 - Privacidade
 
 ## IA e Providers
 
-A seção **IA e Providers** em Configurações usa endpoints reais da API local:
+A secao **IA e Providers** em Configuracoes usa endpoints reais da API local:
 
 ```txt
 GET /api/v1/settings/ai
@@ -101,28 +102,34 @@ POST /api/v1/settings/ai/test
 DELETE /api/v1/settings/ai
 ```
 
-A chave digitada é enviada somente para o backend local e limpa do estado do componente após salvar.
-Ela não é persistida em `localStorage`, `sessionStorage` ou bundle público. A API nunca retorna a
+A chave digitada e enviada somente para o backend local e limpa do estado do componente apos salvar.
+Ela nao e persistida em `localStorage`, `sessionStorage` ou bundle publico. A API nunca retorna a
 chave; retorna apenas provider, modelo, `configured`, `status`, toggles, warnings e `updated_at`.
 
-Armazenamento local backend-side:
+Estados exibidos na UI:
 
 ```txt
-data/settings/ai-settings.json
-data/secrets/ai-provider.local.json
+IA desativada
+Provider local
+Provider configurado
+Provider nao configurado
+Analisando com IA
+Fallback local
+Limite/erro do provider
+Timeout do provider
+Chave invalida
 ```
 
-`data/` e os arquivos locais de segredo são ignorados pelo Git.
+## Kanban e responsividade
 
-Providers:
+O Kanban de Candidaturas usa status reais do backend, drag-and-drop visual, rollback quando a API
+falha e select de status como alternativa para teclado/mobile. O teste responsivo valida:
 
-- `local`: sem chamada externa.
-- `gemini`: usa a integração backend existente quando há chave local e o toggle da área está ativo.
-- `openai_future`: aparece como planejado.
-
-As telas de Currículo, Vaga, Compatibilidade, ATS, Tailor e GitHub mostram badges de **Análise
-local**, **Análise com IA** e **Fallback local**. Se o Gemini falhar, a API retorna fallback local
-com warning.
+```txt
+Mobile: 390x844
+Tablet: 768x1024
+Desktop: 1440x1000
+```
 
 ## Fontes e Captura
 
@@ -130,17 +137,16 @@ A tela **Fontes e Captura** inclui o fluxo `AUTHENTICATED_BROWSER` existente no 
 
 - testa o CDP local em `http://127.0.0.1:9222`;
 - abre um Chromium dedicado para login manual;
-- exige confirmação de uso autorizado antes de coletar;
+- exige confirmacao de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-A v1.5.1 não altera o scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
-regras protegidas. O fluxo não automatiza login, não contorna CAPTCHA/checkpoint e não envia
-candidatura.
+A v1.6.0 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
+regras protegidas.
 
-A v1.5.1 melhora o painel **Extensão Local**, que consulta `/api/v1/extension/status` e
-`/api/v1/extension/captures` para mostrar capturas já salvas pela Local Companion API. O painel
-mostra status do companion, origem, data, tipo de captura e pode importar uma captura para Vaga,
-GitHub Analysis ou Candidaturas sem controlar contas de terceiros.
+O painel **Extensao Local** consulta `/api/v1/extension/status` e `/api/v1/extension/captures` para
+mostrar capturas ja salvas pela Local Companion API. Ele mostra status do companion, ultima
+sincronizacao, origem, URL, data, tipo de captura e acoes para Vaga, GitHub Analysis e
+Candidaturas. O botao Ignorar oculta a captura apenas na sessao da UI.
 
 ## Testes e screenshots
 
@@ -149,20 +155,21 @@ cd apps/web
 npm run test:e2e
 ```
 
-O Playwright cobre Home, Dashboard, fluxo guiado, demos de análise, IA Settings, Fontes e Captura,
-Kanban e ausência de branding legado público. O spec `visual-capture.spec.ts` gera screenshots em:
+O Playwright cobre Home, Dashboard, fluxo guiado, demos de analise, IA Settings, Fontes e Captura,
+Kanban, cross-browser em Chromium/Firefox/WebKit e ausencia de branding legado publico. O spec
+`visual-capture.spec.ts` gera screenshots em:
 
 ```txt
-docs/assets/screenshots/sotuhire-v1.5.1-web-*.png
+docs/assets/screenshots/sotuhire-v1.6-web-*.png
 ```
 
 Todos usam viewport `1440x1000`, `deviceScaleFactor=1` e `fullPage=false`.
 
-## Segurança e limites
+## Seguranca e limites
 
 - Sem auto apply.
-- Sem automação de LinkedIn, Gupy ou plataformas similares.
-- Sem API keys em `localStorage`, `sessionStorage` ou bundle público.
-- GitHub Pages continua estático/demo-oriented.
-- Backend/core continuam responsáveis por regras, score e validações.
-- Streamlit permanece disponível como modo legado/dev/local debug.
+- Sem automacao de LinkedIn, Gupy ou plataformas similares.
+- Sem API keys em `localStorage`, `sessionStorage` ou bundle publico.
+- GitHub Pages continua estatico/demo-oriented.
+- Backend/core continuam responsaveis por regras, score e validacoes.
+- Streamlit permanece disponivel como modo legado/dev/local debug.
