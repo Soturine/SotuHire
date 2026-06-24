@@ -72,6 +72,17 @@ export interface AiSettingsTestResult {
   message: string;
 }
 
+export type AiUiState =
+  | "disabled"
+  | "provider_local"
+  | "configured"
+  | "unconfigured"
+  | "analyzing"
+  | "fallback"
+  | "provider_error"
+  | "provider_timeout"
+  | "invalid_key";
+
 export interface ResumeProfile {
   id?: string;
   name: string;
@@ -184,17 +195,15 @@ export interface GithubAnalyzeResult extends AnalysisMeta {
 export type TrackerStatus =
   | "found"
   | "analyzed"
-  | "ready_to_apply"
+  | "good_fit"
   | "applied"
   | "message_sent"
   | "follow_up"
   | "interview"
-  | "tech_test"
+  | "technical_test"
   | "rejected"
   | "offer"
-  | "archived"
-  | "saved"
-  | "response";
+  | "archived";
 
 export interface TrackerJob {
   id: string;

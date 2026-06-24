@@ -1072,16 +1072,22 @@ function experienceFromText(text: string): NonNullable<ResumeProfile["experience
 }
 
 function normalizeStatus(value: string): TrackerJob["status"] {
+  const aliases: Record<string, TrackerJob["status"]> = {
+    ready_to_apply: "good_fit",
+    tech_test: "technical_test",
+    saved: "analyzed",
+    response: "follow_up",
+  };
+  if (aliases[value]) return aliases[value];
+
   const allowed: TrackerJob["status"][] = [
     "found",
-    "saved",
     "analyzed",
-    "ready_to_apply",
+    "good_fit",
     "applied",
     "message_sent",
     "follow_up",
-    "response",
-    "tech_test",
+    "technical_test",
     "interview",
     "offer",
     "rejected",

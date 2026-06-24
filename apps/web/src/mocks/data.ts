@@ -16,7 +16,7 @@ import type {
 
 export const mockHealth: Health = {
   status: "ok",
-  version: "1.5.1",
+  version: "1.6.0",
   local_first: true,
   environment: "mock",
   capabilities: [
@@ -247,7 +247,7 @@ export const mockJobs: TrackerJob[] = [
     title: "Desenvolvedor de Plataforma",
     company: "Serviço Fictício Orion",
     source: "Página de carreira",
-    status: "ready_to_apply",
+    status: "good_fit",
     match_score: 69,
     ats_score: 65,
     created_at: "2026-06-10",
@@ -319,7 +319,7 @@ export const mockJobs: TrackerJob[] = [
     title: "Engenheiro DevOps",
     company: "Fictícia Infra",
     source: "Gupy",
-    status: "tech_test",
+    status: "technical_test",
     match_score: 66,
     ats_score: 62,
     created_at: "2026-06-08",
