@@ -262,6 +262,11 @@ function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult 
 
       <ActionableInsights
         title="Assistente de ação para compatibilidade"
+        why={[
+          "A recomendação combina requisitos atendidos, lacunas, confiança, risco e evidências citadas.",
+          "Score final e regras permanecem no backend/core; a UI apenas organiza o resultado.",
+        ]}
+        evidence={a.matched_requirements.flatMap((item) => item.evidence ?? []).slice(0, 6)}
         strengths={[
           ...a.matched_requirements.slice(0, 4).map((item) => item.name),
           ...(a.transferable_skills ?? []).slice(0, 2),
@@ -269,6 +274,14 @@ function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult 
         gaps={[
           ...a.partial_requirements.slice(0, 3).map((item) => item.name),
           ...a.missing_requirements.slice(0, 3).map((item) => item.name),
+        ]}
+        improveFirst={[
+          a.partial_requirements[0]?.name
+            ? `Fechar evidência de ${a.partial_requirements[0].name}, se for verdade.`
+            : "Validar se os requisitos atendidos aparecem claramente no currículo.",
+          a.missing_requirements[0]?.name
+            ? `Tratar ${a.missing_requirements[0].name} como lacuna real até existir evidência.`
+            : "Usar a Análise ATS para revisar keywords seguras.",
         ]}
         suggestions={a.safe_actions}
         risks={a.critical_gaps.map((item) => item.reason || item.name)}

@@ -197,8 +197,14 @@ function GhPage() {
 
             <ActionableInsights
               title="Assistente de ação para GitHub"
+              why={[
+                "A recomendação usa sinais técnicos visíveis no repositório e riscos de inconsistência com o currículo.",
+                "Use o repositório como evidência apenas quando ele sustentar requisito real da vaga.",
+              ]}
+              evidence={r.positive_signals}
               strengths={r.positive_signals}
               gaps={r.portfolio_suggestions}
+              improveFirst={r.portfolio_suggestions.slice(0, 3)}
               suggestions={r.portfolio_suggestions}
               risks={r.risks}
               nextActions={[

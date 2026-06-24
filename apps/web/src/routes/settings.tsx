@@ -353,6 +353,7 @@ function AiProvidersCard() {
                   type={showKey ? "text" : "password"}
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
+                  data-testid="ai-api-key-input"
                   placeholder={
                     providerAllowsKey
                       ? "Cole a chave Gemini para salvar no backend"
@@ -419,6 +420,9 @@ function AiProvidersCard() {
               Atualizado em {new Date(settingsQ.data.updated_at).toLocaleString("pt-BR")}.
             </p>
           )}
+          <p className="rounded-md border border-border bg-muted/30 p-2 text-[11px] text-muted-foreground">
+            {aiStatusMessage(status, provider)}
+          </p>
           {settingsQ.isError && (
             <p className="rounded-md bg-muted/50 p-2 text-[11px] text-muted-foreground">
               API offline ou sem resposta. A tela continua funcionando em modo Demo/mock.
@@ -615,6 +619,18 @@ function statusFromTest(status: AiSettingsStatus, success: boolean): AiUiStatus 
   if (status === "ready") return "ready";
   if (success) return "configured";
   return "error";
+}
+
+function aiStatusMessage(status: AiUiStatus, provider: AiProvider): string {
+  if (status === "testing") return "Analisando com IA: teste em andamento com timeout curto.";
+  if (provider === "local") return "Provider local: regras internas, sem chave externa.";
+  if (status === "configured")
+    return "Provider configurado: a chave fica somente no backend local.";
+  if (status === "planned") return "Provider planejado: mantenha o fluxo local por enquanto.";
+  if (status === "error") {
+    return "Limite, timeout, chave invalida ou erro do provider: use fallback local e revise a configuracao.";
+  }
+  return "Provider nao configurado. Configure uma chave em Configuracoes -> IA e Providers.";
 }
 
 function Item({ k, v }: { k: string; v: string }) {

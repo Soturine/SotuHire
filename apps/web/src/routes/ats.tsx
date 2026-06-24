@@ -205,8 +205,16 @@ function AtsPage() {
 
             <ActionableInsights
               title="Assistente de ação ATS"
+              why={[
+                "A recomendação cruza keywords presentes, adicionáveis com evidência e itens sem evidência.",
+                "ATS/Tailor reforçam integridade: não adicione se não for verdade.",
+              ]}
+              evidence={r.present.slice(0, 8)}
               strengths={r.present.slice(0, 6)}
               gaps={r.missing_but_safe_to_add_if_true}
+              improveFirst={r.missing_but_safe_to_add_if_true
+                .slice(0, 3)
+                .map((item) => `Confirmar evidência real para ${item} antes de editar.`)}
               suggestions={[
                 ...r.missing_but_safe_to_add_if_true.map(
                   (item) => `Adicionar ${item} somente se houver evidência real no currículo.`,

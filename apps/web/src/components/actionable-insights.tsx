@@ -19,6 +19,9 @@ export function ActionableInsights({
   risks,
   nextActions,
   doNotAdd,
+  why,
+  evidence,
+  improveFirst,
   actions = [],
 }: {
   title?: string;
@@ -28,11 +31,17 @@ export function ActionableInsights({
   risks?: string[];
   nextActions?: string[];
   doNotAdd?: string[];
+  why?: string[];
+  evidence?: string[];
+  improveFirst?: string[];
   actions?: InsightAction[];
 }) {
   const groups = [
+    { title: "Por que essa recomendacao apareceu?", items: why ?? [], tone: "default" as const },
+    { title: "Evidencias usadas", items: evidence ?? [], tone: "success" as const },
     { title: "Pontos fortes", items: strengths ?? [], tone: "success" as const },
     { title: "Lacunas", items: gaps ?? [], tone: "warning" as const },
+    { title: "O que melhorar primeiro", items: improveFirst ?? [], tone: "accent" as const },
     { title: "Sugestoes praticas", items: suggestions ?? [], tone: "accent" as const },
     { title: "Riscos", items: risks ?? [], tone: "destructive" as const },
     { title: "Proximas acoes", items: nextActions ?? [], tone: "default" as const },
@@ -58,19 +67,39 @@ export function ActionableInsights({
     }
   }
 
+  async function copySuggestions() {
+    const text = (suggestions ?? nextActions ?? []).map((item) => `- ${item}`).join("\n");
+    try {
+      await navigator.clipboard.writeText(text || copyText);
+      toast.success("Sugestoes copiadas.");
+    } catch {
+      toast.error("Nao foi possivel copiar automaticamente.");
+    }
+  }
+
   return (
     <SectionCard
       title={title}
       description="Organizado para agir sem fabricar experiencia, certificacao, metrica ou habilidade."
       actions={
-        <button
-          type="button"
-          onClick={copy}
-          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted"
-        >
-          <Clipboard className="h-3.5 w-3.5" />
-          Copiar plano de acao
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={copySuggestions}
+            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted"
+          >
+            <Clipboard className="h-3.5 w-3.5" />
+            Copiar sugestoes
+          </button>
+          <button
+            type="button"
+            onClick={copy}
+            className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted"
+          >
+            <Clipboard className="h-3.5 w-3.5" />
+            Copiar plano de acao
+          </button>
+        </div>
       }
     >
       <div className="grid gap-3 lg:grid-cols-2">

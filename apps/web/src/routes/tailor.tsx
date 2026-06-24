@@ -203,8 +203,17 @@ function TailorPage() {
 
             <ActionableInsights
               title="Assistente de ação para ajuste"
+              why={[
+                "As sugestões partem da vaga alvo e das evidências informadas pelo usuário.",
+                "Bullets condicionais continuam marcados para evitar experiência inventada.",
+              ]}
+              evidence={t.evidence_used}
               strengths={t.safe_keywords}
               gaps={t.conditional_suggestions.map((item) => item.keyword)}
+              improveFirst={[
+                "Revisar primeiro os bullets seguros que já têm evidência.",
+                "Separar sugestões condicionais e usar somente quando forem verdadeiras.",
+              ]}
               suggestions={[...t.suggested_bullets, ...(mut.data?.ai_suggestions ?? [])]}
               risks={t.warnings}
               nextActions={[
