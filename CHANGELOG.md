@@ -4,6 +4,40 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.6.0] - 2026-06-24
+
+### Adicionado
+
+- Cobertura E2E cross-browser para Chromium, Firefox e WebKit.
+- QA responsivo para mobile `390x844`, tablet `768x1024` e desktop `1440x1000`.
+- Kanban com drag-and-drop visual, atualizacao otimista e rollback quando a API falha.
+- Historico mais rico da Extensao Local em Fontes e Captura.
+- Estados de IA/fallback mais claros para provider local, configurado, nao configurado, timeout,
+  limite/erro e chave invalida.
+- Screenshots v1.6 e GIF walkthrough v1.6 com dimensoes padronizadas.
+- Documento `docs/07-development/v1.6.0-stability-cross-browser-kanban.md`.
+
+### Alterado
+
+- Status do Kanban no frontend alinhados aos enums reais do backend.
+- Match, ATS, Tailor e GitHub agora mostram explicabilidade, evidencias usadas e prioridade de
+  melhoria.
+- Launcher Windows detecta portas ocupadas e mostra processo/PID.
+- README raiz, docs de frontend, scripts e visual preview atualizados para v1.6.0.
+
+### Seguranca
+
+- A chave de IA continua backend-side e nunca retorna ao frontend.
+- Nenhum fluxo de authenticated browser, Chromium/CDP, scraper autenticado, crawler logado ou
+  auto-apply foi alterado.
+- Screenshots e mocks usam apenas dados ficticios.
+
+### Validacao
+
+- Playwright executado em Chromium, Firefox e WebKit.
+- Testes backend cobrem metadados seguros da ponte da extensao.
+- Responsividade validada sem overflow horizontal de pagina nas rotas principais.
+
 ## [1.5.1] - 2026-06-23
 
 ### Adicionado
