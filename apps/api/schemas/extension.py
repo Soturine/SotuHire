@@ -31,8 +31,11 @@ class ExtensionCaptureItem(BaseModel):
     company: str = ""
     url: str = ""
     domain: str = ""
+    kind: str = "other"
+    source: str = "browser_assisted_capture"
     status: str = "captured"
     tracker_id: str = ""
+    captured_at: datetime | None = None
     updated_at: datetime | None = None
 
 

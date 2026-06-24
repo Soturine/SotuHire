@@ -49,8 +49,11 @@ def extension_captures(limit: int = 20) -> ExtensionCapturesResponse:
                 company=record.capture.company,
                 url=record.capture.url,
                 domain=record.capture.domain or _domain(record.capture.url),
+                kind=_capture_kind(record),
+                source=record.capture.collection_method,
                 status=record.status,
                 tracker_id=record.tracker_id,
+                captured_at=record.capture.captured_at,
                 updated_at=record.updated_at,
             )
             for record in records
@@ -145,3 +148,14 @@ def _github_owner_repo(url: str) -> tuple[str, str]:
     if len(parts) < 2:
         return "", ""
     return parts[0], parts[1]
+
+
+def _capture_kind(record) -> str:
+    url = record.capture.url
+    if _github_owner_repo(url)[0]:
+        return "github_repo"
+    if record.capture.job_title or record.capture.description:
+        return "job"
+    if "/in/" in urlparse(url).path.lower():
+        return "profile"
+    return "other"

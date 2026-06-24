@@ -12,8 +12,9 @@ import {
   Save,
   ShieldAlert,
   Terminal,
+  XCircle,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { SourceCardItem } from "@/components/source-card";
@@ -191,9 +192,15 @@ function LocalExtensionPanel() {
       ),
   });
 
-  const captures = capturesQ.data?.captures ?? [];
+  const [ignoredIds, setIgnoredIds] = useState<string[]>([]);
+  const allCaptures = useMemo(() => capturesQ.data?.captures ?? [], [capturesQ.data?.captures]);
+  const captures = useMemo(
+    () => allCaptures.filter((capture) => !ignoredIds.includes(capture.id)),
+    [allCaptures, ignoredIds],
+  );
   const companionOffline = statusQ.isError || statusQ.data?.available === false;
   const busy = importJob.isPending || importTracker.isPending || importGithub.isPending;
+  const lastSync = statusQ.data?.last_capture_at || allCaptures[0]?.captured_at;
 
   return (
     <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -222,13 +229,21 @@ function LocalExtensionPanel() {
           <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
             <InfoTile label="Capturas" value={String(statusQ.data?.capture_count ?? 0)} />
             <InfoTile label="API local" value={statusQ.data?.companion_url ?? "127.0.0.1:8765"} />
+            <InfoTile
+              label="Última sincronização"
+              value={lastSync ? new Date(lastSync).toLocaleString("pt-BR") : "Sem capturas"}
+            />
+            <InfoTile label="Visíveis" value={String(captures.length)} />
           </div>
         </div>
 
         {companionOffline && (
           <div className="rounded-lg border border-dashed border-warning/40 bg-warning/5 p-3 text-xs text-muted-foreground">
-            Companion offline: abra o Local Companion ou use o modo Demo para validar a interface
-            com capturas ficticias.
+            Companion offline: rode{" "}
+            <code className="rounded bg-background px-1 py-0.5">
+              .\start-sotuhire.ps1 -WithCompanion
+            </code>{" "}
+            ou use o modo Demo para validar a interface com capturas fictícias.
           </div>
         )}
 
@@ -274,6 +289,7 @@ function LocalExtensionPanel() {
                 onImportJob={() => importJob.mutate(capture.id)}
                 onImportTracker={() => importTracker.mutate(capture.id)}
                 onImportGithub={() => importGithub.mutate(capture.id)}
+                onIgnore={() => setIgnoredIds((current) => [...current, capture.id])}
               />
             ))}
           </ul>
@@ -289,12 +305,14 @@ function ExtensionCaptureRow({
   onImportJob,
   onImportTracker,
   onImportGithub,
+  onIgnore,
 }: {
   capture: ExtensionCapture;
   busy: boolean;
   onImportJob: () => void;
   onImportTracker: () => void;
   onImportGithub: () => void;
+  onIgnore: () => void;
 }) {
   const kind = capture.kind || (capture.url.includes("github.com") ? "github_repo" : "job");
   const origin = capture.source || capture.domain || capture.company || "Fonte local";
@@ -367,6 +385,16 @@ function ExtensionCaptureRow({
               Enviar para GitHub Analysis
             </button>
           )}
+          <button
+            type="button"
+            onClick={onIgnore}
+            disabled={busy}
+            data-testid="ignore-capture-local"
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+          >
+            <XCircle className="h-3 w-3" />
+            Ignorar
+          </button>
         </div>
       </div>
     </li>

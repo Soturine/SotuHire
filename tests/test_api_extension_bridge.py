@@ -30,7 +30,11 @@ def test_extension_bridge_lists_local_companion_captures(tmp_path: Path, monkeyp
     assert status.status_code == 200
     assert status.json()["data"]["capture_count"] == 1
     assert captures.status_code == 200
-    assert captures.json()["data"]["captures"][0]["id"] == "capture_demo"
+    capture = captures.json()["data"]["captures"][0]
+    assert capture["id"] == "capture_demo"
+    assert capture["kind"] == "job"
+    assert capture["source"] == "browser_assisted_capture"
+    assert capture["captured_at"]
 
 
 def test_extension_bridge_imports_capture_as_job(tmp_path: Path, monkeypatch) -> None:
@@ -127,3 +131,29 @@ def test_extension_bridge_imports_fake_github_capture(tmp_path: Path, monkeypatc
     assert payload["capture_id"] == "capture_github"
     assert payload["message"]
     assert payload["report"]
+
+
+def test_extension_bridge_exposes_fake_github_capture_history(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    store = CompanionCaptureStore()
+    store.save(
+        CompanionCaptureRecord(
+            id="capture_github_history",
+            capture=BrowserCapturePayload(
+                page_title="fictitious-api-lab",
+                url="https://github.com/example/fictitious-api-lab",
+                domain="github.com",
+                visible_text="README FastAPI project with tests.",
+                description="# Fictitious API\nFastAPI project with tests.",
+            ),
+        )
+    )
+    client = api_client()
+
+    response = client.get("/api/v1/extension/captures")
+
+    assert response.status_code == 200
+    capture = response.json()["data"]["captures"][0]
+    assert capture["kind"] == "github_repo"
+    assert capture["source"] == "browser_assisted_capture"
+    assert capture["url"] == "https://github.com/example/fictitious-api-lab"
