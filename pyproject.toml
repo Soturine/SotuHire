@@ -1,6 +1,6 @@
 [project]
 name = "sotuhire"
-version = "1.7.0"
+version = "1.7.1"
 description = "AI-assisted career copilot for resume analysis, job matching and responsible opportunity discovery."
 readme = "README.md"
 requires-python = ">=3.11"

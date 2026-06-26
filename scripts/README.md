@@ -1,6 +1,6 @@
 # Scripts locais do SotuHire
 
-Este guia descreve os scripts locais da experiencia web-first. O fluxo principal da v1.7.0 e o
+Este guia descreve os scripts locais da experiencia web-first. O fluxo principal da v1.7.1 e o
 frontend moderno em `apps/web` consumindo a FastAPI local em `apps/api`.
 
 ## Comando principal

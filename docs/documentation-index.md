@@ -17,6 +17,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [Frontend API Layer](02-architecture/frontend-api-layer.md)
 - [Importadores e fontes publicas](05-data-sources/public-source-importers.md)
 - [v1.7.0 Public Sources and Importers](07-development/v1.7.0-public-sources-importers-capture-history.md)
+- [v1.7.1 Intake Polish and Source Discovery](07-development/v1.7.1-intake-polish-source-discovery.md)
 
 ## Frontend-ready
 

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.7.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.7.0)
+[![Release](https://img.shields.io/badge/release-v1.7.1-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.7.1)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -29,21 +29,17 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 
 ## Preview
 
-![SotuHire v1.7 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.7-web-walkthrough.gif)
+![SotuHire v1.7.1 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.7.1-web-walkthrough.gif)
 
-![SotuHire v1.7 Web Home](docs/assets/screenshots/sotuhire-v1.7-web-home.png)
+![SotuHire v1.7.1 Web Sources Inbox](docs/assets/screenshots/sotuhire-v1.7.1-web-sources-inbox.png)
 
-![SotuHire v1.7 Web Dashboard](docs/assets/screenshots/sotuhire-v1.7-web-dashboard.png)
+![SotuHire v1.7.1 Web Upload CSV](docs/assets/screenshots/sotuhire-v1.7.1-web-upload-csv.png)
 
-![SotuHire v1.7 Web Sources Inbox](docs/assets/screenshots/sotuhire-v1.7-web-sources-inbox.png)
+![SotuHire v1.7.1 Web Dedupe Merge](docs/assets/screenshots/sotuhire-v1.7.1-web-dedupe-merge.png)
 
-![SotuHire v1.7 Web CSV Import](docs/assets/screenshots/sotuhire-v1.7-web-import-csv.png)
+![SotuHire v1.7.1 Web Source Directory](docs/assets/screenshots/sotuhire-v1.7.1-web-source-directory.png)
 
-![SotuHire v1.7 Web Kanban Source](docs/assets/screenshots/sotuhire-v1.7-web-kanban-source.png)
-
-![SotuHire v1.7 Web Extension History](docs/assets/screenshots/sotuhire-v1.7-web-extension-history.png)
-
-![SotuHire v1.7 Web Settings AI](docs/assets/screenshots/sotuhire-v1.7-web-settings-ai.png)
+![SotuHire v1.7.1 Web Kanban Source](docs/assets/screenshots/sotuhire-v1.7.1-web-kanban-source.png)
 
 ## O Que O Projeto Faz
 
@@ -126,7 +122,7 @@ Flags úteis:
 `-WithCompanion` inicia a Local Companion API existente em `127.0.0.1:8765` para a extensão
 assistiva. Isso não abre navegador autenticado, não faz login e não altera Chromium/CDP.
 
-### API local v1.7.0
+### API local v1.7.1
 
 Para conectar um frontend moderno ou inspecionar o OpenAPI:
 
@@ -145,7 +141,7 @@ http://127.0.0.1:8787/docs
 A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
 [Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
 
-### Frontend moderno v1.7.0
+### Frontend moderno v1.7.1
 
 O frontend moderno fica em `apps/web` e roda como app React/Vite separado.
 
@@ -172,7 +168,7 @@ O app tem **Modo Demo** com dados fictícios e **Modo API Real** usando
 VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
 ```
 
-Na v1.7.0, `npm run test:e2e` roda a matriz Playwright em Chromium, Firefox e WebKit. O Kanban de
+Na v1.7.1, `npm run test:e2e` roda a matriz Playwright em Chromium, Firefox e WebKit. O Kanban de
 Candidaturas suporta drag-and-drop com rollback em falha da API e mantém edição de status por select
 para teclado/mobile.
 
@@ -193,7 +189,7 @@ enviada apenas para a FastAPI local, fica no backend em `data/secrets/ai-provide
 caminho é ignorado pelo Git. A API nunca retorna a chave para o frontend; ela retorna apenas
 provider, modelo, status, toggles, warnings e data de atualização.
 
-Na v1.7.0, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
+Na v1.7.1, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
 Análise de Compatibilidade, ATS, Ajuste de Currículo e GitHub. Se Gemini falhar, o SotuHire retorna
 fallback local com warning e mantém os scores finais no backend/core.
 
@@ -224,7 +220,7 @@ PATCH /api/v1/extension/captures/{capture_id}
 Esse painel não cria crawler logado novo, não automatiza login, não faz auto-apply e não mexe no
 fluxo de navegador autenticado existente.
 
-### Importadores e Caixa de Entrada v1.7.0
+### Importadores e Caixa de Entrada v1.7.1
 
 A tela **Fontes e Captura** agora inclui uma **Caixa de Entrada de Oportunidades** persistente para
 texto, link, CSV, JSON e capturas da extensao/local companion. O fluxo recomendado e:
@@ -246,9 +242,16 @@ GET    /api/v1/sources/captures
 PATCH  /api/v1/sources/captures/{capture_id}
 POST   /api/v1/sources/captures/{capture_id}/import-job
 POST   /api/v1/sources/captures/{capture_id}/save-tracker
+POST   /api/v1/sources/captures/{capture_id}/merge
 POST   /api/v1/sources/dedupe
+GET    /api/v1/sources/directory
+POST   /api/v1/sources/export
 GET    /api/v1/sources/stats
 ```
+
+Na v1.7.1, CSV/JSON podem ser enviados por upload no navegador com preview antes de confirmar. A
+Caixa de Entrada também permite exportar todos, filtrados ou selecionados em CSV/JSON e mesclar
+duplicatas preservando histórico.
 
 O importador de URL tenta apenas leitura publica simples. Se a pagina bloquear acesso, exigir login
 ou nao trouxer texto legivel, o SotuHire orienta a pessoa a abrir a pagina manualmente e colar o

@@ -196,6 +196,7 @@ nav:
       - v1.5.1 Product Readiness Audit: 07-development/v1.5.1-product-readiness-audit.md
       - v1.6.0 Stability and QA: 07-development/v1.6.0-stability-cross-browser-kanban.md
       - v1.7.0 Public Sources and Importers: 07-development/v1.7.0-public-sources-importers-capture-history.md
+      - v1.7.1 Intake Polish and Source Discovery: 07-development/v1.7.1-intake-polish-source-discovery.md
   - Frontend:
       - Overview: 08-frontend/README.md
       - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md

@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.3.0 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.7.1 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,14 +8,27 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.3.0 |
-| Natureza da base atual | Produto local-first já funcional, não MVP inicial |
+| Versão atual considerada | v1.7.1 |
+| Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional e intake persistente |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v1.4.0 Streamlit Legacy Mode |
-| Foco de produto | Copiloto de carreira multiárea |
-| Foco técnico imediato | Consolidar fronteira entre frontend moderno e Streamlit local/dev |
-| Grande lacuna atual | Settings/IA ainda dependem de endpoints seguros futuros |
+| Próximo ciclo técnico | v1.8.0 Public Feeds / Source Discovery avançado |
+| Foco de produto | Copiloto de carreira multiárea com intake de oportunidades |
+| Foco técnico imediato | Fontes públicas seguras, feeds com revisão manual e estabilidade do fluxo de importação |
+| Grande lacuna atual | RSS/feed recorrente e APIs oficiais ainda planejados |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
+
+## Estado atual - v1.7.1
+
+A v1.7.1 consolida o frontend web-first e melhora **Fontes e Captura** como fluxo de intake:
+
+- v1.7.0 implementou importadores de texto, link, CSV e JSON, Caixa de Entrada, histórico,
+  deduplicação e integração com Candidaturas/Kanban;
+- v1.7.1 adiciona upload real de CSV/JSON pelo navegador, preview antes de importar, mescla visual
+  de duplicatas, exportação CSV/JSON, Diretório de Fontes e teste anti-mojibake;
+- IA em importações é parcial/opcional: usa `source_import_enrichment_v1` quando provider está
+  configurado e cai para local se falhar;
+- RSS/feed recorrente e APIs oficiais seguem como roadmap para v1.8.0;
+- Streamlit continua legado/dev e não foi removido.
 
 ## Estado atual — v1.3.0
 
@@ -128,6 +141,9 @@ A evolução deve ser feita por camadas:
 | v1.2.0 | API Layer / FastAPI Foundation | Código | API HTTP versionada para consumir o core local-first. |
 | v1.3.0 | Modern Web Frontend | Frontend | Frontend moderno com modo Demo e API Real. |
 | v1.4.0 | Streamlit Legacy Mode | Produto | Streamlit mantido como modo local/dev legado. |
+| v1.7.0 | Public Sources, Importers & Capture History | Produto | Importadores, Caixa de Entrada, histórico e dedupe local. |
+| v1.7.1 | Intake Polish, Encoding Fixes & Source Discovery Prep | Produto | Upload real, merge visual, exportação e Diretório de Fontes. |
+| v1.8.0 | Public Feeds & Source Discovery | Produto | Feeds públicos com refresh manual e revisão antes de salvar. |
 | v2.0.0 | SaaS-ready Architecture | Arquitetura | Base pronta para opção SaaS sem abandonar local-first. |
 
 ---

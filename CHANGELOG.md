@@ -4,6 +4,49 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.7.1] - 2026-06-26
+
+### Corrigido
+
+- Textos públicos com mojibake no Kanban e teste de regressão para sequências comuns de encoding.
+- Separação visual entre Modo Demo e API Real na Caixa de Entrada.
+- Empty state da API Real sem oportunidades, sem misturar dados fictícios silenciosamente.
+- Textos do Kanban para estágio, filtro, rejeição, análise e criação de candidatura.
+
+### Adicionado
+
+- Upload real de CSV/JSON pelo navegador com preview e confirmação antes de importar.
+- Fluxo visual de mescla de duplicatas preservando histórico, fonte, link e notas.
+- Exportação da Caixa de Entrada em CSV e JSON.
+- Diretório de Fontes em **Fontes e Captura** para fontes públicas, feeds, APIs oficiais, CSV/JSON
+  recorrente e links manuais.
+- Endpoint `POST /api/v1/sources/captures/{capture_id}/merge`.
+- Endpoints `GET /api/v1/sources/directory` e `POST /api/v1/sources/export`.
+- Prompt `source_import_enrichment_v1` e schema seguro para enriquecimento opcional de importações.
+
+### Alterado
+
+- Importadores aceitam `use_ai=true` e fazem fallback local se provider não estiver configurado ou
+  falhar.
+- Duplicatas exibem comparação entre item novo e item existente.
+- Fontes públicas/feeds ficam preparadas como diretório seguro, sem crawler amplo ou automação de
+  conta.
+- Roadmap, docs de fontes e mapa de integração atualizados para v1.7.1.
+
+### Segurança
+
+- Nenhuma chave de IA é salva no frontend, no `localStorage` ou no `sessionStorage`.
+- A API key nunca retorna ao frontend e não entra em mocks, docs, prints ou testes.
+- Nenhum fluxo de authenticated browser, Chromium/CDP, login manual, CAPTCHA, cookie, token,
+  crawler logado ou auto-apply foi alterado.
+
+### Validação
+
+- Testes backend direcionados cobrem upload lógico CSV/JSON, merge, export, diretório, fallback de IA
+  e ausência de segredo.
+- Playwright cobre upload CSV/JSON via browser, preview antes da importação, merge visual, export,
+  diretório de fontes, empty state API Real e regressão contra mojibake público.
+
 ## [1.7.0] - 2026-06-26
 
 ### Adicionado

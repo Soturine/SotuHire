@@ -1,54 +1,34 @@
-# Visual preview v1.7.0
+# Visual preview v1.7.1
 
-Esta pagina registra o estado visual atual do frontend moderno do SotuHire. A serie v1.7 usa
+Esta pagina registra o estado visual atual do frontend moderno do SotuHire. A serie v1.7.1 usa
 capturas Playwright com viewport fixo `1440x1000`, `deviceScaleFactor=1` e `fullPage=false`, sem
 chrome do navegador, sem marca d'agua, sem dados reais e sem API keys.
 
 ## Walkthrough
 
-![SotuHire v1.7 Web Walkthrough](../assets/screenshots/sotuhire-v1.7-web-walkthrough.gif)
+![SotuHire v1.7.1 Web Walkthrough](../assets/screenshots/sotuhire-v1.7.1-web-walkthrough.gif)
 
 ## Telas principais
 
-### Home
-
-![SotuHire v1.7 Web Home](../assets/screenshots/sotuhire-v1.7-web-home.png)
-
-### Dashboard
-
-![SotuHire v1.7 Web Dashboard](../assets/screenshots/sotuhire-v1.7-web-dashboard.png)
-
 ### Fontes e Captura - Caixa de Entrada
 
-![SotuHire v1.7 Web Sources Inbox](../assets/screenshots/sotuhire-v1.7-web-sources-inbox.png)
+![SotuHire v1.7.1 Web Sources Inbox](../assets/screenshots/sotuhire-v1.7.1-web-sources-inbox.png)
 
-### Importacao CSV
+### Upload CSV
 
-![SotuHire v1.7 Web CSV Import](../assets/screenshots/sotuhire-v1.7-web-import-csv.png)
+![SotuHire v1.7.1 Web Upload CSV](../assets/screenshots/sotuhire-v1.7.1-web-upload-csv.png)
 
-### Detalhes de importacao
+### Mescla de duplicatas
 
-![SotuHire v1.7 Web Import Details](../assets/screenshots/sotuhire-v1.7-web-import-details.png)
+![SotuHire v1.7.1 Web Dedupe Merge](../assets/screenshots/sotuhire-v1.7.1-web-dedupe-merge.png)
 
-### Analise a partir de oportunidade
+### Diretório de Fontes
 
-![SotuHire v1.7 Web Analysis](../assets/screenshots/sotuhire-v1.7-web-analysis.png)
+![SotuHire v1.7.1 Web Source Directory](../assets/screenshots/sotuhire-v1.7.1-web-source-directory.png)
 
 ### Kanban com origem
 
-![SotuHire v1.7 Web Kanban Source](../assets/screenshots/sotuhire-v1.7-web-kanban-source.png)
-
-### Inteligencia
-
-![SotuHire v1.7 Web Intelligence](../assets/screenshots/sotuhire-v1.7-web-intelligence.png)
-
-### Historico da Extensao Local
-
-![SotuHire v1.7 Web Extension History](../assets/screenshots/sotuhire-v1.7-web-extension-history.png)
-
-### IA e Providers
-
-![SotuHire v1.7 Web Settings AI](../assets/screenshots/sotuhire-v1.7-web-settings-ai.png)
+![SotuHire v1.7.1 Web Kanban Source](../assets/screenshots/sotuhire-v1.7.1-web-kanban-source.png)
 
 ## Padrao visual
 

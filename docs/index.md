@@ -107,8 +107,8 @@ pip install -r docs/requirements/requirements-ai.txt
   <div>
     <h2>Lovable pode redesenhar tudo. O core continua mandando na lógica.</h2>
     <p>
-      A v1.7.0 usa `apps/web` como experiencia principal local, com importadores de oportunidades,
-      Kanban, IA opcional e FastAPI. O visual pode mudar livremente, mas matching, scoring, ATS,
+      A v1.7.1 usa `apps/web` como experiencia principal local, com upload CSV/JSON, Caixa de
+      Entrada, Kanban, IA opcional e FastAPI. O visual pode mudar livremente, mas matching, scoring, ATS,
       Tailor, GitHub Analyzer, validacoes fortes e regras anti-invencao continuam no backend/core.
     </p>
     <a class="sotu-button sotu-button--primary" href="08-frontend/api-contract/">Ver API contract</a>

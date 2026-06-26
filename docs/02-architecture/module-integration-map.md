@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.7.0 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.7.1 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -27,7 +27,7 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Tracker | `/tracker` | `GET/POST/PATCH /api/v1/tracker/jobs` | `apps.api.services.tracker` | `modules/tracker`, `modules/storage` | Real |
 | Intelligence | `/intelligence` | `/api/v1/tracker/metrics`, `/requirements`, `/funnel`, `/sources` | tracker service | `modules/tracker` | Real |
 | IA e Providers | `/settings` | `/api/v1/settings/ai*` | `apps.api.services.ai_settings` | `modules/ai/providers` | Real |
-| Caixa de Entrada de Oportunidades | `/sources` | `/api/v1/sources/imports*`, `/captures*`, `/dedupe`, `/stats` | `apps.api.services.sources` | `modules/sources`, `modules/parsers`, `modules/tracker` | Real |
+| Caixa de Entrada de Oportunidades | `/sources` | `/api/v1/sources/imports*`, `/captures*`, `/dedupe`, `/stats`, `/export`, `/directory` | `apps.api.services.sources` | `modules/sources`, `modules/parsers`, `modules/tracker` | Real |
 | Extensão Local | `/sources` | `/api/v1/extension/*` | `apps.api.services.extension` | `modules/local_api`, `browser-extension/` | Real |
 | Navegador autenticado autorizado | `/sources` | `/api/v1/sources/authenticated-browser/*` | `apps.api.services.sources` | fluxo existente de scraping local | Parcial |
 | Streamlit | legado/dev | Não é API web | `app.py`, `modules/ui` | core antigo | Legado |
@@ -73,7 +73,7 @@ A ponte lê o store local da Local Companion API e permite importar capturas par
 Candidaturas. Ela não reimplementa crawler logado, não controla contas de terceiros e não altera o
 browser autenticado existente.
 
-## Importadores e historico v1.7.0
+## Importadores e historico v1.7.1
 
 Endpoints FastAPI:
 
@@ -87,7 +87,10 @@ GET    /api/v1/sources/captures
 PATCH  /api/v1/sources/captures/{capture_id}
 POST   /api/v1/sources/captures/{capture_id}/import-job
 POST   /api/v1/sources/captures/{capture_id}/save-tracker
+POST   /api/v1/sources/captures/{capture_id}/merge
 POST   /api/v1/sources/dedupe
+GET    /api/v1/sources/directory
+POST   /api/v1/sources/export
 GET    /api/v1/sources/stats
 ```
 
@@ -99,10 +102,13 @@ GET    /api/v1/sources/stats
 - `OpportunityInboxItem`: item exibido na Caixa de Entrada;
 - `ImportBatch`: resumo de importacao CSV/JSON/texto/link;
 - `DuplicateCandidate`: possivel duplicata explicavel.
+- `JobSourceDirectory`: fonte publica/oficial/manual segura para descoberta futura.
+- `SourceExportResult`: payload local de exportacao CSV/JSON.
 
 O fluxo usa parser local para extrair vaga, preserva texto original, normaliza dedupe key e conecta
-o item ao tracker quando a pessoa escolhe **Salvar em Candidaturas**. A IA pode enriquecer
-classificacao/tags em versoes futuras, mas a v1.7.0 funciona localmente sem provider.
+o item ao tracker quando a pessoa escolhe **Salvar em Candidaturas**. A v1.7.1 permite IA opcional
+para enriquecer tags, dominio, senioridade e resumo via `source_import_enrichment_v1`, sempre com
+fallback local e sem retornar segredo ao frontend.
 
 ## UX web v1.6.0
 
@@ -132,3 +138,12 @@ classificacao/tags em versoes futuras, mas a v1.7.0 funciona localmente sem prov
 - Tracker preserva origem/fonte ao salvar oportunidades importadas.
 - Docs de fontes publicas deixam crawler amplo, busca massiva, login automatico e auto-apply fora
   do escopo.
+
+## Incrementos v1.7.1
+
+- Upload CSV/JSON pelo navegador com preview e confirmacao.
+- Mescla visual de duplicatas preservando historico e origem.
+- Exportacao local da Caixa de Entrada em CSV/JSON.
+- Diretório de Fontes para preparar paginas abertas, feeds, APIs oficiais, CSV/JSON recorrente e
+  links manuais sem crawler amplo.
+- Teste anti-mojibake em textos publicos.
