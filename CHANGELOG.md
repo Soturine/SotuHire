@@ -4,6 +4,45 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.7.0] - 2026-06-26
+
+### Adicionado
+
+- Caixa de Entrada de Oportunidades em **Fontes e Captura**.
+- Importadores locais por texto, link, CSV e JSON.
+- Historico persistente de capturas/importacoes em store local ignorado pelo Git.
+- Modelos `JobSource`, `JobImport`, `CaptureRecord`, `OpportunityInboxItem`, `ImportBatch` e
+  `DuplicateCandidate`.
+- Endpoints `/api/v1/sources/imports*`, `/api/v1/sources/captures*`, `/api/v1/sources/dedupe` e
+  `/api/v1/sources/stats`.
+- Deduplicacao local explicavel por URL normalizada, empresa+cargo+localidade e texto normalizado.
+- Acoes para importar oportunidade para Vaga, salvar em Candidaturas e preservar origem no tracker.
+- Historico da extensao/local companion com patch seguro de status local.
+- Screenshots e GIF v1.7 padronizados para os fluxos de importacao.
+- Documento `docs/07-development/v1.7.0-public-sources-importers-capture-history.md`.
+
+### Alterado
+
+- Fontes e Captura virou fluxo pratico de intake: texto/link/CSV/JSON, filtros, busca, duplicatas e
+  fontes publicas planejadas.
+- Cards do tracker preservam contexto de origem ao salvar itens importados.
+- README, docs de frontend, mapa de integracao, visual preview e guia da extensao foram atualizados
+  para v1.7.0.
+
+### Seguranca
+
+- O importador de URL faz apenas leitura publica simples e orienta colar texto quando a pagina
+  bloqueia acesso, exige login ou nao traz conteudo legivel.
+- Nenhum fluxo sensivel de authenticated browser, Chromium/CDP, login manual, crawler logado,
+  CAPTCHA ou auto-apply foi alterado.
+- Nenhum dado real, API key ou segredo foi usado em mocks, testes, docs ou screenshots.
+
+### Validacao
+
+- Testes backend cobrem importacao texto/link/CSV/JSON, dedupe, stats, captura para Vaga e tracker.
+- Playwright cobre Caixa de Entrada, importacoes fake, duplicata, Kanban com origem e ausencia de
+  branding legado publico.
+
 ## [1.6.0] - 2026-06-24
 
 ### Adicionado
