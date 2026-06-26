@@ -32,6 +32,7 @@ SourceOrigin = Literal[
     "extension_capture",
     "companion_capture",
     "public_source",
+    "public_feed",
     "official_api_future",
 ]
 
@@ -47,6 +48,16 @@ CaptureStatus = Literal[
 ]
 
 DuplicateDecision = Literal["possible_duplicate", "confirmed_duplicate", "not_duplicate"]
+SourceDirectoryKind = Literal[
+    "public_career_page",
+    "public_feed",
+    "official_api",
+    "recurring_csv_json",
+    "manual_link",
+    "observed_origin",
+]
+SourceDirectoryStatus = Literal["available", "planned", "future", "manual_review"]
+SourceExportFormat = Literal["csv", "json"]
 
 
 def utc_now() -> datetime:
@@ -133,6 +144,62 @@ class DuplicateCandidate(BaseModel):
     decision: DuplicateDecision = "possible_duplicate"
     reason: str = ""
     confidence: float = Field(default=0.5, ge=0, le=1)
+
+
+class SourceImportAiContext(BaseModel):
+    """Safe optional AI enrichment metadata for source imports."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    requested: bool = False
+    provider_used: str = "local"
+    requested_provider: str = "local"
+    analysis_mode: str = "local"
+    model: str = "local"
+    tags: list[str] = Field(default_factory=list)
+    domain: str = ""
+    seniority: str = ""
+    priority: str = ""
+    summary: str = ""
+    duplicate_explanation: str = ""
+    inconsistency_alerts: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+
+
+class JobSourceDirectory(BaseModel):
+    """Safe source directory card for public/offical source discovery planning."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    name: str
+    kind: SourceDirectoryKind
+    status: SourceDirectoryStatus
+    base_url: str = ""
+    last_checked_at: datetime | None = None
+    observation: str = ""
+    requires_manual_review: bool = True
+
+
+class SourceDiscoveryResult(BaseModel):
+    """Directory and safe discovery summary."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    sources: list[JobSourceDirectory] = Field(default_factory=list)
+    query: str = ""
+    warnings: list[str] = Field(default_factory=list)
+
+
+class SourceExportResult(BaseModel):
+    """Local export payload for inbox items."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    format: SourceExportFormat
+    filename: str
+    content: str
+    item_count: int
 
 
 class ImportBatch(BaseModel):
@@ -225,13 +292,11 @@ class SourceImportService:
         source_name: str = "Texto manual",
         notes: str = "",
         use_ai: bool = False,
+        ai_context: SourceImportAiContext | None = None,
     ) -> tuple[ImportBatch, list[OpportunityInboxItem], list[str]]:
         """Import a pasted job description."""
-        warnings: list[str] = []
-        if use_ai:
-            warnings.append(
-                "IA opcional para importacao esta em modo planejado; usei extracao local."
-            )
+        enrichment = ai_context or SourceImportAiContext(requested=use_ai)
+        warnings: list[str] = list(enrichment.warnings)
         item = self._item_from_text(
             text,
             origin="manual_text",
@@ -241,6 +306,7 @@ class SourceImportService:
             title_hint=title,
             notes=notes,
             confidence=0.76,
+            ai_context=enrichment,
         )
         return self._save_batch("manual_text", [item], source_name=source_name, warnings=warnings)
 
@@ -250,9 +316,12 @@ class SourceImportService:
         url: str,
         source_name: str = "Link manual",
         notes: str = "",
+        use_ai: bool = False,
+        ai_context: SourceImportAiContext | None = None,
     ) -> tuple[ImportBatch, list[OpportunityInboxItem], list[str]]:
         """Import one public URL when simple reading is allowed."""
-        warnings: list[str] = []
+        enrichment = ai_context or SourceImportAiContext(requested=use_ai)
+        warnings: list[str] = list(enrichment.warnings)
         try:
             fetched = self.scraping_client.fetch(url, delay_seconds=0.2)
             page = parse_public_html(fetched.text, fetched.url)
@@ -267,6 +336,7 @@ class SourceImportService:
                 title_hint=page.title,
                 notes=notes,
                 confidence=0.68,
+                ai_context=enrichment,
             )
             return self._save_batch(
                 "manual_url",
@@ -304,9 +374,12 @@ class SourceImportService:
         *,
         csv_text: str,
         source_name: str = "CSV Manual",
+        use_ai: bool = False,
     ) -> tuple[ImportBatch, list[OpportunityInboxItem], list[str]]:
         """Import rows from CSV text."""
         warnings: list[str] = []
+        if use_ai:
+            warnings.append("IA em lote usa enriquecimento local nesta versão.")
         reader = csv.DictReader(StringIO(csv_text))
         if not reader.fieldnames:
             raise ValueError("CSV sem cabecalho.")
@@ -340,9 +413,12 @@ class SourceImportService:
         *,
         entries: list[dict[str, object]],
         source_name: str = "JSON Manual",
+        use_ai: bool = False,
     ) -> tuple[ImportBatch, list[OpportunityInboxItem], list[str]]:
         """Import rows from JSON entries."""
         warnings: list[str] = []
+        if use_ai:
+            warnings.append("IA em lote usa enriquecimento local nesta versão.")
         items: list[CaptureRecord] = []
         errors = 0
         for index, entry in enumerate(entries, start=1):
@@ -393,6 +469,54 @@ class SourceImportService:
                     updates["duplicate_of"] = duplicate_of
                 updated = item.model_copy(update=updates)
                 state.captures[index] = updated
+                self.store.save(state)
+                return OpportunityInboxItem.model_validate(updated.model_dump())
+        raise KeyError("Captura nao encontrada.")
+
+    def merge_duplicate(
+        self,
+        capture_id: str,
+        *,
+        duplicate_of: str,
+        notes: str = "",
+    ) -> OpportunityInboxItem:
+        """Mark one duplicate as merged while preserving both source records."""
+        state = self.store.load()
+        existing = next((item for item in state.captures if item.id == duplicate_of), None)
+        if existing is None:
+            raise KeyError("Captura existente nao encontrada.")
+
+        for index, item in enumerate(state.captures):
+            if item.id == capture_id:
+                merged_at = utc_now().isoformat()
+                metadata = {
+                    **item.metadata,
+                    "merge_action": "merged_into_existing",
+                    "merged_at": merged_at,
+                    "merged_into": duplicate_of,
+                    "existing_source": existing.source_name,
+                }
+                merge_note = (
+                    notes or f"Mesclada com {existing.title or duplicate_of}; historico preservado."
+                )
+                updated = item.model_copy(
+                    update={
+                        "status": "archived",
+                        "duplicate_of": duplicate_of,
+                        "notes": _merge_notes(item.notes, merge_note),
+                        "metadata": metadata,
+                    }
+                )
+                state.captures[index] = updated
+                state.duplicates.append(
+                    DuplicateCandidate(
+                        item_id=item.id,
+                        duplicate_of=duplicate_of,
+                        decision="confirmed_duplicate",
+                        reason="Mescla visual confirmada pelo usuário; histórico preservado.",
+                        confidence=0.95,
+                    )
+                )
                 self.store.save(state)
                 return OpportunityInboxItem.model_validate(updated.model_dump())
         raise KeyError("Captura nao encontrada.")
@@ -455,6 +579,89 @@ class SourceImportService:
         state.duplicates = duplicates
         self.store.save(state)
         return duplicates
+
+    def source_directory(self, query: str = "") -> SourceDiscoveryResult:
+        """Return safe source directory entries without running broad scraping."""
+        state = self.store.load()
+        sources = _default_source_directory()
+        observed: dict[str, JobSourceDirectory] = {}
+        for item in state.captures:
+            key = item.domain or source_label(item.origin)
+            if not key:
+                continue
+            observed[key] = JobSourceDirectory(
+                id=f"observed-{normalize_text(key).replace(' ', '-')}",
+                name=f"Fonte observada: {key}",
+                kind="observed_origin",
+                status="available",
+                base_url=item.source_url or item.job_url,
+                last_checked_at=item.captured_at,
+                observation=f"Origem local: {source_label(item.origin)}.",
+                requires_manual_review=True,
+            )
+        sources.extend(observed.values())
+        cleaned_query = normalize_text(query)
+        if cleaned_query:
+            sources = [
+                source
+                for source in sources
+                if cleaned_query
+                in normalize_text(
+                    " ".join([source.name, source.kind, source.status, source.observation])
+                )
+            ]
+        return SourceDiscoveryResult(
+            sources=sources,
+            query=query,
+            warnings=[
+                "Diretório seguro: não faz login automático, bypass de CAPTCHA ou candidatura automática."
+            ],
+        )
+
+    def export_items(
+        self,
+        *,
+        export_format: SourceExportFormat,
+        item_ids: list[str] | None = None,
+    ) -> SourceExportResult:
+        """Export inbox items to local CSV or JSON content."""
+        state = self.store.load()
+        wanted = set(item_ids or [])
+        items = [item for item in state.captures if not wanted or item.id in wanted]
+        exported = [_export_row(item) for item in items]
+        timestamp = utc_now().strftime("%Y%m%d-%H%M%S")
+        if export_format == "json":
+            import json
+
+            return SourceExportResult(
+                format="json",
+                filename=f"sotuhire-opportunities-{timestamp}.json",
+                content=json.dumps(exported, ensure_ascii=False, indent=2),
+                item_count=len(exported),
+            )
+
+        stream = StringIO()
+        fieldnames = [
+            "cargo",
+            "empresa",
+            "link",
+            "origem",
+            "status",
+            "data",
+            "score",
+            "ats_score",
+            "tags",
+            "notas",
+        ]
+        writer = csv.DictWriter(stream, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(exported)
+        return SourceExportResult(
+            format="csv",
+            filename=f"sotuhire-opportunities-{timestamp}.csv",
+            content=stream.getvalue(),
+            item_count=len(exported),
+        )
 
     def stats(self) -> dict[str, int | dict[str, int]]:
         """Return compact inbox stats."""
@@ -545,11 +752,15 @@ class SourceImportService:
         location_hint: str = "",
         notes: str = "",
         confidence: float = 0.65,
+        ai_context: SourceImportAiContext | None = None,
     ) -> CaptureRecord:
         parsed = parse_job_description(text or title_hint)
         title = title_hint or parsed.title or "Vaga sem titulo"
         company = company_hint or parsed.company or ""
         normalized = normalize_text(text)
+        enrichment = ai_context or SourceImportAiContext()
+        tags = _unique([*parsed.ats_keywords[:10], *parsed.required_skills[:8], *enrichment.tags])
+        metadata = _source_import_metadata(text, parsed, enrichment)
         return CaptureRecord(
             title=title,
             company=company,
@@ -564,12 +775,13 @@ class SourceImportService:
             location=location_hint or parsed.location,
             work_model="" if parsed.modality == "unknown" else parsed.modality,
             employment_type=parsed.contract,
-            seniority=parsed.seniority,
-            domain=source_domain(source_url) if source_url else "",
-            tags=_unique([*parsed.ats_keywords[:10], *parsed.required_skills[:8]]),
+            seniority=enrichment.seniority or parsed.seniority,
+            domain=enrichment.domain or (source_domain(source_url) if source_url else ""),
+            tags=tags,
             source_confidence=confidence,
             dedupe_key=_dedupe_key(title, company, source_url, normalized),
             notes=notes,
+            metadata=metadata,
         )
 
     def _get_capture(self, capture_id: str) -> CaptureRecord:
@@ -589,6 +801,7 @@ def source_label(origin: str) -> str:
         "extension_capture": "Extensao Local",
         "companion_capture": "Companion",
         "public_source": "Fonte publica",
+        "public_feed": "Feed publico",
         "official_api_future": "API oficial futura",
     }
     return labels.get(origin, origin)
@@ -603,7 +816,7 @@ def _collection_method(origin: SourceOrigin):
         return "json_import"
     if origin in {"extension_capture", "companion_capture"}:
         return "browser_assisted_capture"
-    if origin == "public_source":
+    if origin in {"public_source", "public_feed"}:
         return "public_scraping"
     return "manual_url"
 
@@ -719,6 +932,118 @@ def _manual_url_warning(error: str) -> str:
         "ou cole o texto da vaga manualmente. Detalhe local: "
         f"{error}"
     )
+
+
+def _source_import_metadata(
+    text: str,
+    parsed: JobPostingSchema,
+    enrichment: SourceImportAiContext,
+) -> dict[str, object]:
+    summary = enrichment.summary or _local_summary(text, parsed)
+    priority = enrichment.priority or _local_priority(parsed)
+    metadata: dict[str, object] = {
+        "analysis_mode": enrichment.analysis_mode,
+        "provider_used": enrichment.provider_used,
+        "requested_provider": enrichment.requested_provider,
+        "model": enrichment.model,
+        "summary": summary,
+        "priority": priority,
+        "facts_only": True,
+        "inferences": {
+            "domain": enrichment.domain,
+            "seniority": enrichment.seniority,
+            "tags": enrichment.tags,
+        },
+        "inconsistency_alerts": enrichment.inconsistency_alerts,
+    }
+    if enrichment.duplicate_explanation:
+        metadata["duplicate_explanation"] = enrichment.duplicate_explanation
+    return metadata
+
+
+def _local_summary(text: str, parsed: JobPostingSchema) -> str:
+    if parsed.title or parsed.company:
+        parts = [part for part in [parsed.title, parsed.company, parsed.location] if part]
+        return " · ".join(parts)
+    compact = " ".join(text.split())
+    return compact[:180]
+
+
+def _local_priority(parsed: JobPostingSchema) -> str:
+    signals = [
+        bool(parsed.required_skills),
+        bool(parsed.ats_keywords),
+        bool(parsed.title),
+        bool(parsed.company),
+        parsed.modality != "unknown",
+    ]
+    score = sum(signals)
+    if score >= 4:
+        return "alta"
+    if score >= 2:
+        return "media"
+    return "baixa"
+
+
+def _merge_notes(existing: str, note: str) -> str:
+    if existing and note:
+        return f"{existing}\n{note}"
+    return existing or note
+
+
+def _export_row(item: CaptureRecord) -> dict[str, str]:
+    return {
+        "cargo": item.title,
+        "empresa": item.company,
+        "link": item.job_url or item.source_url,
+        "origem": source_label(item.origin),
+        "status": item.status,
+        "data": (item.imported_at or item.captured_at).isoformat(),
+        "score": "" if item.match_score is None else str(item.match_score),
+        "ats_score": "" if item.ats_score is None else str(item.ats_score),
+        "tags": ", ".join(item.tags),
+        "notas": item.notes,
+    }
+
+
+def _default_source_directory() -> list[JobSourceDirectory]:
+    return [
+        JobSourceDirectory(
+            id="open-career-pages",
+            name="Páginas de carreira abertas",
+            kind="public_career_page",
+            status="planned",
+            observation="Leitura pública simples futura, sempre com revisão manual.",
+        ),
+        JobSourceDirectory(
+            id="public-rss-feeds",
+            name="Feeds RSS públicos",
+            kind="public_feed",
+            status="future",
+            observation="RSS/Atom público planejado para v1.8.0, sem salvar no tracker sem ação.",
+        ),
+        JobSourceDirectory(
+            id="official-apis",
+            name="APIs oficiais",
+            kind="official_api",
+            status="future",
+            observation="Somente APIs documentadas, com chave do usuário quando aplicável.",
+        ),
+        JobSourceDirectory(
+            id="recurring-csv-json",
+            name="CSV/JSON recorrente",
+            kind="recurring_csv_json",
+            status="available",
+            observation="Importação manual recorrente com revisão antes de analisar ou salvar.",
+        ),
+        JobSourceDirectory(
+            id="manual-links",
+            name="Links manuais",
+            kind="manual_link",
+            status="available",
+            observation="Links adicionados pelo usuário e registrados no histórico local.",
+        ),
+    ]
 
 
 def _unique(items: list[str]) -> list[str]:

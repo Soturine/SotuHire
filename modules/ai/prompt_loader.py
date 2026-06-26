@@ -171,6 +171,22 @@ Evidence:
 {evidence}
 """
 
+SOURCE_IMPORT_ENRICHMENT_SYSTEM_PROMPT = (
+    "You enrich imported job opportunities for SotuHire intake. Use only the pasted text "
+    "and source URL. Return valid JSON only. Do not invent requirements, company facts, "
+    "salary, licenses, certifications, experience, metrics or application status. Separate "
+    "facts from cautious inference and add warnings when evidence is weak."
+)
+
+SOURCE_IMPORT_ENRICHMENT_USER_TEMPLATE = """Enrich this imported opportunity and return JSON matching the schema.
+
+Source URL: {source_url}
+Language: {language}
+
+JOB TEXT:
+{job_text}
+"""
+
 
 def initial_prompt_specs(
     schema_overrides: dict[str, type[BaseModel]] | None = None,
@@ -250,6 +266,15 @@ def initial_prompt_specs(
             temperature=0.1,
             mode="career_advice",
         ),
+        PromptSpec(
+            prompt_id="source_import_enrichment_v1",
+            version="1.0.0",
+            system_prompt=SOURCE_IMPORT_ENRICHMENT_SYSTEM_PROMPT,
+            user_template=SOURCE_IMPORT_ENRICHMENT_USER_TEMPLATE,
+            output_schema=schemas["source_import_enrichment_v1"],
+            temperature=0.1,
+            mode="source_import_enrichment",
+        ),
     ]
 
 
@@ -263,6 +288,7 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         AtsAiReviewOutput,
         ResumeTailorAiOutput,
         SafeAiInsightOutput,
+        SourceImportEnrichmentOutput,
     )
     from modules.ai.schemas.domain_classification import DomainClassificationOutput
     from modules.ai.schemas.job_extraction import JobExtractionOutput
@@ -279,4 +305,5 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         "ats_analysis_v1": AtsAiReviewOutput,
         "resume_tailor_v1": ResumeTailorAiOutput,
         "career_advice_v1": SafeAiInsightOutput,
+        "source_import_enrichment_v1": SourceImportEnrichmentOutput,
     }

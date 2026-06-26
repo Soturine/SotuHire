@@ -8,7 +8,9 @@ from modules.sources.imports import (
     CaptureStatus,
     DuplicateCandidate,
     ImportBatch,
+    JobSourceDirectory,
     OpportunityInboxItem,
+    SourceExportFormat,
 )
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -96,6 +98,7 @@ class SourceImportUrlRequest(BaseModel):
     url: str = Field(min_length=1, max_length=2048)
     source_name: str = Field(default="Link manual", max_length=120)
     notes: str = Field(default="", max_length=10_000)
+    use_ai: bool = False
     request_id: str = Field(default="", max_length=120)
 
 
@@ -106,6 +109,7 @@ class SourceImportCsvRequest(BaseModel):
 
     csv_text: str = Field(min_length=1, max_length=1_000_000)
     source_name: str = Field(default="CSV Manual", max_length=120)
+    use_ai: bool = False
     request_id: str = Field(default="", max_length=120)
 
 
@@ -117,6 +121,7 @@ class SourceImportJsonRequest(BaseModel):
     items: list[dict[str, object]] = Field(default_factory=list, max_length=500)
     json_text: str = Field(default="", max_length=1_000_000)
     source_name: str = Field(default="JSON Manual", max_length=120)
+    use_ai: bool = False
     request_id: str = Field(default="", max_length=120)
 
 
@@ -128,6 +133,26 @@ class SourceCapturePatchRequest(BaseModel):
     status: CaptureStatus | None = None
     notes: str | None = Field(default=None, max_length=10_000)
     duplicate_of: str | None = Field(default=None, max_length=120)
+    request_id: str = Field(default="", max_length=120)
+
+
+class SourceCaptureMergeRequest(BaseModel):
+    """Merge one duplicate into an existing inbox record without deleting history."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    duplicate_of: str = Field(min_length=1, max_length=120)
+    notes: str = Field(default="", max_length=10_000)
+    request_id: str = Field(default="", max_length=120)
+
+
+class SourceExportRequest(BaseModel):
+    """Export inbox items to local CSV or JSON content."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    format: SourceExportFormat = "csv"
+    item_ids: list[str] = Field(default_factory=list, max_length=500)
     request_id: str = Field(default="", max_length=120)
 
 
@@ -193,6 +218,27 @@ class SourceDedupeResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     duplicates: list[DuplicateCandidate] = Field(default_factory=list)
+
+
+class SourceDirectoryResponse(BaseModel):
+    """Safe public/offical source directory entries."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    sources: list[JobSourceDirectory] = Field(default_factory=list)
+    query: str = ""
+    warnings: list[str] = Field(default_factory=list)
+
+
+class SourceExportResponse(BaseModel):
+    """Local export payload."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    format: SourceExportFormat
+    filename: str
+    content: str
+    item_count: int
 
 
 class SourceStatsResponse(BaseModel):

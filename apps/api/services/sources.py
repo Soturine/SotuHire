@@ -5,10 +5,12 @@ from __future__ import annotations
 import json
 
 from fastapi import HTTPException
+from modules.ai.prompt_loader import default_prompt_registry
+from modules.ai.schemas.analysis_insights import SourceImportEnrichmentOutput
 from modules.scraping.browser_session import inspect_browser_session, launch_authenticated_browser
 from modules.scraping.collection import collect_authenticated_source
 from modules.scraping.schemas import ScrapingSource
-from modules.sources.imports import SourceImportService
+from modules.sources.imports import SourceImportAiContext, SourceImportService
 
 from apps.api.schemas.sources import (
     AuthenticatedBrowserCollectRequest,
@@ -17,11 +19,15 @@ from apps.api.schemas.sources import (
     AuthenticatedBrowserOpportunityItem,
     AuthenticatedBrowserStatusResponse,
     SourceCaptureImportJobResponse,
+    SourceCaptureMergeRequest,
     SourceCapturePatchRequest,
     SourceCaptureResponse,
     SourceCaptureSaveTrackerResponse,
     SourceCapturesResponse,
     SourceDedupeResponse,
+    SourceDirectoryResponse,
+    SourceExportRequest,
+    SourceExportResponse,
     SourceImportCsvRequest,
     SourceImportJsonRequest,
     SourceImportResponse,
@@ -30,6 +36,7 @@ from apps.api.schemas.sources import (
     SourceImportUrlRequest,
     SourceStatsResponse,
 )
+from apps.api.services.ai_settings import get_ai_runtime
 
 
 def authenticated_browser_status(endpoint: str) -> AuthenticatedBrowserStatusResponse:
@@ -109,6 +116,11 @@ def source_imports() -> SourceImportsResponse:
 def source_import_text(request: SourceImportTextRequest) -> tuple[SourceImportResponse, list[str]]:
     """Import a pasted job into the source inbox."""
     try:
+        ai_context = _source_ai_context(
+            enabled=request.use_ai,
+            text=request.text,
+            source_url=request.url,
+        )
         batch, items, warnings = SourceImportService().import_text(
             text=request.text,
             url=request.url,
@@ -117,6 +129,7 @@ def source_import_text(request: SourceImportTextRequest) -> tuple[SourceImportRe
             source_name=request.source_name,
             notes=request.notes,
             use_ai=request.use_ai,
+            ai_context=ai_context,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -136,6 +149,8 @@ def source_import_url(request: SourceImportUrlRequest) -> tuple[SourceImportResp
         url=request.url,
         source_name=request.source_name,
         notes=request.notes,
+        use_ai=request.use_ai,
+        ai_context=_source_ai_context(enabled=request.use_ai, text="", source_url=request.url),
     )
     return (
         SourceImportResponse(
@@ -157,6 +172,7 @@ def source_import_csv(request: SourceImportCsvRequest) -> tuple[SourceImportResp
         batch, items, warnings = SourceImportService().import_csv(
             csv_text=request.csv_text,
             source_name=request.source_name,
+            use_ai=request.use_ai,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -186,6 +202,7 @@ def source_import_json(request: SourceImportJsonRequest) -> tuple[SourceImportRe
     batch, items, warnings = SourceImportService().import_json(
         entries=entries,
         source_name=request.source_name,
+        use_ai=request.use_ai,
     )
     return (
         SourceImportResponse(
@@ -216,6 +233,23 @@ def source_capture_patch(
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return SourceCaptureResponse(capture=capture, message="Captura atualizada.")
+
+
+def source_capture_merge(
+    capture_id: str, request: SourceCaptureMergeRequest
+) -> SourceCaptureResponse:
+    """Merge one duplicate into an existing record while preserving history."""
+    try:
+        capture = SourceImportService().merge_duplicate(
+            capture_id,
+            duplicate_of=request.duplicate_of,
+            notes=request.notes,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return SourceCaptureResponse(
+        capture=capture, message="Duplicata mesclada com histórico preservado."
+    )
 
 
 def source_capture_import_job(capture_id: str) -> SourceCaptureImportJobResponse:
@@ -249,6 +283,74 @@ def source_dedupe() -> SourceDedupeResponse:
     return SourceDedupeResponse(duplicates=SourceImportService().dedupe())
 
 
+def source_directory(query: str = "") -> SourceDirectoryResponse:
+    """Return safe source discovery directory entries."""
+    result = SourceImportService().source_directory(query=query)
+    return SourceDirectoryResponse(
+        sources=result.sources,
+        query=result.query,
+        warnings=result.warnings,
+    )
+
+
+def source_export(request: SourceExportRequest) -> SourceExportResponse:
+    """Export source inbox items without secrets."""
+    result = SourceImportService().export_items(
+        export_format=request.format,
+        item_ids=request.item_ids,
+    )
+    return SourceExportResponse.model_validate(result.model_dump())
+
+
 def source_stats() -> SourceStatsResponse:
     """Return source stats."""
     return SourceStatsResponse.model_validate(SourceImportService().stats())
+
+
+def _source_ai_context(*, enabled: bool, text: str, source_url: str) -> SourceImportAiContext:
+    """Build optional safe AI enrichment context for source imports."""
+    if not enabled:
+        return SourceImportAiContext()
+
+    runtime = get_ai_runtime("source_import")
+    warnings = list(runtime.warnings)
+    if runtime.use_ai and runtime.provider_name != "local":
+        try:
+            spec = default_prompt_registry().get("source_import_enrichment_v1")
+            output = runtime.provider.generate_structured(
+                spec,
+                {
+                    "job_text": text,
+                    "source_url": source_url,
+                    "language": "pt-BR",
+                },
+            )
+            enrichment = SourceImportEnrichmentOutput.model_validate(output)
+            return SourceImportAiContext(
+                requested=True,
+                provider_used=runtime.provider_name,
+                requested_provider=str(runtime.requested_provider),
+                analysis_mode=runtime.analysis_mode,
+                model=runtime.model,
+                tags=enrichment.tags,
+                domain=enrichment.domain,
+                seniority=enrichment.seniority,
+                priority=enrichment.priority,
+                summary=enrichment.summary,
+                duplicate_explanation=enrichment.duplicate_explanation,
+                inconsistency_alerts=enrichment.inconsistency_alerts,
+                warnings=[*warnings, *enrichment.warnings],
+            )
+        except Exception:
+            warnings.append("IA falhou na importação; usei enriquecimento local.")
+    elif not warnings:
+        warnings.append("IA de importação indisponível ou local; usei extração local.")
+
+    return SourceImportAiContext(
+        requested=True,
+        provider_used="local",
+        requested_provider=str(runtime.requested_provider),
+        analysis_mode="fallback" if runtime.requested_provider != "local" else "local",
+        model="local",
+        warnings=warnings,
+    )

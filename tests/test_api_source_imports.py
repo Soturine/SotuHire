@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 from modules.local_api import BrowserCapturePayload, CompanionCaptureRecord, CompanionCaptureStore
 from modules.scraping.schemas import FetchResult
@@ -113,8 +114,67 @@ def test_source_import_with_ai_flag_uses_local_fallback_without_secret(
     serialized = json.dumps(payload).lower()
     assert response.status_code == 200
     assert payload["warnings"]
-    assert "extracao local" in payload["warnings"][0]
+    assert "local" in payload["warnings"][0].lower()
     assert payload["data"]["items"][0]["origin"] == "manual_text"
+    assert "api_key" not in serialized
+    assert "secret" not in serialized
+
+
+def test_source_import_with_mocked_ai_enriches_metadata_without_secret(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+
+    class FakeProvider:
+        def generate_structured(self, prompt, payload):  # noqa: ANN001
+            assert prompt.prompt_id == "source_import_enrichment_v1"
+            assert "api_key" not in json.dumps(payload).lower()
+            return {
+                "tags": ["Python", "SQL"],
+                "domain": "dados",
+                "seniority": "junior",
+                "priority": "alta",
+                "summary": "Vaga fictícia para análise de dados.",
+                "duplicate_explanation": "Mesmo link normalizado.",
+                "inconsistency_alerts": [],
+                "warnings": [],
+                "confidence": 0.82,
+            }
+
+    monkeypatch.setattr(
+        "apps.api.services.sources.get_ai_runtime",
+        lambda feature: SimpleNamespace(
+            provider=FakeProvider(),
+            provider_name="gemini",
+            requested_provider="gemini",
+            model="gemini-fake",
+            use_ai=True,
+            configured=True,
+            allowed=True,
+            allow_memory_context=False,
+            warnings=(),
+            fallback_used=False,
+            analysis_mode="ai",
+        ),
+    )
+    client = api_client()
+
+    response = client.post(
+        "/api/v1/sources/imports/text",
+        json={
+            "text": JOB_TEXT,
+            "title": "Analista de Dados",
+            "company": "Empresa Exemplo",
+            "use_ai": True,
+        },
+    )
+
+    payload = response.json()
+    metadata = payload["data"]["items"][0]["metadata"]
+    serialized = json.dumps(payload).lower()
+    assert response.status_code == 200
+    assert metadata["analysis_mode"] == "ai"
+    assert metadata["priority"] == "alta"
     assert "api_key" not in serialized
     assert "secret" not in serialized
 
@@ -200,6 +260,53 @@ def test_source_capture_actions_stats_and_tracker(tmp_path: Path, monkeypatch) -
     assert saved.json()["data"]["tracker_id"]
     assert stats.status_code == 200
     assert stats.json()["data"]["saved_to_tracker"] == 1
+
+
+def test_source_duplicate_merge_export_and_directory(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    client = api_client()
+    first = client.post(
+        "/api/v1/sources/imports/text",
+        json={
+            "text": JOB_TEXT,
+            "title": "Analista de Dados",
+            "company": "Empresa Exemplo",
+            "url": "https://example.com/jobs/123",
+        },
+    )
+    duplicate = client.post(
+        "/api/v1/sources/imports/text",
+        json={
+            "text": JOB_TEXT,
+            "title": "Analista de Dados",
+            "company": "Empresa Exemplo",
+            "url": "https://example.com/jobs/123?utm=demo",
+        },
+    )
+    first_id = first.json()["data"]["items"][0]["id"]
+    duplicate_id = duplicate.json()["data"]["items"][0]["id"]
+
+    merge = client.post(
+        f"/api/v1/sources/captures/{duplicate_id}/merge",
+        json={"duplicate_of": first_id, "notes": "Mescla fictícia preservando histórico."},
+    )
+    export_csv = client.post("/api/v1/sources/export", json={"format": "csv"})
+    export_json = client.post(
+        "/api/v1/sources/export",
+        json={"format": "json", "item_ids": [first_id]},
+    )
+    directory = client.get("/api/v1/sources/directory")
+
+    assert merge.status_code == 200
+    assert merge.json()["data"]["capture"]["status"] == "archived"
+    assert merge.json()["data"]["capture"]["duplicate_of"] == first_id
+    assert merge.json()["data"]["capture"]["metadata"]["merge_action"] == "merged_into_existing"
+    assert export_csv.status_code == 200
+    assert "cargo,empresa,link" in export_csv.json()["data"]["content"]
+    assert export_json.status_code == 200
+    assert export_json.json()["data"]["item_count"] == 1
+    assert directory.status_code == 200
+    assert any(item["kind"] == "public_feed" for item in directory.json()["data"]["sources"])
 
 
 def test_extension_capture_patch_marks_reviewed(tmp_path: Path, monkeypatch) -> None:

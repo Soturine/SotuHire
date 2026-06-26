@@ -13,11 +13,15 @@ from apps.api.schemas.sources import (
     AuthenticatedBrowserLaunchRequest,
     AuthenticatedBrowserStatusResponse,
     SourceCaptureImportJobResponse,
+    SourceCaptureMergeRequest,
     SourceCapturePatchRequest,
     SourceCaptureResponse,
     SourceCaptureSaveTrackerResponse,
     SourceCapturesResponse,
     SourceDedupeResponse,
+    SourceDirectoryResponse,
+    SourceExportRequest,
+    SourceExportResponse,
     SourceImportCsvRequest,
     SourceImportJsonRequest,
     SourceImportResponse,
@@ -31,10 +35,13 @@ from apps.api.services.sources import (
     authenticated_browser_launch,
     authenticated_browser_status,
     source_capture_import_job,
+    source_capture_merge,
     source_capture_patch,
     source_capture_save_tracker,
     source_captures,
     source_dedupe,
+    source_directory,
+    source_export,
     source_import_csv,
     source_import_json,
     source_import_text,
@@ -95,6 +102,15 @@ def patch_capture(
     return ok(source_capture_patch(capture_id, payload), request_id=payload.request_id)
 
 
+@router.post("/captures/{capture_id}/merge", response_model=ApiEnvelope[SourceCaptureResponse])
+def merge_capture(
+    capture_id: str,
+    payload: SourceCaptureMergeRequest,
+) -> ApiEnvelope[SourceCaptureResponse]:
+    """Merge one duplicate while preserving source history."""
+    return ok(source_capture_merge(capture_id, payload), request_id=payload.request_id)
+
+
 @router.post(
     "/captures/{capture_id}/import-job",
     response_model=ApiEnvelope[SourceCaptureImportJobResponse],
@@ -117,6 +133,19 @@ def save_capture_tracker(capture_id: str) -> ApiEnvelope[SourceCaptureSaveTracke
 def dedupe() -> ApiEnvelope[SourceDedupeResponse]:
     """Run local duplicate detection for source inbox items."""
     return ok(source_dedupe())
+
+
+@router.get("/directory", response_model=ApiEnvelope[SourceDirectoryResponse])
+def directory(query: str = "") -> ApiEnvelope[SourceDirectoryResponse]:
+    """Return safe public/offical source discovery entries."""
+    data = source_directory(query=query)
+    return ok(data, warnings=data.warnings)
+
+
+@router.post("/export", response_model=ApiEnvelope[SourceExportResponse])
+def export(payload: SourceExportRequest) -> ApiEnvelope[SourceExportResponse]:
+    """Export local inbox items to CSV or JSON content."""
+    return ok(source_export(payload), request_id=payload.request_id)
 
 
 @router.get("/stats", response_model=ApiEnvelope[SourceStatsResponse])

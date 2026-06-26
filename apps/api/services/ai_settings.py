@@ -26,7 +26,16 @@ from apps.api.schemas.settings import (
 AI_TEST_TIMEOUT_SECONDS = 8
 SETTINGS_RELATIVE_PATH = Path("settings") / "ai-settings.json"
 SECRETS_RELATIVE_PATH = Path("secrets") / "ai-provider.local.json"
-AiFeature = Literal["resume", "job", "match", "ats", "tailor", "github", "career_advice"]
+AiFeature = Literal[
+    "resume",
+    "job",
+    "match",
+    "ats",
+    "tailor",
+    "github",
+    "career_advice",
+    "source_import",
+]
 
 
 @dataclass(frozen=True)

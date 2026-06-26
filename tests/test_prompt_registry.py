@@ -13,6 +13,7 @@ def test_default_prompt_registry_lists_initial_prompts() -> None:
         "match_analysis_evidence_based_v1",
         "resume_extraction_v1",
         "resume_tailor_v1",
+        "source_import_enrichment_v1",
     ]
 
 

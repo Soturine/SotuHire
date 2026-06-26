@@ -35,3 +35,17 @@ class SafeAiInsightOutput(StrictSchema):
     safe_actions: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     confidence: float = Field(default=0.0, ge=0, le=1)
+
+
+class SourceImportEnrichmentOutput(StrictSchema):
+    """Optional evidence-only enrichment for imported opportunity intake."""
+
+    tags: list[str] = Field(default_factory=list)
+    domain: str = ""
+    seniority: str = ""
+    priority: str = ""
+    summary: str = ""
+    duplicate_explanation: str = ""
+    inconsistency_alerts: list[str] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    confidence: float = Field(default=0.0, ge=0, le=1)
