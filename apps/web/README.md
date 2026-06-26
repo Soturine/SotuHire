@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versao `v1.6.0`.
+Frontend moderno do SotuHire em `apps/web` para a versao `v1.7.0`.
 
 ## Stack
 
@@ -140,13 +140,32 @@ A tela **Fontes e Captura** inclui o fluxo `AUTHENTICATED_BROWSER` existente no 
 - exige confirmacao de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-A v1.6.0 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
+A v1.7.0 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
 regras protegidas.
 
 O painel **Extensao Local** consulta `/api/v1/extension/status` e `/api/v1/extension/captures` para
 mostrar capturas ja salvas pela Local Companion API. Ele mostra status do companion, ultima
 sincronizacao, origem, URL, data, tipo de captura e acoes para Vaga, GitHub Analysis e
-Candidaturas. O botao Ignorar oculta a captura apenas na sessao da UI.
+Candidaturas. A v1.7.0 tambem permite marcar capturas locais como revisadas, ignoradas ou
+arquivadas sem tocar em browser autenticado.
+
+### Caixa de Entrada e importadores
+
+Fontes e Captura inclui a **Caixa de Entrada de Oportunidades** para revisar entradas antes de
+analisar ou salvar:
+
+- texto colado manualmente;
+- link manual com leitura publica simples;
+- CSV com campos `cargo,empresa,link,local,descricao,fonte,status,observacoes`;
+- JSON com os mesmos campos ou aliases em ingles;
+- capturas da extensao/local companion.
+
+O painel oferece busca, filtros por status/origem, deduplicacao local e acoes para **Importar para
+Vaga**, **Salvar em Candidaturas**, **Copiar link**, **Arquivar** e **Ignorar**.
+
+O importador de URL nao faz crawler amplo. Se uma pagina bloquear acesso, exigir login ou nao
+permitir leitura publica simples, a API retorna um aviso para abrir a pagina manualmente e colar o
+texto da vaga.
 
 ## Testes e screenshots
 
@@ -160,7 +179,7 @@ Kanban, cross-browser em Chromium/Firefox/WebKit e ausencia de branding legado p
 `visual-capture.spec.ts` gera screenshots em:
 
 ```txt
-docs/assets/screenshots/sotuhire-v1.6-web-*.png
+docs/assets/screenshots/sotuhire-v1.7-web-*.png
 ```
 
 Todos usam viewport `1440x1000`, `deviceScaleFactor=1` e `fullPage=false`.

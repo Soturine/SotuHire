@@ -1,8 +1,8 @@
 # Frontend moderno
 
-A v1.6.0 consolida o frontend moderno do SotuHire em `apps/web` como experiencia local principal,
-com QA cross-browser, responsividade validada, Kanban com drag-and-drop e estados de IA/fallback
-mais claros.
+A v1.7.0 consolida o frontend moderno do SotuHire em `apps/web` como experiencia local principal e
+adiciona uma Caixa de Entrada de Oportunidades para importar, revisar, deduplicar e enviar vagas para
+analise ou Candidaturas.
 
 O app usa React, Vite, TypeScript, TanStack Router, TanStack Query, Tailwind CSS, Radix UI, Recharts
 e lucide-react. Ele roda separado do Streamlit e consome a FastAPI local em `/api/v1` quando o modo
@@ -91,13 +91,53 @@ A tela **Fontes e Captura** fica na rota `/sources` e no menu lateral. Ela organ
 para colar vaga manualmente, salvar link, importar arquivo, usar extensao assistida, radar publico e
 APIs oficiais quando disponiveis.
 
-O fluxo `AUTHENTICATED_BROWSER` existente no backend local tambem aparece nessa tela. A v1.6.0 nao
+O fluxo `AUTHENTICATED_BROWSER` existente no backend local tambem aparece nessa tela. A v1.7.0 nao
 alterou scraper autenticado, Chromium/CDP, crawler logado ou docs protegidos. O fluxo nao contorna
 CAPTCHA/checkpoint, nao automatiza candidatura e nao faz auto-apply.
 
 O painel **Extensao Local** consulta capturas ja salvas pela Local Companion API, mostra status,
 ultima sincronizacao, origem, URL, data e tipo de captura, e permite importar uma captura para Vaga,
-GitHub Analysis ou Candidaturas. O botao Ignorar oculta a captura apenas na sessao da UI.
+GitHub Analysis ou Candidaturas. A v1.7.0 tambem permite revisar, arquivar ou ignorar capturas no
+historico local.
+
+### Caixa de Entrada
+
+A area **Caixa de Entrada de Oportunidades** em `/sources` mostra vagas importadas por texto, link,
+CSV, JSON e capturas da extensao/local companion. Ela oferece filtros por status/origem, busca por
+cargo/empresa/link/tag/origem, deduplicacao local e acoes para:
+
+- importar para a tela Vaga;
+- salvar em Candidaturas/Kanban;
+- arquivar ou ignorar;
+- copiar o link original.
+
+CSV esperado:
+
+```csv
+cargo,empresa,link,local,descricao,fonte,status,observacoes
+Analista de Dados,Empresa Exemplo,https://example.com/jobs/123,Remoto,"Python, SQL e dashboards",CSV Manual,nova,"vaga ficticia"
+Desenvolvedor Backend,Tech Exemplo,https://example.com/jobs/456,Hibrido,"APIs, testes e bancos de dados",CSV Manual,nova,"vaga ficticia"
+```
+
+JSON esperado:
+
+```json
+[
+  {
+    "cargo": "Analista de Dados",
+    "empresa": "Empresa Exemplo",
+    "link": "https://example.com/jobs/123",
+    "local": "Remoto",
+    "descricao": "Python, SQL e dashboards.",
+    "fonte": "JSON Manual",
+    "status": "nova",
+    "observacoes": "vaga ficticia"
+  }
+]
+```
+
+Links sao lidos apenas quando a pagina publica simples permite. Se houver bloqueio, login ou texto
+ilegivel, o usuario deve abrir a pagina manualmente e colar a vaga.
 
 ## IA e Providers
 
@@ -138,7 +178,7 @@ npm run test:e2e
 ```
 
 O Playwright cobre fluxo guiado, demos de analise, IA Settings, Fontes e Captura, Kanban,
-cross-browser e ausencia de branding legado. O spec visual gera a serie `sotuhire-v1.6-web-*.png`
+cross-browser e ausencia de branding legado. O spec visual gera a serie `sotuhire-v1.7-web-*.png`
 em `docs/assets/screenshots/` com viewport fixo `1440x1000`.
 
 ## Streamlit legado/dev

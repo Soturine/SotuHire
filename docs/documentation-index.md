@@ -8,13 +8,15 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 ## Comece aqui
 
 - [Home pública](index.md)
-- [Visual preview v1.1](01-product/visual-preview.md)
+- [Visual preview v1.7](01-product/visual-preview.md)
 - [Visão do produto](01-product/vision.md)
 - [Roadmap atual](01-product/roadmap.md)
 - [Setup local](07-development/setup.md)
 - [Comandos de desenvolvimento](07-development/commands.md)
 - [GitHub Pages vs app local](01-product/github-pages-site.md)
 - [Frontend API Layer](02-architecture/frontend-api-layer.md)
+- [Importadores e fontes publicas](05-data-sources/public-source-importers.md)
+- [v1.7.0 Public Sources and Importers](07-development/v1.7.0-public-sources-importers-capture-history.md)
 
 ## Frontend-ready
 

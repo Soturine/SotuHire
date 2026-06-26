@@ -1,6 +1,6 @@
 # Scripts locais do SotuHire
 
-Este guia descreve os scripts locais da experiencia web-first. O fluxo principal da v1.6.0 e o
+Este guia descreve os scripts locais da experiencia web-first. O fluxo principal da v1.7.0 e o
 frontend moderno em `apps/web` consumindo a FastAPI local em `apps/api`.
 
 ## Comando principal
@@ -144,5 +144,7 @@ Ele nao e iniciado pelo launcher web-first.
   `SOTUHIRE_API_ALLOWED_ORIGINS` com a origem do frontend.
 - **Companion offline**: rode `.\start-sotuhire.ps1 -WithCompanion` ou
   `python -m modules.local_api.server`.
+- **Importador de URL nao leu a pagina**: abra a pagina manualmente e cole o texto da vaga em
+  **Fontes e Captura -> Caixa de Entrada**. O SotuHire nao tenta login automatico nem bypass.
 - **API health nao responde**: verifique se `python scripts/run_api.py` sobe sem erro e se a porta
   8787 esta livre.

@@ -92,7 +92,7 @@ git clone https://github.com/Soturine/SotuHire.git
 cd SotuHire
 python -m venv .venv
 pip install -r docs/requirements/requirements.txt
-streamlit run app.py
+.\start-sotuhire.ps1
 ```
 
 Para recursos opcionais de IA:
@@ -101,15 +101,15 @@ Para recursos opcionais de IA:
 pip install -r docs/requirements/requirements-ai.txt
 ```
 
-## Frontend moderno futuro
+## Frontend moderno local
 
 <section class="sotu-band">
   <div>
     <h2>Lovable pode redesenhar tudo. O core continua mandando na lógica.</h2>
     <p>
-      A v1.1.0 documenta contratos, mocks e regras para um frontend moderno futuro. O visual pode
-      mudar livremente, mas matching, scoring, ATS, Tailor, GitHub Analyzer, validações fortes e
-      regras anti-invenção continuam no backend/core.
+      A v1.7.0 usa `apps/web` como experiencia principal local, com importadores de oportunidades,
+      Kanban, IA opcional e FastAPI. O visual pode mudar livremente, mas matching, scoring, ATS,
+      Tailor, GitHub Analyzer, validacoes fortes e regras anti-invencao continuam no backend/core.
     </p>
     <a class="sotu-button sotu-button--primary" href="08-frontend/api-contract/">Ver API contract</a>
   </div>

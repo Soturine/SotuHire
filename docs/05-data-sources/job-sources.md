@@ -59,6 +59,10 @@ Prioridade recomendada:
 5. Hidden Jobs Radar por texto colado
 ```
 
+Na v1.7.0, o fluxo real de entrada esta documentado em
+[`public-source-importers.md`](public-source-importers.md): texto, link publico simples, CSV, JSON,
+historico persistente e deduplicacao local.
+
 
 ## Portais brasileiros
 

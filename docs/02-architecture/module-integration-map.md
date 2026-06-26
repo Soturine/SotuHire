@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.6.0 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.7.0 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -27,6 +27,7 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Tracker | `/tracker` | `GET/POST/PATCH /api/v1/tracker/jobs` | `apps.api.services.tracker` | `modules/tracker`, `modules/storage` | Real |
 | Intelligence | `/intelligence` | `/api/v1/tracker/metrics`, `/requirements`, `/funnel`, `/sources` | tracker service | `modules/tracker` | Real |
 | IA e Providers | `/settings` | `/api/v1/settings/ai*` | `apps.api.services.ai_settings` | `modules/ai/providers` | Real |
+| Caixa de Entrada de Oportunidades | `/sources` | `/api/v1/sources/imports*`, `/captures*`, `/dedupe`, `/stats` | `apps.api.services.sources` | `modules/sources`, `modules/parsers`, `modules/tracker` | Real |
 | Extensão Local | `/sources` | `/api/v1/extension/*` | `apps.api.services.extension` | `modules/local_api`, `browser-extension/` | Real |
 | Navegador autenticado autorizado | `/sources` | `/api/v1/sources/authenticated-browser/*` | `apps.api.services.sources` | fluxo existente de scraping local | Parcial |
 | Streamlit | legado/dev | Não é API web | `app.py`, `modules/ui` | core antigo | Legado |
@@ -65,11 +66,43 @@ GET  /api/v1/extension/profile-analysis
 POST /api/v1/extension/import/job
 POST /api/v1/extension/import/github
 POST /api/v1/extension/import/tracker
+PATCH /api/v1/extension/captures/{capture_id}
 ```
 
 A ponte lê o store local da Local Companion API e permite importar capturas para Vaga, GitHub ou
 Candidaturas. Ela não reimplementa crawler logado, não controla contas de terceiros e não altera o
 browser autenticado existente.
+
+## Importadores e historico v1.7.0
+
+Endpoints FastAPI:
+
+```txt
+GET    /api/v1/sources/imports
+POST   /api/v1/sources/imports/text
+POST   /api/v1/sources/imports/url
+POST   /api/v1/sources/imports/csv
+POST   /api/v1/sources/imports/json
+GET    /api/v1/sources/captures
+PATCH  /api/v1/sources/captures/{capture_id}
+POST   /api/v1/sources/captures/{capture_id}/import-job
+POST   /api/v1/sources/captures/{capture_id}/save-tracker
+POST   /api/v1/sources/dedupe
+GET    /api/v1/sources/stats
+```
+
+`modules/sources/imports.py` centraliza o store local de fontes e capturas:
+
+- `JobSource`: fonte configurada ou observada;
+- `JobImport`: evento de importacao;
+- `CaptureRecord`: registro persistente da oportunidade;
+- `OpportunityInboxItem`: item exibido na Caixa de Entrada;
+- `ImportBatch`: resumo de importacao CSV/JSON/texto/link;
+- `DuplicateCandidate`: possivel duplicata explicavel.
+
+O fluxo usa parser local para extrair vaga, preserva texto original, normaliza dedupe key e conecta
+o item ao tracker quando a pessoa escolhe **Salvar em Candidaturas**. A IA pode enriquecer
+classificacao/tags em versoes futuras, mas a v1.7.0 funciona localmente sem provider.
 
 ## UX web v1.6.0
 
@@ -89,3 +122,13 @@ browser autenticado existente.
 - A ponte da extensao inclui `kind`, `source` e `captured_at` para historico seguro de capturas.
 - Playwright cobre Chromium, Firefox e WebKit; responsividade mobile/tablet/desktop e capturas
   visuais padronizadas rodam uma vez no Chromium.
+
+## Incrementos v1.7.0
+
+- Fontes e Captura ganhou Caixa de Entrada para texto, link, CSV, JSON e capturas locais.
+- Deduplicacao local usa URL normalizada, empresa+cargo+localidade e texto normalizado.
+- Importador de URL faz apenas leitura publica simples e orienta colar texto quando houver bloqueio
+  ou login.
+- Tracker preserva origem/fonte ao salvar oportunidades importadas.
+- Docs de fontes publicas deixam crawler amplo, busca massiva, login automatico e auto-apply fora
+  do escopo.

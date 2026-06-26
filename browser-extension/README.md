@@ -11,14 +11,18 @@ dados para a Local Companion API em `http://127.0.0.1:8765`.
 4. Selecione a pasta `browser-extension/`.
 5. Inicie a Local Companion API pela aba **Extensão** no SotuHire.
 
-Na v1.5.0 do frontend moderno, também é possível iniciar o projeto com:
+Na v1.7.0 do frontend moderno, também é possível iniciar o projeto com:
 
 ```powershell
 .\start-sotuhire.ps1 -WithCompanion
 ```
 
-Depois abra **Fontes e Captura -> Extensão Local** para ver capturas já salvas e importar para Vaga
-ou Candidaturas. A extensão continua usando a Local Companion API em `127.0.0.1:8765`.
+Depois abra **Fontes e Captura -> Extensão Local** para ver capturas já salvas, revisar historico,
+arquivar itens locais e importar para Vaga, GitHub Analysis ou Candidaturas. A extensão continua
+usando a Local Companion API em `127.0.0.1:8765`.
+
+As capturas tambem aparecem na **Caixa de Entrada de Oportunidades** do frontend moderno, junto de
+vagas importadas por texto, link, CSV e JSON. O usuario revisa antes de salvar/analisar.
 
 ## Portais compatíveis
 
