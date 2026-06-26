@@ -7,6 +7,8 @@ from fastapi import APIRouter, Query
 from apps.api.routes.responses import ok
 from apps.api.schemas.common import ApiEnvelope
 from apps.api.schemas.extension import (
+    ExtensionCapturePatchRequest,
+    ExtensionCapturePatchResponse,
     ExtensionCapturesResponse,
     ExtensionImportGithubResponse,
     ExtensionImportJobResponse,
@@ -19,6 +21,7 @@ from apps.api.services.extension import (
     extension_import_github,
     extension_import_job,
     extension_import_tracker,
+    extension_patch_capture,
     extension_status,
 )
 
@@ -37,6 +40,18 @@ def local_extension_captures(
 ) -> ApiEnvelope[ExtensionCapturesResponse]:
     """Return recent captures created by the existing browser extension."""
     return ok(extension_captures(limit))
+
+
+@router.patch(
+    "/captures/{capture_id}",
+    response_model=ApiEnvelope[ExtensionCapturePatchResponse],
+)
+def local_extension_patch_capture(
+    capture_id: str,
+    payload: ExtensionCapturePatchRequest,
+) -> ApiEnvelope[ExtensionCapturePatchResponse]:
+    """Archive, ignore, or mark a local extension capture as reviewed."""
+    return ok(extension_patch_capture(capture_id, payload), request_id=payload.request_id)
 
 
 @router.get("/profile-analysis", response_model=ApiEnvelope[ExtensionStatusResponse])

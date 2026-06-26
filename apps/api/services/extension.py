@@ -11,6 +11,8 @@ from modules.portfolio.schemas import ProjectAnalysisPayload
 
 from apps.api.schemas.extension import (
     ExtensionCaptureItem,
+    ExtensionCapturePatchRequest,
+    ExtensionCapturePatchResponse,
     ExtensionCapturesResponse,
     ExtensionImportGithubResponse,
     ExtensionImportJobResponse,
@@ -59,6 +61,34 @@ def extension_captures(limit: int = 20) -> ExtensionCapturesResponse:
             for record in records
         ]
     )
+
+
+def extension_patch_capture(
+    capture_id: str,
+    request: ExtensionCapturePatchRequest,
+) -> ExtensionCapturePatchResponse:
+    """Update only local user-visible status for a companion capture."""
+    service = LocalCompanionService()
+    record = service.capture_store.get(capture_id)
+    if record is None:
+        raise HTTPException(status_code=404, detail="Captura nao encontrada.")
+    safe_statuses = {"reviewed", "archived", "ignored", "captured", "tracked", "analyzed"}
+    status = request.status if request.status in safe_statuses else "reviewed"
+    updated = service.capture_store.save(record.model_copy(update={"status": status}))
+    item = ExtensionCaptureItem(
+        id=updated.id,
+        title=updated.capture.job_title or updated.capture.page_title,
+        company=updated.capture.company,
+        url=updated.capture.url,
+        domain=updated.capture.domain or _domain(updated.capture.url),
+        kind=_capture_kind(updated),
+        source=updated.capture.collection_method,
+        status=updated.status,
+        tracker_id=updated.tracker_id,
+        captured_at=updated.capture.captured_at,
+        updated_at=updated.updated_at,
+    )
+    return ExtensionCapturePatchResponse(capture=item, message="Captura atualizada.")
 
 
 def extension_import_job(request: ExtensionImportRequest) -> ExtensionImportJobResponse:

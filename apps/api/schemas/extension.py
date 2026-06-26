@@ -58,6 +58,24 @@ class ExtensionImportRequest(BaseModel):
     request_id: str = Field(default="", max_length=120)
 
 
+class ExtensionCapturePatchRequest(BaseModel):
+    """Safe user status update for a local companion capture."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: str = Field(default="reviewed", max_length=80)
+    request_id: str = Field(default="", max_length=120)
+
+
+class ExtensionCapturePatchResponse(BaseModel):
+    """Updated local companion capture."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    capture: ExtensionCaptureItem
+    message: str = ""
+
+
 class ExtensionImportJobResponse(BaseModel):
     """Parsed job imported from a local extension capture."""
 
