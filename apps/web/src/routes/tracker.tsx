@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/tracker")({
-  head: () => ({ meta: [{ title: "Candidaturas â€” SotuHire" }] }),
+  head: () => ({ meta: [{ title: "Candidaturas — SotuHire" }] }),
   component: TrackerPage,
 });
 
@@ -31,7 +31,7 @@ const COLUMNS: ColumnDef[] = [
   { id: "message_sent", label: "Mensagem enviada", stage: "andamento", accent: "bg-chart-1" },
   { id: "follow_up", label: "Follow-up", stage: "andamento", accent: "bg-warning" },
   { id: "interview", label: "Entrevista", stage: "andamento", accent: "bg-accent" },
-  { id: "technical_test", label: "Teste tecnico", stage: "andamento", accent: "bg-warning" },
+  { id: "technical_test", label: "Teste técnico", stage: "andamento", accent: "bg-warning" },
   { id: "offer", label: "Oferta", stage: "resultado", accent: "bg-success" },
   { id: "rejected", label: "Rejeitada", stage: "resultado", accent: "bg-destructive" },
   { id: "archived", label: "Arquivada", stage: "resultado", accent: "bg-muted-foreground/40" },
@@ -39,8 +39,8 @@ const COLUMNS: ColumnDef[] = [
 
 const STAGES: { id: ColumnDef["stage"]; label: string; desc: string }[] = [
   { id: "novas", label: "Novas oportunidades", desc: "Triagem inicial" },
-  { id: "andamento", label: "Em andamento", desc: "ApÃ³s enviar candidatura" },
-  { id: "resultado", label: "Resultado", desc: "Oferta, rejeiÃ§Ã£o ou arquivada" },
+  { id: "andamento", label: "Em andamento", desc: "Após enviar candidatura" },
+  { id: "resultado", label: "Resultado", desc: "Oferta, rejeição ou arquivada" },
 ];
 
 function TrackerPage() {
@@ -130,7 +130,7 @@ function TrackerPage() {
   return (
     <AppShell
       title="Candidaturas"
-      description="Acompanhe cada vaga do primeiro contato atÃ© a oferta. Arraste cards entre as etapas."
+      description="Acompanhe cada vaga do primeiro contato até a oferta. Arraste cards entre as etapas."
       actions={
         <>
           <div className="hidden items-center rounded-md border border-input bg-card p-0.5 sm:flex">
@@ -174,7 +174,7 @@ function TrackerPage() {
       ) : totalCount === 0 ? (
         <EmptyState
           title="Nenhuma candidatura ainda"
-          description="Comece adicionando uma vaga ou rodando uma anÃ¡lise de compatibilidade."
+          description="Comece adicionando uma vaga ou rodando uma análise de compatibilidade."
           action={
             <button
               onClick={() => setCreating(true)}
@@ -194,7 +194,7 @@ function TrackerPage() {
               <input
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Filtrar por cargo, empresa ou fonteâ€¦"
+                placeholder="Filtrar por cargo, empresa ou fonte"
                 className="h-9 w-full rounded-md border border-input bg-card pl-9 pr-3 text-sm outline-none transition-colors focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
               />
             </div>
@@ -380,10 +380,10 @@ function JobCard({
       <div className="mt-2 grid gap-1 text-[10px] text-muted-foreground">
         <div className="flex items-center justify-between gap-2">
           <span className="truncate">Origem: {job.source ?? "-"}</span>
-          <span>{job.updated_at ? `Ultima analise: ${job.updated_at}` : "Sem analise"}</span>
+          <span>{job.updated_at ? `Última análise: ${job.updated_at}` : "Sem análise"}</span>
         </div>
         <div className="flex items-center justify-between gap-2">
-          <span>{job.created_at ? `Data: ${job.created_at}` : "Data nao informada"}</span>
+          <span>{job.created_at ? `Data: ${job.created_at}` : "Data não informada"}</span>
           <span>Score: {job.match_score ?? "-"}</span>
         </div>
         {job.notes && <p className="line-clamp-2 rounded bg-muted/60 p-1.5">{job.notes}</p>}
@@ -407,7 +407,7 @@ function ListView({
             <th className="px-4 py-2.5 font-semibold">Vaga</th>
             <th className="hidden px-4 py-2.5 font-semibold sm:table-cell">Empresa</th>
             <th className="hidden px-4 py-2.5 font-semibold md:table-cell">Fonte</th>
-            <th className="px-4 py-2.5 font-semibold">EstÃ¡gio</th>
+            <th className="px-4 py-2.5 font-semibold">Estágio</th>
             <th className="px-4 py-2.5 text-right font-semibold">Scores</th>
           </tr>
         </thead>
@@ -417,7 +417,7 @@ function ListView({
               <td className="px-4 py-2.5">
                 <div className="font-medium">{j.title}</div>
                 <div className="mt-0.5 text-[11px] text-muted-foreground">
-                  {j.updated_at ? `Ultima analise: ${j.updated_at}` : "Sem analise"} Â·{" "}
+                  {j.updated_at ? `Última análise: ${j.updated_at}` : "Sem análise"} ·{" "}
                   {j.notes || "Sem notas"}
                 </div>
               </td>
@@ -425,7 +425,7 @@ function ListView({
                 {j.company}
               </td>
               <td className="hidden px-4 py-2.5 text-xs text-muted-foreground md:table-cell">
-                {j.source ?? "â€”"} {j.created_at ? `Â· ${j.created_at}` : ""}
+                {j.source ?? "—"} {j.created_at ? `· ${j.created_at}` : ""}
               </td>
               <td className="px-4 py-2.5">
                 <select
@@ -483,7 +483,7 @@ function CreateDialog({
     >
       <div className="w-full max-w-md rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-elevated)] animate-in zoom-in-95 duration-150">
         <h3 className="text-display text-lg">Nova candidatura</h3>
-        <p className="mt-1 text-xs text-muted-foreground">SerÃ¡ criada no estÃ¡gio Encontrada.</p>
+        <p className="mt-1 text-xs text-muted-foreground">Será criada no estágio Encontrada.</p>
         <div className="mt-4 space-y-3">
           <input
             value={title}
@@ -523,7 +523,7 @@ function CreateDialog({
             disabled={!title || !company || loading}
             className="rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90 disabled:opacity-50"
           >
-            {loading ? "Criandoâ€¦" : "Criar"}
+            {loading ? "Criando..." : "Criar"}
           </button>
         </div>
       </div>

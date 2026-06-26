@@ -31,7 +31,9 @@ import type {
   SourceCaptureImportJobResult,
   SourceCaptureResult,
   SourceCaptureSaveTrackerResult,
+  SourceDirectoryResult,
   SourceDedupeResult,
+  SourceExportResult,
   SourceImportResult,
   SourceImportsResult,
   SourceStats,
@@ -557,7 +559,12 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeSourceImport,
       ),
 
-    sourceImportUrl: (payload: { url: string; source_name?: string; notes?: string }) =>
+    sourceImportUrl: (payload: {
+      url: string;
+      source_name?: string;
+      notes?: string;
+      use_ai?: boolean;
+    }) =>
       call<SourceImportResult>(
         mode,
         baseUrl,
@@ -577,7 +584,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeSourceImport,
       ),
 
-    sourceImportCsv: (payload: { csv_text: string; source_name?: string }) =>
+    sourceImportCsv: (payload: { csv_text: string; source_name?: string; use_ai?: boolean }) =>
       call<SourceImportResult>(
         mode,
         baseUrl,
@@ -591,6 +598,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
       items?: Record<string, unknown>[];
       json_text?: string;
       source_name?: string;
+      use_ai?: boolean;
     }) =>
       call<SourceImportResult>(
         mode,
@@ -619,6 +627,25 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
             duplicate_of: payload.duplicate_of,
           },
           message: "Modo Demo: item atualizado.",
+        },
+        normalizeSourceCaptureResult,
+      ),
+
+    sourceMergeCapture: (id: string, payload: { duplicate_of: string; notes?: string }) =>
+      call<SourceCaptureResult>(
+        mode,
+        baseUrl,
+        `/sources/captures/${id}/merge`,
+        { method: "POST", body: JSON.stringify(payload) },
+        {
+          capture: {
+            ...(mockSourceImports().items.find((item) => item.id === id) ??
+              mockSourceImports().items[1]!),
+            status: "archived",
+            duplicate_of: payload.duplicate_of,
+            notes: payload.notes || "Modo Demo: duplicata mesclada com histórico preservado.",
+          },
+          message: "Modo Demo: duplicata mesclada com histórico preservado.",
         },
         normalizeSourceCaptureResult,
       ),
@@ -671,6 +698,26 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeSourceDedupe,
       ),
 
+    sourceDirectory: (query = "") =>
+      call<SourceDirectoryResult>(
+        mode,
+        baseUrl,
+        `/sources/directory${query ? `?query=${encodeURIComponent(query)}` : ""}`,
+        undefined,
+        mockSourceDirectory(query),
+        normalizeSourceDirectory,
+      ),
+
+    sourceExport: (payload: { format: "csv" | "json"; item_ids?: string[] }) =>
+      call<SourceExportResult>(
+        mode,
+        baseUrl,
+        "/sources/export",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockSourceExport(payload.format, payload.item_ids),
+        normalizeSourceExport,
+      ),
+
     sourceStats: () =>
       call<SourceStats>(
         mode,
@@ -714,6 +761,11 @@ function mockSourceImports(): SourceImportsResult {
         tags: ["Python", "SQL", "dashboards"],
         source_confidence: 0.82,
         notes: "vaga ficticia",
+        metadata: {
+          analysis_mode: "local",
+          summary: "Vaga fictícia para demonstração de importação.",
+          priority: "media",
+        },
       },
       {
         id: "source-demo-duplicate",
@@ -734,6 +786,11 @@ function mockSourceImports(): SourceImportsResult {
         source_confidence: 0.72,
         duplicate_of: "source-demo-text",
         notes: "possivel duplicata ficticia",
+        metadata: {
+          analysis_mode: "local",
+          duplicate_explanation: "URL normalizada igual ao item de texto manual.",
+          priority: "media",
+        },
       },
       {
         id: "source-demo-extension",
@@ -753,6 +810,11 @@ function mockSourceImports(): SourceImportsResult {
         tags: ["Python", "FastAPI", "testes"],
         source_confidence: 0.8,
         notes: "captura ficticia",
+        metadata: {
+          analysis_mode: "local",
+          summary: "Captura fictícia da extensão local.",
+          priority: "media",
+        },
       },
     ],
     batches: [
@@ -802,6 +864,11 @@ function mockSourceImport(
     tags: ["Python", "SQL"],
     source_confidence: 0.76,
     notes: payload.notes || "",
+    metadata: {
+      analysis_mode: "local",
+      summary: "Importação fictícia do modo Demo.",
+      priority: "media",
+    },
   };
   return {
     batch: {
@@ -844,12 +911,109 @@ function mockBatchImport(
   };
 }
 
+function mockSourceDirectory(query: string): SourceDirectoryResult {
+  const sources: SourceDirectoryResult["sources"] = [
+    {
+      id: "open-career-pages",
+      name: "Páginas de carreira abertas",
+      kind: "public_career_page",
+      status: "planned",
+      observation: "Leitura pública simples futura, sempre com revisão manual.",
+      requires_manual_review: true,
+    },
+    {
+      id: "public-rss-feeds",
+      name: "Feeds RSS públicos",
+      kind: "public_feed",
+      status: "future",
+      observation: "RSS/Atom público planejado para v1.8.0.",
+      requires_manual_review: true,
+    },
+    {
+      id: "official-apis",
+      name: "APIs oficiais",
+      kind: "official_api",
+      status: "future",
+      observation: "Somente APIs documentadas, com chave do usuário quando aplicável.",
+      requires_manual_review: true,
+    },
+    {
+      id: "recurring-csv-json",
+      name: "CSV/JSON recorrente",
+      kind: "recurring_csv_json",
+      status: "available",
+      observation: "Importação manual recorrente com preview e confirmação.",
+      requires_manual_review: true,
+    },
+    {
+      id: "manual-links",
+      name: "Links manuais",
+      kind: "manual_link",
+      status: "available",
+      observation: "Links adicionados pelo usuário e revisados na Caixa de Entrada.",
+      requires_manual_review: true,
+    },
+  ];
+  const normalizedQuery = query.trim().toLowerCase();
+  return {
+    sources: normalizedQuery
+      ? sources.filter((source) =>
+          [source.name, source.kind, source.status, source.observation]
+            .join(" ")
+            .toLowerCase()
+            .includes(normalizedQuery),
+        )
+      : sources,
+    query,
+    warnings: [
+      "Modo Demo: diretório seguro, sem login automático, bypass de CAPTCHA ou auto-apply.",
+    ],
+  };
+}
+
+function mockSourceExport(format: "csv" | "json", itemIds?: string[]): SourceExportResult {
+  const items = mockSourceImports().items.filter(
+    (item) => !itemIds?.length || itemIds.includes(item.id),
+  );
+  if (format === "json") {
+    return {
+      format,
+      filename: "sotuhire-opportunities-demo.json",
+      content: JSON.stringify(items, null, 2),
+      item_count: items.length,
+    };
+  }
+  const header = "cargo,empresa,link,origem,status,data,score,ats_score,tags,notas";
+  const rows = items.map((item) =>
+    [
+      item.title,
+      item.company || "",
+      item.job_url || item.source_url || "",
+      item.origin,
+      item.status,
+      item.imported_at || item.captured_at || "",
+      item.match_score ?? "",
+      item.ats_score ?? "",
+      item.tags.join("; "),
+      item.notes || "",
+    ]
+      .map((cell) => `"${String(cell).replaceAll('"', '""')}"`)
+      .join(","),
+  );
+  return {
+    format,
+    filename: "sotuhire-opportunities-demo.csv",
+    content: [header, ...rows].join("\n"),
+    item_count: items.length,
+  };
+}
+
 function normalizeHealth(value: unknown): Health {
   const raw = asRecord(value);
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "1.7.0",
+    version: asString(raw.version) || "1.7.1",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),
@@ -1335,6 +1499,52 @@ function normalizeSourceDedupe(value: unknown): SourceDedupeResult {
   };
 }
 
+function normalizeSourceDirectory(value: unknown): SourceDirectoryResult {
+  const raw = asRecord(value);
+  return {
+    sources: objectList(raw.sources).map((source) => {
+      const item = asRecord(source);
+      const kind = asString(item.kind);
+      const status = asString(item.status);
+      return {
+        id: asString(item.id),
+        name: asString(item.name),
+        kind:
+          kind === "public_feed" ||
+          kind === "official_api" ||
+          kind === "recurring_csv_json" ||
+          kind === "manual_link" ||
+          kind === "observed_origin"
+            ? kind
+            : "public_career_page",
+        status:
+          status === "available" ||
+          status === "future" ||
+          status === "manual_review" ||
+          status === "planned"
+            ? status
+            : "planned",
+        base_url: asString(item.base_url),
+        last_checked_at: asString(item.last_checked_at),
+        observation: asString(item.observation),
+        requires_manual_review: asBoolean(item.requires_manual_review, true),
+      };
+    }),
+    query: asString(raw.query),
+    warnings: stringList(raw.warnings),
+  };
+}
+
+function normalizeSourceExport(value: unknown): SourceExportResult {
+  const raw = asRecord(value);
+  return {
+    format: raw.format === "json" ? "json" : "csv",
+    filename: asString(raw.filename),
+    content: asString(raw.content),
+    item_count: asNumber(raw.item_count, 0),
+  };
+}
+
 function normalizeSourceStats(value: unknown): SourceStats {
   const raw = asRecord(value);
   return {
@@ -1375,6 +1585,7 @@ function normalizeInboxItem(value: unknown): SourceImportsResult["items"][number
     ats_score: definedNumber(raw.ats_score),
     last_analysis_at: asString(raw.last_analysis_at),
     notes: asString(raw.notes),
+    metadata: asRecord(raw.metadata),
   };
 }
 
@@ -1404,6 +1615,7 @@ function normalizeSourceOrigin(value: unknown): SourceImportsResult["items"][num
     "extension_capture",
     "companion_capture",
     "public_source",
+    "public_feed",
     "official_api_future",
   ];
   return allowed.includes(value as SourceImportsResult["items"][number]["origin"])

@@ -6,9 +6,11 @@ import {
   CheckCircle2,
   Copy,
   Database,
+  Download,
   ExternalLink,
   Filter,
   Github,
+  Merge,
   Monitor,
   PlugZap,
   RefreshCw,
@@ -18,7 +20,7 @@ import {
   Upload,
   XCircle,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent } from "react";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { SourceCardItem } from "@/components/source-card";
@@ -30,6 +32,7 @@ import type {
   ExtensionCapture,
   OpportunityInboxItem,
   SourceCaptureStatus,
+  SourceDirectoryEntry,
   SourceOrigin,
 } from "@/lib/api/types";
 import { SOURCE_CARDS, SOURCE_FLOW } from "@/mocks/sources";
@@ -72,6 +75,16 @@ const AUTH_BROWSER_LIMITS = [
   "Usa perfil local dedicado em %LOCALAPPDATA%\\SotuHire.",
   "Requer autorizacao explicita antes da coleta.",
 ];
+
+type FilePreview = {
+  kind: "csv" | "json";
+  name: string;
+  text: string;
+  rows: string[];
+  error?: string;
+};
+
+const MAX_IMPORT_FILE_BYTES = 512_000;
 
 function SourcesPage() {
   return (
@@ -181,6 +194,10 @@ const SAMPLE_CSV = `cargo,empresa,link,local,descricao,fonte,status,observacoes
 Analista de Dados,Empresa Exemplo,https://example.com/jobs/123,Remoto,"Python, SQL e dashboards",CSV Manual,nova,"vaga ficticia"
 Desenvolvedor Backend,Tech Exemplo,https://example.com/jobs/456,Hibrido,"APIs, testes e bancos de dados",CSV Manual,nova,"vaga ficticia"`;
 
+const SAMPLE_TEXT =
+  "Cargo: Analista de Dados\nEmpresa: Empresa Exemplo\nLocalizacao: Remoto\nRequisitos: Python, SQL e dashboards.";
+const SAMPLE_URL = "https://example.com/jobs/123";
+
 const SAMPLE_JSON = JSON.stringify(
   [
     {
@@ -211,15 +228,38 @@ function OpportunityInboxPanel() {
     queryFn: () => api.sourceStats(),
     retry: false,
   });
-  const [text, setText] = useState(
-    "Cargo: Analista de Dados\nEmpresa: Empresa Exemplo\nLocalizacao: Remoto\nRequisitos: Python, SQL e dashboards.",
-  );
-  const [url, setUrl] = useState("https://example.com/jobs/123");
-  const [csvText, setCsvText] = useState(SAMPLE_CSV);
-  const [jsonText, setJsonText] = useState(SAMPLE_JSON);
+  const [directoryQuery, setDirectoryQuery] = useState("");
+  const directoryQ = useQuery({
+    queryKey: ["source-directory", mode, baseUrl, directoryQuery],
+    queryFn: () => api.sourceDirectory(directoryQuery),
+    retry: false,
+  });
+  const [text, setText] = useState(mode === "demo" ? SAMPLE_TEXT : "");
+  const [url, setUrl] = useState(mode === "demo" ? SAMPLE_URL : "");
+  const [csvText, setCsvText] = useState(mode === "demo" ? SAMPLE_CSV : "");
+  const [jsonText, setJsonText] = useState(mode === "demo" ? SAMPLE_JSON : "");
+  const [filePreview, setFilePreview] = useState<FilePreview | null>(null);
+  const [useAiImport, setUseAiImport] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [exportFormat, setExportFormat] = useState<"csv" | "json">("csv");
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | SourceCaptureStatus>("all");
   const [originFilter, setOriginFilter] = useState<"all" | SourceOrigin>("all");
+
+  useEffect(() => {
+    if (mode === "real") {
+      setText("");
+      setUrl("");
+      setCsvText("");
+      setJsonText("");
+      setFilePreview(null);
+      return;
+    }
+    setText((current) => current || SAMPLE_TEXT);
+    setUrl((current) => current || SAMPLE_URL);
+    setCsvText((current) => current || SAMPLE_CSV);
+    setJsonText((current) => current || SAMPLE_JSON);
+  }, [mode]);
 
   const refresh = () => {
     inboxQ.refetch();
@@ -234,6 +274,7 @@ function OpportunityInboxPanel() {
         title: "Analista de Dados",
         company: "Empresa Exemplo",
         url,
+        use_ai: useAiImport,
       }),
     onSuccess: (data) => {
       toast.success(data.message || "Importacao concluida.");
@@ -244,7 +285,7 @@ function OpportunityInboxPanel() {
   });
 
   const importUrl = useMutation({
-    mutationFn: () => api.sourceImportUrl({ url, source_name: "Link manual" }),
+    mutationFn: () => api.sourceImportUrl({ url, source_name: "Link manual", use_ai: useAiImport }),
     onSuccess: (data) => {
       toast.success(data.message || "Link registrado.");
       refresh();
@@ -254,9 +295,15 @@ function OpportunityInboxPanel() {
   });
 
   const importCsv = useMutation({
-    mutationFn: () => api.sourceImportCsv({ csv_text: csvText, source_name: "CSV Manual" }),
+    mutationFn: (input?: string) =>
+      api.sourceImportCsv({
+        csv_text: input ?? csvText,
+        source_name: "CSV Manual",
+        use_ai: useAiImport,
+      }),
     onSuccess: (data) => {
       toast.success(data.message || "CSV importado.");
+      setFilePreview(null);
       refresh();
     },
     onError: (error) =>
@@ -264,9 +311,15 @@ function OpportunityInboxPanel() {
   });
 
   const importJson = useMutation({
-    mutationFn: () => api.sourceImportJson({ json_text: jsonText, source_name: "JSON Manual" }),
+    mutationFn: (input?: string) =>
+      api.sourceImportJson({
+        json_text: input ?? jsonText,
+        source_name: "JSON Manual",
+        use_ai: useAiImport,
+      }),
     onSuccess: (data) => {
       toast.success(data.message || "JSON importado.");
+      setFilePreview(null);
       refresh();
     },
     onError: (error) =>
@@ -274,14 +327,52 @@ function OpportunityInboxPanel() {
   });
 
   const patchCapture = useMutation({
-    mutationFn: ({ id, status }: { id: string; status: SourceCaptureStatus }) =>
-      api.sourcePatchCapture(id, { status }),
+    mutationFn: ({
+      id,
+      status,
+      notes,
+      duplicate_of,
+    }: {
+      id: string;
+      status?: SourceCaptureStatus;
+      notes?: string;
+      duplicate_of?: string;
+    }) => api.sourcePatchCapture(id, { status, notes, duplicate_of }),
     onSuccess: (data) => {
       toast.success(data.message || "Item atualizado.");
       refresh();
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar item."),
+  });
+
+  const mergeCapture = useMutation({
+    mutationFn: ({ id, duplicateOf }: { id: string; duplicateOf: string }) =>
+      api.sourceMergeCapture(id, {
+        duplicate_of: duplicateOf,
+        notes: "Mescla confirmada pela Caixa de Entrada; histórico preservado.",
+      }),
+    onSuccess: (data) => {
+      toast.success(data.message || "Duplicata mesclada.");
+      refresh();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel mesclar duplicata."),
+  });
+
+  const exportInbox = useMutation({
+    mutationFn: ({ ids }: { ids: string[] }) =>
+      api.sourceExport({ format: exportFormat, item_ids: ids }),
+    onSuccess: (data) => {
+      downloadText(
+        data.filename,
+        data.content,
+        data.format === "json" ? "application/json" : "text/csv",
+      );
+      toast.success(`Exportação concluída: ${data.item_count} item(ns).`);
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Não foi possível exportar."),
   });
 
   const importJob = useMutation({
@@ -341,7 +432,70 @@ function OpportunityInboxPanel() {
     patchCapture.isPending ||
     importJob.isPending ||
     saveTracker.isPending ||
-    dedupe.isPending;
+    dedupe.isPending ||
+    mergeCapture.isPending ||
+    exportInbox.isPending;
+
+  const selectedFilteredIds = filtered.map((item) => item.id);
+  const selectedInFilter = selectedIds.filter((id) => selectedFilteredIds.includes(id));
+
+  async function handleSelectedFile(event: ChangeEvent<HTMLInputElement>, kind: "csv" | "json") {
+    const file = event.currentTarget.files?.[0];
+    event.currentTarget.value = "";
+    await previewFile(file, kind);
+  }
+
+  async function previewFile(file: File | undefined, expectedKind: "csv" | "json") {
+    if (!file) return;
+    const extension = file.name.split(".").pop()?.toLowerCase();
+    const kind = extension === "json" ? "json" : extension === "csv" ? "csv" : expectedKind;
+    if (kind !== expectedKind || !["csv", "json"].includes(extension || "")) {
+      setFilePreview({
+        kind: expectedKind,
+        name: file.name,
+        text: "",
+        rows: [],
+        error: "Formato inválido. Selecione um arquivo .csv ou .json.",
+      });
+      return;
+    }
+    if (file.size > MAX_IMPORT_FILE_BYTES) {
+      setFilePreview({
+        kind,
+        name: file.name,
+        text: "",
+        rows: [],
+        error: "Arquivo muito grande para importação local. Limite: 512 KB.",
+      });
+      return;
+    }
+    const fileText = await file.text();
+    const preview = validateFilePreview(kind, fileText);
+    setFilePreview({ kind, name: file.name, text: fileText, ...preview });
+  }
+
+  function confirmFileImport() {
+    if (!filePreview || filePreview.error) return;
+    if (filePreview.kind === "csv") {
+      setCsvText(filePreview.text);
+      importCsv.mutate(filePreview.text);
+      return;
+    }
+    setJsonText(filePreview.text);
+    importJson.mutate(filePreview.text);
+  }
+
+  function toggleSelected(id: string, selected: boolean) {
+    setSelectedIds((current) =>
+      selected ? Array.from(new Set([...current, id])) : current.filter((item) => item !== id),
+    );
+  }
+
+  function exportItems(scope: "all" | "filtered" | "selected") {
+    const ids =
+      scope === "all" ? [] : scope === "filtered" ? selectedFilteredIds : selectedInFilter;
+    exportInbox.mutate({ ids });
+  }
 
   return (
     <div className="space-y-5">
@@ -350,6 +504,30 @@ function OpportunityInboxPanel() {
         <InfoTile label="Duplicadas" value={String(statsQ.data?.duplicates ?? 0)} />
         <InfoTile label="Salvas" value={String(statsQ.data?.saved_to_tracker ?? 0)} />
         <InfoTile label="Erros" value={String(statsQ.data?.errors ?? 0)} />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        {mode === "demo" ? (
+          <span
+            data-testid="demo-data-badge"
+            className="rounded-md border border-warning/30 bg-warning/10 px-2 py-1 font-medium text-warning"
+          >
+            Dados de demonstração
+          </span>
+        ) : (
+          <span className="rounded-md border border-success/30 bg-success/10 px-2 py-1 font-medium text-success">
+            API Real conectada à base local
+          </span>
+        )}
+        <label className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-2 py-1">
+          <input
+            type="checkbox"
+            checked={useAiImport}
+            onChange={(event) => setUseAiImport(event.target.checked)}
+            data-testid="source-use-ai-import"
+          />
+          Usar IA nas importações se o provider estiver configurado
+        </label>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
@@ -401,7 +579,7 @@ function OpportunityInboxPanel() {
               />
               <button
                 type="button"
-                onClick={() => importCsv.mutate()}
+                onClick={() => importCsv.mutate(undefined)}
                 disabled={busy}
                 data-testid="source-import-csv"
                 className="mt-2 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
@@ -418,7 +596,7 @@ function OpportunityInboxPanel() {
               />
               <button
                 type="button"
-                onClick={() => importJson.mutate()}
+                onClick={() => importJson.mutate(undefined)}
                 disabled={busy}
                 data-testid="source-import-json"
                 className="mt-2 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
@@ -426,6 +604,87 @@ function OpportunityInboxPanel() {
                 Importar JSON
               </button>
             </div>
+          </div>
+
+          <div
+            data-testid="source-upload-panel"
+            onDragOver={(event) => event.preventDefault()}
+            onDrop={(event) => {
+              event.preventDefault();
+              const file = event.dataTransfer.files[0];
+              const extension = file?.name.split(".").pop()?.toLowerCase();
+              previewFile(file, extension === "json" ? "json" : "csv");
+            }}
+            className="mt-3 rounded-lg border border-dashed border-border bg-muted/20 p-3"
+          >
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="font-medium">Upload com preview</span>
+              <label className="cursor-pointer rounded-md border border-input bg-background px-2.5 py-1 hover:bg-muted">
+                Selecionar arquivo CSV
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  data-testid="source-upload-csv-input"
+                  className="sr-only"
+                  onChange={(event) => handleSelectedFile(event, "csv")}
+                />
+              </label>
+              <label className="cursor-pointer rounded-md border border-input bg-background px-2.5 py-1 hover:bg-muted">
+                Selecionar arquivo JSON
+                <input
+                  type="file"
+                  accept=".json,application/json"
+                  data-testid="source-upload-json-input"
+                  className="sr-only"
+                  onChange={(event) => handleSelectedFile(event, "json")}
+                />
+              </label>
+              <span className="text-muted-foreground">ou arraste um arquivo aqui</span>
+            </div>
+
+            {filePreview && (
+              <div
+                data-testid="source-file-preview"
+                className="mt-3 rounded-md border border-border bg-background p-3 text-xs"
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <div className="font-semibold">{filePreview.name}</div>
+                    <div className="text-muted-foreground">
+                      Preview antes de confirmar · {filePreview.kind.toUpperCase()}
+                    </div>
+                  </div>
+                  <div className="flex gap-1.5">
+                    <button
+                      type="button"
+                      onClick={confirmFileImport}
+                      disabled={busy || Boolean(filePreview.error)}
+                      data-testid="source-upload-confirm"
+                      className="rounded-md bg-primary px-2.5 py-1 font-medium text-primary-foreground disabled:opacity-50"
+                    >
+                      Confirmar importação
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFilePreview(null)}
+                      data-testid="source-upload-cancel"
+                      className="rounded-md border border-input bg-background px-2.5 py-1 font-medium hover:bg-muted"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+                {filePreview.error ? (
+                  <p data-testid="source-upload-error" className="mt-2 text-destructive">
+                    {filePreview.error}
+                  </p>
+                ) : (
+                  <pre className="mt-2 max-h-32 overflow-auto whitespace-pre-wrap rounded bg-muted/50 p-2 font-mono text-[11px]">
+                    {filePreview.rows.join("\n")}
+                  </pre>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -472,6 +731,43 @@ function OpportunityInboxPanel() {
         >
           Deduplicar
         </button>
+        <select
+          value={exportFormat}
+          onChange={(event) => setExportFormat(event.target.value as "csv" | "json")}
+          className="rounded-md border border-input bg-background px-3 py-2 text-xs"
+          aria-label="Formato de exportação"
+        >
+          <option value="csv">CSV</option>
+          <option value="json">JSON</option>
+        </select>
+        <button
+          type="button"
+          onClick={() => exportItems("all")}
+          disabled={busy || items.length === 0}
+          data-testid="source-export-all"
+          className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
+        >
+          <Download className="h-3.5 w-3.5" />
+          Exportar todos
+        </button>
+        <button
+          type="button"
+          onClick={() => exportItems("filtered")}
+          disabled={busy || filtered.length === 0}
+          data-testid="source-export-filtered"
+          className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
+        >
+          Exportar filtrados
+        </button>
+        <button
+          type="button"
+          onClick={() => exportItems("selected")}
+          disabled={busy || selectedInFilter.length === 0}
+          data-testid="source-export-selected"
+          className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
+        >
+          Exportar selecionados
+        </button>
       </div>
 
       {inboxQ.isLoading ? (
@@ -479,8 +775,13 @@ function OpportunityInboxPanel() {
           Carregando caixa de entrada...
         </div>
       ) : filtered.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
-          Voce ainda nao importou vagas. Cole uma vaga, adicione um link ou importe um CSV/JSON.
+        <div
+          data-testid={mode === "real" && items.length === 0 ? "source-real-empty" : undefined}
+          className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground"
+        >
+          {mode === "real" && items.length === 0
+            ? "API Real sem oportunidades locais. Cole uma vaga, adicione um link ou importe um CSV/JSON."
+            : "Você ainda não importou vagas. Cole uma vaga, adicione um link ou importe um CSV/JSON."}
         </div>
       ) : (
         <ul className="grid gap-2">
@@ -488,66 +789,171 @@ function OpportunityInboxPanel() {
             <OpportunityInboxRow
               key={item.id}
               item={item}
+              duplicateTarget={items.find((candidate) => candidate.id === item.duplicate_of)}
+              selected={selectedIds.includes(item.id)}
               busy={busy}
+              onSelect={(selected) => toggleSelected(item.id, selected)}
               onImportJob={() => importJob.mutate(item.id)}
               onSaveTracker={() => saveTracker.mutate(item.id)}
               onArchive={() => patchCapture.mutate({ id: item.id, status: "archived" })}
               onIgnore={() => patchCapture.mutate({ id: item.id, status: "ignored" })}
+              onMerge={() =>
+                item.duplicate_of &&
+                mergeCapture.mutate({ id: item.id, duplicateOf: item.duplicate_of })
+              }
+              onKeepSeparate={() =>
+                patchCapture.mutate({
+                  id: item.id,
+                  status: "reviewed",
+                  duplicate_of: "",
+                })
+              }
+              onNotDuplicate={() =>
+                patchCapture.mutate({
+                  id: item.id,
+                  status: "reviewed",
+                  notes: "Marcada como não duplicata pelo usuário.",
+                })
+              }
             />
           ))}
         </ul>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-4">
-        {PUBLIC_SOURCE_CARDS.map((card) => (
-          <div key={card.title} className="rounded-lg border border-border bg-muted/20 p-3 text-xs">
-            <div className="font-semibold text-foreground">{card.title}</div>
-            <p className="mt-1 text-muted-foreground">{card.text}</p>
-            <span className="mt-2 inline-flex rounded-md bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">
-              Futuro seguro
-            </span>
-          </div>
-        ))}
-      </div>
+      <SourceDirectoryPanel
+        query={directoryQuery}
+        onQueryChange={setDirectoryQuery}
+        loading={directoryQ.isLoading}
+        sources={directoryQ.data?.sources ?? []}
+        warnings={directoryQ.data?.warnings ?? []}
+      />
     </div>
   );
 }
 
-const PUBLIC_SOURCE_CARDS = [
-  {
-    title: "Paginas de carreira abertas",
-    text: "Planejado para paginas publicas simples, com revisao manual e respeito a bloqueios.",
-  },
-  {
-    title: "APIs oficiais",
-    text: "Futuro: conectores oficiais quando existirem e forem permitidos.",
-  },
-  {
-    title: "Feeds publicos",
-    text: "RSS/Atom publicos podem alimentar importacao recorrente futura.",
-  },
-  {
-    title: "CSV/JSON recorrente",
-    text: "Importacao manual recorrente, sem crawler amplo nesta versao.",
-  },
-];
+function SourceDirectoryPanel({
+  query,
+  onQueryChange,
+  loading,
+  sources,
+  warnings,
+}: {
+  query: string;
+  onQueryChange: (value: string) => void;
+  loading: boolean;
+  sources: SourceDirectoryEntry[];
+  warnings: string[];
+}) {
+  return (
+    <div
+      id="source-directory"
+      data-testid="source-directory-panel"
+      className="rounded-lg border border-border bg-background p-3"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Database className="h-3.5 w-3.5" />
+            Diretório de Fontes
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Organização segura de fontes públicas, oficiais e manuais. Nada aqui faz login
+            automático, bypass ou candidatura automática.
+          </p>
+        </div>
+        <input
+          value={query}
+          onChange={(event) => onQueryChange(event.target.value)}
+          placeholder="Buscar fonte, tipo ou status"
+          data-testid="source-directory-search"
+          className="min-w-[220px] rounded-md border border-input bg-background px-3 py-2 text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+        />
+      </div>
+
+      {warnings.length > 0 && (
+        <div className="mt-3 rounded-md border border-warning/30 bg-warning/5 p-2 text-xs text-warning">
+          {warnings[0]}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="mt-3 rounded-md border border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+          Carregando diretório...
+        </div>
+      ) : (
+        <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {sources.map((source) => (
+            <div
+              key={source.id}
+              className="rounded-lg border border-border bg-muted/20 p-3 text-xs"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="font-semibold text-foreground">{source.name}</div>
+                <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                  {sourceDirectoryStatus(source.status)}
+                </span>
+              </div>
+              <dl className="mt-2 grid gap-1 text-muted-foreground">
+                <div className="flex gap-1">
+                  <dt className="font-medium text-foreground">Tipo:</dt>
+                  <dd>{sourceDirectoryKind(source.kind)}</dd>
+                </div>
+                <div className="flex gap-1">
+                  <dt className="font-medium text-foreground">URL base:</dt>
+                  <dd className="truncate">{source.base_url || "Definida pelo usuário"}</dd>
+                </div>
+                <div className="flex gap-1">
+                  <dt className="font-medium text-foreground">Última verificação:</dt>
+                  <dd>{source.last_checked_at || "Ainda não verificada"}</dd>
+                </div>
+              </dl>
+              <p className="mt-2 text-muted-foreground">{source.observation}</p>
+              {source.requires_manual_review && (
+                <span className="mt-2 inline-flex rounded-md bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">
+                  Revisão manual necessária
+                </span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function OpportunityInboxRow({
   item,
+  duplicateTarget,
+  selected,
   busy,
+  onSelect,
   onImportJob,
   onSaveTracker,
   onArchive,
   onIgnore,
+  onMerge,
+  onKeepSeparate,
+  onNotDuplicate,
 }: {
   item: OpportunityInboxItem;
+  duplicateTarget?: OpportunityInboxItem;
+  selected: boolean;
   busy: boolean;
+  onSelect: (selected: boolean) => void;
   onImportJob: () => void;
   onSaveTracker: () => void;
   onArchive: () => void;
   onIgnore: () => void;
+  onMerge: () => void;
+  onKeepSeparate: () => void;
+  onNotDuplicate: () => void;
 }) {
   const duplicate = item.status === "duplicate";
+  const metadata = item.metadata ?? {};
+  const duplicateExplanation =
+    typeof metadata.duplicate_explanation === "string"
+      ? metadata.duplicate_explanation
+      : "Critério local: URL normalizada, empresa+cargo ou descrição semelhante.";
   return (
     <li
       data-testid="source-inbox-row"
@@ -556,6 +962,15 @@ function OpportunityInboxRow({
       }`}
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
+        <label className="mt-1 inline-flex items-center gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={selected}
+            onChange={(event) => onSelect(event.target.checked)}
+            data-testid="source-select-item"
+          />
+          Selecionar
+        </label>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="truncate text-sm font-semibold">{item.title}</h3>
@@ -574,9 +989,94 @@ function OpportunityInboxRow({
             {item.company || "Empresa nao detectada"} · {item.location || "Local nao informado"}
           </p>
           {duplicate && (
-            <p className="mt-2 rounded-md border border-warning/30 bg-warning/5 p-2 text-xs text-warning">
-              Esta vaga parece duplicada de outra oportunidade ja salva.
-            </p>
+            <div
+              data-testid="source-duplicate-panel"
+              className="mt-2 rounded-md border border-warning/30 bg-warning/5 p-3 text-xs"
+            >
+              <div className="font-semibold text-warning">
+                Esta vaga parece duplicada de outra oportunidade já salva.
+              </div>
+              <div className="mt-2 grid gap-2 md:grid-cols-2">
+                <div className="rounded-md bg-background/70 p-2">
+                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    Item novo
+                  </div>
+                  <div className="font-medium">{item.title}</div>
+                  <div className="text-muted-foreground">
+                    {item.company || "Empresa não detectada"} · {sourceOriginLabel(item.origin)}
+                  </div>
+                </div>
+                <div className="rounded-md bg-background/70 p-2">
+                  <div className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    Item existente
+                  </div>
+                  <div className="font-medium">
+                    {duplicateTarget?.title || item.duplicate_of || "Não localizado"}
+                  </div>
+                  <div className="text-muted-foreground">
+                    {duplicateTarget?.company || "Histórico preservado"} ·{" "}
+                    {duplicateTarget ? sourceOriginLabel(duplicateTarget.origin) : "origem local"}
+                  </div>
+                </div>
+              </div>
+              <div className="mt-2 grid gap-2 md:grid-cols-3">
+                <div>
+                  <div className="font-medium">Critério de deduplicação</div>
+                  <p className="text-muted-foreground">{duplicateExplanation}</p>
+                </div>
+                <div>
+                  <div className="font-medium">Campos diferentes</div>
+                  <p className="text-muted-foreground">
+                    {differentFields(item, duplicateTarget).join(", ") || "Nenhum campo crítico."}
+                  </p>
+                </div>
+                <div>
+                  <div className="font-medium">Histórico de origem</div>
+                  <p className="text-muted-foreground">
+                    Novo: {sourceOriginLabel(item.origin)} · Existente:{" "}
+                    {duplicateTarget ? sourceOriginLabel(duplicateTarget.origin) : "não encontrado"}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={onMerge}
+                  disabled={busy || !item.duplicate_of}
+                  data-testid="source-merge-duplicate"
+                  className="inline-flex items-center gap-1 rounded-md bg-warning px-2.5 py-1 text-[11px] font-medium text-warning-foreground disabled:opacity-50"
+                >
+                  <Merge className="h-3 w-3" />
+                  Mesclar
+                </button>
+                <button
+                  type="button"
+                  onClick={onKeepSeparate}
+                  disabled={busy}
+                  data-testid="source-keep-separate"
+                  className="rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  Manter separado
+                </button>
+                <button
+                  type="button"
+                  onClick={onArchive}
+                  disabled={busy}
+                  className="rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  Arquivar novo
+                </button>
+                <button
+                  type="button"
+                  onClick={onNotDuplicate}
+                  disabled={busy}
+                  data-testid="source-not-duplicate"
+                  className="rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+                >
+                  Marcar como não duplicata
+                </button>
+              </div>
+            </div>
           )}
           <div className="mt-2 flex flex-wrap gap-1.5">
             {item.tags.slice(0, 5).map((tag) => (
@@ -657,9 +1157,10 @@ function sourceOriginLabel(origin: SourceOrigin): string {
     manual_url: "Link manual",
     csv_import: "CSV",
     json_import: "JSON",
-    extension_capture: "Extensao Local",
+    extension_capture: "Extensão Local",
     companion_capture: "Companion",
-    public_source: "Fonte publica",
+    public_source: "Fonte pública",
+    public_feed: "Feed público",
     official_api_future: "API oficial futura",
   };
   return labels[origin];
@@ -677,6 +1178,82 @@ function captureStatusLabel(status: SourceCaptureStatus): string {
     error: "Erro",
   };
   return labels[status];
+}
+
+function sourceDirectoryKind(kind: SourceDirectoryEntry["kind"]): string {
+  const labels: Record<SourceDirectoryEntry["kind"], string> = {
+    public_career_page: "Página de carreira aberta",
+    public_feed: "Feed RSS público",
+    official_api: "API oficial",
+    recurring_csv_json: "CSV/JSON recorrente",
+    manual_link: "Link manual",
+    observed_origin: "Origem observada",
+  };
+  return labels[kind];
+}
+
+function sourceDirectoryStatus(status: SourceDirectoryEntry["status"]): string {
+  const labels: Record<SourceDirectoryEntry["status"], string> = {
+    available: "Disponível",
+    planned: "Planejado",
+    future: "Futuro",
+    manual_review: "Revisão manual",
+  };
+  return labels[status];
+}
+
+function differentFields(
+  item: OpportunityInboxItem,
+  duplicateTarget: OpportunityInboxItem | undefined,
+): string[] {
+  if (!duplicateTarget) return ["item existente indisponível"];
+  const fields: string[] = [];
+  if ((item.company || "") !== (duplicateTarget.company || "")) fields.push("empresa");
+  if ((item.location || "") !== (duplicateTarget.location || "")) fields.push("local");
+  if (
+    (item.job_url || item.source_url || "") !==
+    (duplicateTarget.job_url || duplicateTarget.source_url || "")
+  )
+    fields.push("link");
+  if (item.origin !== duplicateTarget.origin) fields.push("origem");
+  return fields;
+}
+
+function validateFilePreview(
+  kind: "csv" | "json",
+  text: string,
+): Pick<FilePreview, "rows" | "error"> {
+  if (!text.trim()) return { rows: [], error: "Arquivo vazio." };
+  if (kind === "json") {
+    try {
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed)) {
+        return { rows: [], error: "JSON deve ser uma lista de objetos." };
+      }
+      return {
+        rows: parsed.slice(0, 5).map((item, index) => `${index + 1}. ${JSON.stringify(item)}`),
+      };
+    } catch {
+      return { rows: [], error: "JSON inválido. Revise o arquivo antes de importar." };
+    }
+  }
+  const rows = text.split(/\r?\n/).filter(Boolean);
+  if (rows.length < 2 || !rows[0]?.includes(",")) {
+    return { rows: [], error: "CSV inválido. Inclua cabeçalho e pelo menos uma linha." };
+  }
+  return { rows: rows.slice(0, 6) };
+}
+
+function downloadText(filename: string, content: string, type: string) {
+  const blob = new Blob([content], { type: `${type};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename || "sotuhire-opportunities.csv";
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
 }
 
 function LocalExtensionPanel() {

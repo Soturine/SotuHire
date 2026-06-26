@@ -338,6 +338,7 @@ export type SourceOrigin =
   | "extension_capture"
   | "companion_capture"
   | "public_source"
+  | "public_feed"
   | "official_api_future";
 
 export type SourceCaptureStatus =
@@ -376,6 +377,7 @@ export interface OpportunityInboxItem {
   ats_score?: number;
   last_analysis_at?: string;
   notes?: string;
+  metadata?: Record<string, unknown>;
 }
 
 export interface ImportBatch {
@@ -443,4 +445,34 @@ export interface SourceStats {
   saved_to_tracker: number;
   by_status: Record<string, number>;
   by_origin: Record<string, number>;
+}
+
+export interface SourceDirectoryEntry {
+  id: string;
+  name: string;
+  kind:
+    | "public_career_page"
+    | "public_feed"
+    | "official_api"
+    | "recurring_csv_json"
+    | "manual_link"
+    | "observed_origin";
+  status: "available" | "planned" | "future" | "manual_review";
+  base_url?: string;
+  last_checked_at?: string;
+  observation?: string;
+  requires_manual_review: boolean;
+}
+
+export interface SourceDirectoryResult {
+  sources: SourceDirectoryEntry[];
+  query: string;
+  warnings: string[];
+}
+
+export interface SourceExportResult {
+  format: "csv" | "json";
+  filename: string;
+  content: string;
+  item_count: number;
 }

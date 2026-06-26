@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versao `v1.7.0`.
+Frontend moderno do SotuHire em `apps/web` para a versao `v1.7.1`.
 
 ## Stack
 
@@ -140,13 +140,13 @@ A tela **Fontes e Captura** inclui o fluxo `AUTHENTICATED_BROWSER` existente no 
 - exige confirmacao de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-A v1.7.0 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
+A v1.7.1 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
 regras protegidas.
 
 O painel **Extensao Local** consulta `/api/v1/extension/status` e `/api/v1/extension/captures` para
 mostrar capturas ja salvas pela Local Companion API. Ele mostra status do companion, ultima
 sincronizacao, origem, URL, data, tipo de captura e acoes para Vaga, GitHub Analysis e
-Candidaturas. A v1.7.0 tambem permite marcar capturas locais como revisadas, ignoradas ou
+Candidaturas. A v1.7.1 tambem permite marcar capturas locais como revisadas, ignoradas ou
 arquivadas sem tocar em browser autenticado.
 
 ### Caixa de Entrada e importadores
@@ -162,6 +162,15 @@ analisar ou salvar:
 
 O painel oferece busca, filtros por status/origem, deduplicacao local e acoes para **Importar para
 Vaga**, **Salvar em Candidaturas**, **Copiar link**, **Arquivar** e **Ignorar**.
+
+Na v1.7.1, CSV/JSON tambem podem ser enviados por upload do navegador. O app mostra preview das
+primeiras linhas/itens e so importa depois de confirmacao. A Caixa tambem exporta todos, filtrados
+ou selecionados em CSV/JSON, e a comparacao de duplicatas permite **Mesclar**, **Manter separado**,
+**Arquivar novo** ou **Marcar como nao duplicata** preservando historico.
+
+O **Diretório de Fontes** organiza paginas de carreira abertas, feeds RSS publicos, APIs oficiais,
+CSV/JSON recorrente, links manuais e fontes observadas. RSS recorrente e APIs oficiais continuam
+roadmap/planejado.
 
 O importador de URL nao faz crawler amplo. Se uma pagina bloquear acesso, exigir login ou nao
 permitir leitura publica simples, a API retorna um aviso para abrir a pagina manualmente e colar o
@@ -179,7 +188,7 @@ Kanban, cross-browser em Chromium/Firefox/WebKit e ausencia de branding legado p
 `visual-capture.spec.ts` gera screenshots em:
 
 ```txt
-docs/assets/screenshots/sotuhire-v1.7-web-*.png
+docs/assets/screenshots/sotuhire-v1.7.1-web-*.png
 ```
 
 Todos usam viewport `1440x1000`, `deviceScaleFactor=1` e `fullPage=false`.

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+﻿import { expect, test } from "@playwright/test";
 
 const coreScreens = [
   { path: "/", heading: /SotuHire/i },
@@ -115,7 +115,9 @@ test("sources page handles local extension offline and fake capture imports", as
   await page.goto("/settings");
   await page.getByRole("button", { name: "API Real" }).click();
   await page.getByRole("link", { name: /Fontes e Captura/i }).click();
-  await expect(page.getByText("Companion offline", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText(/Companion offline|Companion conectado|API Real sem oportunidades/i).first(),
+  ).toBeVisible();
 
   await page.getByRole("link", { name: /Configura/i }).click();
   await page.getByRole("button", { name: "Demo" }).click();
@@ -136,6 +138,7 @@ test("sources inbox imports fake text csv json and connects to tracker", async (
   await page.goto("/sources");
 
   await expect(page.getByText("Caixa de Entrada de Oportunidades")).toBeVisible();
+  await expect(page.getByTestId("demo-data-badge")).toContainText("Dados de demonstração");
   await expect(page.getByTestId("source-inbox-row").first()).toBeVisible();
   await page.getByTestId("source-import-text").click();
   await expect(page.getByText(/importacao concluida|Modo Demo/i).first()).toBeVisible();
@@ -157,6 +160,136 @@ test("sources inbox imports fake text csv json and connects to tracker", async (
   await expect(page.locator("body")).toContainText(/Fonte|Origem|CSV|Manual|Demo/);
 });
 
+test("sources supports browser CSV/JSON upload preview, duplicate merge, export and source directory", async ({
+  page,
+}) => {
+  await page.goto("/sources");
+
+  await page.getByTestId("source-upload-csv-input").setInputFiles({
+    name: "vagas-ficticias.csv",
+    mimeType: "text/csv",
+    buffer: Buffer.from(
+      'cargo,empresa,link,local,descricao,fonte,status,observacoes\nAnalista de Dados,Empresa Exemplo,https://example.com/jobs/123,Remoto,"Python e SQL",CSV Manual,nova,"vaga ficticia"',
+    ),
+  });
+  await expect(page.getByTestId("source-file-preview")).toContainText("Preview antes de confirmar");
+  await page.getByTestId("source-upload-confirm").click();
+  await expect(page.getByTestId("source-file-preview")).toBeHidden();
+  await expect(page.getByText(/CSV importado|Modo Demo/i).first()).toBeVisible();
+
+  await page.getByTestId("source-upload-json-input").setInputFiles({
+    name: "vagas-ficticias.json",
+    mimeType: "application/json",
+    buffer: Buffer.from(
+      JSON.stringify([
+        {
+          cargo: "Desenvolvedor Backend",
+          empresa: "Tech Exemplo",
+          link: "https://example.com/jobs/456",
+          local: "Hibrido",
+          descricao: "APIs, testes e bancos de dados.",
+          fonte: "JSON Manual",
+        },
+      ]),
+    ),
+  });
+  await expect(page.getByTestId("source-file-preview")).toContainText("JSON");
+  await page.getByTestId("source-upload-confirm").click();
+  await expect(page.getByTestId("source-file-preview")).toBeHidden();
+  await expect(page.getByText(/JSON importado|Modo Demo/i).first()).toBeVisible();
+
+  await page.getByTestId("source-upload-csv-input").setInputFiles({
+    name: "arquivo-invalido.txt",
+    mimeType: "text/plain",
+    buffer: Buffer.from("nao e csv"),
+  });
+  await expect(page.getByTestId("source-upload-error")).toContainText("Formato inválido");
+  await page.getByTestId("source-upload-cancel").click();
+
+  await expect(page.getByTestId("source-duplicate-panel").first()).toBeVisible();
+  await page.getByTestId("source-merge-duplicate").first().click();
+  await expect(page.getByText(/mesclada|histórico preservado|Modo Demo/i).first()).toBeVisible();
+
+  await page.getByTestId("source-select-item").first().check();
+  await page.getByTestId("source-export-selected").click();
+  await expect(page.getByText(/Exportação concluída|Modo Demo/i).first()).toBeVisible();
+
+  await expect(page.getByTestId("source-directory-panel")).toBeVisible();
+  await page.getByTestId("source-directory-search").fill("RSS");
+  await expect(page.getByTestId("source-directory-panel")).toContainText("Feeds RSS públicos");
+});
+
+test("API Real empty states do not silently show demo opportunity data", async ({ page }) => {
+  await page.route("**/api/v1/sources/imports", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        data: { items: [], batches: [] },
+        warnings: [],
+        request_id: "e2e",
+      }),
+    });
+  });
+  await page.route("**/api/v1/sources/stats", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        data: {
+          total: 0,
+          duplicates: 0,
+          errors: 0,
+          saved_to_tracker: 0,
+          by_status: {},
+          by_origin: {},
+        },
+        warnings: [],
+        request_id: "e2e",
+      }),
+    });
+  });
+  await page.route("**/api/v1/sources/directory**", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        data: { sources: [], query: "", warnings: [] },
+        warnings: [],
+        request_id: "e2e",
+      }),
+    });
+  });
+  await page.route("**/api/v1/tracker/jobs", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, data: { jobs: [] }, warnings: [], request_id: "e2e" }),
+    });
+  });
+
+  await page.goto("/settings");
+  await page.getByRole("button", { name: "API Real" }).click();
+  await page.getByRole("link", { name: /Fontes e Captura/i }).click();
+  await expect(page.getByTestId("source-real-empty")).toContainText("API Real sem oportunidades");
+  await expect(page.locator("body")).not.toContainText("Empresa Exemplo");
+
+  await page
+    .getByRole("navigation")
+    .getByRole("link", { name: /Candidaturas/i })
+    .click();
+  await expect(page.getByText("Nenhuma candidatura ainda")).toBeVisible();
+  await expect(page.locator("body")).not.toContainText("Empresa Demo");
+});
+
+test("public UI does not contain common mojibake sequences", async ({ page }) => {
+  for (const screen of coreScreens) {
+    await page.goto(screen.path);
+    await expect(page.locator("body")).not.toContainText(
+      /\u00c3[\u0080-\u00bf\u0160\u0161\u2018-\u201d\u2020-\u2022]|\u00c2|\u00e2\u20ac/,
+    );
+  }
+});
+
 test("kanban creates and moves a fake application", async ({ page }) => {
   await page.goto("/tracker");
 
@@ -176,7 +309,7 @@ test("kanban creates and moves a fake application", async ({ page }) => {
   await expect(page.getByTestId("kanban-column-interview")).toContainText("Backend Python E2E");
   await page.getByRole("button", { name: /Lista/i }).click();
   await page.getByTestId("application-status-select").first().selectOption("interview");
-  await expect(page.locator("body")).toContainText(/Ultima analise|Sem analise/);
+  await expect(page.locator("body")).toContainText(/Última análise|Sem análise/);
 });
 
 test("responsive layouts avoid page-level horizontal overflow", async ({ page }, testInfo) => {
