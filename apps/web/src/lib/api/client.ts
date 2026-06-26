@@ -10,6 +10,7 @@ import type {
   AuthenticatedBrowserCollectResult,
   AuthenticatedBrowserStatus,
   ExtensionCapturesResult,
+  ExtensionCapturePatchResult,
   ExtensionImportGithubResult,
   ExtensionImportJobResult,
   ExtensionImportTrackerResult,
@@ -17,6 +18,7 @@ import type {
   GithubAnalyzeResult,
   GithubReport,
   Health,
+  ImportBatch,
   JobExtractResult,
   JobPosting,
   MatchAnalysis,
@@ -26,6 +28,13 @@ import type {
   ResumeProfile,
   ResumeTailor,
   ResumeTailorResult,
+  SourceCaptureImportJobResult,
+  SourceCaptureResult,
+  SourceCaptureSaveTrackerResult,
+  SourceDedupeResult,
+  SourceImportResult,
+  SourceImportsResult,
+  SourceStats,
   TrackerFunnel,
   TrackerJob,
   TrackerMetrics,
@@ -493,6 +502,345 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         },
         normalizeExtensionImportGithub,
       ),
+
+    extensionPatchCapture: (capture_id: string, status: string) =>
+      call<ExtensionCapturePatchResult>(
+        mode,
+        baseUrl,
+        `/extension/captures/${capture_id}`,
+        { method: "PATCH", body: JSON.stringify({ status }) },
+        {
+          capture: {
+            ...(mockSourceImports().items[2]
+              ? {
+                  id: "demo-capture-1",
+                  title: "Backend Python Demo",
+                  company: "Empresa Demo",
+                  url: "https://example.invalid/jobs/backend",
+                  domain: "example.invalid",
+                  kind: "job",
+                  source: "Extensao local demo",
+                  status,
+                }
+              : {}),
+          } as ExtensionCapturePatchResult["capture"],
+          message: "Modo Demo: captura atualizada.",
+        },
+        normalizeExtensionPatchCapture,
+      ),
+
+    sourceImports: () =>
+      call<SourceImportsResult>(
+        mode,
+        baseUrl,
+        "/sources/imports",
+        undefined,
+        mockSourceImports(),
+        normalizeSourceImports,
+      ),
+
+    sourceImportText: (payload: {
+      text: string;
+      url?: string;
+      company?: string;
+      title?: string;
+      source_name?: string;
+      notes?: string;
+      use_ai?: boolean;
+    }) =>
+      call<SourceImportResult>(
+        mode,
+        baseUrl,
+        "/sources/imports/text",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockSourceImport(payload, "manual_text"),
+        normalizeSourceImport,
+      ),
+
+    sourceImportUrl: (payload: { url: string; source_name?: string; notes?: string }) =>
+      call<SourceImportResult>(
+        mode,
+        baseUrl,
+        "/sources/imports/url",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockSourceImport(
+          {
+            text: "Cargo: Backend Python Demo\nEmpresa: Empresa Demo\nRequisitos: Python e APIs.",
+            url: payload.url,
+            title: "Backend Python Demo",
+            company: "Empresa Demo",
+            source_name: payload.source_name || "Link manual demo",
+            notes: payload.notes,
+          },
+          "manual_url",
+        ),
+        normalizeSourceImport,
+      ),
+
+    sourceImportCsv: (payload: { csv_text: string; source_name?: string }) =>
+      call<SourceImportResult>(
+        mode,
+        baseUrl,
+        "/sources/imports/csv",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockBatchImport("csv_import", payload.source_name || "CSV Manual"),
+        normalizeSourceImport,
+      ),
+
+    sourceImportJson: (payload: {
+      items?: Record<string, unknown>[];
+      json_text?: string;
+      source_name?: string;
+    }) =>
+      call<SourceImportResult>(
+        mode,
+        baseUrl,
+        "/sources/imports/json",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockBatchImport("json_import", payload.source_name || "JSON Manual"),
+        normalizeSourceImport,
+      ),
+
+    sourcePatchCapture: (
+      id: string,
+      payload: { status?: string; notes?: string; duplicate_of?: string },
+    ) =>
+      call<SourceCaptureResult>(
+        mode,
+        baseUrl,
+        `/sources/captures/${id}`,
+        { method: "PATCH", body: JSON.stringify(payload) },
+        {
+          capture: {
+            ...(mockSourceImports().items.find((item) => item.id === id) ??
+              mockSourceImports().items[0]!),
+            status: (payload.status as SourceCaptureResult["capture"]["status"]) || "reviewed",
+            notes: payload.notes,
+            duplicate_of: payload.duplicate_of,
+          },
+          message: "Modo Demo: item atualizado.",
+        },
+        normalizeSourceCaptureResult,
+      ),
+
+    sourceImportCaptureJob: (id: string) =>
+      call<SourceCaptureImportJobResult>(
+        mode,
+        baseUrl,
+        `/sources/captures/${id}/import-job`,
+        { method: "POST" },
+        {
+          capture: mockSourceImports().items[0]!,
+          job: { ...mockJob },
+          message: "Modo Demo: item importado para Vaga.",
+        },
+        normalizeSourceCaptureImportJob,
+      ),
+
+    sourceSaveCaptureTracker: (id: string) =>
+      call<SourceCaptureSaveTrackerResult>(
+        mode,
+        baseUrl,
+        `/sources/captures/${id}/save-tracker`,
+        { method: "POST" },
+        {
+          capture: { ...mockSourceImports().items[0]!, status: "saved_to_tracker" },
+          tracker_id: `job_${Math.random().toString(36).slice(2, 8)}`,
+          message: "Modo Demo: item salvo em Candidaturas.",
+        },
+        normalizeSourceCaptureSaveTracker,
+      ),
+
+    sourceDedupe: () =>
+      call<SourceDedupeResult>(
+        mode,
+        baseUrl,
+        "/sources/dedupe",
+        { method: "POST" },
+        {
+          duplicates: [
+            {
+              item_id: "source-demo-duplicate",
+              duplicate_of: "source-demo-text",
+              decision: "possible_duplicate",
+              reason: "URL normalizada igual.",
+              confidence: 0.92,
+            },
+          ],
+        },
+        normalizeSourceDedupe,
+      ),
+
+    sourceStats: () =>
+      call<SourceStats>(
+        mode,
+        baseUrl,
+        "/sources/stats",
+        undefined,
+        {
+          total: 3,
+          duplicates: 1,
+          errors: 0,
+          saved_to_tracker: 1,
+          by_status: { new: 1, duplicate: 1, saved_to_tracker: 1 },
+          by_origin: { manual_text: 1, csv_import: 1, extension_capture: 1 },
+        },
+        normalizeSourceStats,
+      ),
+  };
+}
+
+function mockSourceImports(): SourceImportsResult {
+  const now = new Date().toISOString();
+  return {
+    items: [
+      {
+        id: "source-demo-text",
+        title: "Analista de Dados Demo",
+        company: "Empresa Exemplo",
+        source_type: "manual_text",
+        source_name: "Texto manual",
+        source_url: "https://example.com/jobs/123",
+        origin: "manual_text",
+        captured_at: now,
+        imported_at: now,
+        status: "new",
+        raw_text: "Cargo: Analista de Dados\nEmpresa: Empresa Exemplo\nRequisitos: Python e SQL.",
+        job_url: "https://example.com/jobs/123",
+        location: "Remoto",
+        work_model: "remote",
+        seniority: "junior",
+        domain: "example.com",
+        tags: ["Python", "SQL", "dashboards"],
+        source_confidence: 0.82,
+        notes: "vaga ficticia",
+      },
+      {
+        id: "source-demo-duplicate",
+        title: "Analista de Dados",
+        company: "Empresa Exemplo",
+        source_type: "csv_import",
+        source_name: "CSV Manual",
+        source_url: "https://example.com/jobs/123?utm=demo",
+        origin: "csv_import",
+        captured_at: now,
+        imported_at: now,
+        status: "duplicate",
+        raw_text: "Python, SQL e dashboards.",
+        job_url: "https://example.com/jobs/123?utm=demo",
+        location: "Remoto",
+        domain: "example.com",
+        tags: ["Python", "SQL"],
+        source_confidence: 0.72,
+        duplicate_of: "source-demo-text",
+        notes: "possivel duplicata ficticia",
+      },
+      {
+        id: "source-demo-extension",
+        title: "Backend Python Demo",
+        company: "Empresa Demo",
+        source_type: "extension_capture",
+        source_name: "Extensao Local",
+        source_url: "https://example.invalid/jobs/backend",
+        origin: "extension_capture",
+        captured_at: now,
+        imported_at: now,
+        status: "saved_to_tracker",
+        raw_text: "Cargo: Backend Python\nRequisitos: FastAPI e testes.",
+        job_url: "https://example.invalid/jobs/backend",
+        location: "Hibrido",
+        domain: "example.invalid",
+        tags: ["Python", "FastAPI", "testes"],
+        source_confidence: 0.8,
+        notes: "captura ficticia",
+      },
+    ],
+    batches: [
+      {
+        id: "batch-demo",
+        origin: "manual_text",
+        source_name: "Demo",
+        created_at: now,
+        total: 3,
+        imported: 3,
+        errors: 0,
+        duplicates: 1,
+        warnings: [],
+        item_ids: ["source-demo-text", "source-demo-duplicate", "source-demo-extension"],
+      },
+    ],
+  };
+}
+
+function mockSourceImport(
+  payload: {
+    text?: string;
+    url?: string;
+    title?: string;
+    company?: string;
+    source_name?: string;
+    notes?: string;
+  },
+  origin: SourceImportsResult["items"][number]["origin"],
+): SourceImportResult {
+  const now = new Date().toISOString();
+  const item = {
+    id: `source_${Math.random().toString(36).slice(2, 8)}`,
+    title: payload.title || "Vaga importada demo",
+    company: payload.company || "Empresa Exemplo",
+    source_type: origin,
+    source_name: payload.source_name || "Importacao demo",
+    source_url: payload.url || "",
+    origin,
+    captured_at: now,
+    imported_at: now,
+    status: "new" as const,
+    raw_text: payload.text || "",
+    job_url: payload.url || "",
+    location: "Remoto",
+    work_model: "remote",
+    tags: ["Python", "SQL"],
+    source_confidence: 0.76,
+    notes: payload.notes || "",
+  };
+  return {
+    batch: {
+      id: `batch_${Math.random().toString(36).slice(2, 8)}`,
+      origin,
+      source_name: item.source_name,
+      source_url: item.source_url,
+      created_at: now,
+      total: 1,
+      imported: 1,
+      errors: 0,
+      duplicates: 0,
+      warnings: [],
+      item_ids: [item.id],
+    },
+    items: [item],
+    message: "Modo Demo: importacao concluida.",
+  };
+}
+
+function mockBatchImport(
+  origin: SourceImportsResult["items"][number]["origin"],
+  sourceName: string,
+): SourceImportResult {
+  const first = mockSourceImport(
+    {
+      title: origin === "csv_import" ? "Analista de Dados" : "Desenvolvedor Backend",
+      company: origin === "csv_import" ? "Empresa Exemplo" : "Tech Exemplo",
+      url:
+        origin === "csv_import" ? "https://example.com/jobs/123" : "https://example.com/jobs/456",
+      source_name: sourceName,
+      text: "Python, SQL, APIs e testes.",
+    },
+    origin,
+  );
+  return {
+    ...first,
+    batch: { ...first.batch, total: 2, imported: 2, duplicates: 1 },
+    message: "Modo Demo: importacao concluida: 2 itens, 1 duplicado.",
   };
 }
 
@@ -501,7 +849,7 @@ function normalizeHealth(value: unknown): Health {
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "1.5.0",
+    version: asString(raw.version) || "1.7.0",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),
@@ -912,6 +1260,171 @@ function normalizeExtensionImportGithub(value: unknown): ExtensionImportGithubRe
       : undefined,
     message: asString(raw.message),
   };
+}
+
+function normalizeExtensionPatchCapture(value: unknown): ExtensionCapturePatchResult {
+  const raw = asRecord(value);
+  const captures = normalizeExtensionCaptures({ captures: [raw.capture] }).captures;
+  return {
+    capture: captures[0] ?? {
+      id: "",
+      title: "",
+      url: "",
+      status: "reviewed",
+    },
+    message: asString(raw.message),
+  };
+}
+
+function normalizeSourceImports(value: unknown): SourceImportsResult {
+  const raw = asRecord(value);
+  return {
+    items: objectList(raw.items).map(normalizeInboxItem),
+    batches: objectList(raw.batches).map(normalizeImportBatch),
+  };
+}
+
+function normalizeSourceImport(value: unknown): SourceImportResult {
+  const raw = asRecord(value);
+  return {
+    batch: normalizeImportBatch(raw.batch),
+    items: objectList(raw.items).map(normalizeInboxItem),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeSourceCaptureResult(value: unknown): SourceCaptureResult {
+  const raw = asRecord(value);
+  return {
+    capture: normalizeInboxItem(raw.capture),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeSourceCaptureImportJob(value: unknown): SourceCaptureImportJobResult {
+  const raw = asRecord(value);
+  return {
+    capture: normalizeInboxItem(raw.capture),
+    job: normalizeJobPosting(raw.job),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeSourceCaptureSaveTracker(value: unknown): SourceCaptureSaveTrackerResult {
+  const raw = asRecord(value);
+  return {
+    capture: normalizeInboxItem(raw.capture),
+    tracker_id: asString(raw.tracker_id),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeSourceDedupe(value: unknown): SourceDedupeResult {
+  const raw = asRecord(value);
+  return {
+    duplicates: objectList(raw.duplicates).map((item) => ({
+      item_id: asString(item.item_id),
+      duplicate_of: asString(item.duplicate_of),
+      decision:
+        item.decision === "confirmed_duplicate" || item.decision === "not_duplicate"
+          ? item.decision
+          : "possible_duplicate",
+      reason: asString(item.reason),
+      confidence: asNumber(item.confidence, 0),
+    })),
+  };
+}
+
+function normalizeSourceStats(value: unknown): SourceStats {
+  const raw = asRecord(value);
+  return {
+    total: asNumber(raw.total, 0),
+    duplicates: asNumber(raw.duplicates, 0),
+    errors: asNumber(raw.errors, 0),
+    saved_to_tracker: asNumber(raw.saved_to_tracker, 0),
+    by_status: numberRecord(raw.by_status),
+    by_origin: numberRecord(raw.by_origin),
+  };
+}
+
+function normalizeInboxItem(value: unknown): SourceImportsResult["items"][number] {
+  const raw = asRecord(value);
+  return {
+    id: asString(raw.id),
+    title: asString(raw.title) || "Vaga sem titulo",
+    company: asString(raw.company),
+    source_type: normalizeSourceOrigin(raw.source_type),
+    source_name: asString(raw.source_name),
+    source_url: asString(raw.source_url),
+    origin: normalizeSourceOrigin(raw.origin),
+    captured_at: asString(raw.captured_at),
+    imported_at: asString(raw.imported_at),
+    status: normalizeCaptureStatus(raw.status),
+    raw_text: asString(raw.raw_text),
+    job_url: asString(raw.job_url),
+    location: asString(raw.location),
+    work_model: asString(raw.work_model),
+    employment_type: asString(raw.employment_type),
+    seniority: asString(raw.seniority),
+    domain: asString(raw.domain),
+    tags: stringList(raw.tags),
+    source_confidence: asNumber(raw.source_confidence, 0),
+    dedupe_key: asString(raw.dedupe_key),
+    duplicate_of: asString(raw.duplicate_of),
+    match_score: definedNumber(raw.match_score),
+    ats_score: definedNumber(raw.ats_score),
+    last_analysis_at: asString(raw.last_analysis_at),
+    notes: asString(raw.notes),
+  };
+}
+
+function normalizeImportBatch(value: unknown): ImportBatch {
+  const raw = asRecord(value);
+  return {
+    id: asString(raw.id),
+    origin: normalizeSourceOrigin(raw.origin),
+    source_name: asString(raw.source_name),
+    source_url: asString(raw.source_url),
+    created_at: asString(raw.created_at),
+    total: asNumber(raw.total, 0),
+    imported: asNumber(raw.imported, 0),
+    errors: asNumber(raw.errors, 0),
+    duplicates: asNumber(raw.duplicates, 0),
+    warnings: stringList(raw.warnings),
+    item_ids: stringList(raw.item_ids),
+  };
+}
+
+function normalizeSourceOrigin(value: unknown): SourceImportsResult["items"][number]["origin"] {
+  const allowed: SourceImportsResult["items"][number]["origin"][] = [
+    "manual_text",
+    "manual_url",
+    "csv_import",
+    "json_import",
+    "extension_capture",
+    "companion_capture",
+    "public_source",
+    "official_api_future",
+  ];
+  return allowed.includes(value as SourceImportsResult["items"][number]["origin"])
+    ? (value as SourceImportsResult["items"][number]["origin"])
+    : "manual_text";
+}
+
+function normalizeCaptureStatus(value: unknown): SourceImportsResult["items"][number]["status"] {
+  const allowed: SourceImportsResult["items"][number]["status"][] = [
+    "new",
+    "reviewed",
+    "imported_to_job",
+    "saved_to_tracker",
+    "ignored",
+    "archived",
+    "duplicate",
+    "error",
+  ];
+  return allowed.includes(value as SourceImportsResult["items"][number]["status"])
+    ? (value as SourceImportsResult["items"][number]["status"])
+    : "new";
 }
 
 function normalizeTrackerJobs(value: unknown): { jobs: TrackerJob[] } {

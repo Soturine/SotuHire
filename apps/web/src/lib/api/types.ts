@@ -324,3 +324,123 @@ export interface ExtensionImportGithubResult {
   report?: GithubReport;
   message: string;
 }
+
+export interface ExtensionCapturePatchResult {
+  capture: ExtensionCapture;
+  message: string;
+}
+
+export type SourceOrigin =
+  | "manual_text"
+  | "manual_url"
+  | "csv_import"
+  | "json_import"
+  | "extension_capture"
+  | "companion_capture"
+  | "public_source"
+  | "official_api_future";
+
+export type SourceCaptureStatus =
+  | "new"
+  | "reviewed"
+  | "imported_to_job"
+  | "saved_to_tracker"
+  | "ignored"
+  | "archived"
+  | "duplicate"
+  | "error";
+
+export interface OpportunityInboxItem {
+  id: string;
+  title: string;
+  company?: string;
+  source_type: SourceOrigin;
+  source_name?: string;
+  source_url?: string;
+  origin: SourceOrigin;
+  captured_at?: string;
+  imported_at?: string;
+  status: SourceCaptureStatus;
+  raw_text?: string;
+  job_url?: string;
+  location?: string;
+  work_model?: string;
+  employment_type?: string;
+  seniority?: string;
+  domain?: string;
+  tags: string[];
+  source_confidence: number;
+  dedupe_key?: string;
+  duplicate_of?: string;
+  match_score?: number;
+  ats_score?: number;
+  last_analysis_at?: string;
+  notes?: string;
+}
+
+export interface ImportBatch {
+  id: string;
+  origin: SourceOrigin;
+  source_name?: string;
+  source_url?: string;
+  created_at?: string;
+  total: number;
+  imported: number;
+  errors: number;
+  duplicates: number;
+  warnings: string[];
+  item_ids: string[];
+}
+
+export interface DuplicateCandidate {
+  item_id: string;
+  duplicate_of: string;
+  decision: "possible_duplicate" | "confirmed_duplicate" | "not_duplicate";
+  reason: string;
+  confidence: number;
+}
+
+export interface SourceImportsResult {
+  items: OpportunityInboxItem[];
+  batches: ImportBatch[];
+}
+
+export interface SourceImportResult {
+  batch: ImportBatch;
+  items: OpportunityInboxItem[];
+  message: string;
+}
+
+export interface SourceCapturesResult {
+  captures: OpportunityInboxItem[];
+}
+
+export interface SourceCaptureResult {
+  capture: OpportunityInboxItem;
+  message: string;
+}
+
+export interface SourceCaptureImportJobResult {
+  capture: OpportunityInboxItem;
+  job: JobPosting;
+  message: string;
+}
+
+export interface SourceCaptureSaveTrackerResult {
+  capture: OpportunityInboxItem;
+  tracker_id: string;
+  message: string;
+}
+
+export interface SourceDedupeResult {
+  duplicates: DuplicateCandidate[];
+}
+
+export interface SourceStats {
+  total: number;
+  duplicates: number;
+  errors: number;
+  saved_to_tracker: number;
+  by_status: Record<string, number>;
+  by_origin: Record<string, number>;
+}

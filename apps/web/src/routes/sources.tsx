@@ -1,10 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   AlertTriangle,
+  Archive,
   ArrowRight,
   CheckCircle2,
+  Copy,
   Database,
   ExternalLink,
+  Filter,
   Github,
   Monitor,
   PlugZap,
@@ -12,6 +15,7 @@ import {
   Save,
   ShieldAlert,
   Terminal,
+  Upload,
   XCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
@@ -19,10 +23,14 @@ import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { SourceCardItem } from "@/components/source-card";
 import { useApi } from "@/lib/api/hooks";
+import { useApiMode } from "@/lib/api/mode";
 import type {
   AuthenticatedBrowserCollectResult,
   AuthenticatedBrowserStatus,
   ExtensionCapture,
+  OpportunityInboxItem,
+  SourceCaptureStatus,
+  SourceOrigin,
 } from "@/lib/api/types";
 import { SOURCE_CARDS, SOURCE_FLOW } from "@/mocks/sources";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -85,6 +93,19 @@ function SourcesPage() {
             </p>
           </div>
         </div>
+
+        <SectionCard
+          id="opportunity-inbox"
+          title={
+            <span className="flex items-center gap-2">
+              <Database className="h-4 w-4 text-accent" />
+              Caixa de Entrada de Oportunidades
+            </span>
+          }
+          description="Importe texto, link, CSV ou JSON e revise tudo antes de enviar para Vaga, Compatibilidade ou Candidaturas."
+        >
+          <OpportunityInboxPanel />
+        </SectionCard>
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SOURCE_CARDS.map((c) => (
@@ -156,15 +177,518 @@ function SourcesPage() {
   );
 }
 
+const SAMPLE_CSV = `cargo,empresa,link,local,descricao,fonte,status,observacoes
+Analista de Dados,Empresa Exemplo,https://example.com/jobs/123,Remoto,"Python, SQL e dashboards",CSV Manual,nova,"vaga ficticia"
+Desenvolvedor Backend,Tech Exemplo,https://example.com/jobs/456,Hibrido,"APIs, testes e bancos de dados",CSV Manual,nova,"vaga ficticia"`;
+
+const SAMPLE_JSON = JSON.stringify(
+  [
+    {
+      cargo: "Analista de Dados",
+      empresa: "Empresa Exemplo",
+      link: "https://example.com/jobs/123",
+      local: "Remoto",
+      descricao: "Python, SQL e dashboards.",
+      fonte: "JSON Manual",
+      status: "nova",
+      observacoes: "vaga ficticia",
+    },
+  ],
+  null,
+  2,
+);
+
+function OpportunityInboxPanel() {
+  const api = useApi();
+  const { mode, baseUrl } = useApiMode();
+  const inboxQ = useQuery({
+    queryKey: ["source-imports", mode, baseUrl],
+    queryFn: () => api.sourceImports(),
+    retry: false,
+  });
+  const statsQ = useQuery({
+    queryKey: ["source-stats", mode, baseUrl],
+    queryFn: () => api.sourceStats(),
+    retry: false,
+  });
+  const [text, setText] = useState(
+    "Cargo: Analista de Dados\nEmpresa: Empresa Exemplo\nLocalizacao: Remoto\nRequisitos: Python, SQL e dashboards.",
+  );
+  const [url, setUrl] = useState("https://example.com/jobs/123");
+  const [csvText, setCsvText] = useState(SAMPLE_CSV);
+  const [jsonText, setJsonText] = useState(SAMPLE_JSON);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | SourceCaptureStatus>("all");
+  const [originFilter, setOriginFilter] = useState<"all" | SourceOrigin>("all");
+
+  const refresh = () => {
+    inboxQ.refetch();
+    statsQ.refetch();
+  };
+
+  const importText = useMutation({
+    mutationFn: () =>
+      api.sourceImportText({
+        text,
+        source_name: "Texto manual",
+        title: "Analista de Dados",
+        company: "Empresa Exemplo",
+        url,
+      }),
+    onSuccess: (data) => {
+      toast.success(data.message || "Importacao concluida.");
+      refresh();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel importar texto."),
+  });
+
+  const importUrl = useMutation({
+    mutationFn: () => api.sourceImportUrl({ url, source_name: "Link manual" }),
+    onSuccess: (data) => {
+      toast.success(data.message || "Link registrado.");
+      refresh();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel importar link."),
+  });
+
+  const importCsv = useMutation({
+    mutationFn: () => api.sourceImportCsv({ csv_text: csvText, source_name: "CSV Manual" }),
+    onSuccess: (data) => {
+      toast.success(data.message || "CSV importado.");
+      refresh();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel importar CSV."),
+  });
+
+  const importJson = useMutation({
+    mutationFn: () => api.sourceImportJson({ json_text: jsonText, source_name: "JSON Manual" }),
+    onSuccess: (data) => {
+      toast.success(data.message || "JSON importado.");
+      refresh();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel importar JSON."),
+  });
+
+  const patchCapture = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: SourceCaptureStatus }) =>
+      api.sourcePatchCapture(id, { status }),
+    onSuccess: (data) => {
+      toast.success(data.message || "Item atualizado.");
+      refresh();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar item."),
+  });
+
+  const importJob = useMutation({
+    mutationFn: (id: string) => api.sourceImportCaptureJob(id),
+    onSuccess: (data) => {
+      toast.success(data.message || "Item enviado para Vaga.");
+      refresh();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel enviar para Vaga."),
+  });
+
+  const saveTracker = useMutation({
+    mutationFn: (id: string) => api.sourceSaveCaptureTracker(id),
+    onSuccess: (data) => {
+      toast.success(data.message || "Item salvo em Candidaturas.");
+      refresh();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel salvar no tracker."),
+  });
+
+  const dedupe = useMutation({
+    mutationFn: () => api.sourceDedupe(),
+    onSuccess: (data) => {
+      toast.success(`${data.duplicates.length} possiveis duplicatas encontradas.`);
+      refresh();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel deduplicar."),
+  });
+
+  const items = useMemo(() => inboxQ.data?.items ?? [], [inboxQ.data?.items]);
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return items.filter((item) => {
+      const statusOk = statusFilter === "all" || item.status === statusFilter;
+      const originOk = originFilter === "all" || item.origin === originFilter;
+      const haystack = [
+        item.title,
+        item.company,
+        item.job_url,
+        item.source_name,
+        item.origin,
+        item.tags.join(" "),
+      ]
+        .join(" ")
+        .toLowerCase();
+      return statusOk && originOk && (!q || haystack.includes(q));
+    });
+  }, [items, originFilter, search, statusFilter]);
+  const busy =
+    importText.isPending ||
+    importUrl.isPending ||
+    importCsv.isPending ||
+    importJson.isPending ||
+    patchCapture.isPending ||
+    importJob.isPending ||
+    saveTracker.isPending ||
+    dedupe.isPending;
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-3 md:grid-cols-4">
+        <InfoTile label="Itens" value={String(statsQ.data?.total ?? items.length)} />
+        <InfoTile label="Duplicadas" value={String(statsQ.data?.duplicates ?? 0)} />
+        <InfoTile label="Salvas" value={String(statsQ.data?.saved_to_tracker ?? 0)} />
+        <InfoTile label="Erros" value={String(statsQ.data?.errors ?? 0)} />
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className="rounded-lg border border-border bg-background p-3">
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Upload className="h-3.5 w-3.5" />
+            Importar texto ou link
+          </div>
+          <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
+            <Field label="Link opcional" value={url} onChange={setUrl} />
+            <button
+              type="button"
+              onClick={() => importUrl.mutate()}
+              disabled={busy}
+              data-testid="source-import-url"
+              className="self-end rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
+            >
+              Importar link
+            </button>
+          </div>
+          <textarea
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+            className="mt-3 min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+          />
+          <button
+            type="button"
+            onClick={() => importText.mutate()}
+            disabled={busy || !text.trim()}
+            data-testid="source-import-text"
+            className="mt-2 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            Importar texto
+          </button>
+        </div>
+
+        <div className="rounded-lg border border-border bg-background p-3">
+          <div className="mb-2 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <Database className="h-3.5 w-3.5" />
+            Importar CSV/JSON
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div>
+              <textarea
+                value={csvText}
+                onChange={(event) => setCsvText(event.target.value)}
+                data-testid="source-csv-input"
+                className="min-h-32 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-[11px] outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+              />
+              <button
+                type="button"
+                onClick={() => importCsv.mutate()}
+                disabled={busy}
+                data-testid="source-import-csv"
+                className="mt-2 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
+              >
+                Importar CSV
+              </button>
+            </div>
+            <div>
+              <textarea
+                value={jsonText}
+                onChange={(event) => setJsonText(event.target.value)}
+                data-testid="source-json-input"
+                className="min-h-32 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-[11px] outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+              />
+              <button
+                type="button"
+                onClick={() => importJson.mutate()}
+                disabled={busy}
+                data-testid="source-import-json"
+                className="mt-2 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
+              >
+                Importar JSON
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/20 p-3">
+        <Filter className="h-4 w-4 text-muted-foreground" />
+        <input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Buscar cargo, empresa, link, tag ou origem"
+          className="min-w-[220px] flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+        />
+        <select
+          value={statusFilter}
+          onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+          className="rounded-md border border-input bg-background px-3 py-2 text-xs"
+        >
+          <option value="all">Todas</option>
+          <option value="new">Novas</option>
+          <option value="imported_to_job">Importadas</option>
+          <option value="saved_to_tracker">Salvas</option>
+          <option value="duplicate">Duplicadas</option>
+          <option value="archived">Arquivadas</option>
+          <option value="error">Com erro</option>
+        </select>
+        <select
+          value={originFilter}
+          onChange={(event) => setOriginFilter(event.target.value as typeof originFilter)}
+          className="rounded-md border border-input bg-background px-3 py-2 text-xs"
+        >
+          <option value="all">Toda origem</option>
+          <option value="manual_text">Texto manual</option>
+          <option value="manual_url">Link manual</option>
+          <option value="csv_import">CSV</option>
+          <option value="json_import">JSON</option>
+          <option value="extension_capture">Extensao</option>
+        </select>
+        <button
+          type="button"
+          onClick={() => dedupe.mutate()}
+          disabled={busy}
+          data-testid="source-run-dedupe"
+          className="rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
+        >
+          Deduplicar
+        </button>
+      </div>
+
+      {inboxQ.isLoading ? (
+        <div className="rounded-lg border border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+          Carregando caixa de entrada...
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border bg-muted/20 p-4 text-sm text-muted-foreground">
+          Voce ainda nao importou vagas. Cole uma vaga, adicione um link ou importe um CSV/JSON.
+        </div>
+      ) : (
+        <ul className="grid gap-2">
+          {filtered.map((item) => (
+            <OpportunityInboxRow
+              key={item.id}
+              item={item}
+              busy={busy}
+              onImportJob={() => importJob.mutate(item.id)}
+              onSaveTracker={() => saveTracker.mutate(item.id)}
+              onArchive={() => patchCapture.mutate({ id: item.id, status: "archived" })}
+              onIgnore={() => patchCapture.mutate({ id: item.id, status: "ignored" })}
+            />
+          ))}
+        </ul>
+      )}
+
+      <div className="grid gap-3 lg:grid-cols-4">
+        {PUBLIC_SOURCE_CARDS.map((card) => (
+          <div key={card.title} className="rounded-lg border border-border bg-muted/20 p-3 text-xs">
+            <div className="font-semibold text-foreground">{card.title}</div>
+            <p className="mt-1 text-muted-foreground">{card.text}</p>
+            <span className="mt-2 inline-flex rounded-md bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">
+              Futuro seguro
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const PUBLIC_SOURCE_CARDS = [
+  {
+    title: "Paginas de carreira abertas",
+    text: "Planejado para paginas publicas simples, com revisao manual e respeito a bloqueios.",
+  },
+  {
+    title: "APIs oficiais",
+    text: "Futuro: conectores oficiais quando existirem e forem permitidos.",
+  },
+  {
+    title: "Feeds publicos",
+    text: "RSS/Atom publicos podem alimentar importacao recorrente futura.",
+  },
+  {
+    title: "CSV/JSON recorrente",
+    text: "Importacao manual recorrente, sem crawler amplo nesta versao.",
+  },
+];
+
+function OpportunityInboxRow({
+  item,
+  busy,
+  onImportJob,
+  onSaveTracker,
+  onArchive,
+  onIgnore,
+}: {
+  item: OpportunityInboxItem;
+  busy: boolean;
+  onImportJob: () => void;
+  onSaveTracker: () => void;
+  onArchive: () => void;
+  onIgnore: () => void;
+}) {
+  const duplicate = item.status === "duplicate";
+  return (
+    <li
+      data-testid="source-inbox-row"
+      className={`rounded-lg border bg-background p-3 ${
+        duplicate ? "border-warning/40" : "border-border"
+      }`}
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="truncate text-sm font-semibold">{item.title}</h3>
+            <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">
+              {sourceOriginLabel(item.origin)}
+            </span>
+            <span
+              className={`rounded-md px-2 py-0.5 text-[10px] font-semibold ${
+                duplicate ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {captureStatusLabel(item.status)}
+            </span>
+          </div>
+          <p className="mt-0.5 truncate text-xs text-muted-foreground">
+            {item.company || "Empresa nao detectada"} · {item.location || "Local nao informado"}
+          </p>
+          {duplicate && (
+            <p className="mt-2 rounded-md border border-warning/30 bg-warning/5 p-2 text-xs text-warning">
+              Esta vaga parece duplicada de outra oportunidade ja salva.
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {item.tags.slice(0, 5).map((tag) => (
+              <span key={tag} className="rounded-md bg-muted px-2 py-0.5 text-[10px]">
+                {tag}
+              </span>
+            ))}
+          </div>
+          {item.job_url && (
+            <a
+              href={item.job_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-2 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-accent hover:underline"
+            >
+              <ExternalLink className="h-3 w-3 shrink-0" />
+              <span className="truncate">{item.job_url}</span>
+            </a>
+          )}
+        </div>
+        <div className="flex shrink-0 flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={onImportJob}
+            disabled={busy}
+            data-testid="source-import-to-job"
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+          >
+            <ArrowRight className="h-3 w-3" />
+            Importar para Vaga
+          </button>
+          <button
+            type="button"
+            onClick={onSaveTracker}
+            disabled={busy}
+            data-testid="source-save-tracker"
+            className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+          >
+            <Save className="h-3 w-3" />
+            Salvar em Candidaturas
+          </button>
+          <button
+            type="button"
+            onClick={() => navigator.clipboard?.writeText(item.job_url || item.title)}
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted"
+          >
+            <Copy className="h-3 w-3" />
+            Copiar link
+          </button>
+          <button
+            type="button"
+            onClick={onArchive}
+            disabled={busy}
+            data-testid="source-archive-item"
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+          >
+            <Archive className="h-3 w-3" />
+            Arquivar
+          </button>
+          <button
+            type="button"
+            onClick={onIgnore}
+            disabled={busy}
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+          >
+            <XCircle className="h-3 w-3" />
+            Ignorar
+          </button>
+        </div>
+      </div>
+    </li>
+  );
+}
+
+function sourceOriginLabel(origin: SourceOrigin): string {
+  const labels: Record<SourceOrigin, string> = {
+    manual_text: "Texto manual",
+    manual_url: "Link manual",
+    csv_import: "CSV",
+    json_import: "JSON",
+    extension_capture: "Extensao Local",
+    companion_capture: "Companion",
+    public_source: "Fonte publica",
+    official_api_future: "API oficial futura",
+  };
+  return labels[origin];
+}
+
+function captureStatusLabel(status: SourceCaptureStatus): string {
+  const labels: Record<SourceCaptureStatus, string> = {
+    new: "Nova",
+    reviewed: "Revisada",
+    imported_to_job: "Importada",
+    saved_to_tracker: "Salva",
+    ignored: "Ignorada",
+    archived: "Arquivada",
+    duplicate: "Duplicada",
+    error: "Erro",
+  };
+  return labels[status];
+}
+
 function LocalExtensionPanel() {
   const api = useApi();
+  const { mode, baseUrl } = useApiMode();
   const statusQ = useQuery({
-    queryKey: ["extension-status"],
+    queryKey: ["extension-status", mode, baseUrl],
     queryFn: () => api.extensionStatus(),
     retry: false,
   });
   const capturesQ = useQuery({
-    queryKey: ["extension-captures"],
+    queryKey: ["extension-captures", mode, baseUrl],
     queryFn: () => api.extensionCaptures(),
     retry: false,
   });
@@ -192,6 +716,18 @@ function LocalExtensionPanel() {
       ),
   });
 
+  const patchCapture = useMutation({
+    mutationFn: ({ captureId, status }: { captureId: string; status: string }) =>
+      api.extensionPatchCapture(captureId, status),
+    onSuccess: (data) => {
+      toast.success(data.message || "Captura atualizada.");
+      capturesQ.refetch();
+      statusQ.refetch();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel atualizar captura."),
+  });
+
   const [ignoredIds, setIgnoredIds] = useState<string[]>([]);
   const allCaptures = useMemo(() => capturesQ.data?.captures ?? [], [capturesQ.data?.captures]);
   const captures = useMemo(
@@ -199,7 +735,11 @@ function LocalExtensionPanel() {
     [allCaptures, ignoredIds],
   );
   const companionOffline = statusQ.isError || statusQ.data?.available === false;
-  const busy = importJob.isPending || importTracker.isPending || importGithub.isPending;
+  const busy =
+    importJob.isPending ||
+    importTracker.isPending ||
+    importGithub.isPending ||
+    patchCapture.isPending;
   const lastSync = statusQ.data?.last_capture_at || allCaptures[0]?.captured_at;
 
   return (
@@ -289,6 +829,8 @@ function LocalExtensionPanel() {
                 onImportJob={() => importJob.mutate(capture.id)}
                 onImportTracker={() => importTracker.mutate(capture.id)}
                 onImportGithub={() => importGithub.mutate(capture.id)}
+                onReview={() => patchCapture.mutate({ captureId: capture.id, status: "reviewed" })}
+                onArchive={() => patchCapture.mutate({ captureId: capture.id, status: "archived" })}
                 onIgnore={() => setIgnoredIds((current) => [...current, capture.id])}
               />
             ))}
@@ -305,6 +847,8 @@ function ExtensionCaptureRow({
   onImportJob,
   onImportTracker,
   onImportGithub,
+  onReview,
+  onArchive,
   onIgnore,
 }: {
   capture: ExtensionCapture;
@@ -312,6 +856,8 @@ function ExtensionCaptureRow({
   onImportJob: () => void;
   onImportTracker: () => void;
   onImportGithub: () => void;
+  onReview: () => void;
+  onArchive: () => void;
   onIgnore: () => void;
 }) {
   const kind = capture.kind || (capture.url.includes("github.com") ? "github_repo" : "job");
@@ -385,6 +931,26 @@ function ExtensionCaptureRow({
               Enviar para GitHub Analysis
             </button>
           )}
+          <button
+            type="button"
+            onClick={onReview}
+            disabled={busy}
+            data-testid="review-capture-local"
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+          >
+            <CheckCircle2 className="h-3 w-3" />
+            Revisada
+          </button>
+          <button
+            type="button"
+            onClick={onArchive}
+            disabled={busy}
+            data-testid="archive-capture-local"
+            className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
+          >
+            <Archive className="h-3 w-3" />
+            Arquivar
+          </button>
           <button
             type="button"
             onClick={onIgnore}
