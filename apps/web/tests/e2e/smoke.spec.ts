@@ -91,10 +91,12 @@ test("settings AI flow uses backend status shape and never stores secrets in bro
   await expect(page.getByText("IA e Providers")).toBeVisible();
   await expect(page.getByText(/Permitir IA na An.lise de Compatibilidade/)).toBeVisible();
   await expect(page.getByText(/Provider local/i).first()).toBeVisible();
-  await page.getByRole("button", { name: "Gemini" }).click();
   const keyInput = page.getByTestId("ai-api-key-input");
-  await expect(keyInput).toBeEnabled();
-  await keyInput.fill(fakeKey);
+  await expect(async () => {
+    await page.getByRole("button", { name: "Gemini" }).click();
+    await expect(keyInput).toBeEnabled({ timeout: 1_000 });
+    await keyInput.fill(fakeKey, { timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
   await page.getByRole("button", { name: /Testar conex/i }).click();
   await expect(page.getByText(/Provider configurado com sucesso/i).first()).toBeVisible();
   await page.getByRole("button", { name: /Salvar no backend local/i }).click();
@@ -128,6 +130,31 @@ test("sources page handles local extension offline and fake capture imports", as
   await expect(page.getByText(/GitHub Analysis|Analise de GitHub/i).first()).toBeVisible();
   await page.getByTestId("ignore-capture-local").first().click();
   await expect(page.getByTestId("extension-capture-row")).toHaveCount(1);
+});
+
+test("sources inbox imports fake text csv json and connects to tracker", async ({ page }) => {
+  await page.goto("/sources");
+
+  await expect(page.getByText("Caixa de Entrada de Oportunidades")).toBeVisible();
+  await expect(page.getByTestId("source-inbox-row").first()).toBeVisible();
+  await page.getByTestId("source-import-text").click();
+  await expect(page.getByText(/importacao concluida|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("source-import-csv").click();
+  await expect(page.getByText(/CSV|duplicado/i).first()).toBeVisible();
+  await page.getByTestId("source-import-json").click();
+  await expect(page.getByText(/JSON|importacao/i).first()).toBeVisible();
+  await page.getByTestId("source-run-dedupe").click();
+  await expect(page.getByText(/possiveis duplicatas|duplicata/i).first()).toBeVisible();
+  await page.getByTestId("source-import-to-job").first().click();
+  await expect(page.getByText(/Item enviado para Vaga|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("source-save-tracker").first().click();
+  await expect(page.getByText(/Candidaturas|tracker|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("source-archive-item").first().click();
+  await expect(page.getByText(/Item atualizado|Modo Demo/i).first()).toBeVisible();
+
+  await page.goto("/tracker");
+  await expect(page.getByRole("heading", { name: "Candidaturas" })).toBeVisible();
+  await expect(page.locator("body")).toContainText(/Fonte|Origem|CSV|Manual|Demo/);
 });
 
 test("kanban creates and moves a fake application", async ({ page }) => {
