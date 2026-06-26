@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.6.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.6.0)
+[![Release](https://img.shields.io/badge/release-v1.7.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.7.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -29,17 +29,21 @@ O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
 
 ## Preview
 
-![SotuHire v1.6 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.6-web-walkthrough.gif)
+![SotuHire v1.7 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.7-web-walkthrough.gif)
 
-![SotuHire v1.6 Web Home](docs/assets/screenshots/sotuhire-v1.6-web-home.png)
+![SotuHire v1.7 Web Home](docs/assets/screenshots/sotuhire-v1.7-web-home.png)
 
-![SotuHire v1.6 Web Dashboard](docs/assets/screenshots/sotuhire-v1.6-web-dashboard.png)
+![SotuHire v1.7 Web Dashboard](docs/assets/screenshots/sotuhire-v1.7-web-dashboard.png)
 
-![SotuHire v1.6 Web Kanban](docs/assets/screenshots/sotuhire-v1.6-web-kanban.png)
+![SotuHire v1.7 Web Sources Inbox](docs/assets/screenshots/sotuhire-v1.7-web-sources-inbox.png)
 
-![SotuHire v1.6 Web Sources Extension](docs/assets/screenshots/sotuhire-v1.6-web-sources-extension.png)
+![SotuHire v1.7 Web CSV Import](docs/assets/screenshots/sotuhire-v1.7-web-import-csv.png)
 
-![SotuHire v1.6 Web Settings AI](docs/assets/screenshots/sotuhire-v1.6-web-settings-ai.png)
+![SotuHire v1.7 Web Kanban Source](docs/assets/screenshots/sotuhire-v1.7-web-kanban-source.png)
+
+![SotuHire v1.7 Web Extension History](docs/assets/screenshots/sotuhire-v1.7-web-extension-history.png)
+
+![SotuHire v1.7 Web Settings AI](docs/assets/screenshots/sotuhire-v1.7-web-settings-ai.png)
 
 ## O Que O Projeto Faz
 
@@ -122,7 +126,7 @@ Flags úteis:
 `-WithCompanion` inicia a Local Companion API existente em `127.0.0.1:8765` para a extensão
 assistiva. Isso não abre navegador autenticado, não faz login e não altera Chromium/CDP.
 
-### API local v1.6.0
+### API local v1.7.0
 
 Para conectar um frontend moderno ou inspecionar o OpenAPI:
 
@@ -141,7 +145,7 @@ http://127.0.0.1:8787/docs
 A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
 [Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
 
-### Frontend moderno v1.6.0
+### Frontend moderno v1.7.0
 
 O frontend moderno fica em `apps/web` e roda como app React/Vite separado.
 
@@ -168,7 +172,7 @@ O app tem **Modo Demo** com dados fictícios e **Modo API Real** usando
 VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
 ```
 
-Na v1.6.0, `npm run test:e2e` roda a matriz Playwright em Chromium, Firefox e WebKit. O Kanban de
+Na v1.7.0, `npm run test:e2e` roda a matriz Playwright em Chromium, Firefox e WebKit. O Kanban de
 Candidaturas suporta drag-and-drop com rollback em falha da API e mantém edição de status por select
 para teclado/mobile.
 
@@ -189,7 +193,7 @@ enviada apenas para a FastAPI local, fica no backend em `data/secrets/ai-provide
 caminho é ignorado pelo Git. A API nunca retorna a chave para o frontend; ela retorna apenas
 provider, modelo, status, toggles, warnings e data de atualização.
 
-Na v1.6.0, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
+Na v1.7.0, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
 Análise de Compatibilidade, ATS, Ajuste de Currículo e GitHub. Se Gemini falhar, o SotuHire retorna
 fallback local com warning e mantém os scores finais no backend/core.
 
@@ -214,10 +218,41 @@ GET  /api/v1/extension/captures
 POST /api/v1/extension/import/job
 POST /api/v1/extension/import/github
 POST /api/v1/extension/import/tracker
+PATCH /api/v1/extension/captures/{capture_id}
 ```
 
 Esse painel não cria crawler logado novo, não automatiza login, não faz auto-apply e não mexe no
 fluxo de navegador autenticado existente.
+
+### Importadores e Caixa de Entrada v1.7.0
+
+A tela **Fontes e Captura** agora inclui uma **Caixa de Entrada de Oportunidades** persistente para
+texto, link, CSV, JSON e capturas da extensao/local companion. O fluxo recomendado e:
+
+```text
+importar/capturar vaga -> revisar na caixa de entrada -> enviar para Vaga
+-> analisar compatibilidade/ATS/ajuste -> salvar em Candidaturas -> acompanhar no Kanban
+```
+
+Endpoints principais:
+
+```text
+GET    /api/v1/sources/imports
+POST   /api/v1/sources/imports/text
+POST   /api/v1/sources/imports/url
+POST   /api/v1/sources/imports/csv
+POST   /api/v1/sources/imports/json
+GET    /api/v1/sources/captures
+PATCH  /api/v1/sources/captures/{capture_id}
+POST   /api/v1/sources/captures/{capture_id}/import-job
+POST   /api/v1/sources/captures/{capture_id}/save-tracker
+POST   /api/v1/sources/dedupe
+GET    /api/v1/sources/stats
+```
+
+O importador de URL tenta apenas leitura publica simples. Se a pagina bloquear acesso, exigir login
+ou nao trouxer texto legivel, o SotuHire orienta a pessoa a abrir a pagina manualmente e colar o
+texto da vaga. Nao ha login automatico, crawler amplo, bypass de CAPTCHA ou auto-apply.
 
 ## Instalação
 
@@ -368,7 +403,7 @@ automaticamente.
 | `modules/domain_intelligence` | Classificação multiárea, aliases, requisitos e sinais de profissões regulamentadas. |
 | `modules/matching` | Análise de Compatibilidade, evidências, requisitos, pesos por domínio, competências transferíveis, scoring, risk adjustment e explanation builder. |
 | `modules/resume_tailor` | Sugestões rastreáveis para adaptar o currículo com evidências do match. |
-| `modules/scraping`, `modules/opportunities` | Conectores, coleta, deduplicação e armazenamento de oportunidades. |
+| `modules/sources`, `modules/scraping`, `modules/opportunities` | Importadores, histórico de capturas, conectores, coleta, deduplicação e armazenamento de oportunidades. |
 | `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
 | `modules/tracker`, `modules/storage` | Histórico, Kanban, follow-up e persistência local. |
 | `modules/memory`, `modules/profile` | Career Memory, RAG local, evidências, perfil persistente e preferências inferidas. |
@@ -389,9 +424,9 @@ currículo + vaga + preferências
         -> análise explicável e Resume Tailor
         -> tracker, histórico e dashboard
 
-fontes e buscas
-        -> conectores e coleta
-        -> normalização e deduplicação
+fontes, importadores e buscas
+        -> texto/link/CSV/JSON/capturas
+        -> normalização, caixa de entrada e deduplicação
         -> análise e tracker
 ```
 
@@ -468,10 +503,12 @@ mkdocs serve
 - análise de GitHub, portfólio, READMEs e commits com evidências de projeto.
 - GitHub Analyzer com GitHub API pública, tree builder, sampler, dependency graph, evidence
   index, scoring calculado por código e fallback local.
+- caixa de entrada de oportunidades, importadores texto/link/CSV/JSON, histórico persistente de
+  capturas e deduplicação local explicável.
 
 ### Próximos passos
 
-- v1.6.0: edição completa de candidatura, progresso persistente do fluxo guiado e exports web;
+- v1.8.0: exports web, filtros avançados e conectores públicos recorrentes com revisão manual;
 - v2.0.0: SaaS-ready Architecture;
 - evoluir pesos por domínio para configuração externa se o uso real justificar.
 
