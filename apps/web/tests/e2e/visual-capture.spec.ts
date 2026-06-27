@@ -10,49 +10,59 @@ const shots: Array<{
   prepare?: (page: Page) => Promise<void>;
 }> = [
   {
+    path: "/radar",
+    file: "sotuhire-v1.8-web-radar-summary.png",
+    prepare: async (page) => {
+      await page.locator("#radar-summary").scrollIntoViewIfNeeded();
+    },
+  },
+  {
+    path: "/radar",
+    file: "sotuhire-v1.8-web-radar-wishlist.png",
+    prepare: async (page) => {
+      await page.locator("#radar-wishlist").scrollIntoViewIfNeeded();
+    },
+  },
+  {
+    path: "/radar",
+    file: "sotuhire-v1.8-web-radar-sources.png",
+    prepare: async (page) => {
+      await page.locator("#radar-sources").scrollIntoViewIfNeeded();
+    },
+  },
+  {
+    path: "/radar",
+    file: "sotuhire-v1.8-web-radar-results.png",
+    prepare: async (page) => {
+      await page.locator("#radar-results").scrollIntoViewIfNeeded();
+    },
+  },
+  {
+    path: "/radar",
+    file: "sotuhire-v1.8-web-radar-alerts.png",
+    prepare: async (page) => {
+      await page.locator("#radar-alerts").scrollIntoViewIfNeeded();
+    },
+  },
+  {
     path: "/sources",
-    file: "sotuhire-v1.7.1-web-sources-inbox.png",
+    file: "sotuhire-v1.8-web-inbox-radar.png",
     prepare: async (page) => {
       await page.locator("#opportunity-inbox").scrollIntoViewIfNeeded();
     },
   },
   {
-    path: "/sources",
-    file: "sotuhire-v1.7.1-web-upload-csv.png",
-    prepare: async (page) => {
-      await page.getByTestId("source-upload-csv-input").setInputFiles({
-        name: "vagas-ficticias.csv",
-        mimeType: "text/csv",
-        buffer: Buffer.from(
-          'cargo,empresa,link,local,descricao,fonte,status,observacoes\nAnalista de Dados,Empresa Exemplo,https://example.com/jobs/123,Remoto,"Python e SQL",CSV Manual,nova,"vaga ficticia"',
-        ),
-      });
-      await page.getByTestId("source-file-preview").scrollIntoViewIfNeeded();
-    },
-  },
-  {
-    path: "/sources",
-    file: "sotuhire-v1.7.1-web-dedupe-merge.png",
-    prepare: async (page) => {
-      await page.getByTestId("source-duplicate-panel").first().scrollIntoViewIfNeeded();
-    },
-  },
-  {
-    path: "/sources",
-    file: "sotuhire-v1.7.1-web-source-directory.png",
-    prepare: async (page) => {
-      await page.getByTestId("source-directory-panel").scrollIntoViewIfNeeded();
-    },
-  },
-  {
     path: "/tracker",
-    file: "sotuhire-v1.7.1-web-kanban-source.png",
+    file: "sotuhire-v1.8-web-kanban-radar.png",
+    prepare: async (page) => {
+      await page.getByTestId("kanban-card").first().waitFor();
+    },
   },
 ];
 
 test.describe.configure({ mode: "serial" });
 
-test("captures standardized v1.7.1 screenshots", async ({ page }, testInfo) => {
+test("captures standardized v1.8 screenshots", async ({ page }, testInfo) => {
   test.skip(
     process.env.CAPTURE_VISUALS !== "1",
     "Set CAPTURE_VISUALS=1 to generate screenshot assets.",

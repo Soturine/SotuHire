@@ -9,6 +9,7 @@ const coreScreens = [
   { path: "/ats", heading: /ATS/ },
   { path: "/tailor", heading: /Ajuste/ },
   { path: "/github", heading: /GitHub/ },
+  { path: "/radar", heading: "Radar de Vagas" },
   { path: "/tracker", heading: "Candidaturas" },
   { path: "/intelligence", heading: /Intelig.ncia/ },
   { path: "/sources", heading: "Fontes e Captura" },
@@ -47,6 +48,7 @@ test("sidebar navigates across core screens", async ({ page }) => {
     { label: /Curr.culo/i, url: /\/resume$/, heading: /Curr.culo/ },
     { label: /Vaga/i, url: /\/job$/, heading: "Vaga" },
     { label: /Compatibilidade/i, url: /\/match$/, heading: /Compatibilidade/ },
+    { label: /Radar/i, url: /\/radar$/, heading: "Radar de Vagas" },
     { label: /Fontes e Captura/i, url: /\/sources$/, heading: "Fontes e Captura" },
     { label: /Configura..es/i, url: /\/settings$/, heading: /Configura..es/ },
   ];
@@ -119,7 +121,7 @@ test("sources page handles local extension offline and fake capture imports", as
     page.getByText(/Companion offline|Companion conectado|API Real sem oportunidades/i).first(),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: /Configura/i }).click();
+  await page.getByRole("link", { name: "Configurações", exact: true }).click();
   await page.getByRole("button", { name: "Demo" }).click();
   await page.getByRole("link", { name: /Fontes e Captura/i }).click();
   await expect(page.getByText(/Extens.o Local/).first()).toBeVisible();
@@ -158,6 +160,27 @@ test("sources inbox imports fake text csv json and connects to tracker", async (
   await page.goto("/tracker");
   await expect(page.getByRole("heading", { name: "Candidaturas" })).toBeVisible();
   await expect(page.locator("body")).toContainText(/Fonte|Origem|CSV|Manual|Demo/);
+});
+
+test("job radar creates wishlist/source, runs demo and saves results", async ({ page }) => {
+  await page.goto("/radar");
+
+  await expect(page.getByRole("heading", { name: "Radar de Vagas" })).toBeVisible();
+  await expect(page.getByTestId("radar-demo-badge")).toContainText("Dados de demonstração");
+  await expect(page.getByTestId("radar-summary")).toBeVisible();
+  await page.getByTestId("radar-create-wishlist").click();
+  await expect(page.getByText(/wishlist criada|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("radar-create-source").click();
+  await expect(page.getByText(/fonte criada|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("radar-run-now").first().click();
+  await expect(page.getByTestId("radar-result-card").first()).toBeVisible();
+  await expect(page.getByText(/Nova vaga|Radar concluido|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("radar-save-inbox").first().click();
+  await expect(page.getByText(/Caixa de Entrada|salvo/i).first()).toBeVisible();
+  await page.getByTestId("radar-save-tracker").first().click();
+  await expect(page.getByText(/Candidaturas|salvo/i).first()).toBeVisible();
+  await page.getByTestId("radar-mark-alert-read").first().click();
+  await expect(page.getByText(/Alerta atualizado|lido|Modo Demo/i).first()).toBeVisible();
 });
 
 test("sources supports browser CSV/JSON upload preview, duplicate merge, export and source directory", async ({
@@ -281,12 +304,79 @@ test("API Real empty states do not silently show demo opportunity data", async (
   await expect(page.locator("body")).not.toContainText("Empresa Demo");
 });
 
-test("public UI does not contain common mojibake sequences", async ({ page }) => {
+test("API Real radar empty state does not show demo radar results silently", async ({ page }) => {
+  await page.route("**/api/v1/radar/wishlists", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, data: { wishlists: [] }, warnings: [], request_id: "e2e" }),
+    });
+  });
+  await page.route("**/api/v1/radar/sources", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        data: { sources: [], adapters: [] },
+        warnings: [],
+        request_id: "e2e",
+      }),
+    });
+  });
+  await page.route("**/api/v1/radar/results", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, data: { results: [] }, warnings: [], request_id: "e2e" }),
+    });
+  });
+  await page.route("**/api/v1/radar/alerts", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, data: { alerts: [] }, warnings: [], request_id: "e2e" }),
+    });
+  });
+  await page.route("**/api/v1/radar/runs", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, data: { runs: [] }, warnings: [], request_id: "e2e" }),
+    });
+  });
+  await page.route("**/api/v1/radar/stats", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        data: {
+          active_sources: 0,
+          total_sources: 0,
+          total_results: 0,
+          new_results: 0,
+          matched_results: 0,
+          unread_alerts: 0,
+          duplicates: 0,
+          source_errors: 0,
+        },
+        warnings: [],
+        request_id: "e2e",
+      }),
+    });
+  });
+
+  await page.goto("/settings");
+  await page.getByRole("button", { name: "API Real" }).click();
+  await page.getByRole("link", { name: /Radar/i }).click();
+  await expect(page.getByTestId("radar-real-empty")).toContainText("API Real sem Radar");
+  await expect(page.locator("body")).not.toContainText("Empresa Exemplo");
+  await expect(page.locator("body")).not.toContainText("Desenvolvedor Backend Python");
+});
+
+test("public UI does not contain common mojibake sequences", async ({ browser }) => {
   for (const screen of coreScreens) {
+    const page = await browser.newPage();
     await page.goto(screen.path);
     await expect(page.locator("body")).not.toContainText(
       /\u00c3[\u0080-\u00bf\u0160\u0161\u2018-\u201d\u2020-\u2022]|\u00c2|\u00e2\u20ac/,
     );
+    await page.close();
   }
 });
 
