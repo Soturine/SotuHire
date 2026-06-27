@@ -1,42 +1,52 @@
-# Visual preview v1.7.1
+# Visual preview v1.8.0
 
-Esta pagina registra o estado visual atual do frontend moderno do SotuHire. A serie v1.7.1 usa
+Esta página registra o estado visual atual do frontend moderno do SotuHire. A série v1.8 usa
 capturas Playwright com viewport fixo `1440x1000`, `deviceScaleFactor=1` e `fullPage=false`, sem
-chrome do navegador, sem marca d'agua, sem dados reais e sem API keys.
+chrome do navegador, sem marca d'água, sem dados reais e sem API keys.
 
 ## Walkthrough
 
-![SotuHire v1.7.1 Web Walkthrough](../assets/screenshots/sotuhire-v1.7.1-web-walkthrough.gif)
+![SotuHire v1.8 Web Walkthrough](../assets/screenshots/sotuhire-v1.8-web-walkthrough.gif)
 
-## Telas principais
+## Radar de Vagas
 
-### Fontes e Captura - Caixa de Entrada
+### Resumo
 
-![SotuHire v1.7.1 Web Sources Inbox](../assets/screenshots/sotuhire-v1.7.1-web-sources-inbox.png)
+![SotuHire v1.8 Web Radar Summary](../assets/screenshots/sotuhire-v1.8-web-radar-summary.png)
 
-### Upload CSV
+### Wishlist
 
-![SotuHire v1.7.1 Web Upload CSV](../assets/screenshots/sotuhire-v1.7.1-web-upload-csv.png)
+![SotuHire v1.8 Web Radar Wishlist](../assets/screenshots/sotuhire-v1.8-web-radar-wishlist.png)
 
-### Mescla de duplicatas
+### Fontes
 
-![SotuHire v1.7.1 Web Dedupe Merge](../assets/screenshots/sotuhire-v1.7.1-web-dedupe-merge.png)
+![SotuHire v1.8 Web Radar Sources](../assets/screenshots/sotuhire-v1.8-web-radar-sources.png)
 
-### Diretório de Fontes
+### Resultados
 
-![SotuHire v1.7.1 Web Source Directory](../assets/screenshots/sotuhire-v1.7.1-web-source-directory.png)
+![SotuHire v1.8 Web Radar Results](../assets/screenshots/sotuhire-v1.8-web-radar-results.png)
 
-### Kanban com origem
+### Alertas
 
-![SotuHire v1.7.1 Web Kanban Source](../assets/screenshots/sotuhire-v1.7.1-web-kanban-source.png)
+![SotuHire v1.8 Web Radar Alerts](../assets/screenshots/sotuhire-v1.8-web-radar-alerts.png)
 
-## Padrao visual
+## Integrações
+
+### Caixa de Entrada com origem Radar
+
+![SotuHire v1.8 Web Inbox Radar](../assets/screenshots/sotuhire-v1.8-web-inbox-radar.png)
+
+### Kanban com origem Radar
+
+![SotuHire v1.8 Web Kanban Radar](../assets/screenshots/sotuhire-v1.8-web-kanban-radar.png)
+
+## Padrão visual
 
 - viewport: `1440x1000`;
 - `deviceScaleFactor=1`;
 - `fullPage=false`;
-- dados ficticios;
+- dados fictícios;
 - sem browser chrome;
-- sem Lovable, Lightshot ou marca d'agua;
+- sem Lovable, Lightshot ou marca d'água;
 - sem tokens ou chaves;
-- serie atual priorizada no README raiz para evitar mistura de proporcoes.
+- série atual priorizada no README raiz para evitar mistura de proporções.
