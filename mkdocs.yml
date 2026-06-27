@@ -94,6 +94,7 @@ nav:
       - Profile score: 03-business-rules/profile-score.md
       - Resume tailor rules: 03-business-rules/resume-tailor-rules.md
       - Opportunity fit score: 03-business-rules/opportunity-fit-score.md
+      - Job Radar rules: 03-business-rules/job-radar-rules.md
       - Opportunity fit rules v0.1: 03-business-rules/opportunity-fit-rules.md
       - Public exam rules: 03-business-rules/public-exam-rules.md
       - Privacidade da memória: 03-business-rules/memory-privacy-rules.md
@@ -142,6 +143,7 @@ nav:
       - Hidden Jobs Radar safe mode: 05-data-sources/hidden-jobs-radar-safe-mode.md
       - RSS e URL manual: 05-data-sources/rss-and-manual-url-connectors.md
       - Importadores e fontes publicas: 05-data-sources/public-source-importers.md
+      - Radar, feeds publicos e APIs oficiais: 05-data-sources/job-radar-public-feeds.md
       - Alternative job boards: 05-data-sources/alternative-job-boards.md
       - Social post discovery: 05-data-sources/social-post-discovery.md
       - GitHub portfolio analyzer: 05-data-sources/github-portfolio-analyzer.md
@@ -197,6 +199,7 @@ nav:
       - v1.6.0 Stability and QA: 07-development/v1.6.0-stability-cross-browser-kanban.md
       - v1.7.0 Public Sources and Importers: 07-development/v1.7.0-public-sources-importers-capture-history.md
       - v1.7.1 Intake Polish and Source Discovery: 07-development/v1.7.1-intake-polish-source-discovery.md
+      - v1.8.0 Job Radar: 07-development/v1.8.0-job-radar-public-feeds-wishlist-alerts.md
   - Frontend:
       - Overview: 08-frontend/README.md
       - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md

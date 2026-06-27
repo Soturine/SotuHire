@@ -1,8 +1,8 @@
 # Frontend moderno
 
-A v1.7.1 consolida o frontend moderno do SotuHire em `apps/web` como experiencia local principal e
+A v1.8.0 consolida o frontend moderno do SotuHire em `apps/web` como experiencia local principal e
 poliu a Caixa de Entrada de Oportunidades com upload CSV/JSON, preview, merge visual de duplicatas,
-exportacao e Diretório de Fontes.
+exportacao, Diretório de Fontes e Radar de Vagas.
 
 O app usa React, Vite, TypeScript, TanStack Router, TanStack Query, Tailwind CSS, Radix UI, Recharts
 e lucide-react. Ele roda separado do Streamlit e consome a FastAPI local em `/api/v1` quando o modo
@@ -59,6 +59,7 @@ Para iniciar tambem a Local Companion API:
 - Candidaturas
 - Inteligencia de Candidaturas
 - Fontes e Captura
+- Radar de Vagas
 - Configuracoes
 - Privacidade
 
@@ -91,13 +92,13 @@ A tela **Fontes e Captura** fica na rota `/sources` e no menu lateral. Ela organ
 para colar vaga manualmente, salvar link, importar arquivo, usar extensao assistida, radar publico e
 APIs oficiais quando disponiveis.
 
-O fluxo `AUTHENTICATED_BROWSER` existente no backend local tambem aparece nessa tela. A v1.7.1 nao
+O fluxo `AUTHENTICATED_BROWSER` existente no backend local tambem aparece nessa tela. A v1.8.0 nao
 alterou scraper autenticado, Chromium/CDP, crawler logado ou docs protegidos. O fluxo nao contorna
 CAPTCHA/checkpoint, nao automatiza candidatura e nao faz auto-apply.
 
 O painel **Extensao Local** consulta capturas ja salvas pela Local Companion API, mostra status,
 ultima sincronizacao, origem, URL, data e tipo de captura, e permite importar uma captura para Vaga,
-GitHub Analysis ou Candidaturas. A v1.7.1 tambem permite revisar, arquivar ou ignorar capturas no
+GitHub Analysis ou Candidaturas. A v1.8.0 tambem permite revisar, arquivar ou ignorar capturas no
 historico local.
 
 ### Caixa de Entrada
@@ -115,8 +116,21 @@ cargo/empresa/link/tag/origem, deduplicacao local e acoes para:
 - copiar o link original.
 
 O **Diretório de Fontes** mostra paginas de carreira abertas, feeds RSS publicos, APIs oficiais,
-CSV/JSON recorrente, links manuais e fontes observadas. Feeds recorrentes e APIs oficiais continuam
-roadmap/planejado.
+CSV/JSON recorrente, links manuais e fontes observadas. Feeds RSS/Atom publicos agora podem ser
+usados manualmente pelo Radar de Vagas; APIs oficiais continuam como adapters planejados.
+
+## Radar de Vagas
+
+A rota `/radar` adiciona o fluxo v1.8.0:
+
+- wishlist local;
+- fontes RSS/Atom publicas;
+- rodadas manuais;
+- resultados com score, evidencias e lacunas;
+- alertas locais;
+- salvar na Caixa de Entrada ou em Candidaturas.
+
+APIs oficiais aparecem como adapters preparados e continuam dependentes de contrato documentado.
 
 CSV esperado:
 
@@ -184,8 +198,8 @@ cd apps/web
 npm run test:e2e
 ```
 
-O Playwright cobre fluxo guiado, demos de analise, IA Settings, Fontes e Captura, Kanban,
-cross-browser e ausencia de branding legado. O spec visual gera a serie `sotuhire-v1.7.1-web-*.png`
+O Playwright cobre fluxo guiado, demos de analise, IA Settings, Fontes e Captura, Radar, Kanban,
+cross-browser e ausencia de branding legado. O spec visual gera a serie `sotuhire-v1.8-web-*.png`
 em `docs/assets/screenshots/` com viewport fixo `1440x1000`.
 
 ## Streamlit legado/dev

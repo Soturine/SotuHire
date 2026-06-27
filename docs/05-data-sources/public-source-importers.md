@@ -4,6 +4,16 @@ Este documento descreve o escopo seguro para entrada de vagas a partir da v1.7.0
 v1.7.1. Ele complementa os guias de fontes de dados sem alterar regras protegidas de compliance ou
 navegador autenticado.
 
+## O que existe na v1.8.0
+
+- tela **Radar de Vagas** no frontend moderno;
+- wishlists locais para cargos, skills, locais e preferências;
+- fontes RSS/Atom públicas com refresh manual;
+- resultados do Radar com score local, evidências, lacunas e próximas ações;
+- alertas locais para oportunidades relevantes;
+- ações para salvar resultado na Caixa de Entrada ou em Candidaturas;
+- estrutura de adapters para APIs oficiais documentadas.
+
 ## O que existe na v1.7.1
 
 - upload real de CSV/JSON pelo navegador;
@@ -36,8 +46,9 @@ navegador autenticado.
 - auto-apply;
 - automacao de conta em plataformas de terceiros.
 
-Feeds RSS e APIs oficiais aparecem como preparacao segura. A v1.7.1 nao implementa refresh
-recorrente de feeds nem conectores de APIs oficiais.
+Feeds RSS públicos agora têm refresh manual pela tela **Radar de Vagas**. APIs oficiais continuam
+como estrutura preparada: um conector real depende de contrato/documentação oficial e revisão
+manual antes de salvar qualquer oportunidade.
 
 Se uma pagina exige login, bloqueia leitura publica simples ou nao permite extrair texto, o SotuHire
 deve orientar a pessoa a abrir a pagina manualmente e colar o texto da vaga.
@@ -127,13 +138,25 @@ Quando `use_ai=true` e o provider esta configurado, o backend pode tentar enriqu
 Se a IA falhar, a importacao continua localmente. A IA nao deve inventar requisitos, experiencia,
 formacao, certificacao, salario, licenca, empresa ou status de candidatura.
 
+## Radar de Vagas v1.8.0
+
+O Radar não faz busca ampla na web. Ele roda somente em fontes configuradas pelo usuário:
+
+- RSS/Atom público;
+- página pública simples quando permitida;
+- API oficial planejada/documentada;
+- entradas manuais já existentes.
+
+O resultado fica em revisão. O usuário decide se salva na Caixa de Entrada, envia para análise ou
+salva em Candidaturas.
+
 ## Fontes publicas planejadas
 
 Cards no frontend mostram como roadmap:
 
 - paginas de carreira abertas;
 - APIs oficiais;
-- feeds publicos;
+- feeds publicos recorrentes/agendados;
 - CSV/JSON recorrente.
 
 Esses itens sao exibidos como futuro/experimental e requerem revisao manual antes de qualquer

@@ -8,7 +8,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 ## Comece aqui
 
 - [Home pública](index.md)
-- [Visual preview v1.7](01-product/visual-preview.md)
+- [Visual preview v1.8](01-product/visual-preview.md)
 - [Visão do produto](01-product/vision.md)
 - [Roadmap atual](01-product/roadmap.md)
 - [Setup local](07-development/setup.md)
@@ -16,8 +16,10 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [GitHub Pages vs app local](01-product/github-pages-site.md)
 - [Frontend API Layer](02-architecture/frontend-api-layer.md)
 - [Importadores e fontes publicas](05-data-sources/public-source-importers.md)
+- [Radar de Vagas e feeds publicos](05-data-sources/job-radar-public-feeds.md)
 - [v1.7.0 Public Sources and Importers](07-development/v1.7.0-public-sources-importers-capture-history.md)
 - [v1.7.1 Intake Polish and Source Discovery](07-development/v1.7.1-intake-polish-source-discovery.md)
+- [v1.8.0 Job Radar](07-development/v1.8.0-job-radar-public-feeds-wishlist-alerts.md)
 
 ## Frontend-ready
 
@@ -39,6 +41,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [Histórias de usuário](01-product/user-stories.md)
 - [Resume Tailor](01-product/resume-tailor.md)
 - [Opportunity Fit Score](01-product/user-preferences-opportunity-fit.md)
+- [Regras do Radar de Vagas](03-business-rules/job-radar-rules.md)
 - [Concurso Mode](01-product/concurso-mode.md)
 
 ## Arquitetura e regras

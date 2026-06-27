@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.7.1 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.8.0 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,14 +8,28 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.7.1 |
+| Versão atual considerada | v1.8.0 |
 | Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional e intake persistente |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v1.8.0 Public Feeds / Source Discovery avançado |
+| Próximo ciclo técnico | v1.9.0 Radar scheduling e conectores oficiais |
 | Foco de produto | Copiloto de carreira multiárea com intake de oportunidades |
-| Foco técnico imediato | Fontes públicas seguras, feeds com revisão manual e estabilidade do fluxo de importação |
-| Grande lacuna atual | RSS/feed recorrente e APIs oficiais ainda planejados |
+| Foco técnico imediato | Radar manual, feeds públicos, alertas locais e integração com Inbox/Tracker |
+| Grande lacuna atual | Agendamento local recorrente e conectores reais de APIs oficiais |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
+
+## Estado atual - v1.8.0
+
+A v1.8.0 adiciona o **Radar de Vagas**:
+
+- tela `/radar` com Resumo, Wishlist, Fontes, Rodadas, Resultados e Alertas;
+- wishlists locais com cargos, skills, locais, modelo de trabalho e score mínimo;
+- RSS/Atom público com refresh manual;
+- estrutura de adapters para APIs oficiais documentadas;
+- resultados do Radar com score local, evidências, lacunas e próximas ações;
+- alertas locais para vagas acima do score mínimo;
+- ações para salvar na Caixa de Entrada ou em Candidaturas;
+- IA opcional apenas para explicação via `job_radar_match_explanation_v1`, sem decidir score final;
+- Streamlit continua legado/dev e não foi removido.
 
 ## Estado atual - v1.7.1
 
@@ -27,7 +41,7 @@ A v1.7.1 consolida o frontend web-first e melhora **Fontes e Captura** como flux
   de duplicatas, exportação CSV/JSON, Diretório de Fontes e teste anti-mojibake;
 - IA em importações é parcial/opcional: usa `source_import_enrichment_v1` quando provider está
   configurado e cai para local se falhar;
-- RSS/feed recorrente e APIs oficiais seguem como roadmap para v1.8.0;
+- RSS/feed recorrente era roadmap; na v1.8.0 virou Radar manual com RSS/Atom público;
 - Streamlit continua legado/dev e não foi removido.
 
 ## Estado atual — v1.3.0
@@ -143,8 +157,9 @@ A evolução deve ser feita por camadas:
 | v1.4.0 | Streamlit Legacy Mode | Produto | Streamlit mantido como modo local/dev legado. |
 | v1.7.0 | Public Sources, Importers & Capture History | Produto | Importadores, Caixa de Entrada, histórico e dedupe local. |
 | v1.7.1 | Intake Polish, Encoding Fixes & Source Discovery Prep | Produto | Upload real, merge visual, exportação e Diretório de Fontes. |
-| v1.8.0 | Public Feeds & Source Discovery | Produto | Feeds públicos com refresh manual e revisão antes de salvar. |
-| v2.0.0 | SaaS-ready Architecture | Arquitetura | Base pronta para opção SaaS sem abandonar local-first. |
+| v1.8.0 | Job Radar, Public Feeds & Wishlist Alerts | Produto | Radar manual, RSS público, wishlist e alertas locais. |
+| v1.9.0 | Radar Scheduling & Official Connectors | Produto | Agendamento local opcional e conectores oficiais documentados. |
+| v2.0.0 | Assistant autônomo com aprovação manual | Produto/arquitetura | Autonomia local com aprovações explícitas e sem auto-apply. |
 
 ---
 

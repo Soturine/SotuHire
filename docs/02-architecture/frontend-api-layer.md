@@ -94,6 +94,16 @@ biblioteca padrao do Python e endpoints `/capture/*`.
 - `POST /api/v1/extension/import/job`
 - `POST /api/v1/extension/import/github`
 - `POST /api/v1/extension/import/tracker`
+- `GET /api/v1/radar/wishlists`
+- `POST /api/v1/radar/wishlists`
+- `GET /api/v1/radar/sources`
+- `POST /api/v1/radar/sources`
+- `POST /api/v1/radar/run`
+- `GET /api/v1/radar/results`
+- `POST /api/v1/radar/results/{id}/save-inbox`
+- `POST /api/v1/radar/results/{id}/save-tracker`
+- `GET /api/v1/radar/alerts`
+- `GET /api/v1/radar/stats`
 
 ## Configurações de IA
 
@@ -133,13 +143,20 @@ Prompts usados por código:
 - `match_analysis_evidence_based_v1`;
 - `ats_analysis_v1`;
 - `resume_tailor_v1`;
-- `github_repo_analysis_v2`.
+- `github_repo_analysis_v2`;
+- `job_radar_match_explanation_v1`.
 
 ## Ponte da extensão local v1.5
 
 Os endpoints `/api/v1/extension/*` leem capturas já salvas pela Local Companion API e permitem
 importação para Vaga, GitHub ou Candidaturas. Eles não abrem navegador, não fazem login, não
 automatizam portais e não substituem a Local Companion API em `127.0.0.1:8765`.
+
+## Radar de Vagas v1.8
+
+Os endpoints `/api/v1/radar/*` implementam o Radar de Vagas. O frontend cria wishlists, cadastra
+fontes RSS/Atom públicas, executa rodadas manuais, mostra resultados/alertas e deixa a pessoa salvar
+explicitamente na Caixa de Entrada ou no Tracker. Score, dedupe e alertas ficam no backend.
 
 ## Segurança
 

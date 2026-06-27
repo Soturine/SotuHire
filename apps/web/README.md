@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versao `v1.7.1`.
+Frontend moderno do SotuHire em `apps/web` para a versao `v1.8.0`.
 
 ## Stack
 
@@ -84,6 +84,7 @@ URL e o modo selecionados ficam apenas no estado da sessao aberta do app.
 - Analise ATS
 - Ajuste de Curriculo
 - Analise de GitHub
+- Radar de Vagas
 - Candidaturas
 - Inteligencia de Candidaturas
 - Fontes e Captura
@@ -140,13 +141,13 @@ A tela **Fontes e Captura** inclui o fluxo `AUTHENTICATED_BROWSER` existente no 
 - exige confirmacao de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-A v1.7.1 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
+A v1.8.0 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
 regras protegidas.
 
 O painel **Extensao Local** consulta `/api/v1/extension/status` e `/api/v1/extension/captures` para
 mostrar capturas ja salvas pela Local Companion API. Ele mostra status do companion, ultima
 sincronizacao, origem, URL, data, tipo de captura e acoes para Vaga, GitHub Analysis e
-Candidaturas. A v1.7.1 tambem permite marcar capturas locais como revisadas, ignoradas ou
+Candidaturas. A v1.8.0 tambem permite marcar capturas locais como revisadas, ignoradas ou
 arquivadas sem tocar em browser autenticado.
 
 ### Caixa de Entrada e importadores
@@ -163,18 +164,47 @@ analisar ou salvar:
 O painel oferece busca, filtros por status/origem, deduplicacao local e acoes para **Importar para
 Vaga**, **Salvar em Candidaturas**, **Copiar link**, **Arquivar** e **Ignorar**.
 
-Na v1.7.1, CSV/JSON tambem podem ser enviados por upload do navegador. O app mostra preview das
+Na v1.8.0, CSV/JSON tambem podem ser enviados por upload do navegador. O app mostra preview das
 primeiras linhas/itens e so importa depois de confirmacao. A Caixa tambem exporta todos, filtrados
 ou selecionados em CSV/JSON, e a comparacao de duplicatas permite **Mesclar**, **Manter separado**,
 **Arquivar novo** ou **Marcar como nao duplicata** preservando historico.
 
 O **Diretório de Fontes** organiza paginas de carreira abertas, feeds RSS publicos, APIs oficiais,
-CSV/JSON recorrente, links manuais e fontes observadas. RSS recorrente e APIs oficiais continuam
-roadmap/planejado.
+CSV/JSON recorrente, links manuais e fontes observadas. Na v1.8.0, feeds RSS/Atom publicos podem
+ser configurados e atualizados manualmente pelo **Radar de Vagas**. APIs oficiais continuam como
+estrutura planejada ate existir conector documentado.
 
 O importador de URL nao faz crawler amplo. Se uma pagina bloquear acesso, exigir login ou nao
 permitir leitura publica simples, a API retorna um aviso para abrir a pagina manualmente e colar o
 texto da vaga.
+
+## Radar de Vagas
+
+A tela `/radar` implementa o fluxo v1.8.0:
+
+- criar wishlist com cargos, skills, locais, modelo de trabalho e score minimo;
+- adicionar fonte RSS/Atom publica;
+- registrar API oficial planejada via adapter seguro;
+- rodar Radar manualmente;
+- revisar resultados, evidencias, lacunas e alertas;
+- salvar resultado na Caixa de Entrada ou em Candidaturas.
+
+Endpoints usados:
+
+```txt
+GET/POST/PATCH/DELETE /api/v1/radar/wishlists
+GET/POST/PATCH/DELETE /api/v1/radar/sources
+POST /api/v1/radar/run
+GET /api/v1/radar/runs
+GET/PATCH /api/v1/radar/results
+POST /api/v1/radar/results/{id}/save-inbox
+POST /api/v1/radar/results/{id}/save-tracker
+GET/PATCH /api/v1/radar/alerts
+GET /api/v1/radar/stats
+```
+
+O score final do Radar fica no backend. IA, quando habilitada, apenas explica o match via
+`job_radar_match_explanation_v1` e cai para local se falhar.
 
 ## Testes e screenshots
 
@@ -188,7 +218,7 @@ Kanban, cross-browser em Chromium/Firefox/WebKit e ausencia de branding legado p
 `visual-capture.spec.ts` gera screenshots em:
 
 ```txt
-docs/assets/screenshots/sotuhire-v1.7.1-web-*.png
+docs/assets/screenshots/sotuhire-v1.8-web-*.png
 ```
 
 Todos usam viewport `1440x1000`, `deviceScaleFactor=1` e `fullPage=false`.

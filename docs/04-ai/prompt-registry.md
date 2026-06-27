@@ -58,7 +58,15 @@ class PromptRegistry:
 - `resume_extraction_v1`;
 - `job_extraction_multi_domain_v1`;
 - `domain_classification_v1`;
-Os demais prompts continuam documentados como playbooks e entram em ciclos futuros.
+- `github_repo_analysis_v2`;
+- `match_analysis_evidence_based_v1`;
+- `ats_analysis_v1`;
+- `resume_tailor_v1`;
+- `career_advice_v1`;
+- `source_import_enrichment_v1`;
+- `job_radar_match_explanation_v1`.
+
+O prompt do Radar explica evidências e lacunas, mas não altera score final.
 
 ## Dados salvos por execução
 

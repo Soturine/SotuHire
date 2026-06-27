@@ -59,9 +59,10 @@ Prioridade recomendada:
 5. Hidden Jobs Radar por texto colado
 ```
 
-Na v1.7.1, o fluxo real de entrada esta documentado em
+Na v1.8.0, o fluxo real de entrada esta documentado em
 [`public-source-importers.md`](public-source-importers.md): texto, link publico simples, CSV, JSON,
-upload com preview, historico persistente, deduplicacao local, merge visual e exportacao.
+upload com preview, historico persistente, deduplicacao local, merge visual e exportacao. O Radar de
+Vagas com RSS/Atom publico fica em [`job-radar-public-feeds.md`](job-radar-public-feeds.md).
 
 
 ## Portais brasileiros

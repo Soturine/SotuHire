@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.7.1 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.8.0 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -28,6 +28,7 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Intelligence | `/intelligence` | `/api/v1/tracker/metrics`, `/requirements`, `/funnel`, `/sources` | tracker service | `modules/tracker` | Real |
 | IA e Providers | `/settings` | `/api/v1/settings/ai*` | `apps.api.services.ai_settings` | `modules/ai/providers` | Real |
 | Caixa de Entrada de Oportunidades | `/sources` | `/api/v1/sources/imports*`, `/captures*`, `/dedupe`, `/stats`, `/export`, `/directory` | `apps.api.services.sources` | `modules/sources`, `modules/parsers`, `modules/tracker` | Real |
+| Radar de Vagas | `/radar` | `/api/v1/radar/*` | `apps.api.services.radar` | `modules/radar`, `modules/scraping`, `modules/sources`, `modules/tracker` | Real |
 | Extensão Local | `/sources` | `/api/v1/extension/*` | `apps.api.services.extension` | `modules/local_api`, `browser-extension/` | Real |
 | Navegador autenticado autorizado | `/sources` | `/api/v1/sources/authenticated-browser/*` | `apps.api.services.sources` | fluxo existente de scraping local | Parcial |
 | Streamlit | legado/dev | Não é API web | `app.py`, `modules/ui` | core antigo | Legado |
@@ -52,8 +53,8 @@ allow_github
 allow_memory_context
 ```
 
-Currículo e vaga usam IA quando `use_ai=true` e `provider=gemini` configurado. A UI mostra provider,
-modo e baixa confiança sem expor segredo.
+Currículo, vaga, importações e Radar usam IA quando `use_ai=true` e `provider=gemini` configurado.
+A UI mostra provider, modo e baixa confiança sem expor segredo.
 
 ## Ponte da extensão
 
@@ -110,6 +111,37 @@ o item ao tracker quando a pessoa escolhe **Salvar em Candidaturas**. A v1.7.1 p
 para enriquecer tags, dominio, senioridade e resumo via `source_import_enrichment_v1`, sempre com
 fallback local e sem retornar segredo ao frontend.
 
+## Radar de Vagas v1.8.0
+
+Endpoints FastAPI:
+
+```txt
+GET    /api/v1/radar/wishlists
+POST   /api/v1/radar/wishlists
+PATCH  /api/v1/radar/wishlists/{wishlist_id}
+DELETE /api/v1/radar/wishlists/{wishlist_id}
+GET    /api/v1/radar/sources
+POST   /api/v1/radar/sources
+PATCH  /api/v1/radar/sources/{source_id}
+DELETE /api/v1/radar/sources/{source_id}
+POST   /api/v1/radar/run
+GET    /api/v1/radar/runs
+GET    /api/v1/radar/results
+PATCH  /api/v1/radar/results/{result_id}
+POST   /api/v1/radar/results/{result_id}/save-inbox
+POST   /api/v1/radar/results/{result_id}/save-tracker
+GET    /api/v1/radar/alerts
+PATCH  /api/v1/radar/alerts/{alert_id}
+GET    /api/v1/radar/stats
+```
+
+`modules/radar` centraliza wishlists, fontes, rodadas, resultados e alertas em JSON local. O Radar
+consulta RSS/Atom público em rodada manual, prepara adapters de APIs oficiais, calcula score local e
+conecta resultados revisados à Caixa de Entrada ou ao Tracker.
+
+O prompt `job_radar_match_explanation_v1` é opcional e só explica evidências/lacunas. Score final,
+deduplicação e alertas permanecem no backend.
+
 ## UX web v1.6.0
 
 - Home e Dashboard exibem fluxo guiado de 8 passos.
@@ -147,3 +179,12 @@ fallback local e sem retornar segredo ao frontend.
 - Diretório de Fontes para preparar paginas abertas, feeds, APIs oficiais, CSV/JSON recorrente e
   links manuais sem crawler amplo.
 - Teste anti-mojibake em textos publicos.
+
+## Incrementos v1.8.0
+
+- Nova tela `/radar` com Resumo, Wishlist, Fontes, Rodadas, Resultados e Alertas.
+- Backend `modules/radar` com store local, execução manual e limites por rodada.
+- RSS/Atom público implementado como fonte segura.
+- APIs oficiais ficam estruturadas como adapters planejados.
+- Resultados do Radar podem ser salvos na Caixa de Entrada ou em Candidaturas.
+- Alertas locais indicam vagas acima do score mínimo da wishlist.
