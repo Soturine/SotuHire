@@ -4,6 +4,34 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.8.0] - 2026-06-27
+
+### Adicionado
+
+- Tela **Radar de Vagas** no frontend moderno.
+- Modelos e store local para `JobWishlist`, `RadarSource`, `RadarRun`, `RadarResult` e `RadarAlert`.
+- Endpoints `/api/v1/radar/*` para wishlists, fontes, rodadas, resultados, alertas e estatísticas.
+- Suporte a RSS/Atom público com refresh manual e revisão antes de salvar.
+- Estrutura de adapters para APIs oficiais documentadas.
+- Alertas locais para oportunidades acima do score mínimo da wishlist.
+- Ações para salvar resultados do Radar na Caixa de Entrada ou em Candidaturas.
+- Prompt `job_radar_match_explanation_v1` para explicação opcional com IA.
+- Testes backend e E2E para Radar, alertas, RSS fake e modo Demo/API Real.
+
+### Alterado
+
+- Diretório de Fontes marca RSS público como disponível via Radar manual.
+- README, roadmap, mapa de integração e docs de fontes documentam Radar, feeds públicos e limites.
+- Health API anuncia capability `job_radar`.
+
+### Segurança
+
+- Score final do Radar permanece no backend/core.
+- IA opcional apenas explica evidências/lacunas e faz fallback local.
+- Nenhuma API key é salva ou retornada pelo frontend.
+- Nenhum fluxo sensível de authenticated browser, Chromium/CDP, login manual, cookie, token,
+  CAPTCHA, crawler logado ou auto-apply foi alterado.
+
 ## [1.7.1] - 2026-06-26
 
 ### Corrigido
