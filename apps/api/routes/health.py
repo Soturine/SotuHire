@@ -30,6 +30,7 @@ def health(request: Request) -> ApiEnvelope[HealthResponse]:
                 "ai_settings",
                 "authenticated_browser_sources",
                 "extension_bridge",
+                "job_radar",
             ],
             cors_allowed_origins=settings.allowed_origins,
         )

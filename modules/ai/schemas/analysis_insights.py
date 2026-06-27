@@ -49,3 +49,18 @@ class SourceImportEnrichmentOutput(StrictSchema):
     inconsistency_alerts: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     confidence: float = Field(default=0.0, ge=0, le=1)
+
+
+class RadarMatchExplanationOutput(StrictSchema):
+    """Optional evidence-only explanation for Job Radar matches."""
+
+    summary: str = ""
+    match_reasons: list[str] = Field(default_factory=list)
+    evidence: list[str] = Field(default_factory=list)
+    gaps: list[str] = Field(default_factory=list)
+    recommended_actions: list[str] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
+    domain: str = ""
+    seniority: str = ""
+    warnings: list[str] = Field(default_factory=list)
+    confidence: float = Field(default=0.0, ge=0, le=1)

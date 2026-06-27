@@ -187,6 +187,27 @@ JOB TEXT:
 {job_text}
 """
 
+JOB_RADAR_MATCH_SYSTEM_PROMPT = (
+    "You explain Job Radar matches for SotuHire using only provided evidence. "
+    "Return valid JSON only. Do not invent requirements, company facts, salary, credentials, "
+    "candidate experience, metrics or application status. Separate facts from cautious inference. "
+    "Final scores are owned by backend logic; explain them without changing them."
+)
+
+JOB_RADAR_MATCH_USER_TEMPLATE = """Explain why this radar result may match the wishlist.
+
+Language: {language}
+
+Job:
+{job}
+
+Wishlist:
+{wishlist}
+
+Local deterministic match:
+{local_match}
+"""
+
 
 def initial_prompt_specs(
     schema_overrides: dict[str, type[BaseModel]] | None = None,
@@ -275,6 +296,15 @@ def initial_prompt_specs(
             temperature=0.1,
             mode="source_import_enrichment",
         ),
+        PromptSpec(
+            prompt_id="job_radar_match_explanation_v1",
+            version="1.0.0",
+            system_prompt=JOB_RADAR_MATCH_SYSTEM_PROMPT,
+            user_template=JOB_RADAR_MATCH_USER_TEMPLATE,
+            output_schema=schemas["job_radar_match_explanation_v1"],
+            temperature=0.1,
+            mode="job_radar_match_explanation",
+        ),
     ]
 
 
@@ -286,6 +316,7 @@ def default_prompt_registry() -> PromptRegistry:
 def _default_schemas() -> dict[str, type[BaseModel]]:
     from modules.ai.schemas.analysis_insights import (
         AtsAiReviewOutput,
+        RadarMatchExplanationOutput,
         ResumeTailorAiOutput,
         SafeAiInsightOutput,
         SourceImportEnrichmentOutput,
@@ -306,4 +337,5 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         "resume_tailor_v1": ResumeTailorAiOutput,
         "career_advice_v1": SafeAiInsightOutput,
         "source_import_enrichment_v1": SourceImportEnrichmentOutput,
+        "job_radar_match_explanation_v1": RadarMatchExplanationOutput,
     }

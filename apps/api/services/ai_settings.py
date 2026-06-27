@@ -35,6 +35,7 @@ AiFeature = Literal[
     "github",
     "career_advice",
     "source_import",
+    "radar",
 ]
 
 

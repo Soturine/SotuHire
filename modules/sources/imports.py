@@ -444,6 +444,53 @@ class SourceImportService:
             "json_import", items, source_name=source_name, warnings=warnings, errors=errors
         )
 
+    def import_radar_result(
+        self,
+        *,
+        title: str,
+        company: str,
+        text: str,
+        url: str,
+        source_name: str,
+        origin: SourceOrigin,
+        location: str = "",
+        notes: str = "",
+        match_score: int | None = None,
+        ats_score: int | None = None,
+        metadata: dict[str, object] | None = None,
+    ) -> OpportunityInboxItem:
+        """Import one reviewed Radar result into the opportunity inbox."""
+        item = self._item_from_text(
+            text,
+            origin=origin,
+            source_name=source_name,
+            source_url=url,
+            company_hint=company,
+            title_hint=title,
+            location_hint=location,
+            notes=notes,
+            confidence=0.78,
+        )
+        item = item.model_copy(
+            update={
+                "match_score": match_score,
+                "ats_score": ats_score,
+                "last_analysis_at": utc_now(),
+                "metadata": {
+                    **item.metadata,
+                    **(metadata or {}),
+                    "source_flow": "job_radar",
+                },
+            }
+        )
+        _, items, _ = self._save_batch(
+            origin,
+            [item],
+            source_name=source_name,
+            source_url=url,
+        )
+        return items[0]
+
     def list_captures(self) -> list[OpportunityInboxItem]:
         """Return all local capture records."""
         return self.list_imports()[0]
@@ -1019,15 +1066,15 @@ def _default_source_directory() -> list[JobSourceDirectory]:
             id="public-rss-feeds",
             name="Feeds RSS públicos",
             kind="public_feed",
-            status="future",
-            observation="RSS/Atom público planejado para v1.8.0, sem salvar no tracker sem ação.",
+            status="available",
+            observation="RSS/Atom publico com refresh manual pelo Radar, sem salvar no tracker sem acao.",
         ),
         JobSourceDirectory(
             id="official-apis",
             name="APIs oficiais",
             kind="official_api",
-            status="future",
-            observation="Somente APIs documentadas, com chave do usuário quando aplicável.",
+            status="planned",
+            observation="Somente APIs documentadas, com chave do usuario quando aplicavel.",
         ),
         JobSourceDirectory(
             id="recurring-csv-json",
