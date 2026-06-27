@@ -21,9 +21,27 @@ import type {
   ImportBatch,
   JobExtractResult,
   JobPosting,
+  JobWishlist,
   MatchAnalysis,
   MatchAnalyzeResult,
   MatchRequirement,
+  RadarAlert,
+  RadarAlertResult,
+  RadarAlertsResult,
+  RadarResult,
+  RadarResultEnvelope,
+  RadarResultsResult,
+  RadarRun,
+  RadarRunResult,
+  RadarRunsResult,
+  RadarSaveInboxResult,
+  RadarSaveTrackerResult,
+  RadarSource,
+  RadarSourceResult,
+  RadarSourcesResult,
+  RadarStats,
+  RadarWishlistResult,
+  RadarWishlistsResult,
   ResumeExtractResult,
   ResumeProfile,
   ResumeTailor,
@@ -725,14 +743,183 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         "/sources/stats",
         undefined,
         {
-          total: 3,
+          total: 4,
           duplicates: 1,
           errors: 0,
           saved_to_tracker: 1,
-          by_status: { new: 1, duplicate: 1, saved_to_tracker: 1 },
-          by_origin: { manual_text: 1, csv_import: 1, extension_capture: 1 },
+          by_status: { new: 2, duplicate: 1, saved_to_tracker: 1 },
+          by_origin: { manual_text: 1, csv_import: 1, extension_capture: 1, public_feed: 1 },
         },
         normalizeSourceStats,
+      ),
+
+    radarWishlists: () =>
+      call<RadarWishlistsResult>(
+        mode,
+        baseUrl,
+        "/radar/wishlists",
+        undefined,
+        mockRadarWishlists(),
+        normalizeRadarWishlists,
+      ),
+
+    radarCreateWishlist: (payload: Partial<JobWishlist>) =>
+      call<RadarWishlistResult>(
+        mode,
+        baseUrl,
+        "/radar/wishlists",
+        { method: "POST", body: JSON.stringify(payload) },
+        {
+          wishlist: { ...mockRadarWishlists().wishlists[0]!, ...payload },
+          message: "Modo Demo: wishlist criada.",
+        },
+        normalizeRadarWishlistResult,
+      ),
+
+    radarSources: () =>
+      call<RadarSourcesResult>(
+        mode,
+        baseUrl,
+        "/radar/sources",
+        undefined,
+        mockRadarSources(),
+        normalizeRadarSources,
+      ),
+
+    radarCreateSource: (payload: Partial<RadarSource>) =>
+      call<RadarSourceResult>(
+        mode,
+        baseUrl,
+        "/radar/sources",
+        { method: "POST", body: JSON.stringify(payload) },
+        {
+          source: { ...mockRadarSources().sources[0]!, ...payload },
+          message: "Modo Demo: fonte criada.",
+        },
+        normalizeRadarSourceResult,
+      ),
+
+    radarRun: (payload: {
+      source_ids?: string[];
+      wishlist_id?: string;
+      resume_text?: string;
+      keywords?: string[];
+      use_ai?: boolean;
+    }) =>
+      call<RadarRunResult>(
+        mode,
+        baseUrl,
+        "/radar/run",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockRadarRun(payload),
+        normalizeRadarRunResult,
+      ),
+
+    radarRuns: () =>
+      call<RadarRunsResult>(
+        mode,
+        baseUrl,
+        "/radar/runs",
+        undefined,
+        mockRadarRuns(),
+        normalizeRadarRuns,
+      ),
+
+    radarResults: () =>
+      call<RadarResultsResult>(
+        mode,
+        baseUrl,
+        "/radar/results",
+        undefined,
+        mockRadarResults(),
+        normalizeRadarResults,
+      ),
+
+    radarPatchResult: (id: string, payload: { status?: string }) =>
+      call<RadarResultEnvelope>(
+        mode,
+        baseUrl,
+        `/radar/results/${id}`,
+        { method: "PATCH", body: JSON.stringify(payload) },
+        {
+          result: {
+            ...(mockRadarResults().results.find((item) => item.id === id) ??
+              mockRadarResults().results[0]!),
+            radar_status: (payload.status as RadarResult["radar_status"]) || "ignored",
+          },
+          message: "Modo Demo: resultado atualizado.",
+        },
+        normalizeRadarResultEnvelope,
+      ),
+
+    radarSaveInbox: (id: string) =>
+      call<RadarSaveInboxResult>(
+        mode,
+        baseUrl,
+        `/radar/results/${id}/save-inbox`,
+        { method: "POST" },
+        {
+          result: { ...mockRadarResults().results[0]!, radar_status: "saved_to_inbox" },
+          inbox_item: {
+            ...mockSourceImports().items[0]!,
+            source_name: "Radar - Feed publico",
+            origin: "public_feed",
+            metadata: { source_flow: "job_radar", radar_result_id: id },
+          },
+          message: "Modo Demo: resultado salvo na Caixa de Entrada.",
+        },
+        normalizeRadarSaveInbox,
+      ),
+
+    radarSaveTracker: (id: string) =>
+      call<RadarSaveTrackerResult>(
+        mode,
+        baseUrl,
+        `/radar/results/${id}/save-tracker`,
+        { method: "POST" },
+        {
+          result: { ...mockRadarResults().results[0]!, radar_status: "saved_to_tracker" },
+          tracker_id: `job_${Math.random().toString(36).slice(2, 8)}`,
+          message: "Modo Demo: resultado salvo em Candidaturas.",
+        },
+        normalizeRadarSaveTracker,
+      ),
+
+    radarAlerts: () =>
+      call<RadarAlertsResult>(
+        mode,
+        baseUrl,
+        "/radar/alerts",
+        undefined,
+        mockRadarAlerts(),
+        normalizeRadarAlerts,
+      ),
+
+    radarPatchAlert: (id: string, payload: { status?: string }) =>
+      call<RadarAlertResult>(
+        mode,
+        baseUrl,
+        `/radar/alerts/${id}`,
+        { method: "PATCH", body: JSON.stringify(payload) },
+        {
+          alert: {
+            ...(mockRadarAlerts().alerts.find((item) => item.id === id) ??
+              mockRadarAlerts().alerts[0]!),
+            status: (payload.status as RadarAlert["status"]) || "read",
+          },
+          message: "Modo Demo: alerta atualizado.",
+        },
+        normalizeRadarAlertResult,
+      ),
+
+    radarStats: () =>
+      call<RadarStats>(
+        mode,
+        baseUrl,
+        "/radar/stats",
+        undefined,
+        mockRadarStats(),
+        normalizeRadarStats,
       ),
   };
 }
@@ -816,6 +1003,33 @@ function mockSourceImports(): SourceImportsResult {
           priority: "media",
         },
       },
+      {
+        id: "source-demo-radar",
+        title: "Desenvolvedor Backend Python",
+        company: "Empresa Radar Demo",
+        source_type: "public_feed",
+        source_name: "Radar - Feed publico",
+        source_url: "https://example.com/jobs/radar-1",
+        origin: "public_feed",
+        captured_at: now,
+        imported_at: now,
+        status: "new",
+        raw_text: "Cargo: Desenvolvedor Backend Python\nRequisitos: Python, FastAPI e SQL.",
+        job_url: "https://example.com/jobs/radar-1",
+        location: "Remoto",
+        work_model: "remote",
+        domain: "example.com",
+        tags: ["Python", "FastAPI", "Radar"],
+        source_confidence: 0.82,
+        match_score: 82,
+        ats_score: 76,
+        notes: "resultado ficticio do Radar",
+        metadata: {
+          source_flow: "job_radar",
+          radar_score: 82,
+          analysis_mode: "local",
+        },
+      },
     ],
     batches: [
       {
@@ -823,12 +1037,17 @@ function mockSourceImports(): SourceImportsResult {
         origin: "manual_text",
         source_name: "Demo",
         created_at: now,
-        total: 3,
-        imported: 3,
+        total: 4,
+        imported: 4,
         errors: 0,
         duplicates: 1,
         warnings: [],
-        item_ids: ["source-demo-text", "source-demo-duplicate", "source-demo-extension"],
+        item_ids: [
+          "source-demo-text",
+          "source-demo-duplicate",
+          "source-demo-extension",
+          "source-demo-radar",
+        ],
       },
     ],
   };
@@ -925,8 +1144,8 @@ function mockSourceDirectory(query: string): SourceDirectoryResult {
       id: "public-rss-feeds",
       name: "Feeds RSS públicos",
       kind: "public_feed",
-      status: "future",
-      observation: "RSS/Atom público planejado para v1.8.0.",
+      status: "available",
+      observation: "RSS/Atom publico disponivel no Radar de Vagas com refresh manual.",
       requires_manual_review: true,
     },
     {
@@ -1008,12 +1227,254 @@ function mockSourceExport(format: "csv" | "json", itemIds?: string[]): SourceExp
   };
 }
 
+function mockRadarWishlists(): RadarWishlistsResult {
+  const now = new Date().toISOString();
+  return {
+    wishlists: [
+      {
+        id: "radar-wishlist-demo",
+        name: "Backend Python remoto",
+        target_titles: ["Desenvolvedor Backend", "Engenheiro de APIs"],
+        target_domains: ["tecnologia", "produto"],
+        target_seniority: ["pleno", "junior"],
+        required_skills: ["Python", "FastAPI", "SQL"],
+        desired_skills: ["Pytest", "Docker"],
+        excluded_terms: ["presencial integral"],
+        locations: ["Remoto", "Brasil"],
+        remote_preferences: ["remoto"],
+        work_model: "remote",
+        employment_type: "CLT",
+        salary_currency: "BRL",
+        contract_types: ["CLT"],
+        industries: ["software"],
+        companies_include: ["Empresa Exemplo"],
+        companies_exclude: ["Empresa Bloqueada"],
+        source_types: ["public_feed", "manual_url"],
+        min_match_score: 70,
+        min_ats_score: 40,
+        notify_on_new_matches: true,
+        created_at: now,
+        updated_at: now,
+        is_active: true,
+      },
+    ],
+  };
+}
+
+function mockRadarSources(): RadarSourcesResult {
+  const now = new Date().toISOString();
+  return {
+    sources: [
+      {
+        id: "radar-source-feed-demo",
+        name: "Feed publico ficticio",
+        source_type: "public_feed",
+        url: "https://example.com/jobs.xml",
+        status: "available",
+        is_active: true,
+        requires_api_key: false,
+        api_key_configured: false,
+        max_results: 20,
+        timeout_seconds: 6,
+        rate_limit_seconds: 1,
+        last_checked_at: now,
+        notes: "RSS publico ficticio para modo Demo.",
+        created_at: now,
+        updated_at: now,
+      },
+      {
+        id: "radar-source-api-demo",
+        name: "API oficial planejada",
+        source_type: "official_api",
+        url: "https://api.example.com/jobs",
+        docs_url: "https://example.com/docs",
+        status: "requires_official_api",
+        is_active: true,
+        requires_api_key: false,
+        api_key_configured: false,
+        max_results: 20,
+        timeout_seconds: 6,
+        rate_limit_seconds: 1,
+        notes: "Estrutura preparada; conector real depende de API documentada.",
+        created_at: now,
+        updated_at: now,
+      },
+    ],
+    adapters: [
+      {
+        source_type: "public_feed",
+        adapter_name: "RSS/Atom publico",
+        supported: true,
+        notes: "Refresh manual e revisao humana.",
+      },
+      {
+        source_type: "official_api",
+        adapter_name: "API oficial planejada",
+        supported: false,
+        notes: "Requer contrato oficial documentado.",
+      },
+    ],
+  };
+}
+
+function mockRadarResults(): RadarResultsResult {
+  const now = new Date().toISOString();
+  return {
+    results: [
+      {
+        id: "radar-result-demo-1",
+        run_id: "radar-run-demo",
+        source_id: "radar-source-feed-demo",
+        source_name: "Feed publico ficticio",
+        source_type: "public_feed",
+        wishlist_id: "radar-wishlist-demo",
+        title: "Desenvolvedor Backend Python",
+        company: "Empresa Exemplo",
+        url: "https://example.com/jobs/radar-1",
+        location: "Remoto",
+        work_model: "remote",
+        employment_type: "CLT",
+        description: "Vaga ficticia com Python, FastAPI, SQL e testes.",
+        captured_at: now,
+        dedupe_key: "url:https://example.com/jobs/radar-1",
+        match_score: 84,
+        ats_score: 76,
+        wishlist_score: 82,
+        radar_score: 82,
+        radar_status: "matched",
+        already_in_inbox: false,
+        already_in_tracker: false,
+        warnings: [],
+        reasons: ["Cargo desejado encontrado.", "Habilidades obrigatorias encontradas."],
+        evidence: ["Fonte cita Python, FastAPI e SQL.", "Modelo remoto aceito."],
+        gaps: ["Validar se Docker e Pytest sao exigidos."],
+        next_actions: [
+          "Salvar na Caixa de Entrada.",
+          "Rodar compatibilidade com curriculo antes de aplicar.",
+        ],
+        analysis_mode: "local",
+        provider_used: "local",
+        metadata: { tags: ["Python", "FastAPI"], source_flow: "job_radar" },
+      },
+      {
+        id: "radar-result-demo-2",
+        run_id: "radar-run-demo",
+        source_id: "radar-source-feed-demo",
+        source_name: "Feed publico ficticio",
+        source_type: "public_feed",
+        wishlist_id: "radar-wishlist-demo",
+        title: "Analista de Dados",
+        company: "Empresa Exemplo",
+        url: "https://example.com/jobs/radar-2",
+        location: "Hibrido",
+        description: "Vaga ficticia com SQL e dashboards.",
+        captured_at: now,
+        dedupe_key: "url:https://example.com/jobs/radar-2",
+        match_score: 58,
+        ats_score: 52,
+        wishlist_score: 55,
+        radar_score: 55,
+        radar_status: "new",
+        already_in_inbox: false,
+        already_in_tracker: false,
+        warnings: ["Sinais abaixo do minimo da wishlist."],
+        reasons: ["Tem SQL, mas cargo diferente."],
+        evidence: ["Fonte cita SQL e dashboards."],
+        gaps: ["Nao cita FastAPI.", "Modelo hibrido precisa revisao."],
+        next_actions: ["Revisar manualmente antes de salvar."],
+        analysis_mode: "local",
+        provider_used: "local",
+        metadata: { tags: ["SQL"], source_flow: "job_radar" },
+      },
+    ],
+  };
+}
+
+function mockRadarRun(payload: {
+  source_ids?: string[];
+  wishlist_id?: string;
+  use_ai?: boolean;
+}): RadarRunResult {
+  const now = new Date().toISOString();
+  const results = mockRadarResults().results.map((result) =>
+    payload.use_ai
+      ? {
+          ...result,
+          analysis_mode: "ai" as const,
+          provider_used: "gemini",
+          next_actions: [...result.next_actions, "Revisar explicacao da IA antes de agir."],
+        }
+      : result,
+  );
+  const alerts = mockRadarAlerts().alerts;
+  return {
+    run: {
+      id: `radar_run_${Math.random().toString(36).slice(2, 8)}`,
+      started_at: now,
+      finished_at: now,
+      source_ids: payload.source_ids?.length ? payload.source_ids : ["radar-source-feed-demo"],
+      wishlist_id: payload.wishlist_id || "radar-wishlist-demo",
+      resume_used: false,
+      total_sources: 1,
+      total_found: results.length,
+      total_deduped: 0,
+      total_alerted: alerts.length,
+      total_errors: 0,
+      duration_ms: 420,
+      warnings: [],
+      errors: [],
+      metadata: { mode: "demo" },
+    },
+    results,
+    alerts,
+    message: "Modo Demo: Radar concluido com vagas ficticias.",
+  };
+}
+
+function mockRadarRuns(): RadarRunsResult {
+  return { runs: [mockRadarRun({}).run] };
+}
+
+function mockRadarAlerts(): RadarAlertsResult {
+  const now = new Date().toISOString();
+  return {
+    alerts: [
+      {
+        id: "radar-alert-demo-1",
+        run_id: "radar-run-demo",
+        result_id: "radar-result-demo-1",
+        wishlist_id: "radar-wishlist-demo",
+        title: "Nova vaga com 82% de aderencia",
+        message: "Desenvolvedor Backend Python em Empresa Exemplo",
+        score: 82,
+        status: "unread",
+        created_at: now,
+        metadata: { source_name: "Feed publico ficticio" },
+      },
+    ],
+  };
+}
+
+function mockRadarStats(): RadarStats {
+  return {
+    active_sources: 1,
+    total_sources: 2,
+    total_results: 2,
+    new_results: 1,
+    matched_results: 1,
+    unread_alerts: 1,
+    duplicates: 0,
+    source_errors: 0,
+    last_run_at: new Date().toISOString(),
+  };
+}
+
 function normalizeHealth(value: unknown): Health {
   const raw = asRecord(value);
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "1.7.1",
+    version: asString(raw.version) || "1.8.0",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),
@@ -1555,6 +2016,281 @@ function normalizeSourceStats(value: unknown): SourceStats {
     by_status: numberRecord(raw.by_status),
     by_origin: numberRecord(raw.by_origin),
   };
+}
+
+function normalizeRadarWishlists(value: unknown): RadarWishlistsResult {
+  return { wishlists: objectList(asRecord(value).wishlists).map(normalizeRadarWishlist) };
+}
+
+function normalizeRadarWishlistResult(value: unknown): RadarWishlistResult {
+  const raw = asRecord(value);
+  return { wishlist: normalizeRadarWishlist(raw.wishlist), message: asString(raw.message) };
+}
+
+function normalizeRadarWishlist(value: unknown): JobWishlist {
+  const raw = asRecord(value);
+  return {
+    id: asString(raw.id),
+    name: asString(raw.name) || "Wishlist",
+    target_titles: stringList(raw.target_titles),
+    target_domains: stringList(raw.target_domains),
+    target_seniority: stringList(raw.target_seniority),
+    required_skills: stringList(raw.required_skills),
+    desired_skills: stringList(raw.desired_skills),
+    excluded_terms: stringList(raw.excluded_terms),
+    locations: stringList(raw.locations),
+    remote_preferences: stringList(raw.remote_preferences),
+    work_model: asString(raw.work_model),
+    employment_type: asString(raw.employment_type),
+    salary_min: definedNumber(raw.salary_min),
+    salary_currency: asString(raw.salary_currency) || "BRL",
+    contract_types: stringList(raw.contract_types),
+    industries: stringList(raw.industries),
+    companies_include: stringList(raw.companies_include),
+    companies_exclude: stringList(raw.companies_exclude),
+    source_types: stringList(raw.source_types),
+    min_match_score: asNumber(raw.min_match_score, 70),
+    min_ats_score: asNumber(raw.min_ats_score, 0),
+    notify_on_new_matches: asBoolean(raw.notify_on_new_matches, true),
+    created_at: asString(raw.created_at),
+    updated_at: asString(raw.updated_at),
+    is_active: asBoolean(raw.is_active, true),
+  };
+}
+
+function normalizeRadarSources(value: unknown): RadarSourcesResult {
+  const raw = asRecord(value);
+  return {
+    sources: objectList(raw.sources).map(normalizeRadarSource),
+    adapters: objectList(raw.adapters).map((item) => ({
+      source_type: normalizeRadarSourceType(item.source_type),
+      adapter_name: asString(item.adapter_name),
+      supported: asBoolean(item.supported, true),
+      notes: asString(item.notes),
+    })),
+  };
+}
+
+function normalizeRadarSourceResult(value: unknown): RadarSourceResult {
+  const raw = asRecord(value);
+  return { source: normalizeRadarSource(raw.source), message: asString(raw.message) };
+}
+
+function normalizeRadarSource(value: unknown): RadarSource {
+  const raw = asRecord(value);
+  return {
+    id: asString(raw.id),
+    name: asString(raw.name) || "Fonte",
+    source_type: normalizeRadarSourceType(raw.source_type),
+    url: asString(raw.url),
+    docs_url: asString(raw.docs_url),
+    status: normalizeRadarSourceStatus(raw.status),
+    is_active: asBoolean(raw.is_active, true),
+    requires_api_key: asBoolean(raw.requires_api_key, false),
+    api_key_configured: asBoolean(raw.api_key_configured, false),
+    max_results: asNumber(raw.max_results, 20),
+    timeout_seconds: asNumber(raw.timeout_seconds, 6),
+    rate_limit_seconds: asNumber(raw.rate_limit_seconds, 1),
+    last_checked_at: asString(raw.last_checked_at),
+    last_error: asString(raw.last_error),
+    notes: asString(raw.notes),
+    metadata: asRecord(raw.metadata),
+    created_at: asString(raw.created_at),
+    updated_at: asString(raw.updated_at),
+  };
+}
+
+function normalizeRadarRunResult(value: unknown): RadarRunResult {
+  const raw = asRecord(value);
+  return {
+    run: normalizeRadarRun(raw.run),
+    results: objectList(raw.results).map(normalizeRadarResult),
+    alerts: objectList(raw.alerts).map(normalizeRadarAlert),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeRadarRuns(value: unknown): RadarRunsResult {
+  return { runs: objectList(asRecord(value).runs).map(normalizeRadarRun) };
+}
+
+function normalizeRadarRun(value: unknown): RadarRun {
+  const raw = asRecord(value);
+  return {
+    id: asString(raw.id),
+    started_at: asString(raw.started_at),
+    finished_at: asString(raw.finished_at),
+    source_ids: stringList(raw.source_ids),
+    wishlist_id: asString(raw.wishlist_id),
+    resume_used: asBoolean(raw.resume_used, false),
+    total_sources: asNumber(raw.total_sources, 0),
+    total_found: asNumber(raw.total_found, 0),
+    total_deduped: asNumber(raw.total_deduped, 0),
+    total_alerted: asNumber(raw.total_alerted, 0),
+    total_errors: asNumber(raw.total_errors, 0),
+    duration_ms: asNumber(raw.duration_ms, 0),
+    warnings: stringList(raw.warnings),
+    errors: stringList(raw.errors),
+    metadata: asRecord(raw.metadata),
+  };
+}
+
+function normalizeRadarResults(value: unknown): RadarResultsResult {
+  return { results: objectList(asRecord(value).results).map(normalizeRadarResult) };
+}
+
+function normalizeRadarResultEnvelope(value: unknown): RadarResultEnvelope {
+  const raw = asRecord(value);
+  return { result: normalizeRadarResult(raw.result), message: asString(raw.message) };
+}
+
+function normalizeRadarSaveInbox(value: unknown): RadarSaveInboxResult {
+  const raw = asRecord(value);
+  return {
+    result: normalizeRadarResult(raw.result),
+    inbox_item: normalizeInboxItem(raw.inbox_item),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeRadarSaveTracker(value: unknown): RadarSaveTrackerResult {
+  const raw = asRecord(value);
+  return {
+    result: normalizeRadarResult(raw.result),
+    tracker_id: asString(raw.tracker_id),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeRadarResult(value: unknown): RadarResult {
+  const raw = asRecord(value);
+  return {
+    id: asString(raw.id),
+    run_id: asString(raw.run_id),
+    source_id: asString(raw.source_id),
+    source_name: asString(raw.source_name),
+    source_type: normalizeRadarSourceType(raw.source_type),
+    wishlist_id: asString(raw.wishlist_id),
+    title: asString(raw.title) || "Vaga sem titulo",
+    company: asString(raw.company),
+    url: asString(raw.url),
+    location: asString(raw.location),
+    work_model: asString(raw.work_model),
+    employment_type: asString(raw.employment_type),
+    description: asString(raw.description),
+    published_at: asString(raw.published_at),
+    captured_at: asString(raw.captured_at),
+    normalized_text: asString(raw.normalized_text),
+    dedupe_key: asString(raw.dedupe_key),
+    duplicate_of: asString(raw.duplicate_of),
+    match_score: asNumber(raw.match_score, 0),
+    ats_score: asNumber(raw.ats_score, 0),
+    wishlist_score: asNumber(raw.wishlist_score, 0),
+    radar_score: asNumber(raw.radar_score, 0),
+    radar_status: normalizeRadarResultStatus(raw.radar_status),
+    already_in_inbox: asBoolean(raw.already_in_inbox, false),
+    already_in_tracker: asBoolean(raw.already_in_tracker, false),
+    warnings: stringList(raw.warnings),
+    reasons: stringList(raw.reasons),
+    evidence: stringList(raw.evidence),
+    gaps: stringList(raw.gaps),
+    next_actions: stringList(raw.next_actions),
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+    provider_used: asString(raw.provider_used) || "local",
+    metadata: asRecord(raw.metadata),
+  };
+}
+
+function normalizeRadarAlerts(value: unknown): RadarAlertsResult {
+  return { alerts: objectList(asRecord(value).alerts).map(normalizeRadarAlert) };
+}
+
+function normalizeRadarAlertResult(value: unknown): RadarAlertResult {
+  const raw = asRecord(value);
+  return { alert: normalizeRadarAlert(raw.alert), message: asString(raw.message) };
+}
+
+function normalizeRadarAlert(value: unknown): RadarAlert {
+  const raw = asRecord(value);
+  return {
+    id: asString(raw.id),
+    run_id: asString(raw.run_id),
+    result_id: asString(raw.result_id),
+    wishlist_id: asString(raw.wishlist_id),
+    title: asString(raw.title),
+    message: asString(raw.message),
+    score: asNumber(raw.score, 0),
+    status: normalizeRadarAlertStatus(raw.status),
+    created_at: asString(raw.created_at),
+    read_at: asString(raw.read_at),
+    metadata: asRecord(raw.metadata),
+  };
+}
+
+function normalizeRadarStats(value: unknown): RadarStats {
+  const raw = asRecord(value);
+  return {
+    active_sources: asNumber(raw.active_sources, 0),
+    total_sources: asNumber(raw.total_sources, 0),
+    total_results: asNumber(raw.total_results, 0),
+    new_results: asNumber(raw.new_results, 0),
+    matched_results: asNumber(raw.matched_results, 0),
+    unread_alerts: asNumber(raw.unread_alerts, 0),
+    duplicates: asNumber(raw.duplicates, 0),
+    source_errors: asNumber(raw.source_errors, 0),
+    last_run_at: asString(raw.last_run_at),
+  };
+}
+
+function normalizeRadarSourceType(value: unknown): RadarSource["source_type"] {
+  const allowed: RadarSource["source_type"][] = [
+    "public_feed",
+    "official_api",
+    "manual_public_page",
+    "manual_url",
+    "recurring_csv_json",
+  ];
+  return allowed.includes(value as RadarSource["source_type"])
+    ? (value as RadarSource["source_type"])
+    : "public_feed";
+}
+
+function normalizeRadarSourceStatus(value: unknown): RadarSource["status"] {
+  const allowed: RadarSource["status"][] = [
+    "available",
+    "experimental",
+    "requires_official_api",
+    "requires_user_key",
+    "planned",
+    "disabled",
+    "error",
+  ];
+  return allowed.includes(value as RadarSource["status"])
+    ? (value as RadarSource["status"])
+    : "planned";
+}
+
+function normalizeRadarResultStatus(value: unknown): RadarResult["radar_status"] {
+  const allowed: RadarResult["radar_status"][] = [
+    "new",
+    "matched",
+    "ignored",
+    "saved_to_inbox",
+    "saved_to_tracker",
+    "duplicate",
+    "error",
+    "archived",
+  ];
+  return allowed.includes(value as RadarResult["radar_status"])
+    ? (value as RadarResult["radar_status"])
+    : "new";
+}
+
+function normalizeRadarAlertStatus(value: unknown): RadarAlert["status"] {
+  const allowed: RadarAlert["status"][] = ["unread", "read", "ignored", "saved"];
+  return allowed.includes(value as RadarAlert["status"])
+    ? (value as RadarAlert["status"])
+    : "unread";
 }
 
 function normalizeInboxItem(value: unknown): SourceImportsResult["items"][number] {

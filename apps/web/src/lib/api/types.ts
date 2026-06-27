@@ -476,3 +476,227 @@ export interface SourceExportResult {
   content: string;
   item_count: number;
 }
+
+export type RadarSourceType =
+  | "public_feed"
+  | "official_api"
+  | "manual_public_page"
+  | "manual_url"
+  | "recurring_csv_json";
+
+export type RadarSourceStatus =
+  | "available"
+  | "experimental"
+  | "requires_official_api"
+  | "requires_user_key"
+  | "planned"
+  | "disabled"
+  | "error";
+
+export type RadarResultStatus =
+  | "new"
+  | "matched"
+  | "ignored"
+  | "saved_to_inbox"
+  | "saved_to_tracker"
+  | "duplicate"
+  | "error"
+  | "archived";
+
+export type RadarAlertStatus = "unread" | "read" | "ignored" | "saved";
+
+export interface JobWishlist {
+  id: string;
+  name: string;
+  target_titles: string[];
+  target_domains: string[];
+  target_seniority: string[];
+  required_skills: string[];
+  desired_skills: string[];
+  excluded_terms: string[];
+  locations: string[];
+  remote_preferences: string[];
+  work_model?: string;
+  employment_type?: string;
+  salary_min?: number;
+  salary_currency?: string;
+  contract_types: string[];
+  industries: string[];
+  companies_include: string[];
+  companies_exclude: string[];
+  source_types: string[];
+  min_match_score: number;
+  min_ats_score: number;
+  notify_on_new_matches: boolean;
+  created_at?: string;
+  updated_at?: string;
+  is_active: boolean;
+}
+
+export interface RadarSource {
+  id: string;
+  name: string;
+  source_type: RadarSourceType;
+  url?: string;
+  docs_url?: string;
+  status: RadarSourceStatus;
+  is_active: boolean;
+  requires_api_key: boolean;
+  api_key_configured: boolean;
+  max_results: number;
+  timeout_seconds: number;
+  rate_limit_seconds: number;
+  last_checked_at?: string;
+  last_error?: string;
+  notes?: string;
+  metadata?: Record<string, unknown>;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface SourceAdapter {
+  source_type: RadarSourceType;
+  adapter_name: string;
+  supported: boolean;
+  notes?: string;
+}
+
+export interface RadarRun {
+  id: string;
+  started_at?: string;
+  finished_at?: string;
+  source_ids: string[];
+  wishlist_id?: string;
+  resume_used: boolean;
+  total_sources: number;
+  total_found: number;
+  total_deduped: number;
+  total_alerted: number;
+  total_errors: number;
+  duration_ms: number;
+  warnings: string[];
+  errors: string[];
+  metadata?: Record<string, unknown>;
+}
+
+export interface RadarResult {
+  id: string;
+  run_id?: string;
+  source_id?: string;
+  source_name?: string;
+  source_type: RadarSourceType;
+  wishlist_id?: string;
+  title: string;
+  company?: string;
+  url?: string;
+  location?: string;
+  work_model?: string;
+  employment_type?: string;
+  description?: string;
+  published_at?: string;
+  captured_at?: string;
+  normalized_text?: string;
+  dedupe_key?: string;
+  duplicate_of?: string;
+  match_score: number;
+  ats_score: number;
+  wishlist_score: number;
+  radar_score: number;
+  radar_status: RadarResultStatus;
+  already_in_inbox: boolean;
+  already_in_tracker: boolean;
+  warnings: string[];
+  reasons: string[];
+  evidence: string[];
+  gaps: string[];
+  next_actions: string[];
+  analysis_mode: AnalysisMode;
+  provider_used?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface RadarAlert {
+  id: string;
+  run_id?: string;
+  result_id?: string;
+  wishlist_id?: string;
+  title: string;
+  message: string;
+  score: number;
+  status: RadarAlertStatus;
+  created_at?: string;
+  read_at?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface RadarStats {
+  active_sources: number;
+  total_sources: number;
+  total_results: number;
+  new_results: number;
+  matched_results: number;
+  unread_alerts: number;
+  duplicates: number;
+  source_errors: number;
+  last_run_at?: string;
+}
+
+export interface RadarWishlistsResult {
+  wishlists: JobWishlist[];
+}
+
+export interface RadarWishlistResult {
+  wishlist: JobWishlist;
+  message: string;
+}
+
+export interface RadarSourcesResult {
+  sources: RadarSource[];
+  adapters: SourceAdapter[];
+}
+
+export interface RadarSourceResult {
+  source: RadarSource;
+  message: string;
+}
+
+export interface RadarRunResult {
+  run: RadarRun;
+  results: RadarResult[];
+  alerts: RadarAlert[];
+  message: string;
+}
+
+export interface RadarRunsResult {
+  runs: RadarRun[];
+}
+
+export interface RadarResultsResult {
+  results: RadarResult[];
+}
+
+export interface RadarResultEnvelope {
+  result: RadarResult;
+  message: string;
+}
+
+export interface RadarSaveInboxResult {
+  result: RadarResult;
+  inbox_item: OpportunityInboxItem;
+  message: string;
+}
+
+export interface RadarSaveTrackerResult {
+  result: RadarResult;
+  tracker_id: string;
+  message: string;
+}
+
+export interface RadarAlertsResult {
+  alerts: RadarAlert[];
+}
+
+export interface RadarAlertResult {
+  alert: RadarAlert;
+  message: string;
+}

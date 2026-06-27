@@ -16,7 +16,7 @@ import type {
 
 export const mockHealth: Health = {
   status: "ok",
-  version: "1.7.1",
+  version: "1.8.0",
   local_first: true,
   environment: "mock",
   capabilities: [
@@ -31,6 +31,7 @@ export const mockHealth: Health = {
     "ai_settings",
     "authenticated_browser_sources",
     "extension_bridge",
+    "job_radar",
   ],
 };
 
@@ -222,7 +223,7 @@ export const mockJobs: TrackerJob[] = [
     id: "job_demo_001",
     title: "Desenvolvedor Backend Python",
     company: "Empresa Fictícia Delta",
-    source: "LinkedIn",
+    source: "Radar · Feed publico",
     status: "applied",
     match_score: 78,
     ats_score: 74,

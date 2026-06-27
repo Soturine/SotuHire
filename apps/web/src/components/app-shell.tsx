@@ -14,6 +14,7 @@ import {
   Inbox,
   Sparkles,
   Activity,
+  RadioTower,
   ChevronRight,
   Menu,
   X,
@@ -42,6 +43,7 @@ const nav = [
   {
     group: "Pipeline",
     items: [
+      { to: "/radar", label: "Radar", icon: RadioTower },
       { to: "/sources", label: "Fontes e Captura", icon: Inbox },
       { to: "/tracker", label: "Candidaturas", icon: Kanban },
       { to: "/intelligence", label: "Inteligência", icon: LineChart },

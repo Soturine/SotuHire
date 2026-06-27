@@ -87,9 +87,9 @@ export const SOURCE_CARDS: SourceCard[] = [
     description:
       "Buscar oportunidades em fontes públicas e páginas abertas, respeitando limites e regras.",
     cta: "Configurar radar",
-    status: "future",
+    status: "available",
     icon: Radar,
-    disabled: true,
+    to: "/radar",
   },
   {
     id: "apis",
