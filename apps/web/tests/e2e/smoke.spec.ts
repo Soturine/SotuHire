@@ -228,6 +228,21 @@ test("job radar creates wishlist/source, runs demo and saves results", async ({ 
   await expect(page.getByText(/Candidaturas|salvo/i).first()).toBeVisible();
   await page.getByTestId("radar-mark-alert-read").first().click();
   await expect(page.getByText(/Alerta atualizado|lido|Modo Demo/i).first()).toBeVisible();
+  await expect(page.getByTestId("radar-schedules-panel")).toBeVisible();
+  await page.getByTestId("radar-create-schedule").click();
+  await expect(page.getByText(/agendamento criado|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("radar-schedule-run-now").first().click();
+  await expect(page.getByText(/agendamento executado|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("radar-schedule-toggle").first().click();
+  await expect(page.getByText(/agendamento atualizado|Modo Demo/i).first()).toBeVisible();
+  await expect(page.getByTestId("notifications-panel")).toBeVisible();
+  await page.getByTestId("notification-mark-read").first().click();
+  await expect(page.getByText(/notificacao atualizada|lida|Modo Demo/i).first()).toBeVisible();
+  const storage = await page.evaluate(() => ({
+    local: JSON.stringify(localStorage),
+    session: JSON.stringify(sessionStorage),
+  }));
+  expect(storage.local + storage.session).not.toMatch(/AIza|api_key|secret/i);
 });
 
 test("sources supports browser CSV/JSON upload preview, duplicate merge, export and source directory", async ({
@@ -385,6 +400,51 @@ test("API Real radar empty state does not show demo radar results silently", asy
     await route.fulfill({
       contentType: "application/json",
       body: JSON.stringify({ ok: true, data: { runs: [] }, warnings: [], request_id: "e2e" }),
+    });
+  });
+  await page.route("**/api/v1/radar/schedules", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ ok: true, data: { schedules: [] }, warnings: [], request_id: "e2e" }),
+    });
+  });
+  await page.route("**/api/v1/radar/scheduled-runs", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        data: { scheduled_runs: [] },
+        warnings: [],
+        request_id: "e2e",
+      }),
+    });
+  });
+  await page.route("**/api/v1/radar/scheduler/status", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        data: {
+          running: false,
+          enabled_schedules: 0,
+          total_schedules: 0,
+          next_run_at: null,
+          due_schedules: 0,
+        },
+        warnings: [],
+        request_id: "e2e",
+      }),
+    });
+  });
+  await page.route("**/api/v1/notifications", async (route) => {
+    await route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({
+        ok: true,
+        data: { notifications: [], unread_count: 0 },
+        warnings: [],
+        request_id: "e2e",
+      }),
     });
   });
   await page.route("**/api/v1/radar/stats", async (route) => {

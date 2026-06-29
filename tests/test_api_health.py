@@ -9,10 +9,12 @@ def test_health_returns_version_capabilities_and_restricted_cors() -> None:
     assert response.status_code == 200
     payload = response.json()
     assert payload["ok"] is True
-    assert payload["data"]["version"] == "1.8.2"
+    assert payload["data"]["version"] == "1.9.0"
     assert "resume_extract" in payload["data"]["capabilities"]
     assert "universal_career_profile" in payload["data"]["capabilities"]
     assert "authenticated_assisted_capture" in payload["data"]["capabilities"]
+    assert "scheduled_radar" in payload["data"]["capabilities"]
+    assert "local_notifications" in payload["data"]["capabilities"]
     assert "*" not in payload["data"]["cors_allowed_origins"]
 
 
@@ -41,3 +43,9 @@ def test_openapi_exposes_api_v1_contract() -> None:
     assert "/api/v1/radar/results" in paths
     assert "/api/v1/radar/alerts" in paths
     assert "/api/v1/radar/stats" in paths
+    assert "/api/v1/radar/schedules" in paths
+    assert "/api/v1/radar/schedules/{schedule_id}/run-now" in paths
+    assert "/api/v1/radar/scheduled-runs" in paths
+    assert "/api/v1/radar/scheduler/status" in paths
+    assert "/api/v1/notifications" in paths
+    assert "/api/v1/notifications/mark-all-read" in paths
