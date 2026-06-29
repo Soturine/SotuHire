@@ -82,6 +82,7 @@ class JobWishlist(BaseModel):
     min_match_score: int = Field(default=70, ge=0, le=100)
     min_ats_score: int = Field(default=0, ge=0, le=100)
     notify_on_new_matches: bool = True
+    notes: str = ""
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
     is_active: bool = True

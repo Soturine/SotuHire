@@ -15,6 +15,7 @@ from modules.radar.models import (
     SourceAdapter,
 )
 from modules.radar.service import JobRadarService, RadarStore
+from modules.radar.wishlist_draft import build_local_wishlist_draft
 
 __all__ = [
     "JobRadarProfile",
@@ -31,4 +32,5 @@ __all__ = [
     "RadarStore",
     "SavedSearch",
     "SourceAdapter",
+    "build_local_wishlist_draft",
 ]

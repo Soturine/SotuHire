@@ -23,6 +23,8 @@ from apps.api.schemas.radar import (
     RadarSourceResponse,
     RadarSourcesResponse,
     RadarStatsResponse,
+    RadarWishlistDraftRequest,
+    RadarWishlistDraftResponse,
     RadarWishlistPatchRequest,
     RadarWishlistRequest,
     RadarWishlistResponse,
@@ -34,6 +36,7 @@ from apps.api.services.radar import (
     radar_create_wishlist,
     radar_delete_source,
     radar_delete_wishlist,
+    radar_draft_wishlist,
     radar_patch_alert,
     radar_patch_result,
     radar_patch_source,
@@ -61,6 +64,15 @@ def wishlists() -> ApiEnvelope[RadarWishlistsResponse]:
 def create_wishlist(payload: RadarWishlistRequest) -> ApiEnvelope[RadarWishlistResponse]:
     """Create a local radar wishlist."""
     return ok(radar_create_wishlist(payload), request_id=payload.request_id)
+
+
+@router.post("/wishlists/draft", response_model=ApiEnvelope[RadarWishlistDraftResponse])
+def draft_wishlist(
+    payload: RadarWishlistDraftRequest,
+) -> ApiEnvelope[RadarWishlistDraftResponse]:
+    """Create an unsaved AI/local wishlist draft from free text."""
+    data, warnings = radar_draft_wishlist(payload)
+    return ok(data, warnings=warnings, request_id=payload.request_id)
 
 
 @router.patch("/wishlists/{wishlist_id}", response_model=ApiEnvelope[RadarWishlistResponse])

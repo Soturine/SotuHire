@@ -6,8 +6,11 @@ import json
 
 from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
-from modules.ai.schemas.analysis_insights import RadarMatchExplanationOutput
+from modules.ai.schemas.analysis_insights import RadarMatchExplanationOutput, WishlistDraftOutput
+from modules.profile import ProfileContext, ProfileContextOrchestrator
 from modules.radar import JobRadarService, JobWishlist, RadarResult, RadarSource
+from modules.radar.wishlist_draft import build_local_wishlist_draft
+from pydantic import ValidationError
 
 from apps.api.schemas.radar import (
     RadarAlertPatchRequest,
@@ -26,6 +29,8 @@ from apps.api.schemas.radar import (
     RadarSourceResponse,
     RadarSourcesResponse,
     RadarStatsResponse,
+    RadarWishlistDraftRequest,
+    RadarWishlistDraftResponse,
     RadarWishlistPatchRequest,
     RadarWishlistRequest,
     RadarWishlistResponse,
@@ -45,6 +50,71 @@ def radar_create_wishlist(request: RadarWishlistRequest) -> RadarWishlistRespons
         JobWishlist.model_validate(request.model_dump(exclude={"request_id"}))
     )
     return RadarWishlistResponse(wishlist=wishlist, message="Wishlist criada.")
+
+
+def radar_draft_wishlist(
+    request: RadarWishlistDraftRequest,
+) -> tuple[RadarWishlistDraftResponse, list[str]]:
+    """Create an unsaved wishlist draft from free text and optional profile context."""
+    if not request.free_text.strip():
+        raise HTTPException(status_code=422, detail="Informe o que voce esta buscando.")
+    context = _draft_profile_context(request)
+    local_draft = build_local_wishlist_draft(
+        request.free_text,
+        profile_context=context if request.use_profile_context else None,
+    )
+    runtime = get_ai_runtime("radar")
+    warnings = [*runtime.warnings]
+
+    if not runtime.use_ai or runtime.provider_name == "local":
+        draft = local_draft.model_copy(
+            update={
+                "provider_used": runtime.provider_name,
+                "analysis_mode": runtime.analysis_mode,
+                "warnings": [*local_draft.warnings, *warnings],
+                "needs_user_review": True,
+            }
+        )
+        return RadarWishlistDraftResponse.model_validate(draft.model_dump()), warnings
+
+    payload = {
+        "free_text": request.free_text,
+        "profile_context": context.model_dump(mode="json") if context else {},
+        "language": request.language,
+    }
+    if _contains_secret_field(payload):
+        raise HTTPException(status_code=422, detail="Payload de IA contem campo inseguro.")
+
+    try:
+        spec = default_prompt_registry().get("job_wishlist_builder_v1")
+        output = runtime.provider.generate_structured(spec, payload)
+        ai_draft = WishlistDraftOutput.model_validate(output)
+        ai_draft = ai_draft.model_copy(
+            update={
+                "provider_used": runtime.provider_name,
+                "analysis_mode": "ai",
+                "needs_user_review": True,
+                "warnings": [
+                    *warnings,
+                    *ai_draft.warnings,
+                    "Revise manualmente antes de salvar a wishlist.",
+                ],
+            }
+        )
+        return RadarWishlistDraftResponse.model_validate(ai_draft.model_dump()), warnings
+    except (RuntimeError, ValidationError, ValueError, TypeError) as exc:
+        fallback = build_local_wishlist_draft(
+            request.free_text,
+            profile_context=context if request.use_profile_context else None,
+            provider_used="local",
+            analysis_mode="fallback",
+            warnings=[
+                *warnings,
+                "IA indisponivel ou resposta invalida; usei rascunho local.",
+                str(exc)[:160],
+            ],
+        )
+        return RadarWishlistDraftResponse.model_validate(fallback.model_dump()), warnings
 
 
 def radar_patch_wishlist(
@@ -234,3 +304,29 @@ def _radar_ai_enricher(result: RadarResult, wishlist: JobWishlist) -> dict[str, 
         "provider_used": runtime.provider_name,
         "warnings": [*runtime.warnings, *enrichment.warnings],
     }
+
+
+def _draft_profile_context(request: RadarWishlistDraftRequest) -> ProfileContext | None:
+    if not request.use_profile_context:
+        return None
+    try:
+        return ProfileContextOrchestrator().build_context(
+            purpose="job_radar_wishlist",
+            override=request.profile_context_override,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+def _contains_secret_field(value: object) -> bool:
+    secret_markers = {"api_key", "apikey", "secret", "token", "cookie", "session"}
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            normalized_key = str(key).lower()
+            if any(marker in normalized_key for marker in secret_markers):
+                return True
+            if _contains_secret_field(nested):
+                return True
+    if isinstance(value, list):
+        return any(_contains_secret_field(item) for item in value)
+    return False

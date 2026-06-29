@@ -31,6 +31,7 @@ def health(request: Request) -> ApiEnvelope[HealthResponse]:
                 "authenticated_browser_sources",
                 "extension_bridge",
                 "job_radar",
+                "job_radar_wishlist_draft",
             ],
             cors_allowed_origins=settings.allowed_origins,
         )

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from modules.ai.schemas.analysis_insights import WishlistDraftOutput
 from modules.radar.models import (
     JobWishlist,
     RadarAlert,
@@ -45,6 +46,7 @@ class RadarWishlistRequest(BaseModel):
     min_match_score: int = Field(default=70, ge=0, le=100)
     min_ats_score: int = Field(default=0, ge=0, le=100)
     notify_on_new_matches: bool = True
+    notes: str = Field(default="", max_length=10_000)
     is_active: bool = True
     request_id: str = Field(default="", max_length=120)
 
@@ -75,8 +77,25 @@ class RadarWishlistPatchRequest(BaseModel):
     min_match_score: int | None = Field(default=None, ge=0, le=100)
     min_ats_score: int | None = Field(default=None, ge=0, le=100)
     notify_on_new_matches: bool | None = None
+    notes: str | None = Field(default=None, max_length=10_000)
     is_active: bool | None = None
     request_id: str = Field(default="", max_length=120)
+
+
+class RadarWishlistDraftRequest(BaseModel):
+    """Free-text request for an unsaved wishlist draft."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    free_text: str = Field(min_length=1, max_length=5_000)
+    use_profile_context: bool = True
+    language: str = Field(default="pt-BR", max_length=20)
+    profile_context_override: dict[str, object] | None = None
+    request_id: str = Field(default="", max_length=120)
+
+
+class RadarWishlistDraftResponse(WishlistDraftOutput):
+    """Validated unsaved wishlist draft response."""
 
 
 class RadarSourceRequest(BaseModel):
