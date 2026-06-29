@@ -5,7 +5,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass, field
 
-API_VERSION = "1.8.2"
+API_VERSION = "1.9.0"
 DEFAULT_ALLOWED_ORIGINS = (
     "http://localhost:5173",
     "http://127.0.0.1:5173",
