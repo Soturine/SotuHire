@@ -4,6 +4,20 @@ Este documento descreve o escopo seguro para entrada de vagas a partir da v1.7.0
 v1.7.1. Ele complementa os guias de fontes de dados sem alterar regras protegidas de compliance ou
 navegador autenticado.
 
+## O que existe na v1.8.2
+
+- Perfil Profissional Universal usado como contexto local para classificar capturas futuras;
+- endpoint `POST /api/v1/sources/authenticated-captures`;
+- captura assistida autenticada iniciada pelo usuário;
+- aceite de texto visível ou selecionado na página atual;
+- gravação na Caixa de Entrada para revisão;
+- sinais locais de perfil, como itens confirmados encontrados e possíveis gaps;
+- bloqueio de metadata com cookie, token, sessão, headers ou segredos.
+
+Esse fluxo não altera a lógica sensível de authenticated browser/Chromium/CDP. Ele não automatiza
+login, não burla CAPTCHA, não faz auto-apply, não navega em massa e não salva candidatura final sem
+ação explícita da pessoa.
+
 ## O que existe na v1.8.0
 
 - tela **Radar de Vagas** no frontend moderno;

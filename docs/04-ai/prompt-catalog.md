@@ -45,6 +45,7 @@ Cada prompt deve ser tratado como contrato de produto, não como texto improvisa
 | Hidden Job Detection v1 | `prompts/hidden-job-detection-v1.md` | Detectar oportunidade em texto informal. |
 | Career Advice v1 | `prompts/career-advice-v1.md` | Gerar plano de evolução profissional. |
 | Job Wishlist Builder v1 | Registry programático | Transformar texto livre em rascunho de wishlist revisável para o Radar. |
+| Profile Items Extractor v1 | Registry programático | Extrair itens universais de perfil a partir de texto colado, sem confirmar automaticamente. |
 
 ## Regras globais para todos os prompts
 
@@ -125,6 +126,7 @@ Os prompts específicos podem expandir esse formato com schemas próprios.
 | Job Extraction | implementado | implementado | v0.10.0 |
 | Domain Classification | implementado | implementado | v0.10.0 |
 | Job Wishlist Builder | parcial | implementado | v1.8.1 |
+| Profile Items Extractor | parcial | implementado | v1.8.2 |
 | Match Analysis | revisado | engine determinística implementada; IA opcional futura | v0.12.0 |
 | ATS Analysis | revisado | heurística existente com integração de evidências do Match Engine 2.0 | v1.0.0 |
 | Resume Tailor | revisado | fallback seguro com integração de evidências do Match Engine 2.0 | v1.0.0 |

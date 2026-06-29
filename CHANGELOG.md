@@ -4,6 +4,36 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.8.2] - 2026-06-29
+
+### Adicionado
+
+- Perfil Profissional Universal persistido localmente em `data/profile/profiles.json`.
+- Nova tela `/profile` no frontend moderno.
+- Endpoints `/api/v1/profile*` para consultar, editar, importar texto, deduplicar e montar contexto.
+- Prompt `profile_items_extractor_v1` no Prompt Registry.
+- Extração local multiárea para itens de perfil com revisão humana obrigatória.
+- Filtro por tipo e edição inline de itens do perfil no frontend.
+- Integração do perfil persistido com Wishlist/Radar quando `use_profile_context=true`.
+- Integração inicial segura de `ProfileContext` em Match/Tailor e captura de fontes.
+- Endpoint `POST /api/v1/sources/authenticated-captures` para captura assistida autenticada revisável.
+- Testes backend e frontend para perfil, importação, fallback, dedupe, multiárea e captura assistida.
+
+### Alterado
+
+- `ProfileContextOrchestrator` agora usa o Perfil Profissional Universal persistido antes do store legado.
+- Health API anuncia capabilities de Perfil Profissional Universal e captura assistida autenticada.
+- README, roadmap, mapa de integração, catálogo de prompts, docs frontend e release notes documentam v1.8.2.
+- Versão do projeto, API e frontend atualizada para `1.8.2`.
+
+### Segurança
+
+- Itens extraídos por IA nunca são confirmados automaticamente.
+- API key continua backend-side e nunca retorna ao frontend.
+- Dados do perfil só entram em provider externo quando `allow_memory_context=true`.
+- Captura assistida rejeita metadata com cookie, token, sessão, headers ou segredos.
+- Nenhum fluxo sensível de authenticated browser, Chromium/CDP, crawler logado, CAPTCHA ou auto-apply foi alterado.
+
 ## [1.8.1] - 2026-06-29
 
 ### Adicionado

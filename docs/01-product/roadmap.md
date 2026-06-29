@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.8.1 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.8.2 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,14 +8,34 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.8.1 |
+| Versão atual considerada | v1.8.2 |
 | Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional e intake persistente |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v1.8.2 Perfil Profissional Universal |
-| Foco de produto | Copiloto de carreira multiárea com intake de oportunidades |
-| Foco técnico imediato | Wishlist com IA, contexto profissional universal e estabilidade do Radar |
-| Grande lacuna atual | Perfil Profissional Universal completo, agendamento local e conectores reais de APIs oficiais |
+| Próximo ciclo técnico | v1.9.0 Scheduled Radar & Notifications |
+| Foco de produto | Copiloto de carreira multiárea com perfil central e Radar local-first |
+| Foco técnico imediato | Perfil Profissional Universal, captura assistida segura e contexto evidence-first |
+| Grande lacuna atual | Agendamento local, notificações e conectores reais de APIs oficiais |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
+
+## Estado atual - v1.8.2
+
+A v1.8.2 entrega o **Perfil Profissional Universal**:
+
+- cria `modules/profile` com modelos, store local, serviço, extração local e deduplicação;
+- adiciona API `/api/v1/profile` para CRUD do perfil, importação de texto, dedupe e contexto;
+- adiciona tela `/profile` no frontend moderno;
+- permite editar dados básicos, adicionar item manual, filtrar por tipo, editar evidências e
+  remover itens;
+- importa texto de currículo, Lattes, portfólio, certificados e notas como rascunho revisável;
+- registra o prompt `profile_items_extractor_v1` para IA opcional;
+- mantém fallback local multiárea quando IA está desligada ou falha;
+- conecta o perfil persistido ao draft da Wishlist quando `use_profile_context=true`;
+- adiciona integração inicial segura de perfil em Match/Tailor e fontes/captura;
+- adiciona `POST /api/v1/sources/authenticated-captures` para captura assistida autenticada com
+  revisão humana, sem cookie, token, sessão, headers, CAPTCHA bypass ou auto-apply.
+
+O SotuHire continua sem assumir TI/dev, GitHub, CLT, graduação, experiência formal ou registro
+profissional. Registros profissionais só são tratados como fato quando aparecem em evidência.
 
 ## Estado atual - v1.8.1
 

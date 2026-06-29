@@ -1,8 +1,8 @@
 # Frontend moderno
 
-A v1.8.0 consolida o frontend moderno do SotuHire em `apps/web` como experiencia local principal e
-poliu a Caixa de Entrada de Oportunidades com upload CSV/JSON, preview, merge visual de duplicatas,
-exportacao, Diretório de Fontes e Radar de Vagas.
+A v1.8.2 consolida o frontend moderno do SotuHire em `apps/web` como experiencia local principal,
+com Perfil Profissional Universal, Caixa de Entrada de Oportunidades, Radar de Vagas e captura
+assistida segura.
 
 O app usa React, Vite, TypeScript, TanStack Router, TanStack Query, Tailwind CSS, Radix UI, Recharts
 e lucide-react. Ele roda separado do Streamlit e consome a FastAPI local em `/api/v1` quando o modo
@@ -56,6 +56,7 @@ Para iniciar tambem a Local Companion API:
 - Analise ATS
 - Ajuste de Curriculo
 - Analise de GitHub
+- Perfil
 - Candidaturas
 - Inteligencia de Candidaturas
 - Fontes e Captura
@@ -131,6 +132,15 @@ A rota `/radar` adiciona o fluxo v1.8.0:
 - salvar na Caixa de Entrada ou em Candidaturas.
 
 APIs oficiais aparecem como adapters preparados e continuam dependentes de contrato documentado.
+
+## Perfil Profissional Universal
+
+A rota `/profile` permite editar dados básicos, adicionar itens manuais, filtrar por tipo, editar
+evidências, remover itens e importar texto de currículo, Lattes, portfólio, certificados ou notas.
+
+Itens extraídos por IA/fallback aparecem para revisão e só entram no perfil quando a pessoa clica em
+**Adicionar ao perfil**. A API usada é `/api/v1/profile*`, e o frontend não confirma item nem salva
+segredo automaticamente.
 
 CSV esperado:
 

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.8.1-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.8.1)
+[![Release](https://img.shields.io/badge/release-v1.8.2-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.8.2)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -123,7 +123,7 @@ Flags úteis:
 `-WithCompanion` inicia a Local Companion API existente em `127.0.0.1:8765` para a extensão
 assistiva. Isso não abre navegador autenticado, não faz login e não altera Chromium/CDP.
 
-### API local v1.8.1
+### API local v1.8.2
 
 Para conectar um frontend moderno ou inspecionar o OpenAPI:
 
@@ -142,7 +142,7 @@ http://127.0.0.1:8787/docs
 A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
 [Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
 
-### Frontend moderno v1.8.1
+### Frontend moderno v1.8.2
 
 O frontend moderno fica em `apps/web` e roda como app React/Vite separado.
 
@@ -169,7 +169,7 @@ O app tem **Modo Demo** com dados fictícios e **Modo API Real** usando
 VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
 ```
 
-Na v1.8.1, `npm run test:e2e` roda a matriz Playwright em Chromium, Firefox e WebKit. O Kanban de
+Na v1.8.2, `npm run test:e2e` roda a matriz Playwright em Chromium, Firefox e WebKit. O Kanban de
 Candidaturas suporta drag-and-drop com rollback em falha da API e mantém edição de status por select
 para teclado/mobile.
 
@@ -190,7 +190,7 @@ enviada apenas para a FastAPI local, fica no backend em `data/secrets/ai-provide
 caminho é ignorado pelo Git. A API nunca retorna a chave para o frontend; ela retorna apenas
 provider, modelo, status, toggles, warnings e data de atualização.
 
-Na v1.8.1, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
+Na v1.8.2, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
 Análise de Compatibilidade, ATS, Ajuste de Currículo, GitHub, importações e Radar. Se Gemini falhar,
 o SotuHire retorna fallback local com warning e mantém os scores finais no backend/core.
 
@@ -220,6 +220,41 @@ PATCH /api/v1/extension/captures/{capture_id}
 
 Esse painel não cria crawler logado novo, não automatiza login, não faz auto-apply e não mexe no
 fluxo de navegador autenticado existente.
+
+### Perfil Profissional Universal v1.8.2
+
+A tela **Perfil** (`/profile`) centraliza contexto profissional local-first e baseado em evidências.
+Ela funciona para trajetórias técnicas, acadêmicas, científicas, artísticas, de saúde, direito,
+educação, turismo, laboratório, indústria e outras áreas, sem assumir que a pessoa é dev/TI ou tem
+GitHub.
+
+O perfil permite editar dados básicos, adicionar item manual, filtrar por tipo, editar evidências,
+importar texto de currículo/Lattes/portfólio/certificados/notas e revisar itens antes de adicionar.
+Itens extraídos por IA ou fallback local nunca entram como confirmados automaticamente.
+
+Endpoints principais:
+
+```text
+GET/PUT /api/v1/profile
+POST /api/v1/profile/items
+PATCH/DELETE /api/v1/profile/items/{id}
+POST /api/v1/profile/import-text
+POST /api/v1/profile/deduplicate
+GET /api/v1/profile/context
+```
+
+O Radar usa esse contexto quando **Usar contexto local do perfil** está ativo. Match/Tailor e
+capturas também podem usar o contexto de forma conservadora; dados do perfil só são enviados a
+provider externo quando `allow_memory_context=true`.
+
+### Captura Assistida Segura v1.8.2
+
+A API adiciona `POST /api/v1/sources/authenticated-captures` para salvar texto visível ou selecionado
+de uma página autenticada como captura revisável na Caixa de Entrada. A pessoa faz login manualmente
+quando necessário e inicia a captura.
+
+Esse fluxo não captura cookie, token, sessão ou headers autenticados, não burla CAPTCHA, não faz
+auto-apply, não envia mensagem automática e não salva candidatura final sem revisão.
 
 ### Importadores e Caixa de Entrada v1.8.0
 
@@ -258,15 +293,18 @@ O importador de URL tenta apenas leitura publica simples. Se a pagina bloquear a
 ou nao trouxer texto legivel, o SotuHire orienta a pessoa a abrir a pagina manualmente e colar o
 texto da vaga. Nao ha login automatico, crawler amplo, bypass de CAPTCHA ou auto-apply.
 
-### Radar de Vagas v1.8.1
+### Radar de Vagas v1.8.2
 
 A tela **Radar de Vagas** permite criar uma wishlist, cadastrar fontes RSS/Atom publicas, rodar uma
 busca manual e receber alertas locais quando uma oportunidade parece alinhada ao curriculo ou às
 preferencias.
 
-Na v1.8.1, a seção **Criar wishlist com IA** transforma texto livre em um rascunho editável. O
+Na v1.8.2, a seção **Criar wishlist com IA** transforma texto livre em um rascunho editável. O
 backend pode usar Gemini se `allow_radar=true`, mas sempre mantém fallback local multiárea e retorna
 `needs_user_review=true`. A wishlist só é salva depois de revisão manual.
+
+Quando o perfil local existe e o usuário mantém o contexto habilitado, a Wishlist também considera
+objetivos, skills, localidades e preferências confirmadas no Perfil Profissional.
 
 Fluxo:
 
@@ -547,7 +585,8 @@ mkdocs serve
 ### Próximos passos
 
 - v1.8.1: wishlist com IA/local, contexto profissional universal preparado e CI web;
-- v1.8.2: Perfil Profissional Universal editável, multiárea e evidence-first;
+- v1.8.2: Perfil Profissional Universal editável, multiárea, evidence-first e captura assistida
+  segura;
 - v1.9.0: Radar scheduling e conectores oficiais documentados;
 - v2.0.0: SaaS-ready Architecture;
 - evoluir pesos por domínio para configuração externa se o uso real justificar.

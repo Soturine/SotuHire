@@ -64,8 +64,9 @@ class PromptRegistry:
 - `resume_tailor_v1`;
 - `career_advice_v1`;
 - `source_import_enrichment_v1`;
-- `job_radar_match_explanation_v1`.
-- `job_wishlist_builder_v1`.
+- `job_radar_match_explanation_v1`;
+- `job_wishlist_builder_v1`;
+- `profile_items_extractor_v1`.
 
 O prompt do Radar explica evidências e lacunas, mas não altera score final.
 
@@ -73,6 +74,10 @@ O prompt do Radar explica evidências e lacunas, mas não altera score final.
 JSON validado, exigir revisão humana e não inventar formação, experiência, certificação, registro
 profissional, licença, empresa, salário ou requisito. O prompt é multiárea e não assume que a pessoa
 é de tecnologia, usa GitHub, procura CLT ou possui experiência formal.
+
+`profile_items_extractor_v1` extrai itens universais de perfil a partir de texto colado pelo usuário.
+Ele sempre retorna drafts com `confirmed_by_user=false`, preserva evidência, separa baixa confiança
+de fato confirmado e não inclui segredos, cookies, tokens ou API keys.
 
 ## Dados salvos por execução
 

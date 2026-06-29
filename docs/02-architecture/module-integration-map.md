@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.8.1 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.8.2 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -30,8 +30,10 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Caixa de Entrada de Oportunidades | `/sources` | `/api/v1/sources/imports*`, `/captures*`, `/dedupe`, `/stats`, `/export`, `/directory` | `apps.api.services.sources` | `modules/sources`, `modules/parsers`, `modules/tracker` | Real |
 | Radar de Vagas | `/radar` | `/api/v1/radar/*` | `apps.api.services.radar` | `modules/radar`, `modules/scraping`, `modules/sources`, `modules/tracker` | Real |
 | Wishlist com IA/local | `/radar` | `POST /api/v1/radar/wishlists/draft` | `radar_draft_wishlist` | `modules/radar/wishlist_draft.py`, `modules/profile/context.py`, Prompt Registry | Real |
+| Perfil Profissional Universal | `/profile` | `/api/v1/profile*` | `apps.api.services.profile` | `modules/profile` | Real |
 | Extensão Local | `/sources` | `/api/v1/extension/*` | `apps.api.services.extension` | `modules/local_api`, `browser-extension/` | Real |
 | Navegador autenticado autorizado | `/sources` | `/api/v1/sources/authenticated-browser/*` | `apps.api.services.sources` | fluxo existente de scraping local | Parcial |
+| Captura assistida autenticada | `/sources` | `POST /api/v1/sources/authenticated-captures` | `apps.api.services.sources` | `modules/sources`, `modules/profile` | Real |
 | Streamlit | legado/dev | Não é API web | `app.py`, `modules/ui` | core antigo | Legado |
 | Concursos/Editais | sem tela web | sem endpoint web | Parcial | `modules/public_exams` | Roadmap |
 
@@ -173,8 +175,58 @@ salvar manualmente.
 
 `modules/profile/context.py` e `modules/profile/orchestrator.py` preparam um contexto profissional
 universal, sem assumir tecnologia, GitHub, CLT, graduação, conselho profissional ou experiência
-formal. A v1.8.1 usa esse contexto apenas como sinal opcional; o Perfil Profissional Universal
-completo fica para v1.8.2.
+formal. A v1.8.1 usava esse contexto apenas como sinal opcional; a v1.8.2 transforma essa base no
+Perfil Profissional Universal persistido.
+
+## Perfil Profissional Universal v1.8.2
+
+Endpoints FastAPI:
+
+```txt
+GET    /api/v1/profile
+PUT    /api/v1/profile
+POST   /api/v1/profile/items
+PATCH  /api/v1/profile/items/{item_id}
+DELETE /api/v1/profile/items/{item_id}
+POST   /api/v1/profile/import-text
+POST   /api/v1/profile/deduplicate
+GET    /api/v1/profile/context
+```
+
+`modules/profile` agora centraliza o perfil local:
+
+- `models.py`: perfil, item, source summary, estado multi-perfil futuro e draft de importação;
+- `store.py`: persistência local em `data/profile/profiles.json`;
+- `service.py`: CRUD, importação local e deduplicação;
+- `extraction.py`: fallback local multiárea;
+- `orchestrator.py`: monta `ProfileContext` a partir do perfil persistido ou do store legado.
+
+O prompt `profile_items_extractor_v1` é opcional e sempre retorna itens para revisão humana. O
+frontend `/profile` permite editar dados básicos, adicionar item manual, filtrar por tipo, editar
+evidências, importar texto e revisar drafts.
+
+O `ProfileContextOrchestrator` é usado pelo draft da Wishlist quando `use_profile_context=true` e
+por análises de Match/Tailor de forma conservadora. Dados do perfil só entram em provider externo
+quando `allow_memory_context=true`; caso contrário, o backend usa contexto apenas localmente e emite
+warning.
+
+## Captura Assistida Autenticada v1.8.2
+
+Endpoint FastAPI:
+
+```txt
+POST /api/v1/sources/authenticated-captures
+```
+
+Esse endpoint salva texto visível ou selecionado de uma página autenticada como item de Caixa de
+Entrada, sempre com revisão humana. Ele não altera o fluxo existente de Chromium/CDP e rejeita
+metadata com chaves de cookie, token, sessão, headers ou segredos.
+
+A captura pode adicionar sinais locais derivados do Perfil Profissional:
+
+- itens confirmados encontrados no texto visível;
+- possíveis gaps de registros profissionais citados na vaga;
+- baixa confiança quando a captura não encontra evidência suficiente.
 
 ## UX web v1.6.0
 
