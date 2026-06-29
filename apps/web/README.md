@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versao `v1.8.2`.
+Frontend moderno do SotuHire em `apps/web` para a versao `v1.9.0`.
 
 ## Stack
 
@@ -210,7 +210,7 @@ texto da vaga.
 
 ## Radar de Vagas
 
-A tela `/radar` implementa o fluxo v1.8.2:
+A tela `/radar` implementa o fluxo v1.9.0:
 
 - criar wishlist com cargos, skills, locais, modelo de trabalho e score minimo;
 - criar rascunho de wishlist a partir de texto livre com IA/local;
@@ -218,6 +218,27 @@ A tela `/radar` implementa o fluxo v1.8.2:
 - registrar API oficial planejada via adapter seguro;
 - rodar Radar manualmente;
 - revisar resultados, evidencias, lacunas e alertas;
+- criar agendamentos locais do Radar;
+- executar agendamento agora;
+- pausar/reativar agendas;
+- consultar historico de runs agendadas;
+- revisar notificacoes locais/in-app.
+
+Agendamentos rodam somente enquanto a API local esta aberta. Eles respeitam quiet hours, cooldown,
+Perfil Profissional Universal opcional e revisao humana. O frontend nao agenda auto-apply, nao
+coleta segredo e nao salva candidatura final sem acao do usuario.
+
+Endpoints adicionais da v1.9.0:
+
+```txt
+GET/POST/PATCH/DELETE /api/v1/radar/schedules
+POST /api/v1/radar/schedules/{id}/run-now
+GET /api/v1/radar/scheduled-runs
+GET/POST /api/v1/radar/scheduler/status|start|stop
+GET/PATCH /api/v1/notifications/{id}
+POST /api/v1/notifications/mark-all-read
+DELETE /api/v1/notifications/read
+```
 - salvar resultado na Caixa de Entrada ou em Candidaturas.
 
 Endpoints usados:

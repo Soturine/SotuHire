@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.8.2 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.9.0 e os proximos ciclos tecnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,14 +8,33 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.8.2 |
+| Versão atual considerada | v1.9.0 |
 | Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional e intake persistente |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v1.9.0 Scheduled Radar & Notifications |
+| Próximo ciclo técnico | v2.0 Assistant workflows with human approval |
 | Foco de produto | Copiloto de carreira multiárea com perfil central e Radar local-first |
-| Foco técnico imediato | Perfil Profissional Universal, captura assistida segura e contexto evidence-first |
-| Grande lacuna atual | Agendamento local, notificações e conectores reais de APIs oficiais |
+| Foco técnico imediato | Radar agendado local, notificacoes in-app e contexto profissional revisavel |
+| Grande lacuna atual | Notificacoes nativas opcionais e conectores oficiais reais por contrato |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
+
+## Estado atual - v1.9.0
+
+A v1.9.0 entrega **Radar Agendado e Notificacoes Locais**:
+
+- cria agendamentos locais do Radar por wishlist, fonte, palavras-chave e preferencias;
+- adiciona store local para schedules, runs agendadas e notificacoes;
+- adiciona quiet hours, cooldown contra alertas repetidos e historico de execucoes;
+- expoe endpoints `/api/v1/radar/schedules`, `/api/v1/radar/scheduled-runs`,
+  `/api/v1/radar/scheduler/*` e `/api/v1/notifications`;
+- adiciona UI de Agendamentos e Central de Notificacoes dentro do Radar;
+- usa o Perfil Profissional Universal quando `use_profile_context=true`;
+- mantem execucao revisavel: resultados podem ir para Caixa de Entrada ou Tracker apenas por acao
+  manual da pessoa usuaria;
+- permite fontes de captura assistida autenticada como lembrete agendavel, sem coletar cookies,
+  tokens, sessao, headers ou storage de terceiros.
+
+O scheduler roda somente enquanto a API local esta ativa. Ele nao e daemon de sistema operacional,
+nao faz auto-apply e nao substitui revisao humana.
 
 ## Estado atual - v1.8.2
 
@@ -198,8 +217,8 @@ A evolução deve ser feita por camadas:
 | v1.8.0 | Job Radar, Public Feeds & Wishlist Alerts | Produto | Radar manual, RSS público, wishlist e alertas locais. |
 | v1.8.1 | AI Wishlist, Radar Stability & Profile Context Prep | Produto | Wishlist por IA/local, contexto profissional preparado e CI web. |
 | v1.8.2 | Universal Professional Profile | Produto/core | Perfil Profissional Universal editável, multiárea e evidence-first. |
-| v1.9.0 | Radar Scheduling & Official Connectors | Produto | Agendamento local opcional e conectores oficiais documentados. |
-| v2.0.0 | Assistant autônomo com aprovação manual | Produto/arquitetura | Autonomia local com aprovações explícitas e sem auto-apply. |
+| v1.9.0 | Scheduled Radar & Notifications | Produto | Agendamento local do Radar, quiet hours, cooldown e notificacoes in-app. |
+| v2.0.0 | Assistant autonomo com aprovacao manual | Produto/arquitetura | Autonomia local com aprovacoes explicitas e sem auto-apply. |
 
 ---
 

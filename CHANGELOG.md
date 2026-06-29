@@ -4,6 +4,33 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.9.0] - 2026-06-29
+
+### Adicionado
+
+- Scheduler local do Radar com CRUD em `/api/v1/radar/schedules`.
+- Execucao manual `run now` por agendamento.
+- Historico local de runs agendadas em `/api/v1/radar/scheduled-runs`.
+- Runtime local com `/api/v1/radar/scheduler/status`, `start` e `stop`.
+- Quiet hours e cooldown contra notificacoes repetidas.
+- Central local de notificacoes em `/api/v1/notifications`.
+- Secao **Agendamentos** e painel de notificacoes na tela Radar.
+- Uso opcional do Perfil Profissional Universal em agendamentos.
+- Testes backend e E2E para agendamentos, notificacoes e regressao de storage.
+
+### Alterado
+
+- Health API anuncia capabilities de `scheduled_radar` e `local_notifications`.
+- Radar passa a aceitar fonte `authenticated_assisted_capture` como lembrete agendavel e revisavel.
+- README, roadmap e docs de desenvolvimento documentam v1.9.0.
+- Versao do projeto, API e frontend atualizada para `1.9.0`.
+
+### Seguranca
+
+- Agendamentos nao fazem auto-apply, envio automatico de curriculo ou candidatura.
+- Captura assistida autenticada agendada nao coleta cookie, token, sessao, headers ou storage de terceiros.
+- API key continua backend-side e nunca retorna ao frontend.
+
 ## [1.8.2] - 2026-06-29
 
 ### Adicionado

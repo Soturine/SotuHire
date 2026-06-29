@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.8.2-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.8.2)
+[![Release](https://img.shields.io/badge/release-v1.9.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.0)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -123,7 +123,7 @@ Flags úteis:
 `-WithCompanion` inicia a Local Companion API existente em `127.0.0.1:8765` para a extensão
 assistiva. Isso não abre navegador autenticado, não faz login e não altera Chromium/CDP.
 
-### API local v1.8.2
+### API local v1.9.0
 
 Para conectar um frontend moderno ou inspecionar o OpenAPI:
 
@@ -142,7 +142,7 @@ http://127.0.0.1:8787/docs
 A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
 [Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
 
-### Frontend moderno v1.8.2
+### Frontend moderno v1.9.0
 
 O frontend moderno fica em `apps/web` e roda como app React/Vite separado.
 
@@ -293,7 +293,7 @@ O importador de URL tenta apenas leitura publica simples. Se a pagina bloquear a
 ou nao trouxer texto legivel, o SotuHire orienta a pessoa a abrir a pagina manualmente e colar o
 texto da vaga. Nao ha login automatico, crawler amplo, bypass de CAPTCHA ou auto-apply.
 
-### Radar de Vagas v1.8.2
+### Radar de Vagas v1.9.0
 
 A tela **Radar de Vagas** permite criar uma wishlist, cadastrar fontes RSS/Atom publicas, rodar uma
 busca manual e receber alertas locais quando uma oportunidade parece alinhada ao curriculo ou às
@@ -329,6 +329,29 @@ GET /api/v1/radar/stats
 
 O Radar nao faz busca ampla em Google/Bing/SERP, nao automatiza login, nao captura sessão e nao faz
 auto-apply. APIs oficiais ficam preparadas por adapter e dependem de contrato documentado.
+
+Na v1.9.0, o Radar tambem possui **Agendamentos** locais enquanto a API esta aberta. A pessoa pode
+criar uma agenda por wishlist/fonte, definir frequencia, horario de silencio, cooldown, uso de IA e
+uso do Perfil Profissional Universal. A execucao agendada cria resultados e notificacoes locais para
+revisao; ela nao candidata, nao envia curriculo e nao salva no Kanban sem acao manual.
+
+Capturas assistidas autenticadas podem aparecer como fonte agendada apenas como lembrete/revisao
+local: o SotuHire orienta a abrir a pagina e acionar a captura assistida, mas nao coleta cookies,
+tokens, sessao, headers ou storage de terceiros.
+
+Endpoints de agendamento e notificacoes:
+
+```text
+GET/POST/PATCH/DELETE /api/v1/radar/schedules
+POST /api/v1/radar/schedules/{id}/run-now
+GET /api/v1/radar/scheduled-runs
+GET /api/v1/radar/scheduler/status
+POST /api/v1/radar/scheduler/start
+POST /api/v1/radar/scheduler/stop
+GET/PATCH /api/v1/notifications/{id}
+POST /api/v1/notifications/mark-all-read
+DELETE /api/v1/notifications/read
+```
 
 ## Instalação
 
@@ -581,14 +604,15 @@ mkdocs serve
   index, scoring calculado por código e fallback local.
 - caixa de entrada de oportunidades, importadores texto/link/CSV/JSON, histórico persistente de
   capturas e deduplicação local explicável.
+- Radar agendado local, quiet hours, cooldown, historico de runs e notificacoes in-app.
 
 ### Próximos passos
 
 - v1.8.1: wishlist com IA/local, contexto profissional universal preparado e CI web;
 - v1.8.2: Perfil Profissional Universal editável, multiárea, evidence-first e captura assistida
   segura;
-- v1.9.0: Radar scheduling e conectores oficiais documentados;
-- v2.0.0: SaaS-ready Architecture;
+- v1.9.0: Radar agendado local e notificacoes in-app;
+- v2.0.0: assistant workflows com aprovacao humana explicita, sem auto-apply;
 - evoluir pesos por domínio para configuração externa se o uso real justificar.
 
 O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).
