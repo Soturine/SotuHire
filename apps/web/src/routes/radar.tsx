@@ -16,7 +16,9 @@ import {
   Save,
   Search,
   ShieldCheck,
+  Sparkles,
   Target,
+  WandSparkles,
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -28,7 +30,13 @@ import { StatCard } from "@/components/stat-card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
 import { useApiMode } from "@/lib/api/mode";
-import type { JobWishlist, RadarAlert, RadarResult, RadarSource } from "@/lib/api/types";
+import type {
+  JobWishlist,
+  RadarAlert,
+  RadarResult,
+  RadarSource,
+  WishlistDraftResult,
+} from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/radar")({
@@ -51,12 +59,27 @@ function RadarPage() {
   const qc = useQueryClient();
   const [lastRunResults, setLastRunResults] = useState<RadarResult[]>([]);
   const [lastRunAlerts, setLastRunAlerts] = useState<RadarAlert[]>([]);
-  const [wishlistName, setWishlistName] = useState("Backend Python remoto");
-  const [targetTitles, setTargetTitles] = useState("Desenvolvedor Backend, Engenheiro de APIs");
-  const [requiredSkills, setRequiredSkills] = useState("Python, FastAPI, SQL");
-  const [desiredSkills, setDesiredSkills] = useState("Pytest, Docker");
+  const [wishlistName, setWishlistName] = useState("Busca profissional revisada");
+  const [targetTitles, setTargetTitles] = useState(
+    "Estágio em Engenharia, Analista Júnior, Assistente Técnico",
+  );
+  const [targetDomains, setTargetDomains] = useState("Engenharia, Operações, Dados");
+  const [targetSeniority, setTargetSeniority] = useState("estágio, júnior");
+  const [requiredSkills, setRequiredSkills] = useState("Excel, relatórios técnicos, qualidade");
+  const [desiredSkills, setDesiredSkills] = useState("Python, Power BI, comunicação");
+  const [excludedTerms, setExcludedTerms] = useState("PJ");
   const [locations, setLocations] = useState("Remoto, Brasil");
   const [minScore, setMinScore] = useState(70);
+  const [minAtsScore, setMinAtsScore] = useState(60);
+  const [wishlistNotes, setWishlistNotes] = useState(
+    "Revise esta wishlist antes de rodar o Radar.",
+  );
+  const [aiWishlistText, setAiWishlistText] = useState(
+    "Sou estudante de engenharia e quero estágio ou vaga júnior em operações, qualidade ou dados. Tenho Excel, relatórios técnicos e interesse em Power BI. Prefiro remoto ou híbrido e não quero PJ.",
+  );
+  const [useProfileContext, setUseProfileContext] = useState(true);
+  const [useAiForRadar, setUseAiForRadar] = useState(false);
+  const [draft, setDraft] = useState<WishlistDraftResult | null>(null);
   const [sourceName, setSourceName] = useState("Feed publico ficticio");
   const [sourceUrl, setSourceUrl] = useState("https://example.com/jobs.xml");
   const [sourceFilter, setSourceFilter] = useState("all");
@@ -108,17 +131,39 @@ function RadarPage() {
     qc.invalidateQueries({ queryKey: ["radar-runs"] });
   };
 
+  function applyDraftToForm(data: WishlistDraftResult) {
+    const wishlist = data.wishlist;
+    setWishlistName(wishlist.name);
+    setTargetTitles(wishlist.target_titles.join(", "));
+    setTargetDomains(wishlist.target_domains.join(", "));
+    setTargetSeniority(wishlist.target_seniority.join(", "));
+    setRequiredSkills(wishlist.required_skills.join(", "));
+    setDesiredSkills(wishlist.desired_skills.join(", "));
+    setExcludedTerms(wishlist.excluded_terms.join(", "));
+    setLocations(wishlist.locations.join(", "));
+    setMinScore(wishlist.min_match_score);
+    setMinAtsScore(wishlist.min_ats_score);
+    setWishlistNotes(wishlist.notes || "Rascunho revisado manualmente antes de salvar.");
+  }
+
   const createWishlist = useMutation({
     mutationFn: () =>
       api.radarCreateWishlist({
         name: wishlistName,
         target_titles: splitList(targetTitles),
+        target_domains: splitList(targetDomains),
+        target_seniority: splitList(targetSeniority),
         required_skills: splitList(requiredSkills),
         desired_skills: splitList(desiredSkills),
+        excluded_terms: splitList(excludedTerms),
         locations: splitList(locations),
-        remote_preferences: ["remoto"],
+        remote_preferences: splitList(locations).some((item) => /remoto/i.test(item))
+          ? ["remoto"]
+          : [],
         min_match_score: minScore,
+        min_ats_score: minAtsScore,
         notify_on_new_matches: true,
+        notes: wishlistNotes,
         is_active: true,
       }),
     onSuccess: (data) => {
@@ -127,6 +172,22 @@ function RadarPage() {
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "Falha ao criar wishlist."),
+  });
+
+  const draftWishlist = useMutation({
+    mutationFn: () =>
+      api.radarDraftWishlist({
+        free_text: aiWishlistText,
+        use_profile_context: useProfileContext,
+        language: "pt-BR",
+      }),
+    onSuccess: (data) => {
+      setDraft(data);
+      applyDraftToForm(data);
+      toast.success("Rascunho de wishlist gerado. Revise antes de salvar.");
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao gerar rascunho."),
   });
 
   const createSource = useMutation({
@@ -155,6 +216,7 @@ function RadarPage() {
         wishlist_id: activeWishlist?.id,
         source_ids: activeSources.map((item) => item.id),
         keywords: activeWishlist ? [] : splitList(targetTitles),
+        use_ai: useAiForRadar,
       }),
     onSuccess: (data) => {
       setLastRunResults(data.results);
@@ -165,6 +227,7 @@ function RadarPage() {
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "Falha ao rodar radar."),
   });
+  const canRunRadar = activeSources.length > 0 && !runRadar.isPending;
 
   const saveInbox = useMutation({
     mutationFn: (id: string) => api.radarSaveInbox(id),
@@ -223,8 +286,9 @@ function RadarPage() {
       actions={
         <button
           onClick={() => runRadar.mutate()}
-          disabled={runRadar.isPending}
+          disabled={!canRunRadar}
           data-testid="radar-run-now"
+          title={activeSources.length ? "Rodar fontes ativas" : "Adicione uma fonte ativa antes"}
           className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
         >
           {runRadar.isPending ? (
@@ -271,6 +335,13 @@ function RadarPage() {
           </div>
         )}
 
+        {!sourcesQ.isLoading && activeSources.length === 0 && (
+          <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 text-sm text-muted-foreground">
+            Adicione uma fonte ativa antes de rodar o Radar. Fontes RSS públicas e páginas públicas
+            simples sempre ficam sob revisão manual.
+          </div>
+        )}
+
         <section
           id="radar-summary"
           data-testid="radar-summary"
@@ -298,6 +369,114 @@ function RadarPage() {
           <StatCard label="Duplicatas" value={statsQ.data?.duplicates ?? 0} icon={Filter} />
         </section>
 
+        <SectionCard
+          id="radar-ai-wishlist"
+          title={
+            <span className="flex items-center gap-2">
+              <WandSparkles className="h-4 w-4 text-accent" />
+              Criar wishlist com IA
+            </span>
+          }
+          description="Transforme um pedido em texto livre em um rascunho editável. Nada é salvo automaticamente."
+        >
+          <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+            <div className="space-y-3">
+              <label className="text-xs font-medium">
+                O que você está procurando?
+                <textarea
+                  value={aiWishlistText}
+                  onChange={(event) => setAiWishlistText(event.target.value)}
+                  data-testid="radar-wishlist-ai-text"
+                  className="mt-1 min-h-28 w-full rounded-md border border-input bg-card px-3 py-2 text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+                />
+              </label>
+              <label className="flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                <input
+                  type="checkbox"
+                  checked={useProfileContext}
+                  onChange={(event) => setUseProfileContext(event.target.checked)}
+                  data-testid="radar-wishlist-profile-context"
+                  className="mt-0.5"
+                />
+                Usar contexto local do perfil quando existir. O contexto continua local e serve só
+                para sugerir campos editáveis.
+              </label>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => draftWishlist.mutate()}
+                  disabled={draftWishlist.isPending || !aiWishlistText.trim()}
+                  data-testid="radar-generate-wishlist-draft"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+                >
+                  {draftWishlist.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-3.5 w-3.5" />
+                  )}
+                  Gerar sugestão
+                </button>
+                {draft && (
+                  <Badge
+                    tone={
+                      draft.analysis_mode === "ai"
+                        ? "success"
+                        : draft.analysis_mode === "fallback"
+                          ? "warning"
+                          : "muted"
+                    }
+                  >
+                    <span data-testid="radar-draft-mode-badge">
+                      {draft.analysis_mode === "ai"
+                        ? "IA"
+                        : draft.analysis_mode === "fallback"
+                          ? "Fallback local"
+                          : "Local"}
+                    </span>
+                  </Badge>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              {draft ? (
+                <>
+                  <div className="rounded-lg border border-border bg-muted/30 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold">{draft.wishlist.name}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Confiança {Math.round(draft.confidence * 100)}% · revisão humana
+                          obrigatória
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => applyDraftToForm(draft)}
+                        data-testid="radar-apply-wishlist-draft"
+                        className="rounded-md border border-input bg-card px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                      >
+                        Preencher formulário
+                      </button>
+                    </div>
+                    <div className="mt-3 space-y-2">
+                      <MiniList title="Suposições" items={draft.assumptions} />
+                      <MiniList
+                        title="Perguntas para confirmar"
+                        items={draft.questions_to_confirm}
+                      />
+                      <MiniList title="Avisos" items={draft.warnings} />
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+                  Descreva cargos, áreas, habilidades, locais e termos que quer evitar. O SotuHire
+                  gera um rascunho e você decide o que salvar.
+                </div>
+              )}
+            </div>
+          </div>
+        </SectionCard>
+
         <div className="grid gap-6 xl:grid-cols-3">
           <SectionCard
             id="radar-wishlist"
@@ -321,6 +500,18 @@ function RadarPage() {
                     value={targetTitles}
                     onChange={setTargetTitles}
                   />
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <TextField
+                      label="Domínios/áreas"
+                      value={targetDomains}
+                      onChange={setTargetDomains}
+                    />
+                    <TextField
+                      label="Senioridade"
+                      value={targetSeniority}
+                      onChange={setTargetSeniority}
+                    />
+                  </div>
                   <TextField
                     label="Skills obrigatórias"
                     value={requiredSkills}
@@ -331,7 +522,12 @@ function RadarPage() {
                     value={desiredSkills}
                     onChange={setDesiredSkills}
                   />
-                  <div className="grid gap-3 sm:grid-cols-[1fr_140px]">
+                  <TextField
+                    label="Termos a evitar"
+                    value={excludedTerms}
+                    onChange={setExcludedTerms}
+                  />
+                  <div className="grid gap-3 sm:grid-cols-[1fr_120px_120px]">
                     <TextField
                       label="Locais/modelos aceitos"
                       value={locations}
@@ -348,7 +544,19 @@ function RadarPage() {
                         className="mt-1 h-9 w-full rounded-md border border-input bg-card px-3 text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
                       />
                     </label>
+                    <label className="text-xs font-medium">
+                      ATS mínimo
+                      <input
+                        value={minAtsScore}
+                        onChange={(event) => setMinAtsScore(Number(event.target.value) || 0)}
+                        type="number"
+                        min={0}
+                        max={100}
+                        className="mt-1 h-9 w-full rounded-md border border-input bg-card px-3 text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+                      />
+                    </label>
                   </div>
+                  <TextField label="Notas" value={wishlistNotes} onChange={setWishlistNotes} />
                   <button
                     onClick={() => createWishlist.mutate()}
                     disabled={createWishlist.isPending}
@@ -546,6 +754,16 @@ function RadarPage() {
             </span>
           }
         >
+          <label className="mb-4 flex items-start gap-2 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={useAiForRadar}
+              onChange={(event) => setUseAiForRadar(event.target.checked)}
+              className="mt-0.5"
+            />
+            Usar IA explicativa no Radar quando estiver configurada. Se falhar, o SotuHire mantém
+            análise local e mostra fallback.
+          </label>
           <div className="grid gap-3 md:grid-cols-3">
             <InfoBox
               icon={Database}
@@ -585,6 +803,16 @@ function WishlistCard({ wishlist }: { wishlist: JobWishlist }) {
         </span>
       </div>
       <ChipList items={wishlist.target_titles} />
+      <div className="grid gap-2 sm:grid-cols-2">
+        <div>
+          <div className="mb-1 font-medium">Áreas</div>
+          <ChipList items={wishlist.target_domains} />
+        </div>
+        <div>
+          <div className="mb-1 font-medium">Momento</div>
+          <ChipList items={wishlist.target_seniority} />
+        </div>
+      </div>
       <div>
         <div className="mb-1 font-medium">Obrigatórias</div>
         <ChipList items={wishlist.required_skills} />
@@ -593,6 +821,9 @@ function WishlistCard({ wishlist }: { wishlist: JobWishlist }) {
         <div className="mb-1 font-medium">Desejáveis</div>
         <ChipList items={wishlist.desired_skills} />
       </div>
+      {wishlist.notes && (
+        <p className="rounded-md bg-muted p-2 text-muted-foreground">{wishlist.notes}</p>
+      )}
     </div>
   );
 }
@@ -615,6 +846,11 @@ function SourceBox({ source }: { source: RadarSource }) {
         {source.last_error && <Badge tone="error">Erro</Badge>}
       </div>
       {source.notes && <p className="mt-3 text-xs text-muted-foreground">{source.notes}</p>}
+      {source.last_error && (
+        <p className="mt-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
+          {source.last_error}
+        </p>
+      )}
     </div>
   );
 }

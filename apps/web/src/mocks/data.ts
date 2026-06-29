@@ -16,7 +16,7 @@ import type {
 
 export const mockHealth: Health = {
   status: "ok",
-  version: "1.8.0",
+  version: "1.8.1",
   local_first: true,
   environment: "mock",
   capabilities: [
@@ -32,6 +32,7 @@ export const mockHealth: Health = {
     "authenticated_browser_sources",
     "extension_bridge",
     "job_radar",
+    "job_radar_wishlist_draft",
   ],
 };
 
@@ -41,10 +42,14 @@ export const mockAiSettings: AiSettings = {
   configured: true,
   status: "ready",
   use_ai: false,
+  allow_resume: true,
+  allow_job: true,
   allow_match: true,
   allow_ats: true,
   allow_tailor: true,
   allow_github: true,
+  allow_source_import: true,
+  allow_radar: true,
   allow_memory_context: false,
   warnings: [],
 };

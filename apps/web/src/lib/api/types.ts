@@ -36,10 +36,14 @@ export interface AiSettings {
   configured: boolean;
   status: AiSettingsStatus;
   use_ai: boolean;
+  allow_resume: boolean;
+  allow_job: boolean;
   allow_match: boolean;
   allow_ats: boolean;
   allow_tailor: boolean;
   allow_github: boolean;
+  allow_source_import: boolean;
+  allow_radar: boolean;
   allow_memory_context: boolean;
   updated_at?: string;
   warnings?: string[];
@@ -50,10 +54,14 @@ export interface AiSettingsPayload {
   model: string;
   api_key?: string;
   use_ai: boolean;
+  allow_resume: boolean;
+  allow_job: boolean;
   allow_match: boolean;
   allow_ats: boolean;
   allow_tailor: boolean;
   allow_github: boolean;
+  allow_source_import: boolean;
+  allow_radar: boolean;
   allow_memory_context: boolean;
 }
 
@@ -528,9 +536,49 @@ export interface JobWishlist {
   min_match_score: number;
   min_ats_score: number;
   notify_on_new_matches: boolean;
+  notes?: string;
   created_at?: string;
   updated_at?: string;
   is_active: boolean;
+}
+
+export interface WishlistDraftPayload {
+  name: string;
+  target_titles: string[];
+  target_domains: string[];
+  target_seniority: string[];
+  required_skills: string[];
+  desired_skills: string[];
+  excluded_terms: string[];
+  locations: string[];
+  remote_preferences: string[];
+  work_model?: string;
+  employment_type?: string;
+  salary_min?: number;
+  salary_currency?: string;
+  contract_types: string[];
+  industries: string[];
+  companies_include: string[];
+  companies_exclude: string[];
+  source_types: string[];
+  min_match_score: number;
+  min_ats_score: number;
+  notify_on_new_matches: boolean;
+  is_active: boolean;
+  notes?: string;
+}
+
+export interface WishlistDraftResult {
+  wishlist: WishlistDraftPayload;
+  confidence: number;
+  detected_domains: string[];
+  detected_career_moments: string[];
+  assumptions: string[];
+  questions_to_confirm: string[];
+  warnings: string[];
+  needs_user_review: boolean;
+  provider_used: string;
+  analysis_mode: AnalysisMode;
 }
 
 export interface RadarSource {

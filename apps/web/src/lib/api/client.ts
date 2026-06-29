@@ -40,6 +40,7 @@ import type {
   RadarSourceResult,
   RadarSourcesResult,
   RadarStats,
+  WishlistDraftResult,
   RadarWishlistResult,
   RadarWishlistsResult,
   ResumeExtractResult,
@@ -776,6 +777,20 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeRadarWishlistResult,
       ),
 
+    radarDraftWishlist: (payload: {
+      free_text: string;
+      use_profile_context?: boolean;
+      language?: string;
+    }) =>
+      call<WishlistDraftResult>(
+        mode,
+        baseUrl,
+        "/radar/wishlists/draft",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockWishlistDraft(payload.free_text),
+        normalizeWishlistDraft,
+      ),
+
     radarSources: () =>
       call<RadarSourcesResult>(
         mode,
@@ -1227,6 +1242,81 @@ function mockSourceExport(format: "csv" | "json", itemIds?: string[]): SourceExp
   };
 }
 
+function mockWishlistDraft(freeText: string): WishlistDraftResult {
+  const normalized = freeText.toLowerCase();
+  const isHealth = /enferm|coren|hospital|saúde|saude/.test(normalized);
+  const isLaw = /direito|juríd|jurid|oab|advoc/.test(normalized);
+  const isArt = /design|arte|ilustra|portfólio|portfolio/.test(normalized);
+  const isResearch = /pesquisa|lattes|laborat|congresso/.test(normalized);
+  const domain = isHealth
+    ? "Saúde"
+    : isLaw
+      ? "Direito"
+      : isArt
+        ? "Artes e Design"
+        : isResearch
+          ? "Pesquisa e Laboratório"
+          : "Engenharia e Operações";
+  const title = isHealth
+    ? "Enfermeiro"
+    : isLaw
+      ? "Advogado Júnior"
+      : isArt
+        ? "Designer"
+        : isResearch
+          ? "Assistente de Pesquisa"
+          : "Estágio em Engenharia";
+  const skills = isHealth
+    ? ["COREN", "triagem", "prontuário"]
+    : isLaw
+      ? ["OAB", "petições", "pesquisa jurídica"]
+      : isArt
+        ? ["portfólio", "identidade visual", "ilustração"]
+        : isResearch
+          ? ["Lattes", "metodologia", "relatório"]
+          : ["Excel", "relatórios técnicos", "qualidade"];
+  return {
+    wishlist: {
+      name: `Wishlist sugerida - ${domain}`,
+      target_titles: [title],
+      target_domains: [domain],
+      target_seniority:
+        normalized.includes("estágio") || normalized.includes("estagio") ? ["estágio"] : ["júnior"],
+      required_skills: skills,
+      desired_skills: ["comunicação", "organização"],
+      excluded_terms: normalized.includes("pj") ? ["PJ"] : [],
+      locations: normalized.includes("remoto") ? ["Remoto", "Brasil"] : ["Brasil"],
+      remote_preferences: normalized.includes("remoto") ? ["remoto"] : [],
+      work_model: normalized.includes("remoto") ? "remoto" : "",
+      employment_type: normalized.includes("clt") ? "CLT" : "",
+      salary_currency: "BRL",
+      contract_types: normalized.includes("clt") ? ["CLT"] : [],
+      industries: [domain],
+      companies_include: [],
+      companies_exclude: [],
+      source_types: ["public_feed", "manual_url", "manual_public_page"],
+      min_match_score: 70,
+      min_ats_score: 60,
+      notify_on_new_matches: true,
+      is_active: true,
+      notes: "Modo Demo: rascunho fictício. Revise antes de salvar.",
+    },
+    confidence: 0.74,
+    detected_domains: [domain],
+    detected_career_moments:
+      normalized.includes("estágio") || normalized.includes("estagio") ? ["estágio"] : ["júnior"],
+    assumptions: ["Usei apenas sinais do texto digitado."],
+    questions_to_confirm: [
+      "Quais cargos você realmente aceita?",
+      "Há termos que devem ser excluídos?",
+    ],
+    warnings: ["A wishlist não foi salva automaticamente."],
+    needs_user_review: true,
+    provider_used: "local",
+    analysis_mode: "local",
+  };
+}
+
 function mockRadarWishlists(): RadarWishlistsResult {
   const now = new Date().toISOString();
   return {
@@ -1253,6 +1343,7 @@ function mockRadarWishlists(): RadarWishlistsResult {
         min_match_score: 70,
         min_ats_score: 40,
         notify_on_new_matches: true,
+        notes: "Wishlist fictícia do modo Demo.",
         created_at: now,
         updated_at: now,
         is_active: true,
@@ -1474,7 +1565,7 @@ function normalizeHealth(value: unknown): Health {
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "1.8.0",
+    version: asString(raw.version) || "1.8.1",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),
@@ -1491,10 +1582,14 @@ function normalizeAiSettings(value: unknown): AiSettings {
     configured: asBoolean(raw.configured, provider === "local"),
     status,
     use_ai: asBoolean(raw.use_ai, false),
+    allow_resume: asBoolean(raw.allow_resume, true),
+    allow_job: asBoolean(raw.allow_job, true),
     allow_match: asBoolean(raw.allow_match, true),
     allow_ats: asBoolean(raw.allow_ats, true),
     allow_tailor: asBoolean(raw.allow_tailor, true),
     allow_github: asBoolean(raw.allow_github, true),
+    allow_source_import: asBoolean(raw.allow_source_import, true),
+    allow_radar: asBoolean(raw.allow_radar, true),
     allow_memory_context: asBoolean(raw.allow_memory_context, false),
     updated_at: asString(raw.updated_at),
     warnings: stringList(raw.warnings),
@@ -1531,10 +1626,14 @@ function mockSavedAiSettings(payload: AiSettingsPayload): AiSettings {
             : "configured"
           : "not_configured",
     use_ai: payload.use_ai,
+    allow_resume: payload.allow_resume,
+    allow_job: payload.allow_job,
     allow_match: payload.allow_match,
     allow_ats: payload.allow_ats,
     allow_tailor: payload.allow_tailor,
     allow_github: payload.allow_github,
+    allow_source_import: payload.allow_source_import,
+    allow_radar: payload.allow_radar,
     allow_memory_context: payload.allow_memory_context,
     updated_at: new Date().toISOString(),
     warnings:
@@ -2027,6 +2126,52 @@ function normalizeRadarWishlistResult(value: unknown): RadarWishlistResult {
   return { wishlist: normalizeRadarWishlist(raw.wishlist), message: asString(raw.message) };
 }
 
+function normalizeWishlistDraft(value: unknown): WishlistDraftResult {
+  const raw = asRecord(value);
+  const wishlist = normalizeWishlistDraftPayload(raw.wishlist);
+  return {
+    wishlist,
+    confidence: asNumber(raw.confidence, 0),
+    detected_domains: stringList(raw.detected_domains),
+    detected_career_moments: stringList(raw.detected_career_moments),
+    assumptions: stringList(raw.assumptions),
+    questions_to_confirm: stringList(raw.questions_to_confirm),
+    warnings: stringList(raw.warnings),
+    needs_user_review: asBoolean(raw.needs_user_review, true),
+    provider_used: asString(raw.provider_used) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+  };
+}
+
+function normalizeWishlistDraftPayload(value: unknown): WishlistDraftResult["wishlist"] {
+  const raw = asRecord(value);
+  return {
+    name: asString(raw.name) || "Wishlist sugerida",
+    target_titles: stringList(raw.target_titles),
+    target_domains: stringList(raw.target_domains),
+    target_seniority: stringList(raw.target_seniority),
+    required_skills: stringList(raw.required_skills),
+    desired_skills: stringList(raw.desired_skills),
+    excluded_terms: stringList(raw.excluded_terms),
+    locations: stringList(raw.locations),
+    remote_preferences: stringList(raw.remote_preferences),
+    work_model: asString(raw.work_model),
+    employment_type: asString(raw.employment_type),
+    salary_min: definedNumber(raw.salary_min),
+    salary_currency: asString(raw.salary_currency) || "BRL",
+    contract_types: stringList(raw.contract_types),
+    industries: stringList(raw.industries),
+    companies_include: stringList(raw.companies_include),
+    companies_exclude: stringList(raw.companies_exclude),
+    source_types: stringList(raw.source_types),
+    min_match_score: asNumber(raw.min_match_score, 70),
+    min_ats_score: asNumber(raw.min_ats_score, 60),
+    notify_on_new_matches: asBoolean(raw.notify_on_new_matches, true),
+    is_active: asBoolean(raw.is_active, true),
+    notes: asString(raw.notes),
+  };
+}
+
 function normalizeRadarWishlist(value: unknown): JobWishlist {
   const raw = asRecord(value);
   return {
@@ -2052,6 +2197,7 @@ function normalizeRadarWishlist(value: unknown): JobWishlist {
     min_match_score: asNumber(raw.min_match_score, 70),
     min_ats_score: asNumber(raw.min_ats_score, 0),
     notify_on_new_matches: asBoolean(raw.notify_on_new_matches, true),
+    notes: asString(raw.notes),
     created_at: asString(raw.created_at),
     updated_at: asString(raw.updated_at),
     is_active: asBoolean(raw.is_active, true),

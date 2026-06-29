@@ -210,10 +210,14 @@ function AiProvidersCard() {
   const [status, setStatus] = useState<AiUiStatus>("idle");
   const [toggles, setToggles] = useState({
     enabled: false,
+    resume: true,
+    job: true,
     match: true,
     ats: true,
     tailor: true,
     github: true,
+    sourceImport: true,
+    radar: true,
     memory: false,
   });
 
@@ -231,10 +235,14 @@ function AiProvidersCard() {
     setStatus(statusFromSettings(data));
     setToggles({
       enabled: data.use_ai,
+      resume: data.allow_resume,
+      job: data.allow_job,
       match: data.allow_match,
       ats: data.allow_ats,
       tailor: data.allow_tailor,
       github: data.allow_github,
+      sourceImport: data.allow_source_import,
+      radar: data.allow_radar,
       memory: data.allow_memory_context,
     });
   }, [settingsQ.data]);
@@ -246,10 +254,14 @@ function AiProvidersCard() {
         model: provider === "local" ? "local" : model,
         api_key: provider === "gemini" && apiKey.trim() ? apiKey.trim() : undefined,
         use_ai: toggles.enabled,
+        allow_resume: toggles.resume,
+        allow_job: toggles.job,
         allow_match: toggles.match,
         allow_ats: toggles.ats,
         allow_tailor: toggles.tailor,
         allow_github: toggles.github,
+        allow_source_import: toggles.sourceImport,
+        allow_radar: toggles.radar,
         allow_memory_context: toggles.memory,
       }),
     onSuccess: (data) => {
@@ -442,6 +454,18 @@ function AiProvidersCard() {
             onChange={(v) => setToggles({ ...toggles, enabled: v })}
           />
           <Toggle
+            label="Permitir IA em Currículo"
+            checked={toggles.resume}
+            onChange={(v) => setToggles({ ...toggles, resume: v })}
+            disabled={!toggles.enabled}
+          />
+          <Toggle
+            label="Permitir IA em Vaga"
+            checked={toggles.job}
+            onChange={(v) => setToggles({ ...toggles, job: v })}
+            disabled={!toggles.enabled}
+          />
+          <Toggle
             label="Permitir IA na Análise de Compatibilidade"
             checked={toggles.match}
             onChange={(v) => setToggles({ ...toggles, match: v })}
@@ -463,6 +487,18 @@ function AiProvidersCard() {
             label="Permitir IA na Análise de GitHub"
             checked={toggles.github}
             onChange={(v) => setToggles({ ...toggles, github: v })}
+            disabled={!toggles.enabled}
+          />
+          <Toggle
+            label="Permitir IA na Caixa de Entrada e importações"
+            checked={toggles.sourceImport}
+            onChange={(v) => setToggles({ ...toggles, sourceImport: v })}
+            disabled={!toggles.enabled}
+          />
+          <Toggle
+            label="Permitir IA no Radar e Wishlist"
+            checked={toggles.radar}
+            onChange={(v) => setToggles({ ...toggles, radar: v })}
             disabled={!toggles.enabled}
           />
           <Toggle
