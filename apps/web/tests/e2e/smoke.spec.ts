@@ -168,6 +168,19 @@ test("job radar creates wishlist/source, runs demo and saves results", async ({ 
   await expect(page.getByRole("heading", { name: "Radar de Vagas" })).toBeVisible();
   await expect(page.getByTestId("radar-demo-badge")).toContainText("Dados de demonstração");
   await expect(page.getByTestId("radar-summary")).toBeVisible();
+  await expect(page.getByTestId("radar-wishlist-ai-text")).toBeVisible();
+  await page
+    .getByTestId("radar-wishlist-ai-text")
+    .fill(
+      "Sou estudante de engenharia e busco estágio em operações ou qualidade com Excel. Prefiro remoto e não quero PJ.",
+    );
+  await page.getByTestId("radar-generate-wishlist-draft").click();
+  await expect(page.getByTestId("radar-draft-mode-badge")).toBeVisible();
+  await expect(
+    page.getByText(/rascunho de wishlist gerado|Wishlist sugerida/i).first(),
+  ).toBeVisible();
+  await expect(page.getByText(/wishlist criada/i)).toHaveCount(0);
+  await page.getByLabel("Nome").first().fill("Wishlist revisada E2E");
   await page.getByTestId("radar-create-wishlist").click();
   await expect(page.getByText(/wishlist criada|Modo Demo/i).first()).toBeVisible();
   await page.getByTestId("radar-create-source").click();
@@ -369,14 +382,14 @@ test("API Real radar empty state does not show demo radar results silently", asy
   await expect(page.locator("body")).not.toContainText("Desenvolvedor Backend Python");
 });
 
-test("public UI does not contain common mojibake sequences", async ({ browser }) => {
+test("public UI does not contain common mojibake sequences", async ({ page }) => {
+  const mojibakePattern =
+    /\u00c3[\u0080-\u00bf\u0160\u0161\u2018-\u201d\u2020-\u2022]|\u00c2|\u00e2\u20ac/;
+
   for (const screen of coreScreens) {
-    const page = await browser.newPage();
     await page.goto(screen.path);
-    await expect(page.locator("body")).not.toContainText(
-      /\u00c3[\u0080-\u00bf\u0160\u0161\u2018-\u201d\u2020-\u2022]|\u00c2|\u00e2\u20ac/,
-    );
-    await page.close();
+    const bodyText = await page.locator("body").innerText();
+    expect(bodyText, `${screen.path} should render valid UTF-8 copy`).not.toMatch(mojibakePattern);
   }
 });
 

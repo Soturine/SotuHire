@@ -11,6 +11,7 @@ def test_default_prompt_registry_lists_initial_prompts() -> None:
         "github_repo_analysis_v2",
         "job_extraction_multi_domain_v1",
         "job_radar_match_explanation_v1",
+        "job_wishlist_builder_v1",
         "match_analysis_evidence_based_v1",
         "resume_extraction_v1",
         "resume_tailor_v1",

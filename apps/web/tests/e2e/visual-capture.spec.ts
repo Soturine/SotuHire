@@ -11,6 +11,13 @@ const shots: Array<{
 }> = [
   {
     path: "/radar",
+    file: "sotuhire-v1.8.1-web-radar-ai-wishlist.png",
+    prepare: async (page) => {
+      await page.locator("#radar-ai-wishlist").scrollIntoViewIfNeeded();
+    },
+  },
+  {
+    path: "/radar",
     file: "sotuhire-v1.8-web-radar-summary.png",
     prepare: async (page) => {
       await page.locator("#radar-summary").scrollIntoViewIfNeeded();

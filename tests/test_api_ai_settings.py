@@ -19,6 +19,10 @@ def test_ai_settings_default_status_is_safe(tmp_path: Path, monkeypatch) -> None
     assert payload["ok"] is True
     assert payload["data"]["provider"] == "local"
     assert payload["data"]["configured"] is True
+    assert payload["data"]["allow_resume"] is True
+    assert payload["data"]["allow_job"] is True
+    assert payload["data"]["allow_source_import"] is True
+    assert payload["data"]["allow_radar"] is True
     assert "api_key" not in json.dumps(payload)
 
 
@@ -33,10 +37,14 @@ def test_ai_settings_save_gemini_key_backend_side_only(tmp_path: Path, monkeypat
             "model": "gemini-2.5-flash",
             "api_key": FAKE_KEY,
             "use_ai": True,
+            "allow_resume": True,
+            "allow_job": True,
             "allow_match": True,
             "allow_ats": True,
             "allow_tailor": True,
             "allow_github": False,
+            "allow_source_import": True,
+            "allow_radar": False,
             "allow_memory_context": False,
         },
     )
@@ -45,6 +53,7 @@ def test_ai_settings_save_gemini_key_backend_side_only(tmp_path: Path, monkeypat
     payload = response.json()
     assert payload["data"]["provider"] == "gemini"
     assert payload["data"]["configured"] is True
+    assert payload["data"]["allow_radar"] is False
     assert FAKE_KEY not in json.dumps(payload)
     assert "api_key" not in json.dumps(payload)
 
