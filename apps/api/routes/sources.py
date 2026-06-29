@@ -8,6 +8,8 @@ from modules.scraping.browser_session import DEFAULT_CDP_URL
 from apps.api.routes.responses import ok
 from apps.api.schemas.common import ApiEnvelope
 from apps.api.schemas.sources import (
+    AuthenticatedAssistedCaptureRequest,
+    AuthenticatedAssistedCaptureResponse,
     AuthenticatedBrowserCollectRequest,
     AuthenticatedBrowserCollectResponse,
     AuthenticatedBrowserLaunchRequest,
@@ -31,6 +33,7 @@ from apps.api.schemas.sources import (
     SourceStatsResponse,
 )
 from apps.api.services.sources import (
+    authenticated_assisted_capture,
     authenticated_browser_collect,
     authenticated_browser_launch,
     authenticated_browser_status,
@@ -185,3 +188,14 @@ def browser_collect(
 ) -> ApiEnvelope[AuthenticatedBrowserCollectResponse]:
     """Collect opportunities from an authorized authenticated browser session."""
     return ok(authenticated_browser_collect(payload), request_id=payload.request_id)
+
+
+@router.post(
+    "/authenticated-captures",
+    response_model=ApiEnvelope[AuthenticatedAssistedCaptureResponse],
+)
+def assisted_authenticated_capture(
+    payload: AuthenticatedAssistedCaptureRequest,
+) -> ApiEnvelope[AuthenticatedAssistedCaptureResponse]:
+    """Save user-initiated visible authenticated page text for review."""
+    return ok(authenticated_assisted_capture(payload), request_id=payload.request_id)

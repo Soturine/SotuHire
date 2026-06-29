@@ -30,6 +30,8 @@ def health(request: Request) -> ApiEnvelope[HealthResponse]:
                 "ai_settings",
                 "authenticated_browser_sources",
                 "extension_bridge",
+                "universal_career_profile",
+                "authenticated_assisted_capture",
                 "job_radar",
                 "job_radar_wishlist_draft",
             ],

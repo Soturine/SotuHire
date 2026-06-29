@@ -7,12 +7,15 @@ import json
 from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
 from modules.ai.schemas.analysis_insights import SourceImportEnrichmentOutput
+from modules.profile import ProfileContextOrchestrator
 from modules.scraping.browser_session import inspect_browser_session, launch_authenticated_browser
 from modules.scraping.collection import collect_authenticated_source
 from modules.scraping.schemas import ScrapingSource
 from modules.sources.imports import SourceImportAiContext, SourceImportService
 
 from apps.api.schemas.sources import (
+    AuthenticatedAssistedCaptureRequest,
+    AuthenticatedAssistedCaptureResponse,
     AuthenticatedBrowserCollectRequest,
     AuthenticatedBrowserCollectResponse,
     AuthenticatedBrowserLaunchRequest,
@@ -104,6 +107,40 @@ def authenticated_browser_collect(
             )
             for opportunity in result.opportunities
         ],
+    )
+
+
+def authenticated_assisted_capture(
+    request: AuthenticatedAssistedCaptureRequest,
+) -> AuthenticatedAssistedCaptureResponse:
+    """Save visible authenticated page text for user review without secrets."""
+    if not request.user_review_required:
+        raise HTTPException(status_code=422, detail="Captura assistida exige revisao humana.")
+    if _contains_secret_field(request.metadata):
+        raise HTTPException(
+            status_code=422,
+            detail="Metadata de captura nao pode conter cookies, tokens, sessao ou segredos.",
+        )
+    capture_text = (request.selected_text or "").strip() or request.visible_text.strip()
+    if not capture_text:
+        raise HTTPException(status_code=422, detail="Envie texto visivel para revisar.")
+
+    profile_signals = _safe_profile_capture_signals(capture_text)
+    capture = SourceImportService().import_authenticated_assisted_capture(
+        visible_text=request.visible_text,
+        selected_text=request.selected_text or "",
+        source_url=request.source_url,
+        source_host=request.source_host,
+        capture_mode=request.capture_mode,
+        metadata={
+            "captured_at": request.captured_at,
+            "profile_signals": profile_signals,
+            "review_before_save": True,
+        },
+    )
+    return AuthenticatedAssistedCaptureResponse(
+        capture=capture,
+        message="Captura assistida salva na Caixa de Entrada para revisao.",
     )
 
 
@@ -354,3 +391,64 @@ def _source_ai_context(*, enabled: bool, text: str, source_url: str) -> SourceIm
         model="local",
         warnings=warnings,
     )
+
+
+def _safe_profile_capture_signals(text: str) -> dict[str, object]:
+    """Classify a capture with local profile context without inventing facts."""
+    try:
+        context = ProfileContextOrchestrator().build_context(purpose="authenticated_capture")
+    except Exception:
+        return {"profile_context_available": False}
+    lowered = text.casefold()
+    confirmed_titles = [
+        item.title
+        for item in [
+            *context.skills,
+            *context.certifications_and_registries,
+            *context.education,
+            *context.experiences,
+        ]
+        if item.confirmed_by_user and item.title.casefold() in lowered
+    ][:10]
+    gaps = [
+        registry
+        for registry in [
+            "COREN",
+            "OAB",
+            "CRM",
+            "CRP",
+            "CREA",
+            "CRQ",
+            "CFT",
+            "CRC",
+            "CAU",
+            "CREF",
+            "CRF",
+            "CRMV",
+            "CRESS",
+            "CRN",
+            "CRO",
+        ]
+        if registry.casefold() in lowered
+        and registry.casefold()
+        not in {item.title.casefold() for item in context.certifications_and_registries}
+    ][:10]
+    return {
+        "profile_context_available": True,
+        "matched_confirmed_items": confirmed_titles,
+        "possible_gaps": gaps,
+        "confidence": "low" if not confirmed_titles else "medium",
+    }
+
+
+def _contains_secret_field(value: object) -> bool:
+    secret_markers = {"api_key", "apikey", "secret", "token", "cookie", "session", "headers"}
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            if any(marker in str(key).lower() for marker in secret_markers):
+                return True
+            if _contains_secret_field(nested):
+                return True
+    if isinstance(value, list):
+        return any(_contains_secret_field(item) for item in value)
+    return False

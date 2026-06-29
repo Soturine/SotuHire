@@ -31,6 +31,7 @@ SourceOrigin = Literal[
     "json_import",
     "extension_capture",
     "companion_capture",
+    "authenticated_assisted_capture",
     "public_source",
     "public_feed",
     "official_api_future",
@@ -491,6 +492,50 @@ class SourceImportService:
         )
         return items[0]
 
+    def import_authenticated_assisted_capture(
+        self,
+        *,
+        visible_text: str,
+        source_url: str,
+        source_host: str,
+        capture_mode: str,
+        selected_text: str = "",
+        notes: str = "",
+        metadata: dict[str, object] | None = None,
+    ) -> OpportunityInboxItem:
+        """Save one user-reviewed visible-page capture into the inbox."""
+        text = selected_text.strip() or visible_text.strip()
+        item = self._item_from_text(
+            text,
+            origin="authenticated_assisted_capture",
+            source_name=f"Captura assistida: {source_host}",
+            source_url=source_url,
+            notes=notes or "Captura assistida autenticada; revisar antes de salvar.",
+            confidence=0.62,
+        )
+        item = item.model_copy(
+            update={
+                "source_confidence": 0.62,
+                "metadata": {
+                    **item.metadata,
+                    **(metadata or {}),
+                    "source_host": source_host,
+                    "capture_mode": capture_mode,
+                    "user_review_required": True,
+                    "authenticated_assisted_capture": True,
+                    "auto_apply": False,
+                    "stores_session_secrets": False,
+                },
+            }
+        )
+        _, items, _ = self._save_batch(
+            "authenticated_assisted_capture",
+            [item],
+            source_name=f"Captura assistida: {source_host}",
+            source_url=source_url,
+        )
+        return items[0]
+
     def list_captures(self) -> list[OpportunityInboxItem]:
         """Return all local capture records."""
         return self.list_imports()[0]
@@ -847,6 +892,7 @@ def source_label(origin: str) -> str:
         "json_import": "JSON",
         "extension_capture": "Extensao Local",
         "companion_capture": "Companion",
+        "authenticated_assisted_capture": "Captura assistida autenticada",
         "public_source": "Fonte publica",
         "public_feed": "Feed publico",
         "official_api_future": "API oficial futura",
@@ -861,7 +907,7 @@ def _collection_method(origin: SourceOrigin):
         return "csv_import"
     if origin == "json_import":
         return "json_import"
-    if origin in {"extension_capture", "companion_capture"}:
+    if origin in {"extension_capture", "companion_capture", "authenticated_assisted_capture"}:
         return "browser_assisted_capture"
     if origin in {"public_source", "public_feed"}:
         return "public_scraping"

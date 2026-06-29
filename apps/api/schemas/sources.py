@@ -52,6 +52,22 @@ class AuthenticatedBrowserCollectRequest(BaseModel):
     request_id: str = Field(default="", max_length=120)
 
 
+class AuthenticatedAssistedCaptureRequest(BaseModel):
+    """User-initiated visible page capture for review."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    source_url: str = Field(min_length=1, max_length=2048)
+    source_host: str = Field(min_length=1, max_length=300)
+    capture_mode: str = Field(default="current_page_visible_text", max_length=120)
+    visible_text: str = Field(default="", max_length=300_000)
+    selected_text: str | None = Field(default=None, max_length=300_000)
+    captured_at: str = Field(default="", max_length=80)
+    user_review_required: bool = True
+    metadata: dict[str, object] = Field(default_factory=dict)
+    request_id: str = Field(default="", max_length=120)
+
+
 class AuthenticatedBrowserOpportunityItem(BaseModel):
     """Small public summary of a collected opportunity."""
 
@@ -190,6 +206,10 @@ class SourceCaptureResponse(BaseModel):
 
     capture: OpportunityInboxItem
     message: str = ""
+
+
+class AuthenticatedAssistedCaptureResponse(SourceCaptureResponse):
+    """Visible page capture saved for review."""
 
 
 class SourceCaptureImportJobResponse(BaseModel):
