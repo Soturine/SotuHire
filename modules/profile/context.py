@@ -20,6 +20,7 @@ class ProfileContextItem(BaseModel):
     title: str
     description: str | None = None
     area: str | None = None
+    domain: str | None = None
     source: str | None = None
     evidence: str | None = None
     confidence: Literal["low", "medium", "high"] = "medium"
