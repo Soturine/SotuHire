@@ -13,7 +13,7 @@ O CI inicial deve responder:
 
 ## GitHub Actions
 
-Workflow recomendado:
+Workflow atual na v1.8.1:
 
 ```yaml
 name: CI
@@ -50,6 +50,31 @@ jobs:
 
       - name: Tests
         run: pytest -v
+
+      - name: Package browser extension
+        run: python scripts/package_extension.py
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Frontend lint/typecheck/build
+        working-directory: apps/web
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run build
+
+      - name: Frontend smoke E2E
+        working-directory: apps/web
+        run: npx playwright test tests/e2e/smoke.spec.ts --project=chromium
 ```
 
 ## O que não colocar no CI agora
@@ -59,8 +84,8 @@ Evite no começo:
 - deploy automático;
 - Docker complexo;
 - banco externo;
-- testes E2E pesados;
-- Playwright rodando sem necessidade;
+- testes E2E pesados fora do smoke;
+- Playwright sem mocks controlados;
 - scraping real em sites externos;
 - chamadas reais para API de IA.
 
@@ -101,6 +126,10 @@ Antes de mergear:
 ruff check .
 ruff format . --check
 pytest
+cd apps/web
+npm run lint
+npm run typecheck
+npm run build
 ```
 
 ## Futuro

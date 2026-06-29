@@ -32,3 +32,37 @@ jobs:
 
       - name: Tests
         run: pytest -v
+
+      - name: Package browser extension
+        run: python scripts/package_extension.py
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: apps/web
+        run: npm ci
+
+      - name: Frontend lint
+        working-directory: apps/web
+        run: npm run lint
+
+      - name: Frontend typecheck
+        working-directory: apps/web
+        run: npm run typecheck
+
+      - name: Frontend build
+        working-directory: apps/web
+        run: npm run build
+
+      - name: Install Chromium for smoke E2E
+        working-directory: apps/web
+        run: npx playwright install --with-deps chromium
+
+      - name: Frontend smoke E2E
+        working-directory: apps/web
+        run: npx playwright test tests/e2e/smoke.spec.ts --project=chromium
