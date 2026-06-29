@@ -65,8 +65,14 @@ class PromptRegistry:
 - `career_advice_v1`;
 - `source_import_enrichment_v1`;
 - `job_radar_match_explanation_v1`.
+- `job_wishlist_builder_v1`.
 
 O prompt do Radar explica evidências e lacunas, mas não altera score final.
+
+`job_wishlist_builder_v1` transforma texto livre em rascunho de wishlist do Radar. Ele deve retornar
+JSON validado, exigir revisão humana e não inventar formação, experiência, certificação, registro
+profissional, licença, empresa, salário ou requisito. O prompt é multiárea e não assume que a pessoa
+é de tecnologia, usa GitHub, procura CLT ou possui experiência formal.
 
 ## Dados salvos por execução
 

@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.8.0 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.8.1 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -29,6 +29,7 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | IA e Providers | `/settings` | `/api/v1/settings/ai*` | `apps.api.services.ai_settings` | `modules/ai/providers` | Real |
 | Caixa de Entrada de Oportunidades | `/sources` | `/api/v1/sources/imports*`, `/captures*`, `/dedupe`, `/stats`, `/export`, `/directory` | `apps.api.services.sources` | `modules/sources`, `modules/parsers`, `modules/tracker` | Real |
 | Radar de Vagas | `/radar` | `/api/v1/radar/*` | `apps.api.services.radar` | `modules/radar`, `modules/scraping`, `modules/sources`, `modules/tracker` | Real |
+| Wishlist com IA/local | `/radar` | `POST /api/v1/radar/wishlists/draft` | `radar_draft_wishlist` | `modules/radar/wishlist_draft.py`, `modules/profile/context.py`, Prompt Registry | Real |
 | Extensão Local | `/sources` | `/api/v1/extension/*` | `apps.api.services.extension` | `modules/local_api`, `browser-extension/` | Real |
 | Navegador autenticado autorizado | `/sources` | `/api/v1/sources/authenticated-browser/*` | `apps.api.services.sources` | fluxo existente de scraping local | Parcial |
 | Streamlit | legado/dev | Não é API web | `app.py`, `modules/ui` | core antigo | Legado |
@@ -50,6 +51,10 @@ allow_match
 allow_ats
 allow_tailor
 allow_github
+allow_resume
+allow_job
+allow_source_import
+allow_radar
 allow_memory_context
 ```
 
@@ -141,6 +146,35 @@ conecta resultados revisados à Caixa de Entrada ou ao Tracker.
 
 O prompt `job_radar_match_explanation_v1` é opcional e só explica evidências/lacunas. Score final,
 deduplicação e alertas permanecem no backend.
+
+## Wishlist e contexto v1.8.1
+
+Endpoint novo:
+
+```txt
+POST /api/v1/radar/wishlists/draft
+```
+
+Esse endpoint recebe texto livre, monta um rascunho de `JobWishlist` e retorna:
+
+- `wishlist`;
+- `confidence`;
+- `detected_domains`;
+- `detected_career_moments`;
+- `assumptions`;
+- `questions_to_confirm`;
+- `warnings`;
+- `needs_user_review=true`;
+- `provider_used`;
+- `analysis_mode`.
+
+O rascunho não é persistido. O frontend apenas preenche o formulário editável, e a pessoa precisa
+salvar manualmente.
+
+`modules/profile/context.py` e `modules/profile/orchestrator.py` preparam um contexto profissional
+universal, sem assumir tecnologia, GitHub, CLT, graduação, conselho profissional ou experiência
+formal. A v1.8.1 usa esse contexto apenas como sinal opcional; o Perfil Profissional Universal
+completo fica para v1.8.2.
 
 ## UX web v1.6.0
 

@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.8.0 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.8.1 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,14 +8,32 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.8.0 |
+| Versão atual considerada | v1.8.1 |
 | Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional e intake persistente |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v1.9.0 Radar scheduling e conectores oficiais |
+| Próximo ciclo técnico | v1.8.2 Perfil Profissional Universal |
 | Foco de produto | Copiloto de carreira multiárea com intake de oportunidades |
-| Foco técnico imediato | Radar manual, feeds públicos, alertas locais e integração com Inbox/Tracker |
-| Grande lacuna atual | Agendamento local recorrente e conectores reais de APIs oficiais |
+| Foco técnico imediato | Wishlist com IA, contexto profissional universal e estabilidade do Radar |
+| Grande lacuna atual | Perfil Profissional Universal completo, agendamento local e conectores reais de APIs oficiais |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
+
+## Estado atual - v1.8.1
+
+A v1.8.1 consolida o **Radar de Vagas**:
+
+- adiciona `POST /api/v1/radar/wishlists/draft` para transformar texto livre em rascunho de
+  wishlist;
+- registra `job_wishlist_builder_v1` para IA opcional;
+- mantém fallback local multiárea, sem assumir TI, GitHub, CLT, diploma ou experiência formal;
+- prepara `ProfileContext` e `ProfileContextOrchestrator` como base para Perfil Profissional
+  Universal;
+- amplia toggles seguros de IA para currículo, vaga, match, ATS, tailor, GitHub, importações e
+  Radar;
+- melhora `/radar` com criação assistida de wishlist, erros de fonte visíveis e execução desabilitada
+  quando não há fonte ativa;
+- inclui frontend e empacotamento da extensão no CI.
+
+Nenhuma wishlist é salva automaticamente; a pessoa revisa e edita antes de salvar.
 
 ## Estado atual - v1.8.0
 
@@ -158,6 +176,8 @@ A evolução deve ser feita por camadas:
 | v1.7.0 | Public Sources, Importers & Capture History | Produto | Importadores, Caixa de Entrada, histórico e dedupe local. |
 | v1.7.1 | Intake Polish, Encoding Fixes & Source Discovery Prep | Produto | Upload real, merge visual, exportação e Diretório de Fontes. |
 | v1.8.0 | Job Radar, Public Feeds & Wishlist Alerts | Produto | Radar manual, RSS público, wishlist e alertas locais. |
+| v1.8.1 | AI Wishlist, Radar Stability & Profile Context Prep | Produto | Wishlist por IA/local, contexto profissional preparado e CI web. |
+| v1.8.2 | Universal Professional Profile | Produto/core | Perfil Profissional Universal editável, multiárea e evidence-first. |
 | v1.9.0 | Radar Scheduling & Official Connectors | Produto | Agendamento local opcional e conectores oficiais documentados. |
 | v2.0.0 | Assistant autônomo com aprovação manual | Produto/arquitetura | Autonomia local com aprovações explícitas e sem auto-apply. |
 

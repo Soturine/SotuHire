@@ -20,6 +20,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [v1.7.0 Public Sources and Importers](07-development/v1.7.0-public-sources-importers-capture-history.md)
 - [v1.7.1 Intake Polish and Source Discovery](07-development/v1.7.1-intake-polish-source-discovery.md)
 - [v1.8.0 Job Radar](07-development/v1.8.0-job-radar-public-feeds-wishlist-alerts.md)
+- [v1.8.1 AI Wishlist and Radar Stability](07-development/v1.8.1-ai-wishlist-radar-stability-profile-context.md)
 
 ## Frontend-ready
 

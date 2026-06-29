@@ -1,8 +1,12 @@
-# Visual preview v1.8.0
+# Visual preview v1.8.1
 
 Esta página registra o estado visual atual do frontend moderno do SotuHire. A série v1.8 usa
 capturas Playwright com viewport fixo `1440x1000`, `deviceScaleFactor=1` e `fullPage=false`, sem
 chrome do navegador, sem marca d'água, sem dados reais e sem API keys.
+
+## v1.8.1 - Wishlist com IA
+
+![SotuHire v1.8.1 Web Radar AI Wishlist](../assets/screenshots/sotuhire-v1.8.1-web-radar-ai-wishlist.png)
 
 ## Walkthrough
 

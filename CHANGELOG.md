@@ -4,6 +4,40 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.8.1] - 2026-06-29
+
+### Adicionado
+
+- Endpoint `POST /api/v1/radar/wishlists/draft` para gerar rascunho de wishlist a partir de texto livre.
+- Prompt `job_wishlist_builder_v1` no Prompt Registry.
+- Fallback local multiárea para wishlist do Radar, sem assumir tecnologia, GitHub, CLT, diploma ou experiência formal.
+- `ProfileContext` e `ProfileContextOrchestrator` como preparação para Perfil Profissional Universal.
+- Seção **Criar wishlist com IA** na tela Radar.
+- Toggles de IA para currículo, vaga, importações e Radar.
+- CI com frontend `npm ci`, lint, typecheck, build, smoke E2E Chromium e empacotamento da extensão.
+
+### Alterado
+
+- Radar mostra erros de fonte no card e desabilita execução quando não há fonte ativa.
+- Wishlist do Radar ganhou campos editáveis para domínio, senioridade, termos a evitar, ATS mínimo e notas.
+- README, roadmap, mapa de integração, docs de Radar e Prompt Registry atualizados para v1.8.1.
+- Versão do projeto, API e frontend atualizada para `1.8.1`.
+
+### Segurança
+
+- Wishlist gerada por IA/local nunca é salva automaticamente.
+- API key continua backend-side e nunca retorna ao frontend.
+- Scores finais continuam no backend/core.
+- Nenhum fluxo sensível de authenticated browser, Chromium/CDP, crawler logado, cookie, token, sessão,
+  CAPTCHA ou auto-apply foi alterado.
+
+### Validação
+
+- Testes backend cobrem draft local, exemplos multiárea, Gemini fake, fallback por JSON inválido,
+  toggle `allow_radar=false`, ausência de segredo e não persistência automática.
+- Playwright cobre geração de draft, preenchimento do formulário, edição antes de salvar e regressões
+  de storage/branding existentes.
+
 ## [1.8.0] - 2026-06-27
 
 ### Adicionado

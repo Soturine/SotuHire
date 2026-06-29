@@ -1,6 +1,6 @@
 # Radar de Vagas, feeds públicos e APIs oficiais
 
-Este guia descreve o escopo seguro do Radar de Vagas na v1.8.0.
+Este guia descreve o escopo seguro do Radar de Vagas a partir da v1.8.1.
 
 ## O que o Radar faz
 
@@ -14,6 +14,7 @@ Este guia descreve o escopo seguro do Radar de Vagas na v1.8.0.
 - compara com wishlist e currículo;
 - gera alertas locais;
 - permite salvar manualmente na Caixa de Entrada ou no Tracker.
+- cria rascunhos de wishlist a partir de texto livre, com revisão humana obrigatória.
 
 ## O que o Radar não faz
 
@@ -36,6 +37,23 @@ O usuário informa a URL do feed. A rodada manual do Radar:
 5. gera alertas quando o score passa do mínimo da wishlist.
 
 Nada é salvo em Candidaturas sem clique explícito.
+
+## Wishlist com IA/local
+
+Na v1.8.1, a tela `/radar` inclui **Criar wishlist com IA**. O fluxo:
+
+1. a pessoa descreve o que procura em texto livre;
+2. o backend cria um rascunho local ou usa IA opcional quando `allow_radar=true`;
+3. a resposta mostra suposições, perguntas, warnings, confiança e modo `IA`, `Local` ou `Fallback`;
+4. o formulário é preenchido para edição;
+5. a wishlist só é salva se a pessoa confirmar manualmente.
+
+O fallback local é multiárea. Ele não assume que a pessoa é de TI, tem GitHub, busca CLT, possui
+diploma, experiência formal, conselho profissional ou registro técnico.
+
+O prompt `job_wishlist_builder_v1` não pode inventar formação, experiência, certificação, registro,
+licença, salário, empresa ou requisito. Ele retorna JSON validado e sempre marca
+`needs_user_review=true`.
 
 ## APIs oficiais
 

@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versao `v1.8.0`.
+Frontend moderno do SotuHire em `apps/web` para a versao `v1.8.1`.
 
 ## Stack
 
@@ -141,13 +141,13 @@ A tela **Fontes e Captura** inclui o fluxo `AUTHENTICATED_BROWSER` existente no 
 - exige confirmacao de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-A v1.8.0 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
+A v1.8.1 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
 regras protegidas.
 
 O painel **Extensao Local** consulta `/api/v1/extension/status` e `/api/v1/extension/captures` para
 mostrar capturas ja salvas pela Local Companion API. Ele mostra status do companion, ultima
 sincronizacao, origem, URL, data, tipo de captura e acoes para Vaga, GitHub Analysis e
-Candidaturas. A v1.8.0 tambem permite marcar capturas locais como revisadas, ignoradas ou
+Candidaturas. A v1.8.1 tambem permite marcar capturas locais como revisadas, ignoradas ou
 arquivadas sem tocar em browser autenticado.
 
 ### Caixa de Entrada e importadores
@@ -164,13 +164,13 @@ analisar ou salvar:
 O painel oferece busca, filtros por status/origem, deduplicacao local e acoes para **Importar para
 Vaga**, **Salvar em Candidaturas**, **Copiar link**, **Arquivar** e **Ignorar**.
 
-Na v1.8.0, CSV/JSON tambem podem ser enviados por upload do navegador. O app mostra preview das
+Na v1.8.1, CSV/JSON tambem podem ser enviados por upload do navegador. O app mostra preview das
 primeiras linhas/itens e so importa depois de confirmacao. A Caixa tambem exporta todos, filtrados
 ou selecionados em CSV/JSON, e a comparacao de duplicatas permite **Mesclar**, **Manter separado**,
 **Arquivar novo** ou **Marcar como nao duplicata** preservando historico.
 
 O **Diretório de Fontes** organiza paginas de carreira abertas, feeds RSS publicos, APIs oficiais,
-CSV/JSON recorrente, links manuais e fontes observadas. Na v1.8.0, feeds RSS/Atom publicos podem
+CSV/JSON recorrente, links manuais e fontes observadas. Na v1.8.1, feeds RSS/Atom publicos podem
 ser configurados e atualizados manualmente pelo **Radar de Vagas**. APIs oficiais continuam como
 estrutura planejada ate existir conector documentado.
 
@@ -180,9 +180,10 @@ texto da vaga.
 
 ## Radar de Vagas
 
-A tela `/radar` implementa o fluxo v1.8.0:
+A tela `/radar` implementa o fluxo v1.8.1:
 
 - criar wishlist com cargos, skills, locais, modelo de trabalho e score minimo;
+- criar rascunho de wishlist a partir de texto livre com IA/local;
 - adicionar fonte RSS/Atom publica;
 - registrar API oficial planejada via adapter seguro;
 - rodar Radar manualmente;
@@ -193,6 +194,7 @@ Endpoints usados:
 
 ```txt
 GET/POST/PATCH/DELETE /api/v1/radar/wishlists
+POST /api/v1/radar/wishlists/draft
 GET/POST/PATCH/DELETE /api/v1/radar/sources
 POST /api/v1/radar/run
 GET /api/v1/radar/runs
@@ -204,7 +206,8 @@ GET /api/v1/radar/stats
 ```
 
 O score final do Radar fica no backend. IA, quando habilitada, apenas explica o match via
-`job_radar_match_explanation_v1` e cai para local se falhar.
+`job_radar_match_explanation_v1` e cria rascunho de wishlist via `job_wishlist_builder_v1`. Se o
+provider falhar, o app cai para local. A wishlist nunca e salva automaticamente.
 
 ## Testes e screenshots
 
