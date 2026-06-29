@@ -8,7 +8,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from apps.api.config import ApiSettings
-from apps.api.routes import analysis, extension, health, profile, radar, sources, tracker
+from apps.api.routes import (
+    analysis,
+    extension,
+    health,
+    notifications,
+    profile,
+    radar,
+    sources,
+    tracker,
+)
 from apps.api.routes import settings as settings_routes
 from apps.api.schemas.common import ApiError, ErrorEnvelope
 
@@ -36,6 +45,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(profile.router)
     app.include_router(sources.router)
     app.include_router(radar.router)
+    app.include_router(notifications.router)
     app.include_router(extension.router)
     _install_exception_handlers(app)
     return app
