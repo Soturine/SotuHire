@@ -18,4 +18,4 @@ def test_readme_references_current_web_screenshots_and_changelog():
         assert 10_000 < screenshot.stat().st_size < 2_000_000
     assert readme.count("docs/assets/screenshots/") == len(screenshots)
     assert "[Changelog](CHANGELOG.md)" in readme
-    assert "release-v1.8.1" in readme
+    assert "release-v1.8.2" in readme

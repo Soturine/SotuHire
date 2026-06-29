@@ -13,6 +13,7 @@ def test_default_prompt_registry_lists_initial_prompts() -> None:
         "job_radar_match_explanation_v1",
         "job_wishlist_builder_v1",
         "match_analysis_evidence_based_v1",
+        "profile_items_extractor_v1",
         "resume_extraction_v1",
         "resume_tailor_v1",
         "source_import_enrichment_v1",

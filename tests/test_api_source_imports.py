@@ -331,3 +331,57 @@ def test_extension_capture_patch_marks_reviewed(tmp_path: Path, monkeypatch) -> 
 
     assert response.status_code == 200
     assert response.json()["data"]["capture"]["status"] == "archived"
+
+
+def test_authenticated_assisted_capture_saves_visible_text_without_session_secret(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    client = api_client()
+
+    response = client.post(
+        "/api/v1/sources/authenticated-captures",
+        json={
+            "source_url": "https://example.invalid/private/job",
+            "source_host": "example.invalid",
+            "capture_mode": "selected_text",
+            "selected_text": (
+                "Cargo: Enfermeiro hospitalar. Requisito citado na tela: COREN. "
+                "Experiencia em UTI e atendimento."
+            ),
+            "user_review_required": True,
+            "metadata": {"browser": "manual"},
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    serialized = json.dumps(payload).lower()
+    capture = payload["data"]["capture"]
+    assert capture["origin"] == "authenticated_assisted_capture"
+    assert capture["metadata"]["user_review_required"] is True
+    assert capture["metadata"]["auto_apply"] is False
+    assert capture["metadata"]["stores_session_secrets"] is False
+    assert capture["metadata"]["profile_signals"]["possible_gaps"] == ["COREN"]
+    assert "cookie" not in serialized
+    assert "token" not in serialized
+
+
+def test_authenticated_assisted_capture_rejects_unsafe_metadata(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    client = api_client()
+
+    response = client.post(
+        "/api/v1/sources/authenticated-captures",
+        json={
+            "source_url": "https://example.invalid/private/job",
+            "visible_text": "Cargo: Analista de Dados.",
+            "metadata": {"cookie": "nao-deve-ser-aceito"},
+        },
+    )
+
+    assert response.status_code == 422

@@ -10,6 +10,7 @@ const coreScreens = [
   { path: "/tailor", heading: /Ajuste/ },
   { path: "/github", heading: /GitHub/ },
   { path: "/radar", heading: "Radar de Vagas" },
+  { path: "/profile", heading: "Perfil" },
   { path: "/tracker", heading: "Candidaturas" },
   { path: "/intelligence", heading: /Intelig.ncia/ },
   { path: "/sources", heading: "Fontes e Captura" },
@@ -49,6 +50,7 @@ test("sidebar navigates across core screens", async ({ page }) => {
     { label: /Vaga/i, url: /\/job$/, heading: "Vaga" },
     { label: /Compatibilidade/i, url: /\/match$/, heading: /Compatibilidade/ },
     { label: /Radar/i, url: /\/radar$/, heading: "Radar de Vagas" },
+    { label: /Perfil/i, url: /\/profile$/, heading: "Perfil" },
     { label: /Fontes e Captura/i, url: /\/sources$/, heading: "Fontes e Captura" },
     { label: /Configura..es/i, url: /\/settings$/, heading: /Configura..es/ },
   ];
@@ -59,6 +61,35 @@ test("sidebar navigates across core screens", async ({ page }) => {
     await expect(page).toHaveURL(route.url);
     await expect(page.getByRole("heading", { name: route.heading }).first()).toBeVisible();
   }
+});
+
+test("profile page imports fictitious text and keeps review before saving", async ({ page }) => {
+  await page.goto("/profile");
+
+  await expect(page.getByRole("heading", { name: "Perfil", exact: true })).toBeVisible();
+  await expect(page.getByText("Perfil Profissional Universal", { exact: true })).toBeVisible();
+  await page.getByTestId("profile-name").fill("Pessoa Ficticia E2E");
+  await page.getByTestId("profile-save").click();
+  await expect(page.getByText(/Perfil atualizado|Modo Demo/i).first()).toBeVisible();
+
+  await page.getByTestId("profile-item-title").fill("NR10");
+  await page
+    .getByTestId("profile-item-evidence")
+    .fill("Certificado ficticio informado pelo usuario.");
+  await page.getByTestId("profile-add-item").click();
+  await expect(page.getByText(/Item adicionado|Modo Demo/i).first()).toBeVisible();
+
+  await page
+    .getByTestId("profile-import-textarea")
+    .fill("Sou estudante de engenharia com CREA e experiencia em obra.");
+  await page.getByTestId("profile-import-text").click();
+  await expect(page.getByTestId("profile-draft-items")).toBeVisible();
+  await expect(page.getByTestId("profile-draft-items")).toContainText(
+    /Revisar|Adicionar ao perfil/,
+  );
+  await page.getByRole("button", { name: "Adicionar ao perfil" }).first().click();
+  await expect(page.getByText(/Item adicionado|Modo Demo/i).first()).toBeVisible();
+  await expect(page.getByTestId("profile-items")).toContainText(/NR10|Engenharia|Registro/);
 });
 
 test("analysis demo buttons show results", async ({ page }) => {
@@ -169,6 +200,9 @@ test("job radar creates wishlist/source, runs demo and saves results", async ({ 
   await expect(page.getByTestId("radar-demo-badge")).toContainText("Dados de demonstração");
   await expect(page.getByTestId("radar-summary")).toBeVisible();
   await expect(page.getByTestId("radar-wishlist-ai-text")).toBeVisible();
+  await expect(page.getByTestId("radar-profile-context-badge")).toContainText(
+    "Contexto do perfil aplicado",
+  );
   await page
     .getByTestId("radar-wishlist-ai-text")
     .fill(
