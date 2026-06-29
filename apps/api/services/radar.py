@@ -8,7 +8,17 @@ from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
 from modules.ai.schemas.analysis_insights import RadarMatchExplanationOutput, WishlistDraftOutput
 from modules.profile import ProfileContext, ProfileContextOrchestrator
-from modules.radar import JobRadarService, JobWishlist, RadarResult, RadarSource
+from modules.radar import (
+    JobRadarService,
+    JobWishlist,
+    LocalNotificationService,
+    RadarResult,
+    RadarSchedule,
+    RadarSchedulerRuntime,
+    RadarScheduleStore,
+    RadarSource,
+    ScheduledRadarService,
+)
 from modules.radar.wishlist_draft import build_local_wishlist_draft
 from pydantic import ValidationError
 
@@ -24,6 +34,13 @@ from apps.api.schemas.radar import (
     RadarRunsResponse,
     RadarSaveInboxResponse,
     RadarSaveTrackerResponse,
+    RadarScheduledRunResponse,
+    RadarScheduledRunsResponse,
+    RadarSchedulePatchRequest,
+    RadarScheduleRequest,
+    RadarScheduleResponse,
+    RadarSchedulerStatusResponse,
+    RadarSchedulesResponse,
     RadarSourcePatchRequest,
     RadarSourceRequest,
     RadarSourceResponse,
@@ -37,6 +54,19 @@ from apps.api.schemas.radar import (
     RadarWishlistsResponse,
 )
 from apps.api.services.ai_settings import get_ai_runtime
+
+_scheduler_runtime: RadarSchedulerRuntime | None = None
+
+
+def _runtime() -> RadarSchedulerRuntime:
+    """Return a runtime bound to the current local data directory."""
+    global _scheduler_runtime
+    expected_path = RadarScheduleStore().path
+    if _scheduler_runtime is None or _scheduler_runtime.service.store.path != expected_path:
+        _scheduler_runtime = RadarSchedulerRuntime(
+            ScheduledRadarService(store=RadarScheduleStore())
+        )
+    return _scheduler_runtime
 
 
 def radar_wishlists() -> RadarWishlistsResponse:
@@ -207,6 +237,92 @@ def radar_run(request: RadarRunRequest) -> tuple[RadarRunResponse, list[str]]:
 def radar_runs() -> RadarRunsResponse:
     """List radar runs."""
     return RadarRunsResponse(runs=JobRadarService().list_runs())
+
+
+def radar_schedules() -> RadarSchedulesResponse:
+    """List local Radar schedules."""
+    return RadarSchedulesResponse(schedules=ScheduledRadarService().list_schedules())
+
+
+def radar_get_schedule(schedule_id: str) -> RadarScheduleResponse:
+    """Return one local Radar schedule."""
+    try:
+        schedule = ScheduledRadarService().get_schedule(schedule_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return RadarScheduleResponse(schedule=schedule)
+
+
+def radar_create_schedule(request: RadarScheduleRequest) -> RadarScheduleResponse:
+    """Create one local Radar schedule."""
+    schedule = ScheduledRadarService().create_schedule(
+        RadarSchedule.model_validate(request.model_dump(exclude={"request_id"}))
+    )
+    return RadarScheduleResponse(schedule=schedule, message="Agendamento criado.")
+
+
+def radar_patch_schedule(
+    schedule_id: str,
+    request: RadarSchedulePatchRequest,
+) -> RadarScheduleResponse:
+    """Patch one local Radar schedule."""
+    try:
+        schedule = ScheduledRadarService().update_schedule(
+            schedule_id,
+            request.model_dump(exclude={"request_id"}, exclude_unset=True),
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return RadarScheduleResponse(schedule=schedule, message="Agendamento atualizado.")
+
+
+def radar_delete_schedule(schedule_id: str) -> RadarScheduleResponse:
+    """Disable one local Radar schedule."""
+    try:
+        schedule = ScheduledRadarService().delete_schedule(schedule_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    return RadarScheduleResponse(schedule=schedule, message="Agendamento pausado.")
+
+
+def radar_run_schedule_now(schedule_id: str) -> RadarScheduledRunResponse:
+    """Execute one schedule manually."""
+    try:
+        scheduled_run = ScheduledRadarService().run_schedule(
+            schedule_id,
+            manual=True,
+            ai_enricher=_radar_ai_enricher,
+        )
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    notifications = LocalNotificationService().list_notifications()
+    return RadarScheduledRunResponse(
+        scheduled_run=scheduled_run,
+        notifications=notifications[:5],
+        message="Agendamento executado para revisao manual.",
+    )
+
+
+def radar_scheduled_runs() -> RadarScheduledRunsResponse:
+    """List scheduled run history."""
+    return RadarScheduledRunsResponse(scheduled_runs=ScheduledRadarService().list_scheduled_runs())
+
+
+def radar_scheduler_status() -> RadarSchedulerStatusResponse:
+    """Return scheduler runtime status."""
+    return RadarSchedulerStatusResponse.model_validate(_runtime().status().model_dump())
+
+
+def radar_scheduler_start() -> RadarSchedulerStatusResponse:
+    """Start local in-process scheduler."""
+    return RadarSchedulerStatusResponse.model_validate(
+        _runtime().start(ai_enricher=_radar_ai_enricher).model_dump()
+    )
+
+
+def radar_scheduler_stop() -> RadarSchedulerStatusResponse:
+    """Stop local in-process scheduler."""
+    return RadarSchedulerStatusResponse.model_validate(_runtime().stop().model_dump())
 
 
 def radar_results(status: str = "", source_id: str = "") -> RadarResultsResponse:

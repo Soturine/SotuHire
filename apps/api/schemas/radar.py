@@ -16,6 +16,13 @@ from modules.radar.models import (
     RadarStats,
     SourceAdapter,
 )
+from modules.radar.schedule_models import (
+    LocalNotification,
+    RadarSchedule,
+    RadarScheduledRun,
+    RadarSchedulerStatus,
+    ScheduleFrequency,
+)
 from modules.sources.imports import OpportunityInboxItem
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -151,6 +158,56 @@ class RadarRunRequest(BaseModel):
     request_id: str = Field(default="", max_length=120)
 
 
+class RadarScheduleRequest(BaseModel):
+    """Create one local Radar schedule."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(default="Radar agendado", min_length=1, max_length=160)
+    enabled: bool = True
+    wishlist_id: str | None = Field(default=None, max_length=120)
+    source_ids: list[str] = Field(default_factory=list, max_length=50)
+    keywords: list[str] = Field(default_factory=list, max_length=40)
+    use_ai: bool = False
+    use_profile_context: bool = True
+    frequency: ScheduleFrequency = "daily"
+    interval_minutes: int | None = Field(default=None, ge=60, le=10_080)
+    timezone: str = Field(default="local", max_length=80)
+    quiet_hours_start: str | None = Field(default=None, max_length=5)
+    quiet_hours_end: str | None = Field(default=None, max_length=5)
+    cooldown_minutes: int = Field(default=720, ge=0, le=43_200)
+    min_match_score: int | None = Field(default=None, ge=0, le=100)
+    min_ats_score: int | None = Field(default=None, ge=0, le=100)
+    notify_on_new_matches: bool = True
+    notify_on_score_threshold: bool = True
+    request_id: str = Field(default="", max_length=120)
+
+
+class RadarSchedulePatchRequest(BaseModel):
+    """Patch one local Radar schedule."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    name: str | None = Field(default=None, max_length=160)
+    enabled: bool | None = None
+    wishlist_id: str | None = Field(default=None, max_length=120)
+    source_ids: list[str] | None = Field(default=None, max_length=50)
+    keywords: list[str] | None = Field(default=None, max_length=40)
+    use_ai: bool | None = None
+    use_profile_context: bool | None = None
+    frequency: ScheduleFrequency | None = None
+    interval_minutes: int | None = Field(default=None, ge=60, le=10_080)
+    timezone: str | None = Field(default=None, max_length=80)
+    quiet_hours_start: str | None = Field(default=None, max_length=5)
+    quiet_hours_end: str | None = Field(default=None, max_length=5)
+    cooldown_minutes: int | None = Field(default=None, ge=0, le=43_200)
+    min_match_score: int | None = Field(default=None, ge=0, le=100)
+    min_ats_score: int | None = Field(default=None, ge=0, le=100)
+    notify_on_new_matches: bool | None = None
+    notify_on_score_threshold: bool | None = None
+    request_id: str = Field(default="", max_length=120)
+
+
 class RadarResultPatchRequest(BaseModel):
     """Patch one radar result."""
 
@@ -221,6 +278,45 @@ class RadarRunsResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     runs: list[RadarRun] = Field(default_factory=list)
+
+
+class RadarSchedulesResponse(BaseModel):
+    """Schedule list response."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schedules: list[RadarSchedule] = Field(default_factory=list)
+
+
+class RadarScheduleResponse(BaseModel):
+    """One schedule response."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    schedule: RadarSchedule
+    message: str = ""
+
+
+class RadarScheduledRunResponse(BaseModel):
+    """One scheduled run response."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    scheduled_run: RadarScheduledRun
+    notifications: list[LocalNotification] = Field(default_factory=list)
+    message: str = ""
+
+
+class RadarScheduledRunsResponse(BaseModel):
+    """Scheduled run history response."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    scheduled_runs: list[RadarScheduledRun] = Field(default_factory=list)
+
+
+class RadarSchedulerStatusResponse(RadarSchedulerStatus):
+    """Scheduler runtime status response."""
 
 
 class RadarResultsResponse(BaseModel):

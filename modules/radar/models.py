@@ -20,6 +20,7 @@ RadarSourceType = Literal[
     "manual_public_page",
     "manual_url",
     "recurring_csv_json",
+    "authenticated_assisted_capture",
 ]
 RadarSourceStatus = Literal[
     "available",

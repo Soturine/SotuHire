@@ -126,6 +126,14 @@ class JobRadarService:
                 supported=False,
                 notes="Use importacao manual ate existir agendamento local explicito.",
             ),
+            SourceAdapter(
+                source_type="authenticated_assisted_capture",
+                adapter_name="Captura assistida autenticada",
+                notes=(
+                    "Agendavel como lembrete local revisavel; nao coleta cookies, tokens, "
+                    "sessao ou headers."
+                ),
+            ),
         ]
 
     def list_wishlists(self) -> list[JobWishlist]:
@@ -460,6 +468,15 @@ class JobRadarService:
             return RssFeedConnector(self.scraping_client).collect(_scraping_source(source))
         if source.source_type in {"manual_public_page", "manual_url"}:
             return ManualUrlConnector(self.scraping_client).collect(_scraping_source(source))
+        if source.source_type == "authenticated_assisted_capture":
+            return CollectionResult(
+                source=_scraping_source(source),
+                failures=[
+                    "Captura assistida autenticada agendada: abra a pagina, revise e acione a captura manualmente."
+                ],
+                user_assisted_capture=True,
+                authenticated_browser=True,
+            )
         if source.source_type == "official_api":
             return CollectionResult(
                 source=_scraping_source(source),
@@ -831,6 +848,8 @@ def _source_origin_for_radar(source_type: RadarSourceType) -> SourceOrigin:
         return "public_feed"
     if source_type == "official_api":
         return "official_api_future"
+    if source_type == "authenticated_assisted_capture":
+        return "authenticated_assisted_capture"
     return "public_source"
 
 
@@ -839,6 +858,8 @@ def _collection_method_for_radar(source_type: RadarSourceType) -> CollectionMeth
         return "rss"
     if source_type == "official_api":
         return "official_api_future"
+    if source_type == "authenticated_assisted_capture":
+        return "browser_assisted_capture"
     return "public_scraping"
 
 

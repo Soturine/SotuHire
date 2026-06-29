@@ -18,6 +18,13 @@ from apps.api.schemas.radar import (
     RadarRunsResponse,
     RadarSaveInboxResponse,
     RadarSaveTrackerResponse,
+    RadarScheduledRunResponse,
+    RadarScheduledRunsResponse,
+    RadarSchedulePatchRequest,
+    RadarScheduleRequest,
+    RadarScheduleResponse,
+    RadarSchedulerStatusResponse,
+    RadarSchedulesResponse,
     RadarSourcePatchRequest,
     RadarSourceRequest,
     RadarSourceResponse,
@@ -32,20 +39,30 @@ from apps.api.schemas.radar import (
 )
 from apps.api.services.radar import (
     radar_alerts,
+    radar_create_schedule,
     radar_create_source,
     radar_create_wishlist,
+    radar_delete_schedule,
     radar_delete_source,
     radar_delete_wishlist,
     radar_draft_wishlist,
+    radar_get_schedule,
     radar_patch_alert,
     radar_patch_result,
+    radar_patch_schedule,
     radar_patch_source,
     radar_patch_wishlist,
     radar_results,
     radar_run,
+    radar_run_schedule_now,
     radar_runs,
     radar_save_inbox,
     radar_save_tracker,
+    radar_scheduled_runs,
+    radar_scheduler_start,
+    radar_scheduler_status,
+    radar_scheduler_stop,
+    radar_schedules,
     radar_sources,
     radar_stats,
     radar_wishlists,
@@ -128,6 +145,72 @@ def run(payload: RadarRunRequest) -> ApiEnvelope[RadarRunResponse]:
 def runs() -> ApiEnvelope[RadarRunsResponse]:
     """List radar run history."""
     return ok(radar_runs())
+
+
+@router.get("/schedules", response_model=ApiEnvelope[RadarSchedulesResponse])
+def schedules() -> ApiEnvelope[RadarSchedulesResponse]:
+    """List local Radar schedules."""
+    return ok(radar_schedules())
+
+
+@router.post("/schedules", response_model=ApiEnvelope[RadarScheduleResponse])
+def create_schedule(payload: RadarScheduleRequest) -> ApiEnvelope[RadarScheduleResponse]:
+    """Create one local Radar schedule."""
+    return ok(radar_create_schedule(payload), request_id=payload.request_id)
+
+
+@router.get("/schedules/{schedule_id}", response_model=ApiEnvelope[RadarScheduleResponse])
+def get_schedule(schedule_id: str) -> ApiEnvelope[RadarScheduleResponse]:
+    """Return one local Radar schedule."""
+    return ok(radar_get_schedule(schedule_id))
+
+
+@router.patch("/schedules/{schedule_id}", response_model=ApiEnvelope[RadarScheduleResponse])
+def patch_schedule(
+    schedule_id: str,
+    payload: RadarSchedulePatchRequest,
+) -> ApiEnvelope[RadarScheduleResponse]:
+    """Patch one local Radar schedule."""
+    return ok(radar_patch_schedule(schedule_id, payload), request_id=payload.request_id)
+
+
+@router.delete("/schedules/{schedule_id}", response_model=ApiEnvelope[RadarScheduleResponse])
+def delete_schedule(schedule_id: str) -> ApiEnvelope[RadarScheduleResponse]:
+    """Disable one local Radar schedule."""
+    return ok(radar_delete_schedule(schedule_id))
+
+
+@router.post(
+    "/schedules/{schedule_id}/run-now",
+    response_model=ApiEnvelope[RadarScheduledRunResponse],
+)
+def run_schedule_now(schedule_id: str) -> ApiEnvelope[RadarScheduledRunResponse]:
+    """Run one schedule immediately for manual review."""
+    return ok(radar_run_schedule_now(schedule_id))
+
+
+@router.get("/scheduled-runs", response_model=ApiEnvelope[RadarScheduledRunsResponse])
+def scheduled_runs() -> ApiEnvelope[RadarScheduledRunsResponse]:
+    """List scheduled Radar run history."""
+    return ok(radar_scheduled_runs())
+
+
+@router.get("/scheduler/status", response_model=ApiEnvelope[RadarSchedulerStatusResponse])
+def scheduler_status() -> ApiEnvelope[RadarSchedulerStatusResponse]:
+    """Return local scheduler status."""
+    return ok(radar_scheduler_status())
+
+
+@router.post("/scheduler/start", response_model=ApiEnvelope[RadarSchedulerStatusResponse])
+def scheduler_start() -> ApiEnvelope[RadarSchedulerStatusResponse]:
+    """Start the in-process local scheduler."""
+    return ok(radar_scheduler_start())
+
+
+@router.post("/scheduler/stop", response_model=ApiEnvelope[RadarSchedulerStatusResponse])
+def scheduler_stop() -> ApiEnvelope[RadarSchedulerStatusResponse]:
+    """Stop the in-process local scheduler."""
+    return ok(radar_scheduler_stop())
 
 
 @router.get("/results", response_model=ApiEnvelope[RadarResultsResponse])
