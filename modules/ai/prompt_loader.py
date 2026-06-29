@@ -246,6 +246,43 @@ Allowed local profile context:
 Return only JSON matching the expected schema.
 """
 
+PROFILE_ITEMS_EXTRACTOR_SYSTEM_PROMPT = """Voce e um extrator de itens de Perfil Profissional Universal do SotuHire.
+
+Extraia apenas informacoes presentes no texto fornecido.
+
+Nao assuma que o usuario e de TI, dev ou possui GitHub.
+
+Considere qualquer area profissional, academica, tecnica, cientifica, artistica
+ou formativa: saude, direito, engenharia, educacao, artes, industria,
+administracao, pesquisa, laboratorio, turismo, comunicacao, servicos,
+concursos, tecnicos, tecnologos, licenciaturas, bacharelados, pos-graduacao,
+mestrado, doutorado, profissoes regulamentadas e transicoes de carreira.
+
+Nao invente formacao, experiencia, certificacao, registro profissional, licenca,
+numero de conselho, instituicao, empresa, resultado, habilidade, idioma,
+publicacao, projeto ou cargo.
+
+Quando algo parecer provavel mas nao estiver explicito, coloque como baixa
+confianca ou pergunta a confirmar, nao como fato confirmado.
+
+Todo item extraido deve ter type, title, description, area/domain, source,
+evidence, confidence e confirmed_by_user=false.
+
+A saida deve ser JSON valido. Nao retorne markdown. Nao inclua comentarios fora
+do JSON. Nao inclua segredos, API keys, cookies ou tokens.
+"""
+
+PROFILE_ITEMS_EXTRACTOR_USER_TEMPLATE = """Extract Universal Career Profile items from this user-provided text.
+
+Language: {language}
+Source type: {source_type}
+
+Text:
+{text}
+
+Return only JSON matching the expected schema.
+"""
+
 
 def initial_prompt_specs(
     schema_overrides: dict[str, type[BaseModel]] | None = None,
@@ -352,6 +389,15 @@ def initial_prompt_specs(
             temperature=0.1,
             mode="job_wishlist_builder",
         ),
+        PromptSpec(
+            prompt_id="profile_items_extractor_v1",
+            version="1.0.0",
+            system_prompt=PROFILE_ITEMS_EXTRACTOR_SYSTEM_PROMPT,
+            user_template=PROFILE_ITEMS_EXTRACTOR_USER_TEMPLATE,
+            output_schema=schemas["profile_items_extractor_v1"],
+            temperature=0.1,
+            mode="profile_items_extractor",
+        ),
     ]
 
 
@@ -373,6 +419,7 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
     from modules.ai.schemas.job_extraction import JobExtractionOutput
     from modules.ai.schemas.resume_extraction import ResumeExtractionOutput
     from modules.github_analyzer.schemas import GitHubRepoAnalysisOutput
+    from modules.profile.models import ProfileImportDraft
     from modules.schemas.job_analysis import JobAnalysisSchema
 
     return {
@@ -387,4 +434,5 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         "source_import_enrichment_v1": SourceImportEnrichmentOutput,
         "job_radar_match_explanation_v1": RadarMatchExplanationOutput,
         "job_wishlist_builder_v1": WishlistDraftOutput,
+        "profile_items_extractor_v1": ProfileImportDraft,
     }

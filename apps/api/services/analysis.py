@@ -15,6 +15,7 @@ from modules.github_analyzer.analyzer_service import analyze_github_repository
 from modules.github_analyzer.exceptions import GitHubAnalyzerError
 from modules.parsers.job_description_parser import parse_job_description
 from modules.parsers.resume_parser import parse_resume_text
+from modules.profile import ProfileContextOrchestrator
 from modules.resume_tailor.tailor_rules import build_safe_tailor_output
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
@@ -135,6 +136,12 @@ def analyze_match(request: MatchAnalyzeRequest) -> tuple[MatchAnalyzeResponse, l
         portfolio_evidence=request.portfolio_evidence,
     )
     runtime = get_ai_runtime("match")
+    profile_context_text = _profile_context_text()
+    profile_context_applied = bool(profile_context_text) and (
+        runtime.provider_name == "local" or runtime.allow_memory_context
+    )
+    if profile_context_applied:
+        resume_text = _append_profile_context(resume_text, profile_context_text)
     result = analyze_structured(
         resume_text,
         job_text,
@@ -144,6 +151,10 @@ def analyze_match(request: MatchAnalyzeRequest) -> tuple[MatchAnalyzeResponse, l
         share_memory_with_provider=runtime.allow_memory_context,
     )
     warnings = [*runtime.warnings, *([result.warning] if result.warning else [])]
+    if profile_context_applied:
+        warnings.append("Contexto do Perfil Profissional aplicado como evidencia.")
+    elif profile_context_text and runtime.provider_name != "local":
+        warnings.append("Contexto do perfil nao foi enviado ao provider externo.")
     return (
         MatchAnalyzeResponse(
             analysis=result.analysis,
@@ -238,15 +249,26 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
 
 def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, list[str]]:
     """Build safe, evidence-backed tailoring suggestions."""
+    runtime = get_ai_runtime("tailor")
+    profile_context_text = _profile_context_text()
+    evidence_text = request.evidence_text
+    profile_context_applied = bool(profile_context_text) and (
+        runtime.provider_name == "local" or runtime.allow_memory_context
+    )
+    if profile_context_applied:
+        evidence_text = _append_profile_context(evidence_text, profile_context_text)
     tailor = build_safe_tailor_output(
         target_role=request.target_role,
         target_company=request.target_company,
         job_text=request.job_text,
-        evidence_text=request.evidence_text,
+        evidence_text=evidence_text,
         match_analysis=request.match_analysis,
     )
-    runtime = get_ai_runtime("tailor")
     warnings = [*tailor.warnings, *runtime.warnings]
+    if profile_context_applied:
+        warnings.append("Contexto do Perfil Profissional aplicado ao ajuste.")
+    elif profile_context_text and runtime.provider_name != "local":
+        warnings.append("Contexto do perfil nao foi enviado ao provider externo.")
     provider_used = runtime.provider_name
     fallback_used = runtime.fallback_used
     ai_suggestions: list[str] = []
@@ -260,7 +282,7 @@ def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, l
                     "target_role": request.target_role,
                     "target_company": request.target_company or "",
                     "job_text": request.job_text,
-                    "evidence_text": request.evidence_text,
+                    "evidence_text": evidence_text,
                     "deterministic_tailor": tailor.model_dump(mode="json"),
                     "language": "pt-BR",
                 },
@@ -398,6 +420,52 @@ def _append_evidence(
     if not evidence:
         return resume_text
     return f"{resume_text}\n\nEvidencias publicas fornecidas:\n" + "\n".join(evidence)
+
+
+def _append_profile_context(base_text: str, context_text: str) -> str:
+    """Append profile context as explicit evidence, never invented facts."""
+    if not context_text:
+        return base_text
+    return "\n\n".join(
+        part
+        for part in [
+            base_text,
+            "Evidencias do Perfil Profissional Universal local:",
+            context_text,
+            "Use apenas evidencias confirmadas; itens de baixa confianca ficam a confirmar.",
+        ]
+        if part
+    )
+
+
+def _profile_context_text() -> str:
+    """Build a compact local profile evidence summary."""
+    try:
+        context = ProfileContextOrchestrator().build_context(purpose="analysis")
+    except Exception:
+        return ""
+    sections: list[str] = []
+    for label, items in [
+        ("Formacao", context.education),
+        ("Experiencias", context.experiences),
+        ("Academico", context.academic_experiences),
+        ("Projetos/portfolio", context.projects),
+        ("Certificacoes/registros", context.certifications_and_registries),
+        ("Competencias", context.skills),
+        ("Idiomas", context.languages),
+    ]:
+        if not items:
+            continue
+        values = [
+            f"{item.title} ({item.confidence}; {'confirmado' if item.confirmed_by_user else 'a confirmar'})"
+            for item in items[:8]
+        ]
+        sections.append(f"{label}: {', '.join(values)}")
+    if context.career_goals:
+        sections.append(f"Objetivos: {', '.join(context.career_goals[:8])}")
+    if context.constraints:
+        sections.append(f"Restricoes: {', '.join(context.constraints[:8])}")
+    return "\n".join(sections)
 
 
 def _unique(items: list[str]) -> list[str]:
