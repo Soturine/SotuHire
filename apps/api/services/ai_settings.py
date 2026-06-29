@@ -131,10 +131,14 @@ class AiSettingsStore:
             "provider": payload.provider,
             "model": _default_model(payload.provider, payload.model),
             "use_ai": payload.use_ai,
+            "allow_resume": payload.allow_resume,
+            "allow_job": payload.allow_job,
             "allow_match": payload.allow_match,
             "allow_ats": payload.allow_ats,
             "allow_tailor": payload.allow_tailor,
             "allow_github": payload.allow_github,
+            "allow_source_import": payload.allow_source_import,
+            "allow_radar": payload.allow_radar,
             "allow_memory_context": payload.allow_memory_context,
             "updated_at": _utc_now(),
         }
@@ -295,10 +299,14 @@ class AiSettingsStore:
             configured=configured,
             status=status,
             use_ai=_bool(metadata.get("use_ai"), False),
+            allow_resume=_bool(metadata.get("allow_resume"), True),
+            allow_job=_bool(metadata.get("allow_job"), True),
             allow_match=_bool(metadata.get("allow_match"), True),
             allow_ats=_bool(metadata.get("allow_ats"), True),
             allow_tailor=_bool(metadata.get("allow_tailor"), True),
             allow_github=_bool(metadata.get("allow_github"), True),
+            allow_source_import=_bool(metadata.get("allow_source_import"), True),
+            allow_radar=_bool(metadata.get("allow_radar"), True),
             allow_memory_context=_bool(metadata.get("allow_memory_context"), False),
             updated_at=str(metadata.get("updated_at", "")),
             warnings=warnings,
@@ -321,10 +329,14 @@ class AiSettingsStore:
             "provider": "local",
             "model": "local",
             "use_ai": False,
+            "allow_resume": True,
+            "allow_job": True,
             "allow_match": True,
             "allow_ats": True,
             "allow_tailor": True,
             "allow_github": True,
+            "allow_source_import": True,
+            "allow_radar": True,
             "allow_memory_context": False,
             "updated_at": "",
         }
@@ -388,6 +400,10 @@ def _bool(value: object, fallback: bool) -> bool:
 
 
 def _feature_allowed(settings: AiSettingsResponse, feature: AiFeature) -> bool:
+    if feature == "resume":
+        return settings.allow_resume
+    if feature == "job":
+        return settings.allow_job
     if feature == "match":
         return settings.allow_match
     if feature == "ats":
@@ -396,6 +412,10 @@ def _feature_allowed(settings: AiSettingsResponse, feature: AiFeature) -> bool:
         return settings.allow_tailor
     if feature == "github":
         return settings.allow_github
+    if feature == "source_import":
+        return settings.allow_source_import
+    if feature == "radar":
+        return settings.allow_radar
     return True
 
 

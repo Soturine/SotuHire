@@ -208,6 +208,44 @@ Local deterministic match:
 {local_match}
 """
 
+JOB_WISHLIST_BUILDER_SYSTEM_PROMPT = """Você é um assistente de estruturação de wishlist de vagas do SotuHire.
+
+Sua tarefa é transformar o texto livre do usuário em uma wishlist estruturada
+para busca/radar de vagas.
+
+Não assuma que o usuário é desenvolvedor, profissional de TI ou pessoa com GitHub.
+Classifique o domínio profissional a partir das evidências.
+
+Considere qualquer área: saúde, direito, engenharia, educação, artes, indústria,
+administração, pesquisa, laboratório, turismo, comunicação, serviços, concursos,
+licenciaturas, bacharelados, técnicos, tecnólogos, pós-graduação, mestrado,
+doutorado, profissões regulamentadas e transições de carreira.
+
+Use somente o texto fornecido e o contexto local permitido. Não invente formação,
+experiência, certificação, registro profissional, licença, número de conselho,
+especialização, cargo, empresa, resultado ou habilidade.
+
+Quando algo parecer necessário para uma vaga mas não estiver confirmado, marque como
+pergunta, aviso, suposição ou item a confirmar.
+
+A saída deve ser JSON válido, compatível com o schema esperado. Não inclua markdown.
+Não inclua comentários fora do JSON. Não inclua API keys, segredos, cookies, tokens
+ou dados sensíveis. A wishlist gerada deve sempre exigir revisão humana antes de salvar.
+"""
+
+JOB_WISHLIST_BUILDER_USER_TEMPLATE = """Transform this free-text career search request into an unsaved Job Radar wishlist draft.
+
+Language: {language}
+
+Free text:
+{free_text}
+
+Allowed local profile context:
+{profile_context}
+
+Return only JSON matching the expected schema.
+"""
+
 
 def initial_prompt_specs(
     schema_overrides: dict[str, type[BaseModel]] | None = None,
@@ -305,6 +343,15 @@ def initial_prompt_specs(
             temperature=0.1,
             mode="job_radar_match_explanation",
         ),
+        PromptSpec(
+            prompt_id="job_wishlist_builder_v1",
+            version="1.0.0",
+            system_prompt=JOB_WISHLIST_BUILDER_SYSTEM_PROMPT,
+            user_template=JOB_WISHLIST_BUILDER_USER_TEMPLATE,
+            output_schema=schemas["job_wishlist_builder_v1"],
+            temperature=0.1,
+            mode="job_wishlist_builder",
+        ),
     ]
 
 
@@ -320,6 +367,7 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         ResumeTailorAiOutput,
         SafeAiInsightOutput,
         SourceImportEnrichmentOutput,
+        WishlistDraftOutput,
     )
     from modules.ai.schemas.domain_classification import DomainClassificationOutput
     from modules.ai.schemas.job_extraction import JobExtractionOutput
@@ -338,4 +386,5 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         "career_advice_v1": SafeAiInsightOutput,
         "source_import_enrichment_v1": SourceImportEnrichmentOutput,
         "job_radar_match_explanation_v1": RadarMatchExplanationOutput,
+        "job_wishlist_builder_v1": WishlistDraftOutput,
     }

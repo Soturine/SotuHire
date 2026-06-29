@@ -21,10 +21,14 @@ class AiSettingsResponse(BaseModel):
     configured: bool = True
     status: AiSettingsStatus = "ready"
     use_ai: bool = False
+    allow_resume: bool = True
+    allow_job: bool = True
     allow_match: bool = True
     allow_ats: bool = True
     allow_tailor: bool = True
     allow_github: bool = True
+    allow_source_import: bool = True
+    allow_radar: bool = True
     allow_memory_context: bool = False
     updated_at: str = ""
     warnings: list[str] = Field(default_factory=list)
@@ -39,10 +43,14 @@ class AiSettingsUpdateRequest(BaseModel):
     model: str = Field(default=DEFAULT_GEMINI_MODEL, max_length=120)
     api_key: str | None = Field(default=None, max_length=5000)
     use_ai: bool = False
+    allow_resume: bool = True
+    allow_job: bool = True
     allow_match: bool = True
     allow_ats: bool = True
     allow_tailor: bool = True
     allow_github: bool = True
+    allow_source_import: bool = True
+    allow_radar: bool = True
     allow_memory_context: bool = False
     request_id: str = Field(default="", max_length=120)
 
