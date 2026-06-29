@@ -25,6 +25,11 @@ import type {
   MatchAnalysis,
   MatchAnalyzeResult,
   MatchRequirement,
+  ProfileDeduplicateResult,
+  ProfileImportResult,
+  ProfileItem,
+  ProfileItemResult,
+  ProfileResult,
   RadarAlert,
   RadarAlertResult,
   RadarAlertsResult,
@@ -125,6 +130,81 @@ async function call<T>(
 export function makeApi(mode: ApiMode, baseUrl: string) {
   return {
     health: () => call<Health>(mode, baseUrl, "/health", undefined, mockHealth, normalizeHealth),
+
+    profile: () =>
+      call<ProfileResult>(
+        mode,
+        baseUrl,
+        "/profile",
+        undefined,
+        mockProfileResult(),
+        normalizeProfileResult,
+      ),
+
+    profileSave: (payload: Partial<ProfileResult["profile"]>) =>
+      call<ProfileResult>(
+        mode,
+        baseUrl,
+        "/profile",
+        { method: "PUT", body: JSON.stringify(payload) },
+        mockSavedProfile(payload),
+        normalizeProfileResult,
+      ),
+
+    profileAddItem: (payload: Partial<ProfileItem>) =>
+      call<ProfileItemResult>(
+        mode,
+        baseUrl,
+        "/profile/items",
+        { method: "POST", body: JSON.stringify(payload) },
+        { item: normalizeProfileItem({ ...payload, confirmed_by_user: true }), message: "Demo" },
+        normalizeProfileItemResult,
+      ),
+
+    profilePatchItem: (itemId: string, payload: Partial<ProfileItem>) =>
+      call<ProfileItemResult>(
+        mode,
+        baseUrl,
+        `/profile/items/${encodeURIComponent(itemId)}`,
+        { method: "PATCH", body: JSON.stringify(payload) },
+        { item: normalizeProfileItem({ ...payload, item_id: itemId, confirmed_by_user: true }) },
+        normalizeProfileItemResult,
+      ),
+
+    profileDeleteItem: (itemId: string) =>
+      call<ProfileResult>(
+        mode,
+        baseUrl,
+        `/profile/items/${encodeURIComponent(itemId)}`,
+        { method: "DELETE" },
+        mockProfileResult(),
+        normalizeProfileResult,
+      ),
+
+    profileImportText: (payload: {
+      text: string;
+      source_type: string;
+      use_ai: boolean;
+      language?: string;
+    }) =>
+      call<ProfileImportResult>(
+        mode,
+        baseUrl,
+        "/profile/import-text",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockProfileImport(payload.text, payload.source_type, payload.use_ai),
+        normalizeProfileImportResult,
+      ),
+
+    profileDeduplicate: () =>
+      call<ProfileDeduplicateResult>(
+        mode,
+        baseUrl,
+        "/profile/deduplicate",
+        { method: "POST" },
+        { suggestions: [], message: "Sem duplicidades no modo demo." },
+        normalizeProfileDeduplicateResult,
+      ),
 
     aiSettings: () =>
       call<AiSettings>(
@@ -1560,6 +1640,227 @@ function mockRadarStats(): RadarStats {
   };
 }
 
+function mockProfileResult(): ProfileResult {
+  const now = new Date().toISOString();
+  return {
+    profile: {
+      profile_id: "default",
+      display_name: "Perfil Demo",
+      headline: "Estudante de engenharia com projetos academicos",
+      summary: "Perfil ficticio para demonstrar como o SotuHire organiza evidencias de carreira.",
+      primary_domains: ["Engenharia", "Pesquisa e Laboratorio"],
+      secondary_domains: ["Dados"],
+      career_moments: ["estagio", "estudante"],
+      target_roles: ["Estagio em Engenharia", "Assistente Tecnico"],
+      target_seniority: ["estagio"],
+      preferred_locations: ["Sao Jose dos Campos", "Remoto"],
+      preferred_work_models: ["hibrido", "remoto"],
+      preferred_contract_types: ["estagio"],
+      constraints: [],
+      items: [
+        {
+          item_id: "profile-demo-item-1",
+          type: "higher_education",
+          title: "Engenharia em andamento",
+          description: "Graduação fictícia em andamento no período noturno.",
+          area: "Engenharia",
+          domain: "Engenharia",
+          institution: "Instituição Exemplo",
+          organization: null,
+          status: "em andamento",
+          start_date: null,
+          end_date: null,
+          tags: ["formação"],
+          skills: ["relatórios técnicos"],
+          evidence: "Texto fictício de currículo informado pelo usuário.",
+          source: "demo",
+          source_ref: null,
+          confidence: "high",
+          confirmed_by_user: true,
+          sensitive: false,
+          created_at: now,
+          updated_at: now,
+        },
+      ],
+      source_summaries: [
+        { source: "demo", source_type: "demo", item_count: 1, last_imported_at: now },
+      ],
+      created_at: now,
+      updated_at: now,
+    },
+    message: "Modo Demo: perfil ficticio.",
+  };
+}
+
+function mockSavedProfile(payload: Partial<ProfileResult["profile"]>): ProfileResult {
+  const base = mockProfileResult();
+  return {
+    profile: normalizeProfile({
+      ...base.profile,
+      ...payload,
+      updated_at: new Date().toISOString(),
+    }),
+    message: "Perfil atualizado no modo Demo.",
+  };
+}
+
+function mockProfileImport(text: string, sourceType: string, useAi: boolean): ProfileImportResult {
+  const now = new Date().toISOString();
+  const lower = text.toLowerCase();
+  const domain = lower.includes("coren")
+    ? "Saude"
+    : lower.includes("oab")
+      ? "Direito"
+      : lower.includes("portfolio")
+        ? "Artes e Design"
+        : "Geral";
+  return {
+    items: [
+      normalizeProfileItem({
+        item_id: "profile-import-demo",
+        type:
+          lower.includes("coren") || lower.includes("oab") ? "professional_registry" : "project",
+        title: lower.includes("coren") ? "COREN" : lower.includes("oab") ? "OAB" : "Item importado",
+        description: text.slice(0, 220),
+        area: domain,
+        domain,
+        source: sourceType,
+        evidence: text.slice(0, 220),
+        confidence: "medium",
+        confirmed_by_user: false,
+        created_at: now,
+        updated_at: now,
+      }),
+    ],
+    detected_domains: [domain],
+    career_moments: lower.includes("estagio") ? ["estagio"] : [],
+    warnings: [
+      useAi
+        ? "Modo Demo: IA simulada; revise antes de adicionar."
+        : "Modo Demo: extração local simulada.",
+    ],
+    questions_to_confirm: ["Esse item deve entrar como fato confirmado no perfil?"],
+    provider_used: useAi ? "gemini-demo" : "local",
+    requested_provider: useAi ? "gemini" : "local",
+    analysis_mode: useAi ? "ai" : "local",
+    needs_user_review: true,
+  };
+}
+
+function normalizeProfileResult(value: unknown): ProfileResult {
+  const raw = asRecord(value);
+  return {
+    profile: normalizeProfile(raw.profile),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeProfileItemResult(value: unknown): ProfileItemResult {
+  const raw = asRecord(value);
+  return {
+    item: normalizeProfileItem(raw.item),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeProfileImportResult(value: unknown): ProfileImportResult {
+  const raw = asRecord(value);
+  return {
+    items: objectList(raw.items).map(normalizeProfileItem),
+    detected_domains: stringList(raw.detected_domains),
+    career_moments: stringList(raw.career_moments),
+    warnings: stringList(raw.warnings),
+    questions_to_confirm: stringList(raw.questions_to_confirm),
+    provider_used: asString(raw.provider_used) || "local",
+    requested_provider: asString(raw.requested_provider) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+    needs_user_review: asBoolean(raw.needs_user_review, true),
+  };
+}
+
+function normalizeProfileDeduplicateResult(value: unknown): ProfileDeduplicateResult {
+  const raw = asRecord(value);
+  return {
+    suggestions: objectList(raw.suggestions).map((item) => {
+      const suggestion = asRecord(item);
+      return {
+        suggestion_id: asString(suggestion.suggestion_id),
+        item_ids: stringList(suggestion.item_ids),
+        reason: asString(suggestion.reason),
+        confidence: normalizeProfileConfidence(suggestion.confidence),
+        proposed_title: asString(suggestion.proposed_title),
+        proposed_description: asString(suggestion.proposed_description),
+        sources: stringList(suggestion.sources),
+      };
+    }),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeProfile(value: unknown): ProfileResult["profile"] {
+  const raw = asRecord(value);
+  const now = new Date().toISOString();
+  return {
+    profile_id: asString(raw.profile_id) || "default",
+    display_name: asString(raw.display_name),
+    headline: asString(raw.headline),
+    summary: asString(raw.summary),
+    primary_domains: stringList(raw.primary_domains),
+    secondary_domains: stringList(raw.secondary_domains),
+    career_moments: stringList(raw.career_moments),
+    target_roles: stringList(raw.target_roles),
+    target_seniority: stringList(raw.target_seniority),
+    preferred_locations: stringList(raw.preferred_locations),
+    preferred_work_models: stringList(raw.preferred_work_models),
+    preferred_contract_types: stringList(raw.preferred_contract_types),
+    constraints: objectList(raw.constraints).map(normalizeProfileItem),
+    items: objectList(raw.items).map(normalizeProfileItem),
+    source_summaries: objectList(raw.source_summaries).map((item) => {
+      const summary = asRecord(item);
+      return {
+        source: asString(summary.source),
+        source_type: asString(summary.source_type),
+        item_count: asNumber(summary.item_count, 0),
+        last_imported_at: asString(summary.last_imported_at),
+      };
+    }),
+    created_at: asString(raw.created_at) || now,
+    updated_at: asString(raw.updated_at) || now,
+  };
+}
+
+function normalizeProfileItem(value: unknown): ProfileItem {
+  const raw = asRecord(value);
+  const now = new Date().toISOString();
+  return {
+    item_id: asString(raw.item_id) || `profile-item-${Math.random().toString(16).slice(2)}`,
+    type: asString(raw.type) || "other",
+    title: asString(raw.title) || "Item de perfil",
+    description: asString(raw.description),
+    area: asString(raw.area),
+    domain: asString(raw.domain),
+    institution: asString(raw.institution),
+    organization: asString(raw.organization),
+    status: asString(raw.status),
+    start_date: asString(raw.start_date),
+    end_date: asString(raw.end_date),
+    tags: stringList(raw.tags),
+    skills: stringList(raw.skills),
+    evidence: asString(raw.evidence),
+    source: asString(raw.source) || "manual",
+    source_ref: asString(raw.source_ref),
+    confidence: normalizeProfileConfidence(raw.confidence),
+    confirmed_by_user: asBoolean(raw.confirmed_by_user, false),
+    sensitive: asBoolean(raw.sensitive, false),
+    created_at: asString(raw.created_at) || now,
+    updated_at: asString(raw.updated_at) || now,
+  };
+}
+
+function normalizeProfileConfidence(value: unknown): ProfileItem["confidence"] {
+  return value === "low" || value === "medium" || value === "high" ? value : "medium";
+}
+
 function normalizeHealth(value: unknown): Health {
   const raw = asRecord(value);
   return {
@@ -2496,6 +2797,7 @@ function normalizeSourceOrigin(value: unknown): SourceImportsResult["items"][num
     "json_import",
     "extension_capture",
     "companion_capture",
+    "authenticated_assisted_capture",
     "public_source",
     "public_feed",
     "official_api_future",

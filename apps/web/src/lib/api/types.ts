@@ -80,6 +80,111 @@ export interface AiSettingsTestResult {
   message: string;
 }
 
+export type ProfileConfidence = "low" | "medium" | "high";
+
+export interface ProfileItem {
+  item_id: string;
+  type: string;
+  title: string;
+  description?: string | null;
+  area?: string | null;
+  domain?: string | null;
+  institution?: string | null;
+  organization?: string | null;
+  status?: string | null;
+  start_date?: string | null;
+  end_date?: string | null;
+  tags: string[];
+  skills: string[];
+  evidence?: string | null;
+  source: string;
+  source_ref?: string | null;
+  confidence: ProfileConfidence;
+  confirmed_by_user: boolean;
+  sensitive: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UniversalCareerProfile {
+  profile_id: string;
+  display_name?: string | null;
+  headline?: string | null;
+  summary?: string | null;
+  primary_domains: string[];
+  secondary_domains: string[];
+  career_moments: string[];
+  target_roles: string[];
+  target_seniority: string[];
+  preferred_locations: string[];
+  preferred_work_models: string[];
+  preferred_contract_types: string[];
+  constraints: ProfileItem[];
+  items: ProfileItem[];
+  source_summaries: Array<{
+    source: string;
+    source_type: string;
+    item_count: number;
+    last_imported_at?: string | null;
+  }>;
+  updated_at: string;
+  created_at: string;
+}
+
+export interface ProfileResult {
+  profile: UniversalCareerProfile;
+  message?: string;
+}
+
+export interface ProfileItemResult {
+  item: ProfileItem;
+  message?: string;
+}
+
+export interface ProfileImportResult {
+  items: ProfileItem[];
+  detected_domains: string[];
+  career_moments: string[];
+  warnings: string[];
+  questions_to_confirm: string[];
+  provider_used: string;
+  requested_provider: string;
+  analysis_mode: AnalysisMode;
+  needs_user_review: boolean;
+}
+
+export interface ProfileDeduplicateResult {
+  suggestions: Array<{
+    suggestion_id: string;
+    item_ids: string[];
+    reason: string;
+    confidence: ProfileConfidence;
+    proposed_title: string;
+    proposed_description?: string | null;
+    sources: string[];
+  }>;
+  message?: string;
+}
+
+export interface ProfileContextResult {
+  context: {
+    identity: Record<string, unknown>;
+    career_goals: string[];
+    education: ProfileItem[];
+    experiences: ProfileItem[];
+    academic_experiences: ProfileItem[];
+    projects: ProfileItem[];
+    certifications_and_registries: ProfileItem[];
+    skills: ProfileItem[];
+    languages: ProfileItem[];
+    locations: string[];
+    preferences: string[];
+    constraints: string[];
+    application_history_signals: string[];
+  };
+  message?: string;
+}
+
 export type AiUiState =
   | "disabled"
   | "provider_local"
@@ -345,6 +450,7 @@ export type SourceOrigin =
   | "json_import"
   | "extension_capture"
   | "companion_capture"
+  | "authenticated_assisted_capture"
   | "public_source"
   | "public_feed"
   | "official_api_future";

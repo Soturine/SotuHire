@@ -401,6 +401,14 @@ function RadarPage() {
                 Usar contexto local do perfil quando existir. O contexto continua local e serve só
                 para sugerir campos editáveis.
               </label>
+              {useProfileContext && (
+                <span
+                  data-testid="radar-profile-context-badge"
+                  className="inline-flex rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent"
+                >
+                  Contexto do perfil aplicado
+                </span>
+              )}
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => draftWishlist.mutate()}

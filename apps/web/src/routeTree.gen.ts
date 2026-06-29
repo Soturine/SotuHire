@@ -15,6 +15,7 @@ import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as RadarRouteImport } from './routes/radar'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MatchRouteImport } from './routes/match'
 import { Route as JobRouteImport } from './routes/job'
@@ -52,6 +53,11 @@ const ResumeRoute = ResumeRouteImport.update({
 const RadarRoute = RadarRouteImport.update({
   id: '/radar',
   path: '/radar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/job': typeof JobRoute
   '/match': typeof MatchRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/radar': typeof RadarRoute
   '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/job': typeof JobRoute
   '/match': typeof MatchRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/radar': typeof RadarRoute
   '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/job': typeof JobRoute
   '/match': typeof MatchRoute
   '/privacy': typeof PrivacyRoute
+  '/profile': typeof ProfileRoute
   '/radar': typeof RadarRoute
   '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/job'
     | '/match'
     | '/privacy'
+    | '/profile'
     | '/radar'
     | '/resume'
     | '/settings'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/job'
     | '/match'
     | '/privacy'
+    | '/profile'
     | '/radar'
     | '/resume'
     | '/settings'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/job'
     | '/match'
     | '/privacy'
+    | '/profile'
     | '/radar'
     | '/resume'
     | '/settings'
@@ -204,6 +216,7 @@ export interface RootRouteChildren {
   JobRoute: typeof JobRoute
   MatchRoute: typeof MatchRoute
   PrivacyRoute: typeof PrivacyRoute
+  ProfileRoute: typeof ProfileRoute
   RadarRoute: typeof RadarRoute
   ResumeRoute: typeof ResumeRoute
   SettingsRoute: typeof SettingsRoute
@@ -254,6 +267,13 @@ declare module '@tanstack/react-router' {
       path: '/radar'
       fullPath: '/radar'
       preLoaderRoute: typeof RadarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -324,6 +344,7 @@ const rootRouteChildren: RootRouteChildren = {
   JobRoute: JobRoute,
   MatchRoute: MatchRoute,
   PrivacyRoute: PrivacyRoute,
+  ProfileRoute: ProfileRoute,
   RadarRoute: RadarRoute,
   ResumeRoute: ResumeRoute,
   SettingsRoute: SettingsRoute,

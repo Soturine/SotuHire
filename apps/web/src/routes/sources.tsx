@@ -1159,6 +1159,7 @@ function sourceOriginLabel(origin: SourceOrigin): string {
     json_import: "JSON",
     extension_capture: "Extensão Local",
     companion_capture: "Companion",
+    authenticated_assisted_capture: "Captura assistida autenticada",
     public_source: "Fonte pública",
     public_feed: "Feed público",
     official_api_future: "API oficial futura",

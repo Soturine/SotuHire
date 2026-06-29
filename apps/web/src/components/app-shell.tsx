@@ -15,6 +15,7 @@ import {
   Sparkles,
   Activity,
   RadioTower,
+  UserRound,
   ChevronRight,
   Menu,
   X,
@@ -52,6 +53,7 @@ const nav = [
   {
     group: "Conta",
     items: [
+      { to: "/profile", label: "Perfil", icon: UserRound },
       { to: "/settings", label: "Configurações", icon: Settings },
       { to: "/privacy", label: "Privacidade", icon: ShieldCheck },
     ],
