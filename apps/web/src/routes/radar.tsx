@@ -32,8 +32,10 @@ import { useApi } from "@/lib/api/hooks";
 import { useApiMode } from "@/lib/api/mode";
 import type {
   JobWishlist,
+  LocalNotification,
   RadarAlert,
   RadarResult,
+  RadarSchedule,
   RadarSource,
   WishlistDraftResult,
 } from "@/lib/api/types";
@@ -83,6 +85,14 @@ function RadarPage() {
   const [sourceName, setSourceName] = useState("Feed publico ficticio");
   const [sourceUrl, setSourceUrl] = useState("https://example.com/jobs.xml");
   const [sourceFilter, setSourceFilter] = useState("all");
+  const [scheduleName, setScheduleName] = useState("Radar diario com perfil");
+  const [scheduleFrequency, setScheduleFrequency] = useState<RadarSchedule["frequency"]>("daily");
+  const [scheduleInterval, setScheduleInterval] = useState(120);
+  const [scheduleQuietStart, setScheduleQuietStart] = useState("22:00");
+  const [scheduleQuietEnd, setScheduleQuietEnd] = useState("07:00");
+  const [scheduleCooldown, setScheduleCooldown] = useState(720);
+  const [scheduleUseAi, setScheduleUseAi] = useState(false);
+  const [scheduleUseProfile, setScheduleUseProfile] = useState(true);
 
   const wishlistsQ = useQuery({
     queryKey: ["radar-wishlists", mode, baseUrl],
@@ -114,6 +124,26 @@ function RadarPage() {
     queryFn: () => api.radarRuns(),
     retry: false,
   });
+  const schedulesQ = useQuery({
+    queryKey: ["radar-schedules", mode, baseUrl],
+    queryFn: () => api.radarSchedules(),
+    retry: false,
+  });
+  const scheduledRunsQ = useQuery({
+    queryKey: ["radar-scheduled-runs", mode, baseUrl],
+    queryFn: () => api.radarScheduledRuns(),
+    retry: false,
+  });
+  const schedulerStatusQ = useQuery({
+    queryKey: ["radar-scheduler-status", mode, baseUrl],
+    queryFn: () => api.radarSchedulerStatus(),
+    retry: false,
+  });
+  const notificationsQ = useQuery({
+    queryKey: ["notifications", mode, baseUrl],
+    queryFn: () => api.notifications(),
+    retry: false,
+  });
 
   const activeWishlist = wishlistsQ.data?.wishlists.find((item) => item.is_active);
   const activeSources = sourcesQ.data?.sources.filter((item) => item.is_active) ?? [];
@@ -121,6 +151,8 @@ function RadarPage() {
     lastRunResults.length ? lastRunResults : (resultsQ.data?.results ?? [])
   ).filter((result) => sourceFilter === "all" || result.source_type === sourceFilter);
   const shownAlerts = lastRunAlerts.length ? lastRunAlerts : (alertsQ.data?.alerts ?? []);
+  const schedules = schedulesQ.data?.schedules ?? [];
+  const notifications = notificationsQ.data?.notifications ?? [];
 
   const invalidateRadar = () => {
     qc.invalidateQueries({ queryKey: ["radar-wishlists"] });
@@ -129,6 +161,10 @@ function RadarPage() {
     qc.invalidateQueries({ queryKey: ["radar-alerts"] });
     qc.invalidateQueries({ queryKey: ["radar-stats"] });
     qc.invalidateQueries({ queryKey: ["radar-runs"] });
+    qc.invalidateQueries({ queryKey: ["radar-schedules"] });
+    qc.invalidateQueries({ queryKey: ["radar-scheduled-runs"] });
+    qc.invalidateQueries({ queryKey: ["radar-scheduler-status"] });
+    qc.invalidateQueries({ queryKey: ["notifications"] });
   };
 
   function applyDraftToForm(data: WishlistDraftResult) {
@@ -229,6 +265,85 @@ function RadarPage() {
   });
   const canRunRadar = activeSources.length > 0 && !runRadar.isPending;
 
+  const createSchedule = useMutation({
+    mutationFn: () =>
+      api.radarCreateSchedule({
+        name: scheduleName,
+        enabled: true,
+        wishlist_id: activeWishlist?.id || null,
+        source_ids: activeSources.map((item) => item.id),
+        keywords: activeWishlist ? [] : splitList(targetTitles),
+        use_ai: scheduleUseAi,
+        use_profile_context: scheduleUseProfile,
+        frequency: scheduleFrequency,
+        interval_minutes: scheduleFrequency === "custom_interval" ? scheduleInterval : null,
+        quiet_hours_start: scheduleQuietStart || null,
+        quiet_hours_end: scheduleQuietEnd || null,
+        cooldown_minutes: scheduleCooldown,
+        min_match_score: minScore,
+        min_ats_score: minAtsScore,
+        notify_on_new_matches: true,
+        notify_on_score_threshold: true,
+      }),
+    onSuccess: (data) => {
+      toast.success(data.message || "Agendamento criado.");
+      invalidateRadar();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao criar agendamento."),
+  });
+
+  const patchSchedule = useMutation({
+    mutationFn: ({ id, patch }: { id: string; patch: Partial<RadarSchedule> }) =>
+      api.radarPatchSchedule(id, patch),
+    onSuccess: (data) => {
+      toast.success(data.message || "Agendamento atualizado.");
+      invalidateRadar();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao atualizar agendamento."),
+  });
+
+  const deleteSchedule = useMutation({
+    mutationFn: (id: string) => api.radarDeleteSchedule(id),
+    onSuccess: (data) => {
+      toast.success(data.message || "Agendamento pausado.");
+      invalidateRadar();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao pausar agendamento."),
+  });
+
+  const runScheduleNow = useMutation({
+    mutationFn: (id: string) => api.radarRunScheduleNow(id),
+    onSuccess: (data) => {
+      toast.success(data.message || "Agendamento executado.");
+      invalidateRadar();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao rodar agendamento."),
+  });
+
+  const startScheduler = useMutation({
+    mutationFn: () => api.radarSchedulerStart(),
+    onSuccess: () => {
+      toast.success("Scheduler local iniciado.");
+      invalidateRadar();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao iniciar scheduler."),
+  });
+
+  const stopScheduler = useMutation({
+    mutationFn: () => api.radarSchedulerStop(),
+    onSuccess: () => {
+      toast.success("Scheduler local parado.");
+      invalidateRadar();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao parar scheduler."),
+  });
+
   const saveInbox = useMutation({
     mutationFn: (id: string) => api.radarSaveInbox(id),
     onSuccess: (data) => {
@@ -268,6 +383,36 @@ function RadarPage() {
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "Falha ao atualizar alerta."),
+  });
+
+  const markNotificationRead = useMutation({
+    mutationFn: (id: string) => api.notificationPatch(id, { read: true }),
+    onSuccess: (data) => {
+      toast.success(data.message || "Notificacao marcada como lida.");
+      invalidateRadar();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao atualizar notificacao."),
+  });
+
+  const markAllNotificationsRead = useMutation({
+    mutationFn: () => api.notificationsMarkAllRead(),
+    onSuccess: (data) => {
+      toast.success(data.message || "Notificacoes marcadas como lidas.");
+      invalidateRadar();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao atualizar notificacoes."),
+  });
+
+  const clearReadNotifications = useMutation({
+    mutationFn: () => api.notificationsDeleteRead(),
+    onSuccess: (data) => {
+      toast.success(data.message || "Notificacoes lidas removidas.");
+      invalidateRadar();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao limpar notificacoes."),
   });
 
   const hasRealEmpty =
@@ -632,6 +777,192 @@ function RadarPage() {
           </SectionCard>
         </div>
 
+        <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+          <SectionCard
+            id="radar-schedules"
+            title={
+              <span className="flex items-center gap-2">
+                <Bell className="h-4 w-4 text-accent" />
+                Agendamentos
+              </span>
+            }
+            description="Rode o Radar enquanto a API local estiver aberta. Nada salva candidatura automaticamente."
+            actions={
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => startScheduler.mutate()}
+                  data-testid="radar-scheduler-start"
+                  className="rounded-md border border-input bg-card px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                >
+                  Iniciar
+                </button>
+                <button
+                  onClick={() => stopScheduler.mutate()}
+                  data-testid="radar-scheduler-stop"
+                  className="rounded-md border border-input bg-card px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                >
+                  Parar
+                </button>
+              </div>
+            }
+          >
+            <div className="space-y-4" data-testid="radar-schedules-panel">
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                Status:{" "}
+                <strong className="text-foreground">
+                  {schedulerStatusQ.data?.running ? "rodando" : "parado"}
+                </strong>{" "}
+                · {schedulerStatusQ.data?.enabled_schedules ?? 0} ativo(s) · próxima execução{" "}
+                {formatDate(schedulerStatusQ.data?.next_run_at)}
+              </div>
+              <div className="grid gap-3 lg:grid-cols-2">
+                <TextField label="Nome" value={scheduleName} onChange={setScheduleName} />
+                <label className="text-xs font-medium">
+                  Frequência
+                  <select
+                    value={scheduleFrequency}
+                    onChange={(event) =>
+                      setScheduleFrequency(event.target.value as RadarSchedule["frequency"])
+                    }
+                    data-testid="radar-schedule-frequency"
+                    className="mt-1 h-9 w-full rounded-md border border-input bg-card px-3 text-sm outline-none"
+                  >
+                    <option value="hourly">A cada hora</option>
+                    <option value="daily">Diário</option>
+                    <option value="weekly">Semanal</option>
+                    <option value="custom_interval">Intervalo customizado</option>
+                  </select>
+                </label>
+                <label className="text-xs font-medium">
+                  Intervalo customizado (min)
+                  <input
+                    type="number"
+                    min={60}
+                    value={scheduleInterval}
+                    onChange={(event) => setScheduleInterval(Number(event.target.value))}
+                    className="mt-1 h-9 w-full rounded-md border border-input bg-card px-3 text-sm outline-none"
+                  />
+                </label>
+                <label className="text-xs font-medium">
+                  Cooldown de alertas (min)
+                  <input
+                    type="number"
+                    min={0}
+                    value={scheduleCooldown}
+                    onChange={(event) => setScheduleCooldown(Number(event.target.value))}
+                    className="mt-1 h-9 w-full rounded-md border border-input bg-card px-3 text-sm outline-none"
+                  />
+                </label>
+                <TextField
+                  label="Silêncio começa"
+                  value={scheduleQuietStart}
+                  onChange={setScheduleQuietStart}
+                />
+                <TextField
+                  label="Silêncio termina"
+                  value={scheduleQuietEnd}
+                  onChange={setScheduleQuietEnd}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <label className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={scheduleUseProfile}
+                    onChange={(event) => setScheduleUseProfile(event.target.checked)}
+                  />
+                  Usar Perfil Profissional
+                </label>
+                <label className="inline-flex items-center gap-2 rounded-md border border-border bg-card px-3 py-2">
+                  <input
+                    type="checkbox"
+                    checked={scheduleUseAi}
+                    onChange={(event) => setScheduleUseAi(event.target.checked)}
+                  />
+                  IA opcional
+                </label>
+              </div>
+              <button
+                onClick={() => createSchedule.mutate()}
+                disabled={createSchedule.isPending}
+                data-testid="radar-create-schedule"
+                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-60"
+              >
+                <Plus className="h-3.5 w-3.5" /> Criar agendamento
+              </button>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                {schedules.map((schedule) => (
+                  <ScheduleCard
+                    key={schedule.schedule_id}
+                    schedule={schedule}
+                    onToggle={() =>
+                      patchSchedule.mutate({
+                        id: schedule.schedule_id,
+                        patch: { enabled: !schedule.enabled },
+                      })
+                    }
+                    onRunNow={() => runScheduleNow.mutate(schedule.schedule_id)}
+                    onDelete={() => deleteSchedule.mutate(schedule.schedule_id)}
+                  />
+                ))}
+                {!schedulesQ.isLoading && !schedules.length && (
+                  <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted-foreground">
+                    Nenhum agendamento. Crie uma wishlist e uma fonte para receber alertas locais.
+                  </div>
+                )}
+              </div>
+              {!!(scheduledRunsQ.data?.scheduled_runs.length ?? 0) && (
+                <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+                  Última execução agendada:{" "}
+                  {scheduledRunsQ.data?.scheduled_runs[0]?.status ?? "sem histórico"} ·{" "}
+                  {scheduledRunsQ.data?.scheduled_runs[0]?.total_results ?? 0} resultado(s)
+                </div>
+              )}
+            </div>
+          </SectionCard>
+
+          <SectionCard
+            id="radar-notifications"
+            title="Notificações locais"
+            description="Avisos in-app ficam só no armazenamento local."
+            actions={
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => markAllNotificationsRead.mutate()}
+                  data-testid="notifications-mark-all-read"
+                  className="rounded-md border border-input bg-card px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                >
+                  Marcar lidas
+                </button>
+                <button
+                  onClick={() => clearReadNotifications.mutate()}
+                  data-testid="notifications-clear-read"
+                  className="rounded-md border border-input bg-card px-2.5 py-1.5 text-xs font-medium hover:bg-muted"
+                >
+                  Limpar lidas
+                </button>
+              </div>
+            }
+          >
+            <div className="space-y-3" data-testid="notifications-panel">
+              <div className="text-xs text-muted-foreground">
+                Não lidas: <strong>{notificationsQ.data?.unread_count ?? 0}</strong>
+              </div>
+              {notifications.map((notification) => (
+                <NotificationBox
+                  key={notification.notification_id}
+                  notification={notification}
+                  onRead={() => markNotificationRead.mutate(notification.notification_id)}
+                />
+              ))}
+              {!notificationsQ.isLoading && !notifications.length && (
+                <p className="text-sm text-muted-foreground">Nenhuma notificação local ainda.</p>
+              )}
+            </div>
+          </SectionCard>
+        </div>
+
         <SectionCard
           id="radar-sources"
           title={
@@ -693,6 +1024,7 @@ function RadarPage() {
                 <option value="public_feed">RSS</option>
                 <option value="official_api">API oficial</option>
                 <option value="manual_public_page">Página pública</option>
+                <option value="authenticated_assisted_capture">Captura assistida</option>
               </select>
             }
           >
@@ -860,6 +1192,100 @@ function SourceBox({ source }: { source: RadarSource }) {
         </p>
       )}
     </div>
+  );
+}
+
+function ScheduleCard({
+  schedule,
+  onToggle,
+  onRunNow,
+  onDelete,
+}: {
+  schedule: RadarSchedule;
+  onToggle: () => void;
+  onRunNow: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <article className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="font-semibold">{schedule.name}</div>
+          <div className="mt-1 text-xs text-muted-foreground">
+            {scheduleFrequencyLabel(schedule.frequency)} · próxima{" "}
+            {formatDate(schedule.next_run_at)}
+          </div>
+        </div>
+        <Badge tone={schedule.enabled ? "success" : "warning"}>
+          {schedule.enabled ? "Ativo" : "Pausado"}
+        </Badge>
+      </div>
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        {schedule.use_profile_context && <Badge>Perfil</Badge>}
+        {schedule.use_ai && <Badge tone="success">IA</Badge>}
+        <Badge>{schedule.source_ids.length || 0} fonte(s)</Badge>
+        <Badge>Cooldown {schedule.cooldown_minutes} min</Badge>
+      </div>
+      <div className="mt-3 text-xs text-muted-foreground">
+        Silêncio: {schedule.quiet_hours_start || "-"} até {schedule.quiet_hours_end || "-"}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        <button
+          onClick={onRunNow}
+          data-testid="radar-schedule-run-now"
+          className="rounded-md border border-input bg-card px-2.5 py-1.5 text-[11px] font-medium hover:bg-muted"
+        >
+          Run now
+        </button>
+        <button
+          onClick={onToggle}
+          data-testid="radar-schedule-toggle"
+          className="rounded-md border border-input bg-card px-2.5 py-1.5 text-[11px] font-medium hover:bg-muted"
+        >
+          {schedule.enabled ? "Pausar" : "Ativar"}
+        </button>
+        <button
+          onClick={onDelete}
+          className="rounded-md border border-input bg-card px-2.5 py-1.5 text-[11px] font-medium hover:bg-muted"
+        >
+          Arquivar
+        </button>
+      </div>
+    </article>
+  );
+}
+
+function NotificationBox({
+  notification,
+  onRead,
+}: {
+  notification: LocalNotification;
+  onRead: () => void;
+}) {
+  return (
+    <article className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="font-semibold">{notification.title}</div>
+          <p className="mt-1 text-xs text-muted-foreground">{notification.message}</p>
+        </div>
+        <Badge tone={notificationSeverityTone(notification.severity)}>
+          {notification.severity}
+        </Badge>
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+        <span>{formatDate(notification.created_at)}</span>
+        {!notification.read_at && (
+          <button
+            onClick={onRead}
+            data-testid="notification-mark-read"
+            className="rounded-md border border-input bg-card px-2.5 py-1.5 font-medium hover:bg-muted"
+          >
+            Marcar como lida
+          </button>
+        )}
+      </div>
+    </article>
   );
 }
 
@@ -1074,8 +1500,40 @@ function sourceLabel(sourceType: RadarSource["source_type"]): string {
     manual_public_page: "Página pública",
     manual_url: "Link manual",
     recurring_csv_json: "CSV/JSON recorrente",
+    authenticated_assisted_capture: "Captura assistida",
   };
   return labels[sourceType];
+}
+
+function scheduleFrequencyLabel(value: RadarSchedule["frequency"]): string {
+  const labels: Record<RadarSchedule["frequency"], string> = {
+    hourly: "A cada hora",
+    daily: "Diário",
+    weekly: "Semanal",
+    custom_interval: "Intervalo customizado",
+  };
+  return labels[value];
+}
+
+function notificationSeverityTone(
+  severity: LocalNotification["severity"],
+): "muted" | "success" | "warning" | "error" {
+  if (severity === "success") return "success";
+  if (severity === "warning") return "warning";
+  if (severity === "error") return "error";
+  return "muted";
+}
+
+function formatDate(value?: string | null): string {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  return date.toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 }
 
 function sourceStatusLabel(status: RadarSource["status"]): string {

@@ -596,7 +596,8 @@ export type RadarSourceType =
   | "official_api"
   | "manual_public_page"
   | "manual_url"
-  | "recurring_csv_json";
+  | "recurring_csv_json"
+  | "authenticated_assisted_capture";
 
 export type RadarSourceStatus =
   | "available"
@@ -731,6 +732,110 @@ export interface RadarRun {
   warnings: string[];
   errors: string[];
   metadata?: Record<string, unknown>;
+}
+
+export type RadarScheduleFrequency = "hourly" | "daily" | "weekly" | "custom_interval";
+export type RadarScheduledRunStatus = "running" | "success" | "warning" | "error" | "skipped";
+export type NotificationSeverity = "info" | "success" | "warning" | "error";
+
+export interface RadarSchedule {
+  schedule_id: string;
+  name: string;
+  enabled: boolean;
+  wishlist_id?: string | null;
+  source_ids: string[];
+  keywords: string[];
+  use_ai: boolean;
+  use_profile_context: boolean;
+  frequency: RadarScheduleFrequency;
+  interval_minutes?: number | null;
+  timezone: string;
+  quiet_hours_start?: string | null;
+  quiet_hours_end?: string | null;
+  cooldown_minutes: number;
+  min_match_score?: number | null;
+  min_ats_score?: number | null;
+  notify_on_new_matches: boolean;
+  notify_on_score_threshold: boolean;
+  last_run_at?: string | null;
+  next_run_at?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface RadarScheduledRun {
+  run_id: string;
+  schedule_id: string;
+  started_at?: string;
+  finished_at?: string | null;
+  status: RadarScheduledRunStatus;
+  total_results: number;
+  new_results: number;
+  alerts_created: number;
+  warnings: string[];
+  error?: string | null;
+  radar_run_id?: string | null;
+  profile_context_used: boolean;
+  manual: boolean;
+  metadata?: Record<string, unknown>;
+}
+
+export interface LocalNotification {
+  notification_id: string;
+  type: string;
+  title: string;
+  message: string;
+  severity: NotificationSeverity;
+  source: string;
+  related_entity_type?: string | null;
+  related_entity_id?: string | null;
+  created_at?: string;
+  read_at?: string | null;
+  dismissed_at?: string | null;
+  metadata?: Record<string, unknown>;
+}
+
+export interface RadarSchedulerStatus {
+  running: boolean;
+  enabled_schedules: number;
+  total_schedules: number;
+  next_run_at?: string | null;
+  due_schedules: number;
+}
+
+export interface RadarSchedulesResult {
+  schedules: RadarSchedule[];
+}
+
+export interface RadarScheduleResult {
+  schedule: RadarSchedule;
+  message: string;
+}
+
+export interface RadarScheduledRunResult {
+  scheduled_run: RadarScheduledRun;
+  notifications: LocalNotification[];
+  message: string;
+}
+
+export interface RadarScheduledRunsResult {
+  scheduled_runs: RadarScheduledRun[];
+}
+
+export interface NotificationsResult {
+  notifications: LocalNotification[];
+  unread_count: number;
+}
+
+export interface NotificationResult {
+  notification: LocalNotification;
+  message: string;
+}
+
+export interface NotificationBulkResult {
+  count: number;
+  message: string;
 }
 
 export interface RadarResult {

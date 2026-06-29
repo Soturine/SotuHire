@@ -22,9 +22,13 @@ import type {
   JobExtractResult,
   JobPosting,
   JobWishlist,
+  LocalNotification,
   MatchAnalysis,
   MatchAnalyzeResult,
   MatchRequirement,
+  NotificationBulkResult,
+  NotificationResult,
+  NotificationsResult,
   ProfileDeduplicateResult,
   ProfileImportResult,
   ProfileItem,
@@ -36,6 +40,13 @@ import type {
   RadarResult,
   RadarResultEnvelope,
   RadarResultsResult,
+  RadarSchedule,
+  RadarScheduleResult,
+  RadarSchedulesResult,
+  RadarScheduledRun,
+  RadarScheduledRunResult,
+  RadarScheduledRunsResult,
+  RadarSchedulerStatus,
   RadarRun,
   RadarRunResult,
   RadarRunsResult,
@@ -920,6 +931,105 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeRadarRuns,
       ),
 
+    radarSchedules: () =>
+      call<RadarSchedulesResult>(
+        mode,
+        baseUrl,
+        "/radar/schedules",
+        undefined,
+        mockRadarSchedules(),
+        normalizeRadarSchedules,
+      ),
+
+    radarCreateSchedule: (payload: Partial<RadarSchedule>) =>
+      call<RadarScheduleResult>(
+        mode,
+        baseUrl,
+        "/radar/schedules",
+        { method: "POST", body: JSON.stringify(payload) },
+        {
+          schedule: { ...mockRadarSchedules().schedules[0]!, ...payload },
+          message: "Modo Demo: agendamento criado.",
+        },
+        normalizeRadarScheduleResult,
+      ),
+
+    radarPatchSchedule: (id: string, payload: Partial<RadarSchedule>) =>
+      call<RadarScheduleResult>(
+        mode,
+        baseUrl,
+        `/radar/schedules/${id}`,
+        { method: "PATCH", body: JSON.stringify(payload) },
+        {
+          schedule: { ...mockRadarSchedules().schedules[0]!, schedule_id: id, ...payload },
+          message: "Modo Demo: agendamento atualizado.",
+        },
+        normalizeRadarScheduleResult,
+      ),
+
+    radarDeleteSchedule: (id: string) =>
+      call<RadarScheduleResult>(
+        mode,
+        baseUrl,
+        `/radar/schedules/${id}`,
+        { method: "DELETE" },
+        {
+          schedule: { ...mockRadarSchedules().schedules[0]!, schedule_id: id, enabled: false },
+          message: "Modo Demo: agendamento pausado.",
+        },
+        normalizeRadarScheduleResult,
+      ),
+
+    radarRunScheduleNow: (id: string) =>
+      call<RadarScheduledRunResult>(
+        mode,
+        baseUrl,
+        `/radar/schedules/${id}/run-now`,
+        { method: "POST" },
+        mockRadarScheduledRun(id),
+        normalizeRadarScheduledRunResult,
+      ),
+
+    radarScheduledRuns: () =>
+      call<RadarScheduledRunsResult>(
+        mode,
+        baseUrl,
+        "/radar/scheduled-runs",
+        undefined,
+        { scheduled_runs: [mockRadarScheduledRun("schedule-demo").scheduled_run] },
+        normalizeRadarScheduledRuns,
+      ),
+
+    radarSchedulerStatus: () =>
+      call<RadarSchedulerStatus>(
+        mode,
+        baseUrl,
+        "/radar/scheduler/status",
+        undefined,
+        mockRadarSchedulerStatus(),
+        normalizeRadarSchedulerStatus,
+      ),
+
+    radarSchedulerStart: () =>
+      call<RadarSchedulerStatus>(
+        mode,
+        baseUrl,
+        "/radar/scheduler/start",
+        { method: "POST" },
+        { ...mockRadarSchedulerStatus(), running: true },
+        normalizeRadarSchedulerStatus,
+      ),
+
+    radarSchedulerStop: () =>
+      call<RadarSchedulerStatus>(
+        mode,
+        baseUrl,
+        "/radar/scheduler/stop",
+        { method: "POST" },
+        { ...mockRadarSchedulerStatus(), running: false },
+        normalizeRadarSchedulerStatus,
+      ),
+
     radarResults: () =>
       call<RadarResultsResult>(
         mode,
@@ -1015,6 +1125,54 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         undefined,
         mockRadarStats(),
         normalizeRadarStats,
+      ),
+
+    notifications: () =>
+      call<NotificationsResult>(
+        mode,
+        baseUrl,
+        "/notifications",
+        undefined,
+        mockNotifications(),
+        normalizeNotifications,
+      ),
+
+    notificationPatch: (id: string, payload: { read?: boolean; dismissed?: boolean }) =>
+      call<NotificationResult>(
+        mode,
+        baseUrl,
+        `/notifications/${id}`,
+        { method: "PATCH", body: JSON.stringify(payload) },
+        {
+          notification: {
+            ...(mockNotifications().notifications.find((item) => item.notification_id === id) ??
+              mockNotifications().notifications[0]!),
+            read_at: payload.read ? new Date().toISOString() : null,
+            dismissed_at: payload.dismissed ? new Date().toISOString() : null,
+          },
+          message: "Modo Demo: notificacao atualizada.",
+        },
+        normalizeNotificationResult,
+      ),
+
+    notificationsMarkAllRead: () =>
+      call<NotificationBulkResult>(
+        mode,
+        baseUrl,
+        "/notifications/mark-all-read",
+        { method: "POST" },
+        { count: 1, message: "Modo Demo: notificacoes lidas." },
+        normalizeNotificationBulk,
+      ),
+
+    notificationsDeleteRead: () =>
+      call<NotificationBulkResult>(
+        mode,
+        baseUrl,
+        "/notifications/read",
+        { method: "DELETE" },
+        { count: 1, message: "Modo Demo: notificacoes removidas." },
+        normalizeNotificationBulk,
       ),
   };
 }
@@ -1470,6 +1628,22 @@ function mockRadarSources(): RadarSourcesResult {
         created_at: now,
         updated_at: now,
       },
+      {
+        id: "radar-source-assisted-demo",
+        name: "Captura assistida revisavel",
+        source_type: "authenticated_assisted_capture",
+        url: "https://example.invalid/authenticated/job",
+        status: "available",
+        is_active: true,
+        requires_api_key: false,
+        api_key_configured: false,
+        max_results: 1,
+        timeout_seconds: 6,
+        rate_limit_seconds: 1,
+        notes: "Agendamento cria lembrete local; captura depende de acao e revisao do usuario.",
+        created_at: now,
+        updated_at: now,
+      },
     ],
     adapters: [
       {
@@ -1483,6 +1657,12 @@ function mockRadarSources(): RadarSourcesResult {
         adapter_name: "API oficial planejada",
         supported: false,
         notes: "Requer contrato oficial documentado.",
+      },
+      {
+        source_type: "authenticated_assisted_capture",
+        adapter_name: "Captura assistida autenticada",
+        supported: true,
+        notes: "Agendavel como lembrete revisavel; sem cookies, tokens ou sessao.",
       },
     ],
   };
@@ -1604,6 +1784,95 @@ function mockRadarRun(payload: {
 
 function mockRadarRuns(): RadarRunsResult {
   return { runs: [mockRadarRun({}).run] };
+}
+
+function mockRadarSchedules(): RadarSchedulesResult {
+  const now = new Date().toISOString();
+  return {
+    schedules: [
+      {
+        schedule_id: "schedule-demo",
+        name: "Radar diario - Backend remoto",
+        enabled: true,
+        wishlist_id: "radar-wishlist-demo",
+        source_ids: ["radar-source-feed-demo"],
+        keywords: ["Python", "FastAPI"],
+        use_ai: false,
+        use_profile_context: true,
+        frequency: "daily",
+        interval_minutes: null,
+        timezone: "local",
+        quiet_hours_start: "22:00",
+        quiet_hours_end: "07:00",
+        cooldown_minutes: 720,
+        min_match_score: 70,
+        min_ats_score: 40,
+        notify_on_new_matches: true,
+        notify_on_score_threshold: true,
+        last_run_at: now,
+        next_run_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        created_at: now,
+        updated_at: now,
+        metadata: { review_required: true },
+      },
+    ],
+  };
+}
+
+function mockRadarScheduledRun(scheduleId: string): RadarScheduledRunResult {
+  const now = new Date().toISOString();
+  return {
+    scheduled_run: {
+      run_id: `scheduled_${Math.random().toString(36).slice(2, 8)}`,
+      schedule_id: scheduleId,
+      started_at: now,
+      finished_at: now,
+      status: "success",
+      total_results: 2,
+      new_results: 2,
+      alerts_created: 1,
+      warnings: [],
+      radar_run_id: "radar-run-demo",
+      profile_context_used: true,
+      manual: true,
+      metadata: { review_required: true, auto_apply: false },
+    },
+    notifications: mockNotifications().notifications,
+    message: "Modo Demo: agendamento executado.",
+  };
+}
+
+function mockRadarSchedulerStatus(): RadarSchedulerStatus {
+  return {
+    running: false,
+    enabled_schedules: 1,
+    total_schedules: 1,
+    next_run_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+    due_schedules: 0,
+  };
+}
+
+function mockNotifications(): NotificationsResult {
+  const now = new Date().toISOString();
+  return {
+    unread_count: 1,
+    notifications: [
+      {
+        notification_id: "notification-demo-1",
+        type: "radar_schedule",
+        title: "2 resultado(s) do Radar agendado",
+        message: "Radar diario - Backend remoto encontrou oportunidades ficticias para revisao.",
+        severity: "success",
+        source: "radar",
+        related_entity_type: "radar_schedule",
+        related_entity_id: "schedule-demo",
+        created_at: now,
+        read_at: null,
+        dismissed_at: null,
+        metadata: { schedule_id: "schedule-demo", auto_apply: false },
+      },
+    ],
+  };
 }
 
 function mockRadarAlerts(): RadarAlertsResult {
@@ -2561,6 +2830,90 @@ function normalizeRadarRuns(value: unknown): RadarRunsResult {
   return { runs: objectList(asRecord(value).runs).map(normalizeRadarRun) };
 }
 
+function normalizeRadarSchedules(value: unknown): RadarSchedulesResult {
+  return { schedules: objectList(asRecord(value).schedules).map(normalizeRadarSchedule) };
+}
+
+function normalizeRadarScheduleResult(value: unknown): RadarScheduleResult {
+  const raw = asRecord(value);
+  return { schedule: normalizeRadarSchedule(raw.schedule), message: asString(raw.message) };
+}
+
+function normalizeRadarSchedule(value: unknown): RadarSchedule {
+  const raw = asRecord(value);
+  return {
+    schedule_id: asString(raw.schedule_id),
+    name: asString(raw.name) || "Radar agendado",
+    enabled: asBoolean(raw.enabled, true),
+    wishlist_id: asString(raw.wishlist_id) || null,
+    source_ids: stringList(raw.source_ids),
+    keywords: stringList(raw.keywords),
+    use_ai: asBoolean(raw.use_ai, false),
+    use_profile_context: asBoolean(raw.use_profile_context, true),
+    frequency: normalizeRadarScheduleFrequency(raw.frequency),
+    interval_minutes: definedNumber(raw.interval_minutes) ?? null,
+    timezone: asString(raw.timezone) || "local",
+    quiet_hours_start: asString(raw.quiet_hours_start) || null,
+    quiet_hours_end: asString(raw.quiet_hours_end) || null,
+    cooldown_minutes: asNumber(raw.cooldown_minutes, 720),
+    min_match_score: definedNumber(raw.min_match_score) ?? null,
+    min_ats_score: definedNumber(raw.min_ats_score) ?? null,
+    notify_on_new_matches: asBoolean(raw.notify_on_new_matches, true),
+    notify_on_score_threshold: asBoolean(raw.notify_on_score_threshold, true),
+    last_run_at: asString(raw.last_run_at) || null,
+    next_run_at: asString(raw.next_run_at) || null,
+    created_at: asString(raw.created_at),
+    updated_at: asString(raw.updated_at),
+    metadata: asRecord(raw.metadata),
+  };
+}
+
+function normalizeRadarScheduledRunResult(value: unknown): RadarScheduledRunResult {
+  const raw = asRecord(value);
+  return {
+    scheduled_run: normalizeRadarScheduledRun(raw.scheduled_run),
+    notifications: objectList(raw.notifications).map(normalizeLocalNotification),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeRadarScheduledRuns(value: unknown): RadarScheduledRunsResult {
+  return {
+    scheduled_runs: objectList(asRecord(value).scheduled_runs).map(normalizeRadarScheduledRun),
+  };
+}
+
+function normalizeRadarScheduledRun(value: unknown): RadarScheduledRun {
+  const raw = asRecord(value);
+  return {
+    run_id: asString(raw.run_id),
+    schedule_id: asString(raw.schedule_id),
+    started_at: asString(raw.started_at),
+    finished_at: asString(raw.finished_at) || null,
+    status: normalizeRadarScheduledRunStatus(raw.status),
+    total_results: asNumber(raw.total_results, 0),
+    new_results: asNumber(raw.new_results, 0),
+    alerts_created: asNumber(raw.alerts_created, 0),
+    warnings: stringList(raw.warnings),
+    error: asString(raw.error) || null,
+    radar_run_id: asString(raw.radar_run_id) || null,
+    profile_context_used: asBoolean(raw.profile_context_used, false),
+    manual: asBoolean(raw.manual, false),
+    metadata: asRecord(raw.metadata),
+  };
+}
+
+function normalizeRadarSchedulerStatus(value: unknown): RadarSchedulerStatus {
+  const raw = asRecord(value);
+  return {
+    running: asBoolean(raw.running, false),
+    enabled_schedules: asNumber(raw.enabled_schedules, 0),
+    total_schedules: asNumber(raw.total_schedules, 0),
+    next_run_at: asString(raw.next_run_at) || null,
+    due_schedules: asNumber(raw.due_schedules, 0),
+  };
+}
+
 function normalizeRadarRun(value: unknown): RadarRun {
   const raw = asRecord(value);
   return {
@@ -2689,6 +3042,48 @@ function normalizeRadarStats(value: unknown): RadarStats {
   };
 }
 
+function normalizeNotifications(value: unknown): NotificationsResult {
+  const raw = asRecord(value);
+  return {
+    notifications: objectList(raw.notifications).map(normalizeLocalNotification),
+    unread_count: asNumber(raw.unread_count, 0),
+  };
+}
+
+function normalizeNotificationResult(value: unknown): NotificationResult {
+  const raw = asRecord(value);
+  return {
+    notification: normalizeLocalNotification(raw.notification),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeNotificationBulk(value: unknown): NotificationBulkResult {
+  const raw = asRecord(value);
+  return {
+    count: asNumber(raw.count, 0),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeLocalNotification(value: unknown): LocalNotification {
+  const raw = asRecord(value);
+  return {
+    notification_id: asString(raw.notification_id),
+    type: asString(raw.type) || "radar_schedule",
+    title: asString(raw.title) || "Notificacao",
+    message: asString(raw.message),
+    severity: normalizeNotificationSeverity(raw.severity),
+    source: asString(raw.source) || "radar",
+    related_entity_type: asString(raw.related_entity_type) || null,
+    related_entity_id: asString(raw.related_entity_id) || null,
+    created_at: asString(raw.created_at),
+    read_at: asString(raw.read_at) || null,
+    dismissed_at: asString(raw.dismissed_at) || null,
+    metadata: asRecord(raw.metadata),
+  };
+}
+
 function normalizeRadarSourceType(value: unknown): RadarSource["source_type"] {
   const allowed: RadarSource["source_type"][] = [
     "public_feed",
@@ -2696,6 +3091,7 @@ function normalizeRadarSourceType(value: unknown): RadarSource["source_type"] {
     "manual_public_page",
     "manual_url",
     "recurring_csv_json",
+    "authenticated_assisted_capture",
   ];
   return allowed.includes(value as RadarSource["source_type"])
     ? (value as RadarSource["source_type"])
@@ -2738,6 +3134,33 @@ function normalizeRadarAlertStatus(value: unknown): RadarAlert["status"] {
   return allowed.includes(value as RadarAlert["status"])
     ? (value as RadarAlert["status"])
     : "unread";
+}
+
+function normalizeRadarScheduleFrequency(value: unknown): RadarSchedule["frequency"] {
+  const allowed: RadarSchedule["frequency"][] = ["hourly", "daily", "weekly", "custom_interval"];
+  return allowed.includes(value as RadarSchedule["frequency"])
+    ? (value as RadarSchedule["frequency"])
+    : "daily";
+}
+
+function normalizeRadarScheduledRunStatus(value: unknown): RadarScheduledRun["status"] {
+  const allowed: RadarScheduledRun["status"][] = [
+    "running",
+    "success",
+    "warning",
+    "error",
+    "skipped",
+  ];
+  return allowed.includes(value as RadarScheduledRun["status"])
+    ? (value as RadarScheduledRun["status"])
+    : "warning";
+}
+
+function normalizeNotificationSeverity(value: unknown): LocalNotification["severity"] {
+  const allowed: LocalNotification["severity"][] = ["info", "success", "warning", "error"];
+  return allowed.includes(value as LocalNotification["severity"])
+    ? (value as LocalNotification["severity"])
+    : "info";
 }
 
 function normalizeInboxItem(value: unknown): SourceImportsResult["items"][number] {
