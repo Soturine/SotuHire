@@ -23,6 +23,9 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [v1.8.1 AI Wishlist and Radar Stability](07-development/v1.8.1-ai-wishlist-radar-stability-profile-context.md)
 - [v1.8.2 Universal Career Profile](07-development/v1.8.2-universal-career-profile.md)
 - [v1.9.0 Scheduled Radar and Notifications](07-development/v1.9.0-scheduled-radar-notifications.md)
+- [v1.9.1 Release Integrity and Context Unification](07-development/v1.9.1-release-integrity-readme-context-unification.md)
+- [Career Context Engine](02-architecture/career-context-engine.md)
+- [Extension Profile Bridge](02-architecture/extension-profile-bridge.md)
 
 ## Frontend-ready
 
@@ -53,6 +56,8 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [Data flow](02-architecture/data-flow.md)
 - [Local Companion API](02-architecture/local-companion-api.md)
 - [Frontend API Layer](02-architecture/frontend-api-layer.md)
+- [Career Context Engine](02-architecture/career-context-engine.md)
+- [Extension Profile Bridge](02-architecture/extension-profile-bridge.md)
 - [Matching rules](03-business-rules/matching-rules.md)
 - [ATS rules](03-business-rules/ats-rules.md)
 - [Resume Tailor rules](03-business-rules/resume-tailor-rules.md)

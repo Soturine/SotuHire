@@ -1,6 +1,6 @@
 # Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.9.0 e os proximos ciclos tecnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.9.1 e os proximos ciclos tecnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,14 +8,28 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.9.0 |
+| Versão atual considerada | v1.9.1 |
 | Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional e intake persistente |
 | Próximo ciclo documental | contínuo |
 | Próximo ciclo técnico | v2.0 Assistant workflows with human approval |
 | Foco de produto | Copiloto de carreira multiárea com perfil central e Radar local-first |
-| Foco técnico imediato | Radar agendado local, notificacoes in-app e contexto profissional revisavel |
-| Grande lacuna atual | Notificacoes nativas opcionais e conectores oficiais reais por contrato |
+| Foco técnico imediato | Contexto de carreira unificado, RAG local aplicado e documentacao profissional |
+| Grande lacuna atual | Matching adaptativo por dominio, upload direto para Perfil e revisao avancada de evidencias GitHub/Portfolio |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
+
+## Estado atual - v1.9.1
+
+A v1.9.1 entrega **Integridade de Release, README profissional e Career Context Engine**:
+
+- revisa a integridade da tag `v1.9.0` para o estado final com lockfile validado;
+- confirma `npm ci` e validacoes do frontend antes da nova release;
+- reestrutura o README como pagina de produto/repo;
+- atualiza screenshots e GIF do frontend web moderno com nomes sem versao;
+- cria `modules/context` como Career Context Engine;
+- unifica Perfil Profissional Universal, RAG local e sinais do produto em contexto serializavel;
+- integra contexto em Wishlist, Radar, Scheduler, Match, ATS, Tailor, Tracker, Fontes, Notificacoes e GitHub/Portfolio;
+- adiciona candidatos de evidencia de GitHub/Portfolio para revisao, sem salvar automaticamente no Perfil;
+- preserva o fluxo authenticated browser existente.
 
 ## Estado atual - v1.9.0
 
@@ -161,9 +175,11 @@ seguros, manter Streamlit como modo local/dev e preservar o core como fonte de v
 
 - A apresentação web moderna já existe e tem screenshots e walkthroughs atuais.
 - Os parsers ainda carregam viés forte para tecnologia/dev.
-- A IA existe, mas ainda não opera por Prompt Registry completo.
-- Os prompts atuais implementados no código ainda são pequenos comparados à visão planejada.
-- Settings/IA ainda precisam de endpoints seguros no backend local.
+- O Prompt Registry existe, mas precisa governanca e cobertura continua.
+- Os prompts atuais implementados no código ainda podem ganhar exemplos e criterios por dominio.
+- Settings/IA existem, mas precisam auditoria continua de UX e seguranca.
+- A lacuna atual e aprofundar Career Context Engine/RAG unificado com Kanban, GitHub/Portfolio e ATS.
+- Upload direto de arquivos para Perfil e matching adaptativo por dominio seguem como evolucoes futuras.
 - A documentação anterior misturava estado atual, histórico antigo e planos futuros.
 
 ### O que não deve acontecer agora
@@ -218,6 +234,7 @@ A evolução deve ser feita por camadas:
 | v1.8.1 | AI Wishlist, Radar Stability & Profile Context Prep | Produto | Wishlist por IA/local, contexto profissional preparado e CI web. |
 | v1.8.2 | Universal Professional Profile | Produto/core | Perfil Profissional Universal editável, multiárea e evidence-first. |
 | v1.9.0 | Scheduled Radar & Notifications | Produto | Agendamento local do Radar, quiet hours, cooldown e notificacoes in-app. |
+| v1.9.1 | Release Integrity, README Overhaul & Context Unification | Produto/core/docs | Integridade de tag, README profissional, screenshots web e Career Context Engine. |
 | v2.0.0 | Assistant autonomo com aprovacao manual | Produto/arquitetura | Autonomia local com aprovacoes explicitas e sem auto-apply. |
 
 ---

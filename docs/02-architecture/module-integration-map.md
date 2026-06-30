@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.8.2 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.9.1 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -20,6 +20,7 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | --- | --- | --- | --- | --- | --- |
 | Currículo | `/resume` | `POST /api/v1/resume/extract` | `extract_resume` | `modules/parsers`, structured extractor | Real |
 | Vaga | `/job` | `POST /api/v1/job/extract` | `extract_job` | `modules/parsers`, structured extractor | Real |
+| Career Context Engine | varios fluxos | consumo interno | services API | `modules/context`, `modules/profile`, `modules/memory` | Real |
 | Compatibilidade | `/match` | `POST /api/v1/match/analyze` | `analyze_match` | `modules/analyzer`, `modules/matching` | Real |
 | ATS | `/ats` | `POST /api/v1/ats/analyze` | `analyze_ats` | `modules/ats` | Real |
 | Tailor | `/tailor` | `POST /api/v1/resume/tailor` | `tailor_resume` | `modules/resume_tailor` | Real |
@@ -205,10 +206,17 @@ O prompt `profile_items_extractor_v1` é opcional e sempre retorna itens para re
 frontend `/profile` permite editar dados básicos, adicionar item manual, filtrar por tipo, editar
 evidências, importar texto e revisar drafts.
 
-O `ProfileContextOrchestrator` é usado pelo draft da Wishlist quando `use_profile_context=true` e
-por análises de Match/Tailor de forma conservadora. Dados do perfil só entram em provider externo
-quando `allow_memory_context=true`; caso contrário, o backend usa contexto apenas localmente e emite
-warning.
+O `CareerContextEngine` usa `ProfileContextOrchestrator` e `MemoryRetriever` para entregar um
+contexto compacto por proposito. Wishlist, Radar, Scheduler, Match, ATS, Tailor, Tracker, Fontes,
+Notificacoes, Extensao e GitHub/Portfolio consultam essa camada. Dados do perfil/memoria so entram em
+provider externo quando `allow_memory_context=true`; evidencias sensiveis sao omitidas do payload
+externo.
+
+Capturas e projetos da extensao agora podem gerar candidatos revisaveis de `ProfileItem` com
+`source_ref` local. Nada e salvo no Perfil Universal antes de confirmacao humana.
+
+Leia tambem [Career Context Engine](career-context-engine.md) e
+[Extension Profile Bridge](extension-profile-bridge.md).
 
 ## Captura Assistida Autenticada v1.8.2
 

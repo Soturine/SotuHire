@@ -77,6 +77,8 @@ nav:
       - Local Companion API: 02-architecture/local-companion-api.md
       - Frontend API Layer: 02-architecture/frontend-api-layer.md
       - Mapa de integração de módulos: 02-architecture/module-integration-map.md
+      - Career Context Engine: 02-architecture/career-context-engine.md
+      - Extension Profile Bridge: 02-architecture/extension-profile-bridge.md
       - Background jobs: 02-architecture/background-jobs.md
       - Parsers: 02-architecture/parsers.md
       - Semântica do parser: 02-architecture/parser-semantics.md
@@ -203,9 +205,11 @@ nav:
       - v1.8.1 AI Wishlist and Radar Stability: 07-development/v1.8.1-ai-wishlist-radar-stability-profile-context.md
       - v1.8.2 Universal Career Profile: 07-development/v1.8.2-universal-career-profile.md
       - v1.9.0 Scheduled Radar and Notifications: 07-development/v1.9.0-scheduled-radar-notifications.md
+      - v1.9.1 Context Unification: 07-development/v1.9.1-release-integrity-readme-context-unification.md
       - Release notes v1.8.1: releases/v1.8.1.md
       - Release notes v1.8.2: releases/v1.8.2.md
       - Release notes v1.9.0: releases/v1.9.0.md
+      - Release notes v1.9.1: releases/v1.9.1.md
   - Frontend:
       - Overview: 08-frontend/README.md
       - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md
