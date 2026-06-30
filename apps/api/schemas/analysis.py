@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Literal
 
+from modules.context import CareerContextEvidence
 from modules.core.collection_method import CollectionMethod
 from modules.github_analyzer.repository_models import RepositoryAnalysisInput
 from modules.github_analyzer.schemas import GitHubAnalyzerReport
@@ -97,6 +98,9 @@ class MatchAnalyzeResponse(BaseModel):
     local_first: bool = True
     model: str = ""
     memory_shared_with_provider: bool = False
+    context_summary: str = ""
+    context_evidence_count: int = 0
+    context_warnings: list[str] = Field(default_factory=list)
 
 
 class AtsAnalyzeRequest(BaseModel):
@@ -126,6 +130,8 @@ class AtsAnalyzeResponse(BaseModel):
     fallback_used: bool = False
     ai_insights: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    context_summary: str = ""
+    context_evidence_keywords: list[str] = Field(default_factory=list)
 
 
 class ResumeTailorRequest(BaseModel):
@@ -153,6 +159,8 @@ class ResumeTailorResponse(BaseModel):
     analysis_mode: Literal["local", "ai", "fallback"] = "local"
     fallback_used: bool = False
     ai_suggestions: list[str] = Field(default_factory=list)
+    context_summary: str = ""
+    context_evidence_count: int = 0
 
 
 class GitHubRepoAnalyzeRequest(BaseModel):
@@ -198,6 +206,7 @@ class GitHubRepoAnalyzeResponse(BaseModel):
     requested_provider: str = "local"
     analysis_mode: Literal["local", "ai", "fallback"] = "local"
     fallback_used: bool = False
+    profile_evidence_candidates: list[CareerContextEvidence] = Field(default_factory=list)
 
 
 class TrackerJobCreateRequest(BaseModel):
@@ -235,10 +244,20 @@ class TrackerJobUpdateRequest(BaseModel):
     request_id: str = Field(default="", max_length=120)
 
 
-class TrackerJobResponse(BaseModel):
-    """Tracker card response."""
+class TrackerJobContext(BaseModel):
+    """Context hints for one tracker card."""
 
     model_config = ConfigDict(extra="forbid")
+
+    context_summary: str = ""
+    fit_reason: str = ""
+    next_action_hint: str = ""
+    aligned_with_profile: bool | None = None
+    recurring_gaps: list[str] = Field(default_factory=list)
+
+
+class TrackerJobResponse(TrackerJobContext):
+    """Tracker card response."""
 
     job: StoredAnalysis
 
@@ -249,6 +268,8 @@ class TrackerJobsResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     jobs: list[StoredAnalysis] = Field(default_factory=list)
+    context_summary: str = ""
+    job_contexts: dict[str, TrackerJobContext] = Field(default_factory=dict)
 
 
 class TrackerMetricsResponse(BaseModel):

@@ -11,11 +11,20 @@ from modules.ai.structured_analysis import analyze_structured
 from modules.ai.structured_job_extractor import extract_structured_job
 from modules.ai.structured_resume_extractor import extract_structured_resume
 from modules.ats.match_keywords import review_keywords_with_match
+from modules.context import (
+    CareerContext,
+    CareerContextEngine,
+    CareerContextPurpose,
+    context_brief,
+    context_to_memory_evidence,
+    format_context_for_prompt,
+    profile_evidence_candidates_from_github_report,
+)
+from modules.core.text_utils import normalize_text
 from modules.github_analyzer.analyzer_service import analyze_github_repository
 from modules.github_analyzer.exceptions import GitHubAnalyzerError
 from modules.parsers.job_description_parser import parse_job_description
 from modules.parsers.resume_parser import parse_resume_text
-from modules.profile import ProfileContextOrchestrator
 from modules.resume_tailor.tailor_rules import build_safe_tailor_output
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
@@ -136,25 +145,35 @@ def analyze_match(request: MatchAnalyzeRequest) -> tuple[MatchAnalyzeResponse, l
         portfolio_evidence=request.portfolio_evidence,
     )
     runtime = get_ai_runtime("match")
-    profile_context_text = _profile_context_text()
-    profile_context_applied = bool(profile_context_text) and (
-        runtime.provider_name == "local" or runtime.allow_memory_context
+    career_context = _build_career_context(
+        CareerContextPurpose.MATCH,
+        query=" ".join([resume_text, job_text]),
     )
-    if profile_context_applied:
-        resume_text = _append_profile_context(resume_text, profile_context_text)
+    external_share = runtime.provider_name != "local" and runtime.allow_memory_context
+    memory_evidence = context_to_memory_evidence(
+        career_context,
+        include_sensitive=not external_share,
+    )
     result = analyze_structured(
         resume_text,
         job_text,
         preferences=request.preferences,
         job_details=(request.job.model_dump() if request.job else None),
         provider=runtime.provider,
+        memory_evidence=memory_evidence,
         share_memory_with_provider=runtime.allow_memory_context,
     )
-    warnings = [*runtime.warnings, *([result.warning] if result.warning else [])]
-    if profile_context_applied:
-        warnings.append("Contexto do Perfil Profissional aplicado como evidencia.")
-    elif profile_context_text and runtime.provider_name != "local":
-        warnings.append("Contexto do perfil nao foi enviado ao provider externo.")
+    warnings = [
+        *runtime.warnings,
+        *career_context.warnings,
+        *([result.warning] if result.warning else []),
+    ]
+    if memory_evidence:
+        warnings.append("Career Context Engine aplicado como evidencia local.")
+    if memory_evidence and runtime.provider_name != "local" and not runtime.allow_memory_context:
+        warnings.append("Contexto de carreira nao foi enviado ao provider externo.")
+    if external_share and any(item.sensitive for item in career_context.evidence):
+        warnings.append("Evidencias sensiveis foram omitidas do contexto externo.")
     return (
         MatchAnalyzeResponse(
             analysis=result.analysis,
@@ -165,6 +184,9 @@ def analyze_match(request: MatchAnalyzeRequest) -> tuple[MatchAnalyzeResponse, l
             local_first=result.provider == "local",
             model=result.model,
             memory_shared_with_provider=result.memory_shared_with_provider,
+            context_summary=context_brief(career_context),
+            context_evidence_count=len(memory_evidence),
+            context_warnings=career_context.warnings,
         ),
         warnings,
     )
@@ -195,13 +217,27 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
     review = review_keywords_with_match(analysis, keywords)
     runtime = get_ai_runtime("ats")
     warnings.extend(runtime.warnings)
+    career_context = _build_career_context(
+        CareerContextPurpose.ATS,
+        query=" ".join([request.job_text, " ".join(keywords)]),
+    )
+    context_keywords = _context_keywords_for_ats(career_context, keywords)
+    if context_keywords:
+        warnings.append("ATS consultou evidencias do Career Context Engine.")
     provider_used = runtime.provider_name
     fallback_used = runtime.fallback_used
-    ai_insights: list[str] = []
+    ai_insights: list[str] = [
+        f"Evidencia local encontrada para: {keyword}" for keyword in context_keywords[:8]
+    ]
 
     if runtime.use_ai and runtime.provider_name != "local":
         try:
             spec = default_prompt_registry().get("ats_analysis_v1")
+            external_context = (
+                format_context_for_prompt(career_context, include_sensitive=False)
+                if runtime.allow_memory_context
+                else ""
+            )
             output = runtime.provider.generate_structured(
                 spec,
                 {
@@ -214,12 +250,14 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
                         "missing_but_safe_to_add_if_true": review.missing_but_safe_to_add_if_true,
                         "missing_without_evidence": review.missing_without_evidence,
                     },
+                    "career_context": external_context,
                     "language": "pt-BR",
                 },
             )
             ai_review = AtsAiReviewOutput.model_validate(output)
             ai_insights = _unique(
                 [
+                    *ai_insights,
                     *ai_review.keyword_observations,
                     *ai_review.safe_to_add_if_true,
                 ]
@@ -242,6 +280,8 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
             fallback_used=fallback_used,
             ai_insights=ai_insights,
             warnings=warnings,
+            context_summary=context_brief(career_context),
+            context_evidence_keywords=context_keywords,
         ),
         warnings,
     )
@@ -250,25 +290,29 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
 def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, list[str]]:
     """Build safe, evidence-backed tailoring suggestions."""
     runtime = get_ai_runtime("tailor")
-    profile_context_text = _profile_context_text()
-    evidence_text = request.evidence_text
-    profile_context_applied = bool(profile_context_text) and (
-        runtime.provider_name == "local" or runtime.allow_memory_context
+    career_context = _build_career_context(
+        CareerContextPurpose.TAILOR,
+        query=" ".join([request.target_role, request.job_text, request.evidence_text]),
     )
-    if profile_context_applied:
-        evidence_text = _append_profile_context(evidence_text, profile_context_text)
+    context_text = format_context_for_prompt(career_context, include_sensitive=False)
+    local_evidence_text = _append_profile_context(request.evidence_text, context_text)
+    provider_evidence_text = (
+        local_evidence_text
+        if runtime.provider_name == "local" or runtime.allow_memory_context
+        else request.evidence_text
+    )
     tailor = build_safe_tailor_output(
         target_role=request.target_role,
         target_company=request.target_company,
         job_text=request.job_text,
-        evidence_text=evidence_text,
+        evidence_text=local_evidence_text,
         match_analysis=request.match_analysis,
     )
-    warnings = [*tailor.warnings, *runtime.warnings]
-    if profile_context_applied:
-        warnings.append("Contexto do Perfil Profissional aplicado ao ajuste.")
-    elif profile_context_text and runtime.provider_name != "local":
-        warnings.append("Contexto do perfil nao foi enviado ao provider externo.")
+    warnings = [*tailor.warnings, *runtime.warnings, *career_context.warnings]
+    if context_text:
+        warnings.append("Career Context Engine aplicado ao ajuste local.")
+    if context_text and runtime.provider_name != "local" and not runtime.allow_memory_context:
+        warnings.append("Contexto de carreira nao foi enviado ao provider externo.")
     provider_used = runtime.provider_name
     fallback_used = runtime.fallback_used
     ai_suggestions: list[str] = []
@@ -282,7 +326,7 @@ def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, l
                     "target_role": request.target_role,
                     "target_company": request.target_company or "",
                     "job_text": request.job_text,
-                    "evidence_text": evidence_text,
+                    "evidence_text": provider_evidence_text,
                     "deterministic_tailor": tailor.model_dump(mode="json"),
                     "language": "pt-BR",
                 },
@@ -310,6 +354,8 @@ def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, l
             analysis_mode=_analysis_mode(provider_used, fallback_used),
             fallback_used=fallback_used,
             ai_suggestions=ai_suggestions,
+            context_summary=context_brief(career_context),
+            context_evidence_count=len(career_context.evidence),
         ),
         warnings,
     )
@@ -345,6 +391,7 @@ def analyze_github_repo(
             requested_provider=str(runtime.requested_provider),
             analysis_mode=_analysis_mode(provider_used, fallback_used),
             fallback_used=fallback_used,
+            profile_evidence_candidates=profile_evidence_candidates_from_github_report(report),
         ),
         warnings,
     )
@@ -438,34 +485,34 @@ def _append_profile_context(base_text: str, context_text: str) -> str:
     )
 
 
-def _profile_context_text() -> str:
-    """Build a compact local profile evidence summary."""
-    try:
-        context = ProfileContextOrchestrator().build_context(purpose="analysis")
-    except Exception:
-        return ""
-    sections: list[str] = []
-    for label, items in [
-        ("Formacao", context.education),
-        ("Experiencias", context.experiences),
-        ("Academico", context.academic_experiences),
-        ("Projetos/portfolio", context.projects),
-        ("Certificacoes/registros", context.certifications_and_registries),
-        ("Competencias", context.skills),
-        ("Idiomas", context.languages),
-    ]:
-        if not items:
-            continue
-        values = [
-            f"{item.title} ({item.confidence}; {'confirmado' if item.confirmed_by_user else 'a confirmar'})"
-            for item in items[:8]
-        ]
-        sections.append(f"{label}: {', '.join(values)}")
-    if context.career_goals:
-        sections.append(f"Objetivos: {', '.join(context.career_goals[:8])}")
-    if context.constraints:
-        sections.append(f"Restricoes: {', '.join(context.constraints[:8])}")
-    return "\n".join(sections)
+def _build_career_context(purpose: CareerContextPurpose, *, query: str = "") -> CareerContext:
+    return CareerContextEngine().build(purpose, query=query, max_evidence=12)
+
+
+def _context_keywords_for_ats(
+    context: CareerContext,
+    keywords: list[str],
+) -> list[str]:
+    supported: list[str] = []
+    evidence_text = normalize_text(
+        " ".join(
+            [
+                context.profile_summary,
+                *context.goals,
+                *context.domains,
+                *[
+                    f"{item.title} {item.content}"
+                    for item in context.evidence
+                    if not item.sensitive
+                ],
+            ]
+        )
+    )
+    for keyword in keywords:
+        normalized = normalize_text(keyword)
+        if normalized and normalized in evidence_text:
+            supported.append(keyword)
+    return _unique(supported)
 
 
 def _unique(items: list[str]) -> list[str]:

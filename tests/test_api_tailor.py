@@ -19,3 +19,32 @@ def test_resume_tailor_returns_safe_reviewable_output() -> None:
     assert payload["safe_to_export"] is True
     assert payload["tailor"]["target_role"] == "Backend Python"
     assert payload["tailor"]["warnings"]
+
+
+def test_resume_tailor_reports_career_context_usage(tmp_path, monkeypatch) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    client = api_client()
+    profile = client.post(
+        "/api/v1/profile/items",
+        json={
+            "type": "project",
+            "title": "API FastAPI",
+            "evidence": "Projeto de API com FastAPI e testes.",
+            "confidence": "high",
+        },
+    )
+    assert profile.status_code == 200
+
+    response = client.post(
+        "/api/v1/resume/tailor",
+        json={
+            "target_role": "Backend Python",
+            "job_text": JOB_TEXT,
+            "evidence_text": "Experiencia com Python.",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["context_evidence_count"] >= 1
+    assert "API FastAPI" in payload["context_summary"]

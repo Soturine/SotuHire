@@ -28,4 +28,6 @@ def test_github_repo_analyze_uses_fallback_payload_without_network_dependency() 
     report = payload["data"]["report"]
     assert report["repository_identity"]["name"] == "fictitious-api"
     assert report["fallback_used"] is True
+    assert payload["data"]["profile_evidence_candidates"]
+    assert payload["data"]["profile_evidence_candidates"][0]["metadata"]["review_required"] is True
     assert payload["warnings"] == ["Analise GitHub usou fallback local."]

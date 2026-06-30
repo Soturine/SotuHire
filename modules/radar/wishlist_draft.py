@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from typing import Literal
 
 from modules.ai.schemas.analysis_insights import WishlistDraftOutput, WishlistDraftPayload
+from modules.context import CareerContext
 from modules.core.text_utils import normalize_text
 from modules.profile.context import ProfileContext
 
@@ -117,7 +118,7 @@ _SENIORITY_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
 def build_local_wishlist_draft(
     free_text: str,
     *,
-    profile_context: ProfileContext | None = None,
+    profile_context: ProfileContext | CareerContext | None = None,
     provider_used: str = "local",
     analysis_mode: AnalysisMode = "local",
     warnings: Iterable[str] = (),
@@ -137,10 +138,13 @@ def build_local_wishlist_draft(
     contract_types = _detect_contracts(normalized)
 
     if profile_context is not None:
-        titles = _merge(titles, profile_context.career_goals)
-        skills = _merge(skills, [item.title for item in profile_context.skills[:12]])
-        locations = _merge(locations, profile_context.locations)
-        desired_skills = _merge(desired_skills, profile_context.preferences[:10])
+        titles = _merge(titles, _context_goals(profile_context))
+        detected_domains = _merge(detected_domains, _context_domains(profile_context))
+        skills = _merge(skills, _context_skill_titles(profile_context))
+        locations = _merge(locations, _context_locations(profile_context))
+        remote_preferences = _merge(remote_preferences, _context_work_models(profile_context))
+        contract_types = _merge(contract_types, _context_contract_types(profile_context))
+        desired_skills = _merge(desired_skills, _context_preferences(profile_context))
         if not seniorities:
             seniorities = _extract_seniority_from_context(profile_context)
 
@@ -341,7 +345,76 @@ def _explicit_requirements_from_text(normalized: str) -> list[str]:
     return requirements
 
 
-def _extract_seniority_from_context(profile_context: ProfileContext) -> list[str]:
+def _context_goals(profile_context: ProfileContext | CareerContext) -> list[str]:
+    return (
+        list(profile_context.goals)
+        if isinstance(profile_context, CareerContext)
+        else list(profile_context.career_goals)
+    )
+
+
+def _context_domains(profile_context: ProfileContext | CareerContext) -> list[str]:
+    if isinstance(profile_context, CareerContext):
+        return list(profile_context.domains)
+    return [
+        item.domain
+        for item in [
+            *profile_context.education,
+            *profile_context.experiences,
+            *profile_context.projects,
+            *profile_context.certifications_and_registries,
+            *profile_context.skills,
+        ]
+        if item.domain
+    ]
+
+
+def _context_skill_titles(profile_context: ProfileContext | CareerContext) -> list[str]:
+    if isinstance(profile_context, CareerContext):
+        return [
+            item.title
+            for item in profile_context.evidence
+            if item.kind in {"skill", "technical_skill", "practical_skill", "tool", "method"}
+            and not item.sensitive
+        ][:12]
+    return [item.title for item in profile_context.skills[:12]]
+
+
+def _context_locations(profile_context: ProfileContext | CareerContext) -> list[str]:
+    return list(profile_context.locations)
+
+
+def _context_work_models(profile_context: ProfileContext | CareerContext) -> list[str]:
+    return list(profile_context.work_models) if isinstance(profile_context, CareerContext) else []
+
+
+def _context_contract_types(profile_context: ProfileContext | CareerContext) -> list[str]:
+    return (
+        list(profile_context.contract_types) if isinstance(profile_context, CareerContext) else []
+    )
+
+
+def _context_preferences(profile_context: ProfileContext | CareerContext) -> list[str]:
+    if isinstance(profile_context, CareerContext):
+        return [
+            item.title
+            for item in profile_context.evidence
+            if item.kind not in {"constraint"} and not item.sensitive
+        ][:10]
+    return profile_context.preferences[:10]
+
+
+def _extract_seniority_from_context(profile_context: ProfileContext | CareerContext) -> list[str]:
+    if isinstance(profile_context, CareerContext):
+        signals = normalize_text(
+            " ".join(
+                [
+                    *profile_context.seniority,
+                    *[item.title for item in profile_context.evidence if not item.sensitive],
+                ]
+            )
+        )
+        return _detect_seniority(signals)
     signals = normalize_text(" ".join(profile_context.application_history_signals))
     return _detect_seniority(signals)
 

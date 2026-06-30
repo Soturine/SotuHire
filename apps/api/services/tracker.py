@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from fastapi import HTTPException
+from modules.context import CareerContext, CareerContextEngine, CareerContextPurpose, context_brief
+from modules.core.text_utils import normalize_text
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.storage.models import StoredAnalysis, utc_now
 from modules.tracker.dashboard import (
@@ -25,6 +27,7 @@ from apps.api.schemas.analysis import (
     RequirementRankItem,
     SourceMetricsItem,
     TrackerFunnelResponse,
+    TrackerJobContext,
     TrackerJobCreateRequest,
     TrackerJobResponse,
     TrackerJobsResponse,
@@ -42,7 +45,13 @@ class TrackerService:
 
     def list_jobs(self) -> TrackerJobsResponse:
         """Return local tracker cards."""
-        return TrackerJobsResponse(jobs=self.tracker.list_analyses())
+        records = self.tracker.list_analyses()
+        context = _tracker_context(records)
+        return TrackerJobsResponse(
+            jobs=records,
+            context_summary=context_brief(context),
+            job_contexts={record.id: _job_context(record, context) for record in records},
+        )
 
     def create_job(self, request: TrackerJobCreateRequest) -> TrackerJobResponse:
         """Create or update a tracker card."""
@@ -71,7 +80,8 @@ class TrackerService:
                 saved = self.tracker.change_status(saved.id, request.status)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
-        return TrackerJobResponse(job=saved)
+        context = _tracker_context([saved])
+        return TrackerJobResponse(job=saved, **_job_context(saved, context).model_dump())
 
     def update_job(
         self,
@@ -91,7 +101,8 @@ class TrackerService:
             record.notes = notes
             record.updated_at = utc_now()
             record = self.tracker.store.save(record)
-        return TrackerJobResponse(job=record)
+        context = _tracker_context([record])
+        return TrackerJobResponse(job=record, **_job_context(record, context).model_dump())
 
     def metrics(self) -> TrackerMetricsResponse:
         """Return dashboard and frontend KPI aggregates."""
@@ -240,3 +251,81 @@ def _gap_item(name: str, count: int, *, safe_action: str) -> CriticalGapItem:
 
 def _rate(numerator: int, denominator: int) -> float:
     return round(numerator / denominator, 2) if denominator else 0
+
+
+def _tracker_context(records: list[StoredAnalysis]) -> CareerContext:
+    query = " ".join(
+        [
+            *[record.job_title for record in records],
+            *[record.company for record in records],
+            *[requirement for record in records for requirement in record.requirements],
+        ]
+    )
+    return CareerContextEngine().build(CareerContextPurpose.TRACKER, query=query, max_evidence=10)
+
+
+def _job_context(record: StoredAnalysis, context: CareerContext) -> TrackerJobContext:
+    corpus = normalize_text(
+        " ".join(
+            [
+                record.job_title,
+                record.company,
+                record.modality,
+                record.seniority,
+                " ".join(record.requirements),
+                " ".join(record.analysis.missing_keywords),
+            ]
+        )
+    )
+    matched = [
+        item.title
+        for item in context.evidence
+        if not item.sensitive and normalize_text(item.title) in corpus
+    ][:5]
+    gaps = _merge_unique(
+        [
+            *record.analysis.critical_gaps,
+            *record.analysis.missing_requirements,
+            *record.analysis.missing_keywords,
+        ],
+        context.constraints,
+    )[:8]
+    aligned = bool(matched) or any(
+        normalize_text(goal) in corpus for goal in [*context.goals, *context.domains]
+    )
+    fit_reason = (
+        "Alinhada com evidencias locais: " + ", ".join(matched)
+        if matched
+        else "Sem evidencia local forte; revisar Match antes de aplicar."
+    )
+    return TrackerJobContext(
+        context_summary=context_brief(context),
+        fit_reason=fit_reason,
+        next_action_hint=_next_action_hint(record, aligned, gaps),
+        aligned_with_profile=aligned
+        if context.evidence or context.goals or context.domains
+        else None,
+        recurring_gaps=gaps,
+    )
+
+
+def _next_action_hint(record: StoredAnalysis, aligned: bool, gaps: list[str]) -> str:
+    if record.status.value in {"applied", "interview", "offer"}:
+        return "Registrar feedback e proximo follow-up."
+    if gaps:
+        return "Validar gaps antes de ajustar curriculo ou aplicar."
+    if aligned and record.analysis.should_apply():
+        return "Revisar a vaga original e preparar candidatura manual."
+    return "Rodar Match/Tailor com evidencias atualizadas antes da proxima acao."
+
+
+def _merge_unique(primary: list[str], secondary: list[str]) -> list[str]:
+    merged: list[str] = []
+    seen: set[str] = set()
+    for item in [*primary, *secondary]:
+        cleaned = str(item).strip()
+        key = normalize_text(cleaned)
+        if cleaned and key not in seen:
+            seen.add(key)
+            merged.append(cleaned)
+    return merged

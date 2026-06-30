@@ -165,6 +165,10 @@ class SourceImportAiContext(BaseModel):
     duplicate_explanation: str = ""
     inconsistency_alerts: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    context_summary: str = ""
+    profile_alignment: str = ""
+    profile_gaps: list[str] = Field(default_factory=list)
+    suggested_next_steps: list[str] = Field(default_factory=list)
 
 
 class JobSourceDirectory(BaseModel):
@@ -1048,6 +1052,13 @@ def _source_import_metadata(
             "tags": enrichment.tags,
         },
         "inconsistency_alerts": enrichment.inconsistency_alerts,
+        "career_context": {
+            "summary": enrichment.context_summary,
+            "profile_alignment": enrichment.profile_alignment,
+            "profile_gaps": enrichment.profile_gaps,
+            "suggested_next_steps": enrichment.suggested_next_steps,
+            "auto_save_to_tracker": False,
+        },
     }
     if enrichment.duplicate_explanation:
         metadata["duplicate_explanation"] = enrichment.duplicate_explanation

@@ -18,8 +18,10 @@ def test_tracker_crud_and_analytics_endpoints_use_temp_store(tmp_path) -> None:
     )
 
     assert created.status_code == 200
-    job = created.json()["data"]["job"]
+    created_payload = created.json()["data"]
+    job = created_payload["job"]
     assert job["status"] == "applied"
+    assert created_payload["next_action_hint"]
 
     updated = client.patch(
         f"/api/v1/tracker/jobs/{job['id']}",
@@ -29,7 +31,9 @@ def test_tracker_crud_and_analytics_endpoints_use_temp_store(tmp_path) -> None:
     assert updated.status_code == 200
     assert updated.json()["data"]["job"]["status"] == "interview"
 
-    assert client.get("/api/v1/tracker/jobs").json()["data"]["jobs"][0]["id"] == job["id"]
+    jobs_payload = client.get("/api/v1/tracker/jobs").json()["data"]
+    assert jobs_payload["jobs"][0]["id"] == job["id"]
+    assert job["id"] in jobs_payload["job_contexts"]
     assert client.get("/api/v1/tracker/metrics").json()["data"]["total_saved"] == 1
     assert client.get("/api/v1/tracker/requirements").json()["data"]["top_requirements"]
     assert client.get("/api/v1/tracker/funnel").json()["data"]["stages"]

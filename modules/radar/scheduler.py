@@ -7,7 +7,12 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 from time import monotonic
 
-from modules.profile import ProfileContextOrchestrator
+from modules.context import (
+    CareerContextEngine,
+    CareerContextPurpose,
+    context_brief,
+    format_context_for_prompt,
+)
 from modules.radar.models import JobWishlist, RadarResult, RadarSource, utc_now
 from modules.radar.notifications import LocalNotificationService
 from modules.radar.schedule_models import (
@@ -158,13 +163,15 @@ class ScheduledRadarService:
         notifications_created: list[LocalNotification] = []
         warnings: list[str] = []
         profile_text = ""
+        context_summary = ""
         try:
             if schedule.use_profile_context:
-                profile_text = _profile_context_text()
+                context = _career_context_for_schedule(schedule)
+                profile_text = format_context_for_prompt(context, include_sensitive=False)
+                context_summary = context_brief(context)
                 if profile_text:
-                    warnings.append(
-                        "Contexto do Perfil Profissional Universal aplicado localmente."
-                    )
+                    warnings.append("Career Context Engine aplicado localmente ao Radar agendado.")
+                warnings.extend(context.warnings)
             auth_sources = _authenticated_assisted_sources(
                 self.radar_service.list_sources(),
                 schedule.source_ids,
@@ -202,7 +209,7 @@ class ScheduledRadarService:
             if schedule.notify_on_new_matches and results:
                 notification = self.notifications.create(
                     title=f"{len(results)} resultado(s) do Radar agendado",
-                    message=f"{schedule.name} encontrou oportunidades para revisao manual.",
+                    message=_matches_notification_message(schedule.name, context_summary),
                     severity="success" if alerts else "info",
                     related_entity_type="radar_schedule",
                     related_entity_id=schedule.schedule_id,
@@ -211,6 +218,7 @@ class ScheduledRadarService:
                         "radar_run_id": radar_run.id,
                         "alerts": len(alerts),
                         "auto_apply": False,
+                        "context_summary": context_summary,
                     },
                     cooldown_key=f"matches:{schedule.schedule_id}",
                     cooldown_minutes=schedule.cooldown_minutes,
@@ -244,6 +252,7 @@ class ScheduledRadarService:
                         **scheduled_run.metadata,
                         "duration_ms": int((monotonic() - started) * 1000),
                         "radar_alerts": len(alerts),
+                        "context_summary": context_summary,
                     },
                 }
             )
@@ -376,26 +385,21 @@ def _minutes(value: str) -> int:
     return int(hour) * 60 + int(minute)
 
 
-def _profile_context_text() -> str:
-    try:
-        context = ProfileContextOrchestrator().build_context(purpose="scheduled_radar")
-    except Exception:
-        return ""
-    values: list[str] = []
-    for item in [
-        *context.education,
-        *context.experiences,
-        *context.academic_experiences,
-        *context.projects,
-        *context.certifications_and_registries,
-        *context.skills,
-        *context.languages,
-    ]:
-        if item.confirmed_by_user or item.confidence in {"high", "medium"}:
-            values.append(f"{item.title} ({item.type}; {item.confidence})")
-    values.extend(context.career_goals)
-    values.extend(context.locations)
-    return "\n".join(dict.fromkeys(values[:40]))
+def _career_context_for_schedule(schedule: RadarSchedule):
+    return CareerContextEngine().build(
+        CareerContextPurpose.RADAR,
+        query=" ".join([schedule.name, *schedule.keywords]),
+        max_evidence=10,
+    )
+
+
+def _matches_notification_message(schedule_name: str, context_summary: str) -> str:
+    if context_summary:
+        return (
+            f"{schedule_name} encontrou oportunidades para revisao manual "
+            f"alinhadas a {context_summary}."
+        )[:1_000]
+    return f"{schedule_name} encontrou oportunidades para revisao manual."
 
 
 def _authenticated_assisted_sources(

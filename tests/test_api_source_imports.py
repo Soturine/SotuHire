@@ -35,6 +35,8 @@ def test_source_import_text_persists_inbox_item(tmp_path: Path, monkeypatch) -> 
     item = payload["data"]["items"][0]
     assert item["origin"] == "manual_text"
     assert item["title"] == "Analista de Dados"
+    assert item["metadata"]["career_context"]["auto_save_to_tracker"] is False
+    assert item["metadata"]["career_context"]["suggested_next_steps"]
     assert "api_key" not in json.dumps(payload)
 
     inbox = client.get("/api/v1/sources/imports")

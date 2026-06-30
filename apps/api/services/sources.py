@@ -7,6 +7,8 @@ import json
 from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
 from modules.ai.schemas.analysis_insights import SourceImportEnrichmentOutput
+from modules.context import CareerContext, CareerContextEngine, CareerContextPurpose, context_brief
+from modules.core.text_utils import normalize_text
 from modules.profile import ProfileContextOrchestrator
 from modules.scraping.browser_session import inspect_browser_session, launch_authenticated_browser
 from modules.scraping.collection import collect_authenticated_source
@@ -346,8 +348,14 @@ def source_stats() -> SourceStatsResponse:
 
 def _source_ai_context(*, enabled: bool, text: str, source_url: str) -> SourceImportAiContext:
     """Build optional safe AI enrichment context for source imports."""
+    career_context = CareerContextEngine().build(
+        CareerContextPurpose.SOURCES,
+        query=" ".join([text, source_url]),
+        max_evidence=8,
+    )
+    context_metadata = _source_context_metadata(text=text, context=career_context)
     if not enabled:
-        return SourceImportAiContext()
+        return context_metadata
 
     runtime = get_ai_runtime("source_import")
     warnings = list(runtime.warnings)
@@ -359,37 +367,83 @@ def _source_ai_context(*, enabled: bool, text: str, source_url: str) -> SourceIm
                 {
                     "job_text": text,
                     "source_url": source_url,
+                    "career_context": (
+                        {
+                            "summary": context_brief(career_context),
+                            "evidence": [
+                                item.model_dump(mode="json")
+                                for item in career_context.evidence
+                                if not item.sensitive
+                            ][:8],
+                        }
+                        if runtime.allow_memory_context
+                        else {"shared_with_provider": False}
+                    ),
                     "language": "pt-BR",
                 },
             )
             enrichment = SourceImportEnrichmentOutput.model_validate(output)
-            return SourceImportAiContext(
-                requested=True,
-                provider_used=runtime.provider_name,
-                requested_provider=str(runtime.requested_provider),
-                analysis_mode=runtime.analysis_mode,
-                model=runtime.model,
-                tags=enrichment.tags,
-                domain=enrichment.domain,
-                seniority=enrichment.seniority,
-                priority=enrichment.priority,
-                summary=enrichment.summary,
-                duplicate_explanation=enrichment.duplicate_explanation,
-                inconsistency_alerts=enrichment.inconsistency_alerts,
-                warnings=[*warnings, *enrichment.warnings],
+            return context_metadata.model_copy(
+                update={
+                    "requested": True,
+                    "provider_used": runtime.provider_name,
+                    "requested_provider": str(runtime.requested_provider),
+                    "analysis_mode": runtime.analysis_mode,
+                    "model": runtime.model,
+                    "tags": enrichment.tags,
+                    "domain": enrichment.domain,
+                    "seniority": enrichment.seniority,
+                    "priority": enrichment.priority,
+                    "summary": enrichment.summary,
+                    "duplicate_explanation": enrichment.duplicate_explanation,
+                    "inconsistency_alerts": enrichment.inconsistency_alerts,
+                    "warnings": [*warnings, *enrichment.warnings],
+                }
             )
         except Exception:
             warnings.append("IA falhou na importação; usei enriquecimento local.")
     elif not warnings:
         warnings.append("IA de importação indisponível ou local; usei extração local.")
 
+    return context_metadata.model_copy(
+        update={
+            "requested": True,
+            "provider_used": "local",
+            "requested_provider": str(runtime.requested_provider),
+            "analysis_mode": "fallback" if runtime.requested_provider != "local" else "local",
+            "model": "local",
+            "warnings": warnings,
+        }
+    )
+
+
+def _source_context_metadata(*, text: str, context: CareerContext) -> SourceImportAiContext:
+    normalized_text = normalize_text(text)
+    matched = [
+        item.title
+        for item in context.evidence
+        if not item.sensitive and normalize_text(item.title) in normalized_text
+    ][:6]
+    gaps = [
+        item
+        for item in context.constraints
+        if normalize_text(item) and normalize_text(item) in normalized_text
+    ][:6]
+    if matched:
+        alignment = "aligned_with_profile_evidence"
+    elif context.goals or context.domains:
+        alignment = "needs_match_review"
+    else:
+        alignment = "unknown"
     return SourceImportAiContext(
-        requested=True,
-        provider_used="local",
-        requested_provider=str(runtime.requested_provider),
-        analysis_mode="fallback" if runtime.requested_provider != "local" else "local",
-        model="local",
-        warnings=warnings,
+        context_summary=context_brief(context),
+        profile_alignment=alignment,
+        profile_gaps=gaps,
+        suggested_next_steps=[
+            "Enviar para Match antes de salvar no Tracker.",
+            "Revisar gaps e requisitos sem evidencia.",
+            "Salvar no Radar ou Tracker somente apos revisao humana.",
+        ],
     )
 
 

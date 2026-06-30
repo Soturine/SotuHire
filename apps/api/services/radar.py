@@ -7,7 +7,13 @@ import json
 from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
 from modules.ai.schemas.analysis_insights import RadarMatchExplanationOutput, WishlistDraftOutput
-from modules.profile import ProfileContext, ProfileContextOrchestrator
+from modules.context import (
+    CareerContext,
+    CareerContextEngine,
+    CareerContextPurpose,
+    context_brief,
+    format_context_for_prompt,
+)
 from modules.radar import (
     JobRadarService,
     JobWishlist,
@@ -88,13 +94,13 @@ def radar_draft_wishlist(
     """Create an unsaved wishlist draft from free text and optional profile context."""
     if not request.free_text.strip():
         raise HTTPException(status_code=422, detail="Informe o que voce esta buscando.")
-    context = _draft_profile_context(request)
+    context = _draft_career_context(request)
     local_draft = build_local_wishlist_draft(
         request.free_text,
         profile_context=context if request.use_profile_context else None,
     )
     runtime = get_ai_runtime("radar")
-    warnings = [*runtime.warnings]
+    warnings = [*runtime.warnings, *(context.warnings if context else [])]
 
     if not runtime.use_ai or runtime.provider_name == "local":
         draft = local_draft.model_copy(
@@ -109,7 +115,7 @@ def radar_draft_wishlist(
 
     payload = {
         "free_text": request.free_text,
-        "profile_context": context.model_dump(mode="json") if context else {},
+        "profile_context": _context_payload(context, include_sensitive=False),
         "language": request.language,
     }
     if _contains_secret_field(payload):
@@ -209,11 +215,17 @@ def radar_delete_source(source_id: str) -> RadarSourceResponse:
 def radar_run(request: RadarRunRequest) -> tuple[RadarRunResponse, list[str]]:
     """Execute one manual Job Radar run."""
     ai_enricher = _radar_ai_enricher if request.use_ai else None
+    career_context = _safe_context(
+        CareerContextPurpose.RADAR,
+        query=" ".join([request.resume_text, " ".join(request.keywords)]),
+    )
+    context_text = format_context_for_prompt(career_context, include_sensitive=False)
+    resume_text = "\n\n".join(part for part in [request.resume_text.strip(), context_text] if part)
     try:
         run, results, alerts, warnings = JobRadarService().run(
             source_ids=request.source_ids,
             wishlist_id=request.wishlist_id,
-            resume_text=request.resume_text,
+            resume_text=resume_text,
             keywords=request.keywords,
             use_ai=request.use_ai,
             ai_enricher=ai_enricher,
@@ -230,7 +242,7 @@ def radar_run(request: RadarRunRequest) -> tuple[RadarRunResponse, list[str]]:
                 f"{run.total_alerted} alerta(s), {run.total_errors} erro(s)."
             ),
         ),
-        warnings,
+        [*warnings, *career_context.warnings],
     )
 
 
@@ -392,6 +404,10 @@ def _radar_ai_enricher(result: RadarResult, wishlist: JobWishlist) -> dict[str, 
     if not runtime.use_ai or runtime.provider_name == "local":
         raise RuntimeError("; ".join(runtime.warnings) or "IA indisponivel para Radar.")
     spec = default_prompt_registry().get("job_radar_match_explanation_v1")
+    career_context = _safe_context(
+        CareerContextPurpose.RADAR,
+        query=" ".join([result.title, result.company, result.description]),
+    )
     payload = {
         "job": {
             "title": result.title,
@@ -409,6 +425,14 @@ def _radar_ai_enricher(result: RadarResult, wishlist: JobWishlist) -> dict[str, 
             "evidence": result.evidence,
             "gaps": result.gaps,
         },
+        "career_context": (
+            _context_payload(career_context, include_sensitive=False)
+            if runtime.allow_memory_context
+            else {
+                "shared_with_provider": False,
+                "summary": context_brief(career_context),
+            }
+        ),
         "language": "pt-BR",
     }
     if "api_key" in json.dumps(payload).lower():
@@ -422,16 +446,48 @@ def _radar_ai_enricher(result: RadarResult, wishlist: JobWishlist) -> dict[str, 
     }
 
 
-def _draft_profile_context(request: RadarWishlistDraftRequest) -> ProfileContext | None:
+def _draft_career_context(request: RadarWishlistDraftRequest) -> CareerContext | None:
     if not request.use_profile_context:
         return None
     try:
-        return ProfileContextOrchestrator().build_context(
-            purpose="job_radar_wishlist",
-            override=request.profile_context_override,
+        return CareerContextEngine().build(
+            CareerContextPurpose.WISHLIST,
+            query=request.free_text,
+            profile_context_override=request.profile_context_override,
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+def _safe_context(purpose: CareerContextPurpose, *, query: str = "") -> CareerContext:
+    return CareerContextEngine().build(purpose, query=query, max_evidence=10)
+
+
+def _context_payload(
+    context: CareerContext | None,
+    *,
+    include_sensitive: bool,
+) -> dict[str, object]:
+    if context is None:
+        return {}
+    return {
+        "purpose": context.purpose.value,
+        "summary": context_brief(context),
+        "goals": context.goals[:8],
+        "domains": context.domains[:8],
+        "seniority": context.seniority[:6],
+        "locations": context.locations[:8],
+        "work_models": context.work_models[:6],
+        "contract_types": context.contract_types[:6],
+        "constraints": context.constraints[:8],
+        "evidence": [
+            item.model_dump(mode="json")
+            for item in context.evidence
+            if include_sensitive or not item.sensitive
+        ][:10],
+        "warnings": context.warnings,
+        "privacy_notes": context.privacy_notes,
+    }
 
 
 def _contains_secret_field(value: object) -> bool:
