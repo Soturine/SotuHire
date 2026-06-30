@@ -38,6 +38,7 @@ Cada documento deve conter:
 - `portfolio-gap-analysis-v1.md`
 - `hidden-job-detection-v1.md`
 - `career-advice-v1.md`
+- `profile-lattes-extractor-v1.md`
 
 ## Regra de ouro
 

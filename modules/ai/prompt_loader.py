@@ -283,6 +283,38 @@ Text:
 Return only JSON matching the expected schema.
 """
 
+PROFILE_LATTES_EXTRACTOR_SYSTEM_PROMPT = """Você é um extrator assistido de evidências acadêmicas para o Perfil Profissional Universal do SotuHire.
+
+Use somente informações explícitas no texto fornecido pelo usuário. A IA organiza e sugere rascunhos, mas não é fonte de verdade.
+
+Não invente formação, publicação, DOI, ISBN, ISSN, ORCID, Lattes ID, instituição, orientador, vínculo, registro, prêmio, autoria, cargo ou resultado.
+Não faça login, scraping, crawler ou inferência de dados externos. Não salve nada automaticamente no Perfil.
+
+Extraia candidatos de ProfileItem para formação, pesquisa, iniciação científica, extensão, docência, monitoria, publicações, artigos, anais, livros, capítulos, produção técnica, produção artística, eventos, apresentações, prêmios, bolsas, orientações, bancas, revisão, laboratório, campo, clínica, Lattes e ORCID quando estiverem explícitos.
+
+Cada item deve preservar source, source_ref, evidence curta, confidence e confirmed_by_user=false.
+Se algo estiver implícito ou incompleto, use confidence=low e coloque em assumptions, questions_to_confirm ou warnings.
+Dados sensíveis devem ser marcados como sensitive=true quando aparecerem.
+
+Retorne somente JSON válido, sem markdown, compatível com o schema esperado.
+"""
+
+PROFILE_LATTES_EXTRACTOR_USER_TEMPLATE = """Extract academic and Lattes evidence candidates from this pasted text.
+
+Language: {language}
+Source URL: {source_url}
+Lattes ID: {lattes_id}
+ORCID: {orcid}
+
+Local parser draft, for comparison only:
+{local_parser_draft}
+
+PASTED LATTES OR ACADEMIC TEXT:
+{text}
+
+Return only JSON matching the expected schema.
+"""
+
 
 def initial_prompt_specs(
     schema_overrides: dict[str, type[BaseModel]] | None = None,
@@ -398,6 +430,15 @@ def initial_prompt_specs(
             temperature=0.1,
             mode="profile_items_extractor",
         ),
+        PromptSpec(
+            prompt_id="profile_lattes_extractor_v1",
+            version="1.0.0",
+            system_prompt=PROFILE_LATTES_EXTRACTOR_SYSTEM_PROMPT,
+            user_template=PROFILE_LATTES_EXTRACTOR_USER_TEMPLATE,
+            output_schema=schemas["profile_lattes_extractor_v1"],
+            temperature=0.0,
+            mode="profile_lattes_extractor",
+        ),
     ]
 
 
@@ -407,6 +448,7 @@ def default_prompt_registry() -> PromptRegistry:
 
 
 def _default_schemas() -> dict[str, type[BaseModel]]:
+    from modules.academic.lattes_models import LattesImportResult
     from modules.ai.schemas.analysis_insights import (
         AtsAiReviewOutput,
         RadarMatchExplanationOutput,
@@ -435,4 +477,5 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         "job_radar_match_explanation_v1": RadarMatchExplanationOutput,
         "job_wishlist_builder_v1": WishlistDraftOutput,
         "profile_items_extractor_v1": ProfileImportDraft,
+        "profile_lattes_extractor_v1": LattesImportResult,
     }
