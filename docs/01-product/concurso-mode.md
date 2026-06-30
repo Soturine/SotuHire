@@ -2,6 +2,8 @@
 
 O **Concurso Mode** é uma ideia forte, mas deve ficar fora do MVP principal. Ele usa raciocínio parecido com análise de vagas, porém o domínio é outro: edital, banca, regime, conteúdo programático, datas, salário, benefícios e histórico de chamadas.
 
+A v1.9.2 prepara a fundação documental para esse domínio por meio do Perfil Profissional Universal, evidências acadêmicas/Lattes e do Career Context Engine. O Concurso Mode completo ainda não foi implementado.
+
 ## Por que não entra no MVP
 
 O MVP do SotuHire precisa validar primeiro:
@@ -21,22 +23,13 @@ Concurseiros gastam muito com performance, organização e análise de editais. 
 
 ## Entidades principais
 
-- edital;
-- cargo;
-- banca;
-- órgão;
-- estado/cidade;
-- salário;
-- benefícios;
-- taxa de inscrição;
-- número de vagas;
-- cadastro reserva;
-- regime: estatutário, CLT, temporário;
-- datas;
-- conteúdo programático;
-- peso por disciplina;
-- requisitos;
-- histórico de convocações.
+- `ExamNotice`: edital, órgão, banca, URL e versão;
+- `ExamRole`: cargo, área, regime, localidade e remuneração;
+- `ExamRequirement`: formação, registro, experiência, título ou documento exigido;
+- `ExamSubject`: disciplina, tópico e peso;
+- `ExamTimeline`: inscrição, pagamento, prova, resultado e recursos;
+- `ExamFitScore`: aderência ao Perfil Profissional Universal;
+- `StudyPlanDraft`: plano de estudos revisável por disciplina.
 
 ## Fluxo futuro
 
@@ -95,3 +88,14 @@ modules/public_exams/
 ```
 
 Isso preserva arquitetura limpa e evita misturar regras de emprego privado com regras de concurso.
+
+## Limites de segurança
+
+- Não faz inscrição automática.
+- Não substitui leitura jurídica do edital.
+- Não faz login em plataformas de concurso.
+- Não captura cookies, tokens, sessão, headers ou storage de terceiros.
+- Não promete aprovação.
+- Não decide elegibilidade final sem revisão humana.
+
+Leia também: [Fundação para Editais e Concursos](../02-architecture/public-exams-foundation.md).
