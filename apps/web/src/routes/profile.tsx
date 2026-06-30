@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2,
   FileSearch,
+  GraduationCap,
   Loader2,
   Pencil,
   Plus,
@@ -19,7 +20,12 @@ import { EmptyState } from "@/components/states";
 import { ProviderBadge } from "@/components/provider-badge";
 import { useApi } from "@/lib/api/hooks";
 import { useApiMode } from "@/lib/api/mode";
-import type { ProfileImportResult, ProfileItem, UniversalCareerProfile } from "@/lib/api/types";
+import type {
+  LattesImportResult,
+  ProfileImportResult,
+  ProfileItem,
+  UniversalCareerProfile,
+} from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/profile")({
@@ -58,6 +64,14 @@ function ProfilePage() {
   const [useAi, setUseAi] = useState(true);
   const [typeFilter, setTypeFilter] = useState("all");
   const [draft, setDraft] = useState<ProfileImportResult | null>(null);
+  const [lattesText, setLattesText] = useState("");
+  const [lattesId, setLattesId] = useState("");
+  const [lattesUrl, setLattesUrl] = useState("");
+  const [orcid, setOrcid] = useState("");
+  const [useLattesAi, setUseLattesAi] = useState(false);
+  const [lattesDraft, setLattesDraft] = useState<LattesImportResult | null>(null);
+  const [lattesSelectedIds, setLattesSelectedIds] = useState<Set<string>>(new Set());
+  const [lattesFilter, setLattesFilter] = useState("all");
 
   useEffect(() => {
     if (!profile) return;
@@ -128,6 +142,40 @@ function ProfilePage() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Falha ao extrair."),
   });
 
+  const importLattes = useMutation({
+    mutationFn: () =>
+      api.profileImportLattes({
+        text: lattesText,
+        source_url: lattesUrl,
+        lattes_id: lattesId,
+        orcid,
+        use_ai: useLattesAi,
+      }),
+    onSuccess: (data) => {
+      setLattesDraft(data);
+      setLattesSelectedIds(new Set(data.items.map((item) => item.item_id)));
+      toast.success("Evidências acadêmicas extraídas para revisão.");
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao extrair Lattes."),
+  });
+
+  const confirmLattes = useMutation({
+    mutationFn: () => {
+      const selected = (lattesDraft?.items ?? []).filter((item) =>
+        lattesSelectedIds.has(item.item_id),
+      );
+      return api.profileConfirmLattes(selected);
+    },
+    onSuccess: (data) => {
+      toast.success(data.message || "Itens acadêmicos adicionados ao Perfil.");
+      setLattesSelectedIds(new Set());
+      invalidate();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Falha ao confirmar itens."),
+  });
+
   const dedupe = useMutation({
     mutationFn: () => api.profileDeduplicate(),
     onSuccess: (data) => toast.success(data.message || "Deduplicação concluída."),
@@ -139,6 +187,10 @@ function ProfilePage() {
   const visibleItems =
     typeFilter === "all" ? items : items.filter((item) => item.type === typeFilter);
   const itemTypes = ["all", ...Array.from(new Set(items.map((item) => item.type))).sort()];
+  const lattesItems = lattesDraft?.items ?? [];
+  const lattesTypes = ["all", ...Array.from(new Set(lattesItems.map((item) => item.type))).sort()];
+  const visibleLattesItems =
+    lattesFilter === "all" ? lattesItems : lattesItems.filter((item) => item.type === lattesFilter);
   const summary = profileSummary(profile);
 
   return (
@@ -396,6 +448,177 @@ function ProfilePage() {
             </div>
           </SectionCard>
         )}
+
+        <SectionCard
+          title="Acadêmico / Lattes"
+          description="Importe texto colado do Currículo Lattes ou trajetória acadêmica. Nada é salvo sem revisão."
+          actions={
+            <ProviderBadge
+              provider={lattesDraft?.provider_used || "local"}
+              mode={lattesDraft?.analysis_mode || "local"}
+              fallback={lattesDraft?.analysis_mode === "fallback"}
+            />
+          }
+        >
+          <div className="space-y-4" data-testid="profile-lattes-section">
+            <div
+              className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-foreground"
+              data-testid="profile-lattes-review-warning"
+            >
+              <GraduationCap className="mt-0.5 h-4 w-4 shrink-0" />
+              <div>
+                Nada é salvo sem revisão. O SotuHire não acessa sua conta Lattes, não faz login e
+                não usa scraping autenticado.
+              </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+              <TextArea
+                label="Texto do Currículo Lattes ou acadêmico"
+                value={lattesText}
+                onChange={setLattesText}
+                className="min-h-64"
+                testId="profile-lattes-textarea"
+                placeholder="Cole aqui formação, projetos, publicações, extensão, docência, prêmios, eventos ou produção técnica/artística."
+              />
+              <div className="space-y-3">
+                <TextField
+                  label="Lattes ID"
+                  value={lattesId}
+                  onChange={setLattesId}
+                  placeholder="opcional"
+                />
+                <TextField
+                  label="URL do Lattes"
+                  value={lattesUrl}
+                  onChange={setLattesUrl}
+                  placeholder="https://lattes.cnpq.br/..."
+                />
+                <TextField label="ORCID" value={orcid} onChange={setOrcid} placeholder="opcional" />
+                <label className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={useLattesAi}
+                    onChange={(event) => setUseLattesAi(event.target.checked)}
+                  />
+                  Usar IA/Gemini se configurada
+                </label>
+                <button
+                  type="button"
+                  onClick={() => importLattes.mutate()}
+                  disabled={!lattesText.trim() || importLattes.isPending}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                  data-testid="profile-lattes-extract"
+                >
+                  {importLattes.isPending ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <FileSearch className="h-4 w-4" />
+                  )}
+                  Extrair do Lattes
+                </button>
+              </div>
+            </div>
+
+            {lattesDraft && (
+              <div className="space-y-3" data-testid="profile-lattes-candidates">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="text-sm text-muted-foreground">
+                    {lattesDraft.items.length} candidato(s), confiança{" "}
+                    {confidenceLabel(lattesDraft.confidence)}.
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <select
+                      value={lattesFilter}
+                      onChange={(event) => setLattesFilter(event.target.value)}
+                      className="rounded-md border border-input bg-background px-2.5 py-2 text-xs font-semibold"
+                    >
+                      {lattesTypes.map((type) => (
+                        <option key={type} value={type}>
+                          {type === "all" ? "Todos os tipos" : type}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => confirmLattes.mutate()}
+                      disabled={!lattesSelectedIds.size || confirmLattes.isPending}
+                      className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+                      data-testid="profile-lattes-add-selected"
+                    >
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      Adicionar selecionados ao Perfil
+                    </button>
+                  </div>
+                </div>
+
+                {[...lattesDraft.warnings, ...lattesDraft.assumptions].map((warning) => (
+                  <p
+                    key={warning}
+                    className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-foreground"
+                  >
+                    {warning}
+                  </p>
+                ))}
+
+                <div className="grid gap-3">
+                  {visibleLattesItems.map((item) => (
+                    <label
+                      key={item.item_id}
+                      className="grid gap-3 rounded-lg border border-border bg-background p-4 md:grid-cols-[auto_minmax(0,1fr)]"
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-1"
+                        checked={lattesSelectedIds.has(item.item_id)}
+                        onChange={(event) =>
+                          setLattesSelectedIds((current) => {
+                            const next = new Set(current);
+                            if (event.target.checked) next.add(item.item_id);
+                            else next.delete(item.item_id);
+                            return next;
+                          })
+                        }
+                      />
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold">{item.title}</h3>
+                          <Badge>{item.type}</Badge>
+                          <Badge>{item.source}</Badge>
+                          <Badge
+                            tone={
+                              item.confidence === "high"
+                                ? "success"
+                                : item.confidence === "low"
+                                  ? "warning"
+                                  : "neutral"
+                            }
+                          >
+                            {confidenceLabel(item.confidence)}
+                          </Badge>
+                          <Badge tone="warning">Revisar</Badge>
+                        </div>
+                        <p className="mt-2 text-sm text-muted-foreground">
+                          {item.description || item.evidence || "Sem descrição."}
+                        </p>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          {item.domain || item.area || "Acadêmico"} · Evidência:{" "}
+                          {item.evidence || "a confirmar"}
+                        </p>
+                      </div>
+                    </label>
+                  ))}
+                  {!visibleLattesItems.length && (
+                    <EmptyState
+                      title="Nenhum candidato neste filtro"
+                      description="Troque o tipo do filtro para ver outros itens extraídos."
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </SectionCard>
 
         <SectionCard
           title="Itens do perfil"

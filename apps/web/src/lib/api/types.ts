@@ -153,6 +153,25 @@ export interface ProfileImportResult {
   needs_user_review: boolean;
 }
 
+export interface LattesImportResult {
+  items: ProfileItem[];
+  detected_sections: string[];
+  assumptions: string[];
+  questions_to_confirm: string[];
+  warnings: string[];
+  confidence: ProfileConfidence;
+  needs_user_review: boolean;
+  provider_used: string;
+  requested_provider: string;
+  analysis_mode: AnalysisMode;
+}
+
+export interface LattesConfirmResult {
+  saved: ProfileItem[];
+  skipped_duplicates: ProfileItem[];
+  message: string;
+}
+
 export interface ProfileDeduplicateResult {
   suggestions: Array<{
     suggestion_id: string;

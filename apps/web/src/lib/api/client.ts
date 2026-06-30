@@ -25,6 +25,8 @@ import type {
   JobExtractResult,
   JobPosting,
   JobWishlist,
+  LattesConfirmResult,
+  LattesImportResult,
   LocalNotification,
   MatchAnalysis,
   MatchAnalyzeResult,
@@ -208,6 +210,37 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         { method: "POST", body: JSON.stringify(payload) },
         mockProfileImport(payload.text, payload.source_type, payload.use_ai),
         normalizeProfileImportResult,
+      ),
+
+    profileImportLattes: (payload: {
+      text: string;
+      source_url?: string;
+      lattes_id?: string;
+      orcid?: string;
+      use_ai: boolean;
+      language?: string;
+    }) =>
+      call<LattesImportResult>(
+        mode,
+        baseUrl,
+        "/profile/lattes/draft",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockLattesImport(payload),
+        normalizeLattesImportResult,
+      ),
+
+    profileConfirmLattes: (items: ProfileItem[]) =>
+      call<LattesConfirmResult>(
+        mode,
+        baseUrl,
+        "/profile/lattes/confirm",
+        { method: "POST", body: JSON.stringify({ items }) },
+        {
+          saved: items.map((item) => normalizeProfileItem({ ...item, confirmed_by_user: true })),
+          skipped_duplicates: [],
+          message: "Modo Demo: itens acadêmicos adicionados ao Perfil.",
+        },
+        normalizeLattesConfirmResult,
       ),
 
     profileDeduplicate: () =>
@@ -2161,6 +2194,118 @@ function mockProfileImport(text: string, sourceType: string, useAi: boolean): Pr
   };
 }
 
+function mockLattesImport(payload: {
+  text: string;
+  source_url?: string;
+  lattes_id?: string;
+  orcid?: string;
+  use_ai: boolean;
+}): LattesImportResult {
+  const now = new Date().toISOString();
+  const text = payload.text || "Currículo Lattes fictício";
+  const normalized = text.toLowerCase();
+  const publication = /artigo|doi|anais|publica/.test(normalized);
+  const project = /pesquisa|pibic|projeto|laborat/.test(normalized);
+  const teaching = /doc.ncia|monitoria|disciplina|aula/.test(normalized);
+  const items = [
+    normalizeProfileItem({
+      item_id: "lattes-demo-education",
+      type: normalized.includes("mestrado") ? "master_degree" : "higher_education",
+      title: normalized.includes("mestrado")
+        ? "Mestrado informado no Lattes"
+        : "Formação acadêmica informada",
+      description: text.slice(0, 220),
+      area: "Acadêmico",
+      domain: "Pesquisa acadêmica",
+      source: "curriculum_lattes",
+      source_ref: payload.lattes_id || payload.source_url || payload.orcid,
+      evidence: text.slice(0, 220),
+      confidence: "medium",
+      confirmed_by_user: false,
+      tags: ["Lattes", "formação"],
+      created_at: now,
+      updated_at: now,
+    }),
+    ...(publication
+      ? [
+          normalizeProfileItem({
+            item_id: "lattes-demo-publication",
+            type: "journal_article",
+            title: "Publicação acadêmica a revisar",
+            description: text.slice(0, 220),
+            area: "Acadêmico",
+            domain: "Produção científica",
+            source: "curriculum_lattes",
+            source_ref: payload.lattes_id || payload.source_url || payload.orcid,
+            evidence: text.slice(0, 220),
+            confidence: "medium",
+            confirmed_by_user: false,
+            tags: ["publicação"],
+            created_at: now,
+            updated_at: now,
+          }),
+        ]
+      : []),
+    ...(project
+      ? [
+          normalizeProfileItem({
+            item_id: "lattes-demo-project",
+            type: "research_project",
+            title: "Projeto de pesquisa a revisar",
+            description: text.slice(0, 220),
+            area: "Acadêmico",
+            domain: "Pesquisa acadêmica",
+            source: "curriculum_lattes",
+            source_ref: payload.lattes_id || payload.source_url || payload.orcid,
+            evidence: text.slice(0, 220),
+            confidence: "medium",
+            confirmed_by_user: false,
+            tags: ["pesquisa"],
+            created_at: now,
+            updated_at: now,
+          }),
+        ]
+      : []),
+    ...(teaching
+      ? [
+          normalizeProfileItem({
+            item_id: "lattes-demo-teaching",
+            type: "teaching_experience",
+            title: "Experiência docente a revisar",
+            description: text.slice(0, 220),
+            area: "Acadêmico",
+            domain: "Docência",
+            source: "curriculum_lattes",
+            source_ref: payload.lattes_id || payload.source_url || payload.orcid,
+            evidence: text.slice(0, 220),
+            confidence: "medium",
+            confirmed_by_user: false,
+            tags: ["docência"],
+            created_at: now,
+            updated_at: now,
+          }),
+        ]
+      : []),
+  ];
+  return {
+    items,
+    detected_sections: ["Formação acadêmica/titulação", "Produções bibliográficas"],
+    assumptions: [],
+    questions_to_confirm: ["Quais itens devem entrar como fatos confirmados no Perfil?"],
+    warnings: [
+      payload.use_ai
+        ? "Modo Demo: Gemini simulado; revise antes de adicionar."
+        : "Modo Demo: parser local de Lattes simulado.",
+      "Nada é salvo sem revisão.",
+    ],
+    confidence: "medium",
+    provider_used: payload.use_ai ? "gemini-demo" : "local",
+    requested_provider: payload.use_ai ? "gemini" : "local",
+    analysis_mode: payload.use_ai ? "ai" : "local",
+    needs_user_review: true,
+  };
+}
+
 function normalizeProfileResult(value: unknown): ProfileResult {
   const raw = asRecord(value);
   return {
@@ -2189,6 +2334,31 @@ function normalizeProfileImportResult(value: unknown): ProfileImportResult {
     requested_provider: asString(raw.requested_provider) || "local",
     analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
     needs_user_review: asBoolean(raw.needs_user_review, true),
+  };
+}
+
+function normalizeLattesImportResult(value: unknown): LattesImportResult {
+  const raw = asRecord(value);
+  return {
+    items: objectList(raw.items).map(normalizeProfileItem),
+    detected_sections: stringList(raw.detected_sections),
+    assumptions: stringList(raw.assumptions),
+    questions_to_confirm: stringList(raw.questions_to_confirm),
+    warnings: stringList(raw.warnings),
+    confidence: normalizeProfileConfidence(raw.confidence),
+    provider_used: asString(raw.provider_used) || "local",
+    requested_provider: asString(raw.requested_provider) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+    needs_user_review: asBoolean(raw.needs_user_review, true),
+  };
+}
+
+function normalizeLattesConfirmResult(value: unknown): LattesConfirmResult {
+  const raw = asRecord(value);
+  return {
+    saved: objectList(raw.saved).map(normalizeProfileItem),
+    skipped_duplicates: objectList(raw.skipped_duplicates).map(normalizeProfileItem),
+    message: asString(raw.message),
   };
 }
 

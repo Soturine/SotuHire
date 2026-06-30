@@ -92,6 +92,23 @@ test("profile page imports fictitious text and keeps review before saving", asyn
   await expect(page.getByTestId("profile-items")).toContainText(/NR10|Engenharia|Registro/);
 });
 
+test("profile page extracts Lattes candidates and confirms selected items", async ({ page }) => {
+  await page.goto("/profile");
+
+  await expect(page.getByTestId("profile-lattes-section")).toBeVisible();
+  await expect(page.getByTestId("profile-lattes-review-warning")).toBeVisible();
+  await page
+    .getByTestId("profile-lattes-textarea")
+    .fill(
+      "Formação acadêmica/titulação\nMestrado em Geofísica.\nArtigos completos publicados em periódicos\nArtigo fictício com DOI 10.1234/demo.\nProjetos de pesquisa\nProjeto PIBIC com Python.",
+    );
+  await page.getByTestId("profile-lattes-extract").click();
+  await expect(page.getByTestId("profile-lattes-candidates")).toBeVisible();
+  await expect(page.getByTestId("profile-lattes-candidates")).toContainText(/Revisar|Lattes/);
+  await page.getByTestId("profile-lattes-add-selected").click();
+  await expect(page.getByText(/acadêmicos adicionados|Modo Demo/i).first()).toBeVisible();
+});
+
 test("analysis demo buttons show results", async ({ page }) => {
   const demos = [
     { path: "/resume", result: /Perfil extra.do|Pessoa Fict/ },
