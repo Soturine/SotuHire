@@ -1,6 +1,6 @@
 # SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versao `v1.9.0`.
+Frontend moderno do SotuHire em `apps/web` para a versao `v1.9.1`.
 
 ## Stack
 
