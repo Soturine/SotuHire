@@ -132,6 +132,10 @@ class AtsAnalyzeResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     context_summary: str = ""
     context_evidence_keywords: list[str] = Field(default_factory=list)
+    safe_keywords_from_context: list[str] = Field(default_factory=list)
+    keywords_without_context_evidence: list[str] = Field(default_factory=list)
+    profile_or_rag_terms: list[str] = Field(default_factory=list)
+    unevidenced_profile_claims: list[str] = Field(default_factory=list)
 
 
 class ResumeTailorRequest(BaseModel):

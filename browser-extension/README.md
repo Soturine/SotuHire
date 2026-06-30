@@ -1,89 +1,107 @@
 # SotuHire Assistive Browser Companion
 
-Extensão Manifest V3 para capturar a página atual ou uma lista visível de candidaturas e enviar os
-dados para a Local Companion API em `http://127.0.0.1:8765`.
+Extensao Manifest V3 para capturar a pagina atual, uma lista visivel de candidaturas ou um projeto
+publico e enviar os dados para a Local Companion API em `http://127.0.0.1:8765`.
 
-## Instalação local
+O app SotuHire v1.9.1 e compativel com a extensao v0.9.0. A extensao tem versionamento independente.
 
-1. Abra a página de extensões do Chromium.
+## Instalacao local
+
+1. Abra a pagina de extensoes do Chromium.
 2. Ative o modo desenvolvedor.
-3. Escolha **Carregar sem compactação**.
+3. Escolha **Carregar sem compactacao**.
 4. Selecione a pasta `browser-extension/`.
-5. Inicie a Local Companion API pela aba **Extensão** no SotuHire.
+5. Inicie a Local Companion API pela aba **Extensao** no SotuHire.
 
-Na v1.9.0 do frontend moderno, tambem e possivel iniciar o projeto com:
+Tambem e possivel iniciar o projeto com:
 
 ```powershell
 .\start-sotuhire.ps1 -WithCompanion
 ```
 
-Depois abra **Fontes e Captura -> Extensão Local** para ver capturas já salvas, revisar historico,
-arquivar itens locais e importar para Vaga, GitHub Analysis ou Candidaturas. A extensão continua
-usando a Local Companion API em `127.0.0.1:8765`.
+Depois abra **Fontes e Captura -> Extensao Local** para ver capturas salvas, revisar historico,
+arquivar itens locais, importar para Vaga/GitHub/Candidaturas e gerar evidencias candidatas para o
+Perfil Profissional Universal.
 
-As capturas tambem aparecem na **Caixa de Entrada de Oportunidades** do frontend moderno, junto de
-vagas importadas por texto, link, CSV e JSON. Na v1.8.2, a Caixa tambem permite upload CSV/JSON com
-preview, mescla visual de duplicatas e exportacao local. O usuario revisa antes de salvar/analisar.
+## Ponte com o Perfil Universal
 
-Na v1.9.0, a compatibilidade com a extensao/local companion foi mantida e o backend preserva a
-camada segura para **Captura Assistida Autenticada** via `POST /api/v1/sources/authenticated-captures`.
-Esse endpoint aceita texto visivel ou selecionado da pagina atual e salva na Caixa de Entrada para
-revisao. No Radar Agendado da v1.9.0, esse tipo de fonte pode gerar lembrete local revisavel, mas
-nao coleta cookie, token, sessao, headers ou storage de terceiros. Nenhum fluxo de Chromium/CDP,
-CAPTCHA ou auto-apply foi alterado.
+Na v1.9.1, capturas e projetos podem virar `ProfileItem` candidatos revisaveis. O site chama:
 
-## Portais compatíveis
+```txt
+GET  /api/v1/extension/context
+POST /api/v1/extension/captures/{capture_id}/profile-candidates
+POST /api/v1/extension/captures/{capture_id}/add-to-profile
+POST /api/v1/extension/projects/{project_id}/profile-candidates
+POST /api/v1/extension/projects/{project_id}/add-to-profile
+```
 
-A extensão usa permissões `activeTab` e heurísticas genéricas, então pode trabalhar com a página
-atual de LinkedIn, Gupy, Indeed, InfoJobs, Nube, páginas de carreira e outros portais. O portal não
+Esses candidatos usam `source` como `extension_capture`, `github_capture`, `portfolio_capture` ou
+`browser_assisted_capture`, preservam `source_ref` com `capture_id` ou `project_id`, carregam
+evidencia textual curta e ficam com `confirmed_by_user=false` ate a pessoa confirmar no site.
+
+Uma vaga capturada pode gerar objetivo, preferencia ou gap a revisar. Ela nao vira habilidade
+profissional automaticamente. Projetos GitHub/portfolio podem gerar projeto e skills candidatas,
+tambem com revisao humana.
+
+## Portais compativeis
+
+A extensao usa permissoes `activeTab` e heuristicas genericas, entao pode trabalhar com a pagina
+atual de LinkedIn, Gupy, Indeed, InfoJobs, Nube, paginas de carreira e outros portais. O portal nao
 precisa estar previamente cadastrado no SotuHire.
 
 ## Importar candidaturas paginadas
 
 1. Abra manualmente a lista de candidaturas no portal.
-2. Em cada página, clique em **Adicionar página ao lote**.
-3. Navegue para a próxima página e repita.
+2. Em cada pagina, clique em **Adicionar pagina ao lote**.
+3. Navegue para a proxima pagina e repita.
 4. Clique em **Enviar lote acumulado**.
 
-O lote fica temporariamente no storage local da extensão e aceita até 500 registros por envio. A
-API e o tracker deduplicam por URL normalizada e por empresa+título semelhante. Se LinkedIn levar a
-candidatura para Gupy ou outro portal, o SotuHire mantém um cartão e registra as duas fontes.
+O lote fica temporariamente no storage local da extensao e aceita ate 500 registros por envio. A API
+e o tracker deduplicam por URL normalizada e por empresa + titulo semelhante.
 
-## GitHub, projetos e portfólios
+## GitHub, projetos e portfolios
 
-Em uma página pública de perfil GitHub, repositório, projeto ou portfólio, a extensão extrai o
-conteúdo visível, README, arquivos centrais, mensagens de commit, linguagens e topics.
+Em uma pagina publica de perfil GitHub, repositorio, projeto ou portfolio, a extensao extrai conteudo
+visivel, README, arquivos centrais, mensagens de commit, linguagens e topics.
 
-Em `github.com`, a extensão injeta o botão **SotuHire AI** próximo às ações do repositório ou,
-como fallback, ao cabeçalho visível. O botão funciona em repositórios, árvores, arquivos e perfis
-públicos. O modal oferece análise, cópia, exportação e envio para memória, evidências, perfil e
-comparação com vaga.
+Em `github.com`, a extensao injeta o botao **SotuHire AI** perto das acoes do repositorio ou, como
+fallback, no cabecalho visivel. O modal oferece analise, copia, exportacao e envio para memoria,
+evidencias, perfil e comparacao com vaga.
 
-Ela oferece dois modos:
+Modos principais:
 
-- **Analisar projeto no navegador**: relatório standalone local; se uma chave Gemini standalone for
-  configurada, o Gemini aprimora o texto do relatório;
-- **Salvar projeto no SotuHire**: envia o payload à API local, gera relatório completo, salva
-  memória/evidências e disponibiliza o projeto na aba **GitHub / Portfólio / Projetos**.
+- **Analisar projeto no navegador**: relatorio standalone local; se uma chave Gemini standalone for
+  configurada, o Gemini aprimora o texto do relatorio.
+- **Salvar projeto no SotuHire**: envia o payload a API local, gera relatorio completo, salva
+  memoria/evidencias e disponibiliza o projeto no SotuHire.
+- **Gerar evidencia para Perfil**: envia o projeto ao SotuHire local para que o site gere candidatos
+  revisaveis. Nada entra no Perfil sem confirmacao do usuario.
 
-Arquivos gerados, binários, imagens, locks grandes, `node_modules`, `dist`, `build`, `.venv` e
-`__pycache__` não entram na amostragem inteligente.
+Arquivos gerados, binarios, imagens, locks grandes, `node_modules`, `dist`, `build`, `.venv` e
+`__pycache__` nao entram na amostragem inteligente.
 
-## Token local opcional
+## IA e token local
 
 Se `SOTUHIRE_COMPANION_TOKEN` estiver configurado no SotuHire, informe o mesmo valor no campo
-**Token local opcional** do popup. Esse token protege apenas a API localhost; ele não é uma chave de
+**Token local opcional** do popup. Esse token protege apenas a API localhost; ele nao e uma chave de
 provider de IA.
+
+A chave Gemini standalone opcional pode permanecer no popup, mas ela e separada da IA configurada no
+app. A API key do app SotuHire nao e lida, exposta ou armazenada pela extensao.
 
 ## Privacidade
 
 - usa somente `activeTab`, `scripting`, `storage`, localhost e o host restrito `github.com`;
-- processa a página que a pessoa abriu manualmente;
-- não automatiza login e não guarda senha;
-- não burla CAPTCHA;
-- nunca recebe ou armazena a API Key configurada no SotuHire;
-- a chave Gemini standalone opcional fica somente em `chrome.storage.local`;
-- não lê cookies, tokens, `localStorage`, `sessionStorage` ou headers autenticados.
+- processa a pagina que a pessoa abriu manualmente;
+- nao automatiza login;
+- nao automatiza candidatura;
+- nao burla CAPTCHA;
+- nao coleta cookies, tokens, sessao, headers, `localStorage` ou `sessionStorage`;
+- nao acessa a API key configurada no app;
+- exige revisao humana antes de salvar evidencias no Perfil.
+
+O fluxo `/api/v1/sources/authenticated-browser/*`, Chromium/CDP e `/authenticated-browser/collect`
+permanece separado e nao e alterado pela extensao.
 
 ## Gerar o ZIP da Chrome Web Store
 
@@ -93,14 +111,14 @@ Na raiz do projeto:
 python scripts/package_extension.py
 ```
 
-O script valida Manifest V3, permissões, ícones, arquivos obrigatórios e segredos antes de gerar
-`dist/sotuhire-extension-v0.9.0.zip`. Documentos e assets da listagem ficam em `store/` e não
-entram no ZIP executável.
+O script valida Manifest V3, permissoes, icones, arquivos obrigatorios e segredos antes de gerar
+`dist/sotuhire-extension-v0.9.0.zip`. Documentos e assets da listagem ficam em `store/` e nao entram
+no ZIP executavel.
 
 ## Publicar
 
 1. Execute os testes e gere o ZIP.
 2. Crie ou atualize a listagem na Chrome Web Store.
 3. Use `store/description-short.txt`, `store/description-full.md` e `store/listing.md`.
-4. Informe a política em `store/privacy-policy.md`.
+4. Informe a politica em `store/privacy-policy.md`.
 5. Envie as screenshots controladas e siga `store/test-instructions.md`.

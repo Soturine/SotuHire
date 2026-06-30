@@ -222,6 +222,8 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
         query=" ".join([request.job_text, " ".join(keywords)]),
     )
     context_keywords = _context_keywords_for_ats(career_context, keywords)
+    keywords_without_context = [keyword for keyword in keywords if keyword not in context_keywords]
+    profile_or_rag_terms = _profile_or_rag_terms_for_ats(career_context)
     if context_keywords:
         warnings.append("ATS consultou evidencias do Career Context Engine.")
     provider_used = runtime.provider_name
@@ -282,6 +284,14 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
             warnings=warnings,
             context_summary=context_brief(career_context),
             context_evidence_keywords=context_keywords,
+            safe_keywords_from_context=context_keywords,
+            keywords_without_context_evidence=keywords_without_context,
+            profile_or_rag_terms=profile_or_rag_terms,
+            unevidenced_profile_claims=[
+                keyword
+                for keyword in review.missing_but_safe_to_add_if_true
+                if keyword not in context_keywords
+            ],
         ),
         warnings,
     )
@@ -513,6 +523,18 @@ def _context_keywords_for_ats(
         if normalized and normalized in evidence_text:
             supported.append(keyword)
     return _unique(supported)
+
+
+def _profile_or_rag_terms_for_ats(context: CareerContext) -> list[str]:
+    terms: list[str] = []
+    for item in context.evidence:
+        if item.sensitive:
+            continue
+        terms.append(item.title)
+        terms.append(item.kind)
+        terms.append(item.source)
+    terms.extend([*context.goals, *context.domains, *context.contract_types])
+    return _unique([term for term in terms if 2 <= len(str(term)) <= 80])[:40]
 
 
 def _unique(items: list[str]) -> list[str]:

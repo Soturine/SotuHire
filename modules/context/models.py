@@ -20,6 +20,7 @@ class CareerContextPurpose(StrEnum):
     TRACKER = "tracker"
     NOTIFICATIONS = "notifications"
     SOURCES = "sources"
+    EXTENSION = "extension"
     GITHUB = "github"
     DASHBOARD = "dashboard"
 

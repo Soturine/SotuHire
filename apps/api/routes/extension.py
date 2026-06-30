@@ -7,21 +7,30 @@ from fastapi import APIRouter, Query
 from apps.api.routes.responses import ok
 from apps.api.schemas.common import ApiEnvelope
 from apps.api.schemas.extension import (
+    ExtensionAddToProfileResponse,
     ExtensionCapturePatchRequest,
     ExtensionCapturePatchResponse,
     ExtensionCapturesResponse,
+    ExtensionContextResponse,
     ExtensionImportGithubResponse,
     ExtensionImportJobResponse,
     ExtensionImportRequest,
     ExtensionImportTrackerResponse,
+    ExtensionProfileCandidatesRequest,
+    ExtensionProfileCandidatesResponse,
     ExtensionStatusResponse,
 )
 from apps.api.services.extension import (
+    extension_capture_add_to_profile,
+    extension_capture_profile_candidates,
     extension_captures,
+    extension_context,
     extension_import_github,
     extension_import_job,
     extension_import_tracker,
     extension_patch_capture,
+    extension_project_add_to_profile,
+    extension_project_profile_candidates,
     extension_status,
 )
 
@@ -42,6 +51,12 @@ def local_extension_captures(
     return ok(extension_captures(limit))
 
 
+@router.get("/context", response_model=ApiEnvelope[ExtensionContextResponse])
+def local_extension_context() -> ApiEnvelope[ExtensionContextResponse]:
+    """Return unified local context for extension/profile review."""
+    return ok(extension_context())
+
+
 @router.patch(
     "/captures/{capture_id}",
     response_model=ApiEnvelope[ExtensionCapturePatchResponse],
@@ -52,6 +67,52 @@ def local_extension_patch_capture(
 ) -> ApiEnvelope[ExtensionCapturePatchResponse]:
     """Archive, ignore, or mark a local extension capture as reviewed."""
     return ok(extension_patch_capture(capture_id, payload), request_id=payload.request_id)
+
+
+@router.post(
+    "/captures/{capture_id}/profile-candidates",
+    response_model=ApiEnvelope[ExtensionProfileCandidatesResponse],
+)
+def local_extension_capture_profile_candidates(
+    capture_id: str,
+) -> ApiEnvelope[ExtensionProfileCandidatesResponse]:
+    """Generate review-only profile candidates from a capture."""
+    return ok(extension_capture_profile_candidates(capture_id))
+
+
+@router.post(
+    "/captures/{capture_id}/add-to-profile",
+    response_model=ApiEnvelope[ExtensionAddToProfileResponse],
+)
+def local_extension_capture_add_to_profile(
+    capture_id: str,
+    payload: ExtensionProfileCandidatesRequest,
+) -> ApiEnvelope[ExtensionAddToProfileResponse]:
+    """Add selected capture candidates to the profile after user review."""
+    return ok(extension_capture_add_to_profile(capture_id, payload), request_id=payload.request_id)
+
+
+@router.post(
+    "/projects/{project_id}/profile-candidates",
+    response_model=ApiEnvelope[ExtensionProfileCandidatesResponse],
+)
+def local_extension_project_profile_candidates(
+    project_id: str,
+) -> ApiEnvelope[ExtensionProfileCandidatesResponse]:
+    """Generate review-only profile candidates from a saved project."""
+    return ok(extension_project_profile_candidates(project_id))
+
+
+@router.post(
+    "/projects/{project_id}/add-to-profile",
+    response_model=ApiEnvelope[ExtensionAddToProfileResponse],
+)
+def local_extension_project_add_to_profile(
+    project_id: str,
+    payload: ExtensionProfileCandidatesRequest,
+) -> ApiEnvelope[ExtensionAddToProfileResponse]:
+    """Add selected project candidates to the profile after user review."""
+    return ok(extension_project_add_to_profile(project_id, payload), request_id=payload.request_id)
 
 
 @router.get("/profile-analysis", response_model=ApiEnvelope[ExtensionStatusResponse])

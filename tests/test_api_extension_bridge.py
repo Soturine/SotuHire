@@ -157,3 +157,113 @@ def test_extension_bridge_exposes_fake_github_capture_history(tmp_path: Path, mo
     assert capture["kind"] == "github_repo"
     assert capture["source"] == "browser_assisted_capture"
     assert capture["url"] == "https://github.com/example/fictitious-api-lab"
+
+
+def test_extension_context_endpoint_uses_career_context_engine(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    client = api_client()
+
+    response = client.get("/api/v1/extension/context")
+
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["context"]["purpose"] == "extension"
+    assert "Contexto" in payload["message"]
+
+
+def test_extension_profile_candidates_do_not_save_automatically(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    store = CompanionCaptureStore()
+    store.save(
+        CompanionCaptureRecord(
+            id="capture_profile_candidate",
+            capture=BrowserCapturePayload(
+                page_title="Analista de Dados",
+                url="https://example.invalid/jobs/data",
+                domain="example.invalid",
+                visible_text="Cargo: Analista de Dados\nRequisitos: Python, SQL. Local: Remoto.",
+                job_title="Analista de Dados",
+                company="Empresa Ficticia",
+            ),
+        )
+    )
+    client = api_client()
+
+    candidates = client.post(
+        "/api/v1/extension/captures/capture_profile_candidate/profile-candidates"
+    )
+    profile = client.get("/api/v1/profile")
+
+    assert candidates.status_code == 200
+    data = candidates.json()["data"]
+    assert data["capture_id"] == "capture_profile_candidate"
+    assert data["candidates"]
+    assert data["candidates"][0]["confirmed_by_user"] is False
+    assert profile.status_code == 200
+    assert profile.json()["data"]["profile"]["items"] == []
+
+
+def test_extension_add_to_profile_requires_user_confirmation(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    store = CompanionCaptureStore()
+    store.save(
+        CompanionCaptureRecord(
+            id="capture_add_profile",
+            capture=BrowserCapturePayload(
+                page_title="Backend Python Demo",
+                url="https://example.invalid/jobs/backend",
+                domain="example.invalid",
+                visible_text="Cargo: Backend Python\nRequisitos: Python, FastAPI.",
+                job_title="Backend Python Demo",
+                company="Empresa Ficticia",
+            ),
+        )
+    )
+    client = api_client()
+    candidates = client.post("/api/v1/extension/captures/capture_add_profile/profile-candidates")
+    candidate_id = candidates.json()["data"]["candidates"][0]["item_id"]
+
+    response = client.post(
+        "/api/v1/extension/captures/capture_add_profile/add-to-profile",
+        json={"candidate_ids": [candidate_id], "privacy_acknowledged": True},
+    )
+    profile = client.get("/api/v1/profile").json()["data"]["profile"]
+
+    assert response.status_code == 200
+    added = response.json()["data"]["added"]
+    assert len(added) == 1
+    assert added[0]["confirmed_by_user"] is True
+    assert added[0]["source"] == "extension_capture"
+    assert added[0]["source_ref"] == "capture_add_profile"
+    assert profile["items"][0]["source_ref"] == "capture_add_profile"
+
+
+def test_extension_github_capture_generates_project_profile_candidates(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    store = CompanionCaptureStore()
+    store.save(
+        CompanionCaptureRecord(
+            id="capture_github_profile_candidate",
+            capture=BrowserCapturePayload(
+                page_title="fictitious-api-lab",
+                url="https://github.com/example/fictitious-api-lab",
+                domain="github.com",
+                visible_text="README FastAPI project with Pytest and PostgreSQL.",
+                description="# Fictitious API\nFastAPI project with Pytest and PostgreSQL.",
+            ),
+        )
+    )
+    client = api_client()
+
+    response = client.post(
+        "/api/v1/extension/projects/capture_github_profile_candidate/profile-candidates"
+    )
+
+    assert response.status_code == 200
+    candidates = response.json()["data"]["candidates"]
+    assert any(item["type"] == "project" for item in candidates)
+    assert {item["source"] for item in candidates} == {"github_capture"}

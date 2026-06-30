@@ -134,6 +134,34 @@ def test_context_works_without_profile_or_memory(tmp_path: Path) -> None:
     assert context.warnings
 
 
+def test_context_can_include_or_exclude_extension_memory(tmp_path: Path) -> None:
+    engine, _, memory_store = _engine(tmp_path)
+    memory_store.add_memory_item(
+        CareerMemoryItem(
+            kind="opportunity",
+            title="Captura extensao Backend Python",
+            content="Vaga capturada pela extensao com Python e FastAPI.",
+            source="browser_assisted_capture",
+            source_id="capture_demo",
+            tags=["browser_assisted_capture"],
+        )
+    )
+
+    included = engine.build(
+        CareerContextPurpose.EXTENSION,
+        query="Python FastAPI",
+        include_extension=True,
+    )
+    excluded = engine.build(
+        CareerContextPurpose.EXTENSION,
+        query="Python FastAPI",
+        include_extension=False,
+    )
+
+    assert any(item.source == "browser_assisted_capture" for item in included.evidence)
+    assert not any(item.source == "browser_assisted_capture" for item in excluded.evidence)
+
+
 def test_context_marks_sensitive_privacy_notes(tmp_path: Path) -> None:
     engine, profile_store, _ = _engine(tmp_path)
     profile_store.save_active(

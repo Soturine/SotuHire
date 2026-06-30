@@ -83,6 +83,16 @@ def _context_from_universal_profile(
     purpose: str,
 ) -> ProfileContext:
     items = [*profile.items, *profile.constraints]
+    target_role_items = _items_by_type(items, {"target_role"})
+    location_items = _items_by_type(items, {"location_preference"})
+    preference_items = _items_by_type(
+        items,
+        {"work_model_preference", "contract_preference", "preference_signal"},
+    )
+    application_signal_items = _items_by_type(
+        items,
+        {"application_signal", "keyword_to_review", "gap_signal"},
+    )
     return ProfileContext(
         identity={
             "profile_id": profile.profile_id,
@@ -90,7 +100,7 @@ def _context_from_universal_profile(
             "headline": profile.headline or "",
             "summary": profile.summary or "",
         },
-        career_goals=list(profile.target_roles),
+        career_goals=[*profile.target_roles, *[item.title for item in target_role_items]],
         education=_items_of_type(
             items,
             {
@@ -131,16 +141,19 @@ def _context_from_universal_profile(
             {"technical_skill", "practical_skill", "soft_skill", "tool", "method"},
         ),
         languages=_items_of_type(items, {"language", "language_course"}),
-        locations=list(profile.preferred_locations),
+        locations=[*profile.preferred_locations, *[item.title for item in location_items]],
         preferences=[
             *profile.primary_domains,
             *profile.secondary_domains,
             *profile.preferred_work_models,
             *profile.preferred_contract_types,
+            *[item.title for item in preference_items],
         ],
         constraints=[item.title for item in profile.constraints],
         application_history_signals=[
             *[f"Objetivo: {role}" for role in profile.target_roles],
+            *[f"Objetivo revisado: {item.title}" for item in target_role_items],
+            *[f"Sinal de extensao: {item.title}" for item in application_signal_items],
             *[f"Momento de carreira: {moment}" for moment in profile.career_moments],
             *[f"Senioridade alvo: {seniority}" for seniority in profile.target_seniority],
             f"Contexto montado para: {purpose}.",
@@ -220,6 +233,10 @@ def _item(
 
 def _items_of_type(items: list[ProfileItem], types: set[str]) -> list[ProfileContextItem]:
     return [_context_item(item) for item in items if item.type in types]
+
+
+def _items_by_type(items: list[ProfileItem], types: set[str]) -> list[ProfileItem]:
+    return [item for item in items if item.type in types]
 
 
 def _context_item(item: ProfileItem) -> ProfileContextItem:

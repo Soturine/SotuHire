@@ -31,6 +31,7 @@ class CareerContextEngine:
         include_memory: bool = True,
         include_tracker: bool = True,
         include_sources: bool = True,
+        include_extension: bool = True,
         include_github: bool = True,
         max_evidence: int = 12,
         profile_context_override: dict[str, object] | None = None,
@@ -55,6 +56,7 @@ class CareerContextEngine:
                 query=_context_query(resolved_purpose, query, profile_context),
                 include_tracker=include_tracker,
                 include_sources=include_sources,
+                include_extension=include_extension,
                 include_github=include_github,
                 max_evidence=max(1, max_evidence),
                 warnings=warnings,
@@ -107,6 +109,7 @@ class CareerContextEngine:
         query: str,
         include_tracker: bool,
         include_sources: bool,
+        include_extension: bool,
         include_github: bool,
         max_evidence: int,
         warnings: list[str],
@@ -128,6 +131,7 @@ class CareerContextEngine:
             _evidence_from_memory(item)
             for item in retrieved
             if item.kind is None or not allowed or item.kind in allowed
+            if include_extension or not _is_extension_memory(item)
         ]
         return converted[:max_evidence]
 
@@ -257,7 +261,21 @@ def _allowed_memory_kinds(
         base.update({"github_profile", "github_repo", "portfolio", "project_evidence"})
     if purpose == CareerContextPurpose.GITHUB:
         base.update({"commit_analysis", "readme_analysis"})
+    if purpose == CareerContextPurpose.EXTENSION:
+        base.update({"opportunity", "project", "portfolio", "github_repo", "project_evidence"})
     return base
+
+
+def _is_extension_memory(item: CareerEvidence) -> bool:
+    source = normalize_text(item.source)
+    markers = {
+        "extension_capture",
+        "browser_assisted_capture",
+        "companion_capture",
+        "github_capture",
+        "portfolio_capture",
+    }
+    return any(marker in source for marker in markers)
 
 
 def _profile_summary(context: ProfileContext) -> str:

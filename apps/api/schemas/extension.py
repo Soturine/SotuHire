@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from modules.context import CareerContext
 from modules.portfolio.schemas import ProjectAnalysisReport
+from modules.profile.models import ProfileItem
 from modules.schemas.job_posting import JobPostingSchema
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -35,6 +37,8 @@ class ExtensionCaptureItem(BaseModel):
     source: str = "browser_assisted_capture"
     status: str = "captured"
     tracker_id: str = ""
+    profile_candidate_count: int = 0
+    context_signal: str = ""
     captured_at: datetime | None = None
     updated_at: datetime | None = None
 
@@ -105,3 +109,49 @@ class ExtensionImportGithubResponse(BaseModel):
     capture_id: str
     report: ProjectAnalysisReport
     message: str
+
+
+class ExtensionContextResponse(BaseModel):
+    """Unified context visible to the extension bridge."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    context: CareerContext
+    context_summary: str = ""
+    message: str = ""
+
+
+class ExtensionProfileCandidatesRequest(BaseModel):
+    """Reviewed selection to promote extension candidates into the profile."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    candidate_ids: list[str] = Field(default_factory=list, max_length=50)
+    items: list[ProfileItem] = Field(default_factory=list, max_length=50)
+    privacy_acknowledged: bool = True
+    request_id: str = Field(default="", max_length=120)
+
+
+class ExtensionProfileCandidatesResponse(BaseModel):
+    """Review-only profile item candidates derived from one extension source."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    capture_id: str = ""
+    project_id: str = ""
+    candidates: list[ProfileItem] = Field(default_factory=list)
+    context_summary: str = ""
+    warnings: list[str] = Field(default_factory=list)
+    message: str = ""
+
+
+class ExtensionAddToProfileResponse(BaseModel):
+    """Items explicitly confirmed by the user and added to the profile."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    capture_id: str = ""
+    project_id: str = ""
+    added: list[ProfileItem] = Field(default_factory=list)
+    skipped: list[str] = Field(default_factory=list)
+    message: str = ""
