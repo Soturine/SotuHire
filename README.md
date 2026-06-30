@@ -2,114 +2,104 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.9.0-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.0)
+[![Release](https://img.shields.io/badge/release-v1.9.1-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.1)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
-Copiloto de carreira local-first para analisar currículos, comparar vagas, melhorar aderência ATS,
-descobrir oportunidades e acompanhar candidaturas.
+SotuHire e um copiloto de carreira local-first, multi area e baseado em evidencias para analisar curriculos, comparar vagas, melhorar ATS, descobrir oportunidades, acompanhar candidaturas e organizar o perfil profissional da pessoa usuaria.
 
-O SotuHire combina regras determinísticas, NLP e IA opcional para responder:
+Ele combina Perfil Profissional Universal, RAG local, Match, ATS, Tailor, Radar, Fontes, Kanban, GitHub/Portfolio e IA opcional sem transformar a candidatura em automacao cega. A regra central e simples: a pessoa revisa antes de salvar, exportar, aplicar ou compartilhar contexto com provider externo.
 
-> Esta vaga faz sentido para mim, quais são os gaps e o que devo ajustar antes de aplicar?
+[Documentacao](docs/) · [Roadmap](docs/01-product/roadmap.md) · [Visao](docs/01-product/vision.md) · [Estrategia multi area](docs/01-product/multi-domain-product-strategy.md) · [Arquitetura](docs/02-architecture/module-integration-map.md) · [RAG local](docs/04-ai/career-memory-rag.md) · [Seguranca](docs/06-engineering/security-privacy.md) · [Changelog](CHANGELOG.md)
 
-[Documentação](https://soturine.github.io/SotuHire/) ·
-[Demo estática](docs/08-frontend/static-demo.md) ·
-[Frontend handoff](docs/08-frontend/README.md) ·
-[API contract](docs/08-frontend/api-contract.md) ·
-[Roadmap](docs/01-product/roadmap.md) ·
-[Visão](docs/01-product/vision.md) ·
-[Estratégia multiárea](docs/01-product/multi-domain-product-strategy.md) ·
-[Prompt Catalog](docs/04-ai/prompt-catalog.md) ·
-[Prompt Architecture](docs/04-ai/prompt-architecture.md) ·
-[Prompt Registry](docs/04-ai/prompt-registry.md) ·
-[Prompts individuais](docs/04-ai/prompts/README.md) ·
-[Changelog](CHANGELOG.md) ·
-[Segurança e privacidade](docs/06-engineering/security-privacy.md)
+## Para Quem Serve
+
+SotuHire nao e uma ferramenta apenas para dev/TI. Ele foi desenhado para trajetorias tecnicas, academicas, cientificas, artisticas, operacionais e profissionais reguladas:
+
+- estudantes, pessoas em transicao e pessoas sem experiencia formal;
+- cursos tecnicos, tecnologos, engenharias, laboratorio, industria e qualidade;
+- saude, direito, educacao, pesquisa, administracao, comercial, turismo, artes e design;
+- profissionais com registros ou conselhos como CREA, CFT, CRQ, COREN, CRP, CRM, OAB, CRC, CAU, CREF, CRF, CRMV, CRESS, CRN e CRO;
+- pessoas que usam GitHub/portfolio e pessoas que nunca usaram GitHub.
 
 ## Preview
 
-![SotuHire v1.8 Web Walkthrough](docs/assets/screenshots/sotuhire-v1.8-web-walkthrough.gif)
+![SotuHire web product walkthrough](docs/assets/screenshots/sotuhire-web-product-walkthrough.gif)
 
-![SotuHire v1.8 Web Radar Summary](docs/assets/screenshots/sotuhire-v1.8-web-radar-summary.png)
+| Perfil | Match | Radar e agendamentos |
+| --- | --- | --- |
+| ![Perfil Profissional Universal](docs/assets/screenshots/sotuhire-web-profile.png) | ![Analise de compatibilidade](docs/assets/screenshots/sotuhire-web-match.png) | ![Radar com agendamentos](docs/assets/screenshots/sotuhire-web-radar-schedules.png) |
 
-![SotuHire v1.8 Web Radar Wishlist](docs/assets/screenshots/sotuhire-v1.8-web-radar-wishlist.png)
+| Notificacoes | Tracker | Fontes |
+| --- | --- | --- |
+| ![Notificacoes locais](docs/assets/screenshots/sotuhire-web-notifications.png) | ![Kanban de candidaturas](docs/assets/screenshots/sotuhire-web-tracker.png) | ![Fontes e captura](docs/assets/screenshots/sotuhire-web-sources.png) |
 
-![SotuHire v1.8 Web Radar Sources](docs/assets/screenshots/sotuhire-v1.8-web-radar-sources.png)
+![Configuracoes de IA](docs/assets/screenshots/sotuhire-web-settings-ai.png)
 
-![SotuHire v1.8 Web Radar Results](docs/assets/screenshots/sotuhire-v1.8-web-radar-results.png)
+## Principais Recursos
 
-![SotuHire v1.8 Web Inbox Radar](docs/assets/screenshots/sotuhire-v1.8-web-inbox-radar.png)
+- **Perfil Profissional Universal**: centraliza objetivos, areas, senioridade, localidades, modelos de trabalho, contratos, restricoes e evidencias revisaveis.
+- **Career Context Engine**: monta contexto compacto para Wishlist, Radar, Match, ATS, Tailor, Tracker, Fontes, GitHub/Portfolio, Notificacoes e Dashboard.
+- **Analise de curriculo e vaga**: extrai dados estruturados com fallback local e IA opcional.
+- **Match, ATS e Tailor**: compara evidencias reais, separa gaps, sugere ajustes seguros e evita inventar experiencia, certificacao ou registro.
+- **Radar, Wishlist e agendamentos**: monitora fontes configuradas, RSS/Atom publico e buscas revisaveis com quiet hours, cooldown e notificacoes locais.
+- **Fontes, captura e extensao**: importa texto, link, CSV, JSON, capturas da extensao e capturas assistidas, sempre com revisao humana.
+- **Kanban/Tracker**: acompanha candidaturas, status, fontes, requisitos recorrentes, funil e proximas acoes.
+- **GitHub/Portfolio**: analisa repositorios publicos e sugere candidatos de evidencia para o perfil, sem salvar automaticamente.
+- **IA opcional e fallback local**: Gemini pode ser usado pelo backend local; sem chave, o produto continua funcionando localmente.
+- **RAG/Memoria local**: recupera evidencias lexicais locais por relevancia, score e origem.
 
-## O Que O Projeto Faz
-
-- lê currículos em TXT, PDF e DOCX;
-- extrai experiências, formação, projetos, links e competências;
-- interpreta descrições de vagas e publicações com oportunidades;
-- possui base de extração estruturada por IA com JSON Guard, Pydantic e fallback local;
-- classifica domínios e requisitos multiárea com Domain Intelligence inicial;
-- executa Análise de Compatibilidade com requisitos, evidências, gaps críticos, confiança e
-  explicação;
-- ajusta pesos de matching por domínio profissional;
-- calcula Pontuação de compatibilidade, ATS, Aderência e Risco no backend/core;
-- explica pontos fortes, gaps, riscos e palavras-chave ausentes;
-- sugere adaptações de currículo sem inventar experiências;
-- oferece análise local por padrão e Gemini opcional;
-- aprende localmente com currículos, projetos, análises, feedbacks e candidaturas;
-- recupera evidências relevantes com RAG local e explica por que recomendou uma vaga;
-- consolida perfil profissional e preferências inferidas, editáveis pela pessoa usuária;
-- coleta oportunidades públicas, URLs específicas, conteúdo assistido e fontes autenticadas
-  autorizadas;
-- normaliza, deduplica e salva oportunidades para análise;
-- monitora RSS/Atom público configurado pelo usuário com Radar de Vagas e alertas locais;
-- mantém tracker, histórico e dashboard locais;
-- gera Search Intelligence e Hidden Jobs Radar;
-- captura a vaga atual com extensão assistiva e Local Companion API;
-- importa candidaturas paginadas sem duplicar vagas já registradas;
-- consolida a mesma vaga encontrada em LinkedIn, Gupy, Indeed, InfoJobs, Nube e outros portais;
-- mostra todas as fontes da candidatura e ranqueia requisitos recorrentes;
-- analisa perfis GitHub, repositórios, READMEs, commits, projetos e portfólios públicos;
-- transforma projetos em evidências reutilizáveis para vagas, memória e perfil profissional;
-- oferece análise standalone na extensão ou análise conectada ao SotuHire local.
-- publica documentação e demo estática no GitHub Pages.
-- documenta contratos, mocks e handoff para o frontend moderno web-first.
-- expõe FastAPI local em `/api/v1` para frontend moderno, com OpenAPI.
-
-## Como Usar
-
-### Modo rápido
-
-Use quando já possui um currículo e uma vaga:
+## Como Funciona
 
 ```text
-Carregar currículo -> colar vaga -> receber análise -> revisar sugestões
+Dados do usuario
+  -> Perfil Profissional Universal + Memoria local
+  -> Career Context Engine
+  -> Match / ATS / Tailor / Radar / Kanban / Fontes / GitHub / Dashboard
+  -> revisao humana antes de salvar, exportar, aplicar ou compartilhar
 ```
 
-### Modo avançado
+O contexto e serializavel, local-first e baseado em evidencias. Itens de baixa confianca ficam como "a confirmar". Evidencias sensiveis nao devem ir para provider externo sem permissao explicita.
 
-Use para revisar dados detectados, configurar IA, coletar oportunidades, comparar vagas, exportar
-resultados, consultar a **Memória de carreira** e acompanhar candidaturas no tracker.
+## Instalacao Rapida
 
-Também é possível clicar em **Rodar análise de exemplo** para conhecer o fluxo sem usar dados
-pessoais.
+Requisitos:
 
-### GitHub Pages vs app local
+- Python 3.11 ou superior;
+- Node.js e npm para o frontend web;
+- Git;
+- chave Gemini apenas se desejar IA externa opcional.
 
-O site em [soturine.github.io/SotuHire](https://soturine.github.io/SotuHire/) é estático: serve para
-documentação, visão de produto e demos. Ele não roda Python, Streamlit, IA, Local Companion API ou
-backend.
+```bash
+git clone https://github.com/Soturine/SotuHire.git
+cd SotuHire
+python -m venv .venv
+```
 
-O fluxo local principal agora é web-first:
+Windows PowerShell:
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+pip install -r docs/requirements/requirements.txt
+.\start-sotuhire.ps1
+```
+
+Linux/macOS:
+
+```bash
+source .venv/bin/activate
+pip install -r docs/requirements/requirements.txt
+```
+
+## Rodar Localmente
+
+Launcher web-first:
 
 ```powershell
 .\start-sotuhire.ps1
 ```
 
-O launcher sobe a API local em `http://127.0.0.1:8787`, o frontend moderno em
-`http://localhost:5173`, espera `/api/v1/health` e abre o navegador. Use `Ctrl+C` para encerrar API
-e frontend.
-
-Flags úteis:
+Flags uteis:
 
 ```powershell
 .\start-sotuhire.ps1 -NoBrowser
@@ -120,302 +110,29 @@ Flags úteis:
 .\start-sotuhire.ps1 -WithCompanion
 ```
 
-`-WithCompanion` inicia a Local Companion API existente em `127.0.0.1:8765` para a extensão
-assistiva. Isso não abre navegador autenticado, não faz login e não altera Chromium/CDP.
-
-### API local v1.9.0
-
-Para conectar um frontend moderno ou inspecionar o OpenAPI:
+API local:
 
 ```powershell
 python scripts/run_api.py
 ```
 
-Endpoints:
+Frontend web:
 
-```text
-http://127.0.0.1:8787/api/v1
-http://127.0.0.1:8787/openapi.json
-http://127.0.0.1:8787/docs
-```
-
-A API usa CORS restrito por default e reaproveita o core em `modules/`. Veja
-[Frontend API Layer](docs/02-architecture/frontend-api-layer.md).
-
-### Frontend moderno v1.9.0
-
-O frontend moderno fica em `apps/web` e roda como app React/Vite separado.
-
-```powershell
+```bash
 cd apps/web
-npm install
+npm ci
 npm run dev
 ```
 
-Build e validação do frontend:
-
-```bash
-cd apps/web
-npm run build
-npm run lint
-npm run typecheck
-npm run test:e2e
-```
-
-O app tem **Modo Demo** com dados fictícios e **Modo API Real** usando
-`http://127.0.0.1:8787/api/v1`. Para configurar localmente:
-
-```env
-VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
-```
-
-Na v1.8.2, `npm run test:e2e` roda a matriz Playwright em Chromium, Firefox e WebKit. O Kanban de
-Candidaturas suporta drag-and-drop com rollback em falha da API e mantém edição de status por select
-para teclado/mobile.
-
-Streamlit continua disponível como modo local/dev:
+Streamlit legado/dev continua disponivel:
 
 ```powershell
 streamlit run app.py
 ```
 
-O frontend não salva segredos, não persiste API key em storage do navegador e não calcula score real
-no browser. Análise de Compatibilidade, ATS, Resume Tailor, GitHub Analyzer, validações fortes,
-privacidade e regras anti-invenção continuam no backend/core.
+## Configurar IA Opcional
 
-### IA e Providers
-
-A tela **Configurações → IA e Providers** chama endpoints reais em `/api/v1/settings/ai`. A chave é
-enviada apenas para a FastAPI local, fica no backend em `data/secrets/ai-provider.local.json` e esse
-caminho é ignorado pelo Git. A API nunca retorna a chave para o frontend; ela retorna apenas
-provider, modelo, status, toggles, warnings e data de atualização.
-
-Na v1.8.2, o backend também usa essas configurações para rotear IA opcional em Currículo, Vaga,
-Análise de Compatibilidade, ATS, Ajuste de Currículo, GitHub, importações e Radar. Se Gemini falhar,
-o SotuHire retorna fallback local com warning e mantém os scores finais no backend/core.
-
-Endpoints:
-
-```text
-GET    /api/v1/settings/ai
-GET    /api/v1/settings/ai/status
-POST   /api/v1/settings/ai
-POST   /api/v1/settings/ai/test
-DELETE /api/v1/settings/ai
-```
-
-### Extensão Local no frontend
-
-A tela **Fontes e Captura** inclui o painel **Extensão Local**, que consulta capturas já salvas pela
-Local Companion API e permite importar para Vaga, GitHub Analysis ou Candidaturas:
-
-```text
-GET  /api/v1/extension/status
-GET  /api/v1/extension/captures
-POST /api/v1/extension/import/job
-POST /api/v1/extension/import/github
-POST /api/v1/extension/import/tracker
-PATCH /api/v1/extension/captures/{capture_id}
-```
-
-Esse painel não cria crawler logado novo, não automatiza login, não faz auto-apply e não mexe no
-fluxo de navegador autenticado existente.
-
-### Perfil Profissional Universal v1.8.2
-
-A tela **Perfil** (`/profile`) centraliza contexto profissional local-first e baseado em evidências.
-Ela funciona para trajetórias técnicas, acadêmicas, científicas, artísticas, de saúde, direito,
-educação, turismo, laboratório, indústria e outras áreas, sem assumir que a pessoa é dev/TI ou tem
-GitHub.
-
-O perfil permite editar dados básicos, adicionar item manual, filtrar por tipo, editar evidências,
-importar texto de currículo/Lattes/portfólio/certificados/notas e revisar itens antes de adicionar.
-Itens extraídos por IA ou fallback local nunca entram como confirmados automaticamente.
-
-Endpoints principais:
-
-```text
-GET/PUT /api/v1/profile
-POST /api/v1/profile/items
-PATCH/DELETE /api/v1/profile/items/{id}
-POST /api/v1/profile/import-text
-POST /api/v1/profile/deduplicate
-GET /api/v1/profile/context
-```
-
-O Radar usa esse contexto quando **Usar contexto local do perfil** está ativo. Match/Tailor e
-capturas também podem usar o contexto de forma conservadora; dados do perfil só são enviados a
-provider externo quando `allow_memory_context=true`.
-
-### Captura Assistida Segura v1.8.2
-
-A API adiciona `POST /api/v1/sources/authenticated-captures` para salvar texto visível ou selecionado
-de uma página autenticada como captura revisável na Caixa de Entrada. A pessoa faz login manualmente
-quando necessário e inicia a captura.
-
-Esse fluxo não captura cookie, token, sessão ou headers autenticados, não burla CAPTCHA, não faz
-auto-apply, não envia mensagem automática e não salva candidatura final sem revisão.
-
-### Importadores e Caixa de Entrada v1.8.0
-
-A tela **Fontes e Captura** agora inclui uma **Caixa de Entrada de Oportunidades** persistente para
-texto, link, CSV, JSON e capturas da extensao/local companion. O fluxo recomendado e:
-
-```text
-importar/capturar vaga -> revisar na caixa de entrada -> enviar para Vaga
--> analisar compatibilidade/ATS/ajuste -> salvar em Candidaturas -> acompanhar no Kanban
-```
-
-Endpoints principais:
-
-```text
-GET    /api/v1/sources/imports
-POST   /api/v1/sources/imports/text
-POST   /api/v1/sources/imports/url
-POST   /api/v1/sources/imports/csv
-POST   /api/v1/sources/imports/json
-GET    /api/v1/sources/captures
-PATCH  /api/v1/sources/captures/{capture_id}
-POST   /api/v1/sources/captures/{capture_id}/import-job
-POST   /api/v1/sources/captures/{capture_id}/save-tracker
-POST   /api/v1/sources/captures/{capture_id}/merge
-POST   /api/v1/sources/dedupe
-GET    /api/v1/sources/directory
-POST   /api/v1/sources/export
-GET    /api/v1/sources/stats
-```
-
-Na v1.8.0, CSV/JSON podem ser enviados por upload no navegador com preview antes de confirmar. A
-Caixa de Entrada também permite exportar todos, filtrados ou selecionados em CSV/JSON e mesclar
-duplicatas preservando histórico.
-
-O importador de URL tenta apenas leitura publica simples. Se a pagina bloquear acesso, exigir login
-ou nao trouxer texto legivel, o SotuHire orienta a pessoa a abrir a pagina manualmente e colar o
-texto da vaga. Nao ha login automatico, crawler amplo, bypass de CAPTCHA ou auto-apply.
-
-### Radar de Vagas v1.9.0
-
-A tela **Radar de Vagas** permite criar uma wishlist, cadastrar fontes RSS/Atom publicas, rodar uma
-busca manual e receber alertas locais quando uma oportunidade parece alinhada ao curriculo ou às
-preferencias.
-
-Na v1.8.2, a seção **Criar wishlist com IA** transforma texto livre em um rascunho editável. O
-backend pode usar Gemini se `allow_radar=true`, mas sempre mantém fallback local multiárea e retorna
-`needs_user_review=true`. A wishlist só é salva depois de revisão manual.
-
-Quando o perfil local existe e o usuário mantém o contexto habilitado, a Wishlist também considera
-objetivos, skills, localidades e preferências confirmadas no Perfil Profissional.
-
-Fluxo:
-
-```text
-wishlist + fontes -> rodar radar -> revisar resultados -> salvar na Caixa de Entrada ou Candidaturas
-```
-
-Endpoints principais:
-
-```text
-GET/POST/PATCH/DELETE /api/v1/radar/wishlists
-POST /api/v1/radar/wishlists/draft
-GET/POST/PATCH/DELETE /api/v1/radar/sources
-POST /api/v1/radar/run
-GET /api/v1/radar/runs
-GET/PATCH /api/v1/radar/results
-POST /api/v1/radar/results/{id}/save-inbox
-POST /api/v1/radar/results/{id}/save-tracker
-GET/PATCH /api/v1/radar/alerts
-GET /api/v1/radar/stats
-```
-
-O Radar nao faz busca ampla em Google/Bing/SERP, nao automatiza login, nao captura sessão e nao faz
-auto-apply. APIs oficiais ficam preparadas por adapter e dependem de contrato documentado.
-
-Na v1.9.0, o Radar tambem possui **Agendamentos** locais enquanto a API esta aberta. A pessoa pode
-criar uma agenda por wishlist/fonte, definir frequencia, horario de silencio, cooldown, uso de IA e
-uso do Perfil Profissional Universal. A execucao agendada cria resultados e notificacoes locais para
-revisao; ela nao candidata, nao envia curriculo e nao salva no Kanban sem acao manual.
-
-Capturas assistidas autenticadas podem aparecer como fonte agendada apenas como lembrete/revisao
-local: o SotuHire orienta a abrir a pagina e acionar a captura assistida, mas nao coleta cookies,
-tokens, sessao, headers ou storage de terceiros.
-
-Endpoints de agendamento e notificacoes:
-
-```text
-GET/POST/PATCH/DELETE /api/v1/radar/schedules
-POST /api/v1/radar/schedules/{id}/run-now
-GET /api/v1/radar/scheduled-runs
-GET /api/v1/radar/scheduler/status
-POST /api/v1/radar/scheduler/start
-POST /api/v1/radar/scheduler/stop
-GET/PATCH /api/v1/notifications/{id}
-POST /api/v1/notifications/mark-all-read
-DELETE /api/v1/notifications/read
-```
-
-## Instalação
-
-### Requisitos
-
-- Python 3.11 ou superior;
-- Git;
-- Windows, Linux ou macOS;
-- chave Gemini apenas se desejar análise externa opcional.
-
-### Baixar e executar
-
-```bash
-git clone https://github.com/Soturine/SotuHire.git
-cd SotuHire
-python -m venv .venv
-```
-
-Ative o ambiente virtual:
-
-```powershell
-# Windows PowerShell
-.\.venv\Scripts\Activate.ps1
-```
-
-```bash
-# Linux/macOS
-source .venv/bin/activate
-```
-
-Instale as dependências Python e abra o fluxo web-first:
-
-```powershell
-pip install -r docs/requirements/requirements.txt
-.\start-sotuhire.ps1
-```
-
-O Streamlit continua disponível como modo legado/dev/local debug:
-
-```powershell
-streamlit run app.py
-```
-
-## Configuração
-
-O modo local funciona sem chave de API. Para personalizar configurações:
-
-```bash
-cp .env.example .env
-```
-
-No Windows PowerShell:
-
-```powershell
-Copy-Item .env.example .env
-```
-
-### Gemini opcional
-
-```bash
-pip install -r docs/requirements/requirements-ai.txt
-```
-
-Configure no `.env`:
+SotuHire funciona sem provider externo. Para usar Gemini, configure pela tela **Configuracoes -> IA e Providers** ou por ambiente local:
 
 ```env
 DEFAULT_AI_PROVIDER=gemini
@@ -423,234 +140,96 @@ GEMINI_API_KEY=sua_chave
 GEMINI_MODEL=gemini-2.5-flash
 ```
 
-Também é possível configurar e testar a chave pela seção **Configurações → IA e Providers** no
-frontend moderno.
+A chave fica somente no backend local, em arquivo ignorado pelo Git. O frontend nunca recebe nem persiste API key. O envio de memoria/contexto para provider externo depende de opt-in explicito.
 
-Por padrão, o Gemini não recebe a memória local. Para usá-la no aprimoramento da análise,
-habilite explicitamente **Enviar contexto relevante para Gemini**. Somente as evidências
-recuperadas para a vaga atual são resumidas e enviadas, nunca a memória inteira.
+## Extensao Assistiva
 
-### Extensão assistiva
+A extensao em [browser-extension/](browser-extension/README.md) usa uma Local Companion API para capturar vagas visiveis e analisar GitHub/portfolio. Ela pode trabalhar conectada ao SotuHire local e e compativel com a extensao v0.9.0.
 
-1. Inicie o app com `streamlit run app.py`.
-2. Abra o modo avançado e a aba **Extensão**.
-3. Clique em **Iniciar Local API**.
-4. Em `chrome://extensions`, ative o modo desenvolvedor e carregue `browser-extension/`.
-5. Abra uma vaga e use **Salvar vaga atual**, **Analisar vaga atual** ou **Enviar para tracker**.
+O fluxo assistivo nao faz candidatura automatica, nao captura cookies/tokens/sessao/headers, nao burla CAPTCHA e nao coloca API key no frontend. Capturas viram itens revisaveis antes de entrar em Vaga, Radar, Match ou Tracker.
 
-Para importar muitas candidaturas já realizadas, percorra as páginas do tracker do portal e clique
-em **Adicionar página ao lote** em cada uma. Depois use **Enviar lote acumulado**. O SotuHire
-normaliza URLs e compara empresa+título para não criar duplicatas, inclusive quando um portal
-redireciona a candidatura para outro.
+## Seguranca E Privacidade
 
-A extensão pode pedir ao SotuHire local que use o Gemini configurado, mas nunca recebe ou armazena
-a API Key. Leia [Browser Companion v0.9.0](docs/07-development/v0.9.0-browser-extension-companion.md).
+- local-first por padrao;
+- sem auto-apply;
+- sem envio automatico de curriculo;
+- sem bypass de CAPTCHA;
+- sem captura de cookies, tokens, sessao, headers ou storage de terceiros;
+- sem API key no frontend;
+- sem salvar candidatos de evidencia no Perfil sem revisao;
+- sem mover score final ou regras anti-invencao para o browser.
 
-Para GitHub e portfólios, a extensão possui dois modos:
+Veja [Security & Privacy](docs/06-engineering/security-privacy.md) e [Compliance & Ethics](docs/05-data-sources/compliance-and-ethics.md).
 
-- **Standalone Extension Analysis**: relatório local no navegador, com Gemini standalone opcional;
-- **Connected SotuHire Analysis**: salva relatório, evidências, README e commits na memória local.
+## Arquitetura
 
-Em repositórios e perfis públicos do GitHub, o botão **SotuHire AI** aparece diretamente na
-página e abre um modal com score, grade, stack, README, commits, arquitetura, recomendações e
-ações para salvar no SotuHire. Para gerar o ZIP validado da extensão:
+```text
+apps/web
+  -> apps/api/routes
+  -> apps/api/services
+  -> modules/context
+  -> modules/profile + modules/memory
+  -> modules/radar + modules/sources + modules/tracker
+  -> modules/matching + modules/ats + modules/resume_tailor
+  -> data/ local ignorado pelo Git
+```
+
+Leia o [mapa de integracao de modulos](docs/02-architecture/module-integration-map.md), a [documentacao do Career Context Engine](docs/02-architecture/career-context-engine.md), o [catalogo de prompts](docs/04-ai/prompt-catalog.md) e a [documentacao do frontend](apps/web/README.md).
+
+## Documentacao
+
+- [Indice documental](docs/documentation-index.md)
+- [Roadmap](docs/01-product/roadmap.md)
+- [Visao do produto](docs/01-product/vision.md)
+- [Estrategia multi area](docs/01-product/multi-domain-product-strategy.md)
+- [Career Memory e RAG local](docs/04-ai/career-memory-rag.md)
+- [Prompt Catalog](docs/04-ai/prompt-catalog.md)
+- [Security & Privacy](docs/06-engineering/security-privacy.md)
+- [Release notes v1.9.1](docs/releases/v1.9.1.md)
+- [Changelog](CHANGELOG.md)
+
+## Desenvolvimento
+
+```bash
+ruff check .
+ruff format --check .
+pytest
+mkdocs build --strict
+python -m compileall modules tests apps scripts
+pyright
+```
+
+Frontend:
+
+```bash
+cd apps/web
+npm ci
+npm run build
+npm run lint
+npm run typecheck
+npm run test:e2e
+```
+
+Screenshots web:
+
+```bash
+python scripts/capture_web_walkthrough.py
+```
+
+Extensao:
 
 ```bash
 python scripts/package_extension.py
 ```
 
-O artefato é criado em `dist/sotuhire-extension-v0.9.0.zip`. Consulte o
-[guia da Chrome Web Store](docs/07-development/chrome-web-store-extension.md).
+## Roadmap Curto
 
-A chave Gemini standalone, quando escolhida, fica somente no `chrome.storage.local` e nunca entra
-no payload da Local Companion API. O modo recomendado continua sendo usar Gemini pelo SotuHire
-local. Veja [Análise GitHub e portfólio](docs/07-development/extension-github-portfolio-analysis.md).
+- aprofundar matching adaptativo por dominio sem hardcode gigante por profissao;
+- evoluir upload direto de arquivos para o Perfil Profissional Universal;
+- ampliar a revisao de candidatos de evidencia de GitHub/Portfolio;
+- estudar notificacoes nativas opcionais;
+- manter o fluxo authenticated browser preservado e revisavel.
 
-### Coleta autenticada opcional
+## Licenca
 
-Instale as dependências de scraping:
-
-```bash
-pip install -r docs/requirements/requirements-scraping.txt
-playwright install chromium
-```
-
-No app, selecione **Navegador autenticado autorizado**, clique em **Abrir navegador para login**,
-faça login manualmente no navegador dedicado e teste a conexão antes de coletar.
-
-Leia o guia de [crawling com navegador autenticado](docs/05-data-sources/authenticated-browser-crawling.md).
-
-## Modos De Coleta
-
-| Modo | Uso |
-| --- | --- |
-| `PUBLIC_SCRAPING` | RSS, páginas públicas de carreira, boards e listagens abertas com cache, rate limit e `robots.txt`. |
-| `MANUAL_URL` | Coleta somente a URL informada, sem seguir links em massa. |
-| `USER_ASSISTED_CAPTURE` | Processa o conteúdo da vaga ou publicação atual enviado pela pessoa usuária. |
-| `AUTHENTICATED_BROWSER` | Usa um navegador dedicado previamente autenticado para fontes autorizadas, com limites configuráveis. |
-
-O SotuHire não automatiza login, não contorna CAPTCHA ou checkpoints e não envia candidaturas
-automaticamente.
-
-## Módulos Principais
-
-| Módulo | Responsabilidade |
-| --- | --- |
-| `modules/parsers` | Extração e normalização de currículo e vaga. |
-| `modules/analyzer`, `modules/ats`, `modules/preferences` | Scores, recomendação, riscos e aderência às preferências. |
-| `modules/ai` | Providers, diagnóstico, Gemini opcional, Prompt Registry, JSON Guard e extração estruturada. |
-| `modules/domain_intelligence` | Classificação multiárea, aliases, requisitos e sinais de profissões regulamentadas. |
-| `modules/matching` | Análise de Compatibilidade, evidências, requisitos, pesos por domínio, competências transferíveis, scoring, risk adjustment e explanation builder. |
-| `modules/resume_tailor` | Sugestões rastreáveis para adaptar o currículo com evidências do match. |
-| `modules/sources`, `modules/scraping`, `modules/opportunities` | Importadores, histórico de capturas, conectores, coleta, deduplicação e armazenamento de oportunidades. |
-| `modules/search_intelligence` | Queries, fontes sugeridas e detecção de oportunidades escondidas. |
-| `modules/tracker`, `modules/storage` | Histórico, Kanban, follow-up e persistência local. |
-| `modules/memory`, `modules/profile` | Career Memory, RAG local, evidências, perfil persistente e preferências inferidas. |
-| `modules/local_api` | API localhost para integração local com a extensão. |
-| `apps/api` | FastAPI local para frontends modernos, OpenAPI e contratos `/api/v1`. |
-| `browser-extension` | Extensão assistiva multiportal e análise GitHub/portfólio no navegador. |
-| `modules/portfolio` | Amostragem, commits, scores e evidências de GitHub/projetos/portfólio. |
-| `modules/ui` | Fluxos Streamlit rápido e avançado. |
-| `apps/web` | Frontend moderno React/Vite com modo Demo e modo API Real. |
-
-Arquitetura resumida:
-
-```text
-currículo + vaga + preferências
-        -> parsers e schemas
-        -> recuperação de evidências da memória local
-        -> Análise de Compatibilidade, regras, scores e IA opcional
-        -> análise explicável e Resume Tailor
-        -> tracker, histórico e dashboard
-
-fontes, importadores e buscas
-        -> texto/link/CSV/JSON/capturas
-        -> normalização, caixa de entrada e deduplicação
-        -> análise e tracker
-```
-
-Veja a [documentação de arquitetura](docs/02-architecture/overview.md) e o
-[pipeline de oportunidades](docs/02-architecture/opportunity-collection-pipeline.md).
-
-## Estrutura Do Repositório
-
-```text
-SotuHire/
-├── app.py                  # entrada Streamlit
-├── apps/                   # FastAPI local e web frontend reservado
-├── modules/                # domínio, serviços, conectores e UI
-├── browser-extension/      # extensão assistiva Manifest V3
-├── tests/                  # testes unitários, integração e regressão
-├── examples/               # currículos, vagas e resultados fictícios
-├── config/                 # exemplos de fontes configuráveis
-├── docs/                   # documentação publicada com MkDocs
-│   └── requirements/       # dependências separadas por perfil
-├── scripts/                # automações auxiliares
-└── .github/workflows/      # CI e publicação da documentação
-```
-
-## Qualidade E Desenvolvimento
-
-Instale as dependências de desenvolvimento:
-
-```bash
-pip install -r docs/requirements/requirements-dev.txt
-```
-
-Execute as verificações:
-
-```bash
-ruff check .
-ruff format . --check
-python -m pytest -q
-mkdocs build --strict
-```
-
-Para visualizar a documentação localmente:
-
-```bash
-mkdocs serve
-```
-
-## Roadmap
-
-### Disponível atualmente
-
-- análise local e Gemini opcional;
-- Career Memory local, RAG lexical e análise baseada em evidências;
-- perfil profissional persistente, feedback learning e preferências inferidas;
-- export/import de memória e flags explícitas de privacidade;
-- parsers de currículo e vaga;
-- Prompt Registry, JSON Guard e schemas Pydantic para extração estruturada;
-- Domain Intelligence inicial para vagas e currículos multiárea;
-- Análise de Compatibilidade com requisitos obrigatórios/desejáveis, evidências, gaps críticos,
-  confiança e explicações;
-- pesos de match por domínio, ATS evidence review e Resume Tailor seguro;
-- GitHub Pages como site estático de documentação/demo;
-- home profissional do GitHub Pages, demo estática v1.1 e handoff frontend-ready;
-- contratos API e mocks para Lovable/React em `docs/08-frontend` e `docs/assets/mock-api`;
-- FastAPI local em `apps/api`, OpenAPI, endpoints `/api/v1` e Application Intelligence;
-- frontend moderno em `apps/web`, com Home, Dashboard, Currículo, Vaga, Compatibilidade, ATS,
-  Ajuste, GitHub, Candidaturas, Inteligência, Fontes e Captura, Configurações e Privacidade;
-- demos fictícias multiárea em `examples/`;
-- scores explicáveis e Resume Tailor;
-- tracker, histórico e dashboard;
-- Search Intelligence e Hidden Jobs Radar;
-- coleta pública, URL manual, captura assistida e navegador autenticado autorizado.
-- extensão assistiva multiportal, Local Companion API e importação paginada deduplicada;
-- calibração da memória, feedback de evidência e ranking de requisitos.
-- análise de GitHub, portfólio, READMEs e commits com evidências de projeto.
-- GitHub Analyzer com GitHub API pública, tree builder, sampler, dependency graph, evidence
-  index, scoring calculado por código e fallback local.
-- caixa de entrada de oportunidades, importadores texto/link/CSV/JSON, histórico persistente de
-  capturas e deduplicação local explicável.
-- Radar agendado local, quiet hours, cooldown, historico de runs e notificacoes in-app.
-
-### Próximos passos
-
-- v1.8.1: wishlist com IA/local, contexto profissional universal preparado e CI web;
-- v1.8.2: Perfil Profissional Universal editável, multiárea, evidence-first e captura assistida
-  segura;
-- v1.9.0: Radar agendado local e notificacoes in-app;
-- v2.0.0: assistant workflows com aprovacao humana explicita, sem auto-apply;
-- evoluir pesos por domínio para configuração externa se o uso real justificar.
-
-O planejamento detalhado está no [roadmap](docs/01-product/roadmap.md).
-
-## Privacidade
-
-- a análise local é o padrão;
-- currículos reais, segredos, bancos locais e exports privados não devem ser versionados;
-- o histórico não precisa armazenar o texto bruto do currículo;
-- a memória de carreira fica em `data/memory/`, pode ser exportada/importada e pode ser apagada;
-- Gemini recebe apenas contexto relevante quando a opção explícita estiver habilitada;
-- a extensão não recebe API Key, cookie, senha ou conteúdo de outras abas;
-- capturas e fontes ficam em stores locais ignorados pelo Git;
-- sugestões devem permanecer apoiadas por evidências fornecidas pela pessoa usuária;
-- integrações externas e coletas devem ser habilitadas conscientemente.
-
-Consulte [Security & Privacy](docs/06-engineering/security-privacy.md) e
-[Compliance & Ethics](docs/05-data-sources/compliance-and-ethics.md).
-
-## Documentação
-
-A documentação completa está publicada em
-[soturine.github.io/SotuHire](https://soturine.github.io/SotuHire/) e organizada por:
-
-- produto e roadmap;
-- arquitetura e fluxo de dados;
-- regras de negócio e scores;
-- IA e providers;
-- fontes de dados e conectores;
-- engenharia, testes e desenvolvimento.
-
-O histórico de versões fica exclusivamente no [CHANGELOG.md](CHANGELOG.md).
-
-## Contribuição
-
-Contribuições são bem-vindas. Antes de enviar mudanças, execute a suíte de qualidade e consulte o
-[guia de contribuição](docs/07-development/contributing.md).
-
-## Licença
-
-Distribuído sob a licença [Apache 2.0](LICENSE).
+Distribuido sob a licenca [Apache 2.0](LICENSE).
