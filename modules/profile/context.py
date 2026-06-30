@@ -25,6 +25,7 @@ class ProfileContextItem(BaseModel):
     evidence: str | None = None
     confidence: Literal["low", "medium", "high"] = "medium"
     confirmed_by_user: bool = False
+    sensitive: bool = False
 
 
 class ProfileContext(BaseModel):

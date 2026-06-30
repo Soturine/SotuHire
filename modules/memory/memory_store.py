@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from modules.memory.evidence_ranker import rank_evidence
@@ -11,8 +12,9 @@ from modules.memory.schemas import CareerMemoryItem, CareerMemoryQuery, MemoryEx
 class MemoryStore:
     """Persist career memory locally without an external database."""
 
-    def __init__(self, path: str | Path = "data/memory/career-memory.jsonl") -> None:
-        self.path = Path(path)
+    def __init__(self, path: str | Path | None = None) -> None:
+        base = Path(os.getenv("SOTUHIRE_DATA_DIR", "data"))
+        self.path = Path(path) if path is not None else base / "memory" / "career-memory.jsonl"
 
     def add_memory_item(self, item: CareerMemoryItem) -> CareerMemoryItem:
         """Insert or replace an item with the same id."""

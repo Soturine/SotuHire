@@ -233,4 +233,5 @@ def _context_item(item: ProfileItem) -> ProfileContextItem:
         evidence=item.evidence,
         confidence=item.confidence,
         confirmed_by_user=item.confirmed_by_user,
+        sensitive=item.sensitive,
     )
