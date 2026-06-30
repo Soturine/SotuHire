@@ -229,6 +229,8 @@ def _context_query(
             *profile_context.skills,
             *profile_context.projects,
             *profile_context.experiences,
+            *profile_context.academic_experiences,
+            *profile_context.education,
             *profile_context.certifications_and_registries,
         ]
     ]
@@ -252,6 +254,13 @@ def _allowed_memory_kinds(
         "preference",
         "job_analysis",
         "feedback",
+        "academic",
+        "lattes",
+        "publication",
+        "research_project",
+        "extension_project",
+        "teaching_experience",
+        "technical_production",
     }
     if include_tracker:
         base.update({"tracker_event", "opportunity"})
@@ -260,9 +269,29 @@ def _allowed_memory_kinds(
     if include_github:
         base.update({"github_profile", "github_repo", "portfolio", "project_evidence"})
     if purpose == CareerContextPurpose.GITHUB:
-        base.update({"commit_analysis", "readme_analysis"})
+        base.update({"commit_analysis", "readme_analysis", "portfolio_academic"})
     if purpose == CareerContextPurpose.EXTENSION:
         base.update({"opportunity", "project", "portfolio", "github_repo", "project_evidence"})
+    if purpose in {
+        CareerContextPurpose.ACADEMIC,
+        CareerContextPurpose.LATTES,
+        CareerContextPurpose.PUBLIC_EXAMS,
+    }:
+        base.update(
+            {
+                "academic_profile",
+                "curriculum_lattes",
+                "education",
+                "research_project",
+                "publication",
+                "journal_article",
+                "conference_paper",
+                "technical_production",
+                "teaching_experience",
+                "scholarship",
+                "grant",
+            }
+        )
     return base
 
 

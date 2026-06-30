@@ -54,6 +54,41 @@ def test_context_includes_universal_profile_evidence(tmp_path: Path) -> None:
     assert context.evidence[0].confirmed_by_user is True
 
 
+def test_context_includes_academic_lattes_evidence(tmp_path: Path) -> None:
+    engine, profile_store, _ = _engine(tmp_path)
+    profile_store.save_active(
+        UniversalCareerProfile(
+            target_roles=["Pesquisadora em Geofísica"],
+            items=[
+                ProfileItem(
+                    type="journal_article",
+                    title="Artigo sobre ionosfera",
+                    evidence="Artigo publicado em periódico com DOI 10.1234/abc.def.",
+                    source="curriculum_lattes",
+                    source_ref="10.1234/abc.def",
+                    confidence="high",
+                    confirmed_by_user=True,
+                ),
+                ProfileItem(
+                    type="research_project",
+                    title="Projeto PIBIC em ionosfera",
+                    evidence="Projeto de pesquisa com análise de dados em Python.",
+                    source="curriculum_lattes",
+                    confidence="high",
+                    confirmed_by_user=True,
+                ),
+            ],
+        )
+    )
+
+    context = engine.build(CareerContextPurpose.ACADEMIC, query="pesquisa ionosfera Python")
+
+    assert context.purpose == CareerContextPurpose.ACADEMIC
+    assert any(item.kind == "journal_article" for item in context.evidence)
+    assert any(item.kind == "research_project" for item in context.evidence)
+    assert all(item.source == "curriculum_lattes" for item in context.evidence[:2])
+
+
 def test_context_includes_rag_evidence_when_query_matches(tmp_path: Path) -> None:
     engine, _, memory_store = _engine(tmp_path)
     memory_store.add_memory_item(

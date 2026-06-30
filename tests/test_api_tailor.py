@@ -48,3 +48,37 @@ def test_resume_tailor_reports_career_context_usage(tmp_path, monkeypatch) -> No
     payload = response.json()["data"]
     assert payload["context_evidence_count"] >= 1
     assert "API FastAPI" in payload["context_summary"]
+
+
+def test_resume_tailor_uses_academic_context_without_inventing_experience(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    client = api_client()
+    profile = client.post(
+        "/api/v1/profile/items",
+        json={
+            "type": "research_project",
+            "title": "Projeto PIBIC em ionosfera",
+            "evidence": "Projeto acadêmico de pesquisa com análise de dados em Python.",
+            "source": "curriculum_lattes",
+        },
+    )
+    assert profile.status_code == 200
+
+    response = client.post(
+        "/api/v1/resume/tailor",
+        json={
+            "target_role": "Estágio em pesquisa aplicada",
+            "job_text": "Vaga pede pesquisa, Python e relatórios técnicos.",
+            "evidence_text": "Sem experiência profissional formal.",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["context_evidence_count"] >= 1
+    serialized = str(payload).lower()
+    assert "projeto pibic em ionosfera" in serialized
+    assert "invente" in serialized or "somente" in serialized or "verdade" in serialized

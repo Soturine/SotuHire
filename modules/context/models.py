@@ -23,6 +23,9 @@ class CareerContextPurpose(StrEnum):
     EXTENSION = "extension"
     GITHUB = "github"
     DASHBOARD = "dashboard"
+    ACADEMIC = "academic"
+    LATTES = "lattes"
+    PUBLIC_EXAMS = "public_exams"
 
 
 class CareerContextEvidence(BaseModel):

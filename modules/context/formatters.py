@@ -132,8 +132,37 @@ def profile_context_from_career_context(context: CareerContext) -> ProfileContex
     return ProfileContext(
         career_goals=list(context.goals),
         skills=[item for item in items if item.type in {"skill", "technical_skill", "tool"}],
-        projects=[item for item in items if item.type in {"project", "portfolio"}],
+        projects=[
+            item
+            for item in items
+            if item.type
+            in {
+                "project",
+                "portfolio",
+                "research_project",
+                "portfolio_academic",
+                "technical_production",
+            }
+        ],
         experiences=[item for item in items if "experience" in item.type],
+        academic_experiences=[
+            item
+            for item in items
+            if item.type
+            in {
+                "academic_profile",
+                "curriculum_lattes",
+                "research_project",
+                "extension_project",
+                "publication",
+                "journal_article",
+                "conference_paper",
+                "teaching_experience",
+                "scientific_initiation",
+                "technical_production",
+                "portfolio_academic",
+            }
+        ],
         certifications_and_registries=[
             item
             for item in items
@@ -158,12 +187,55 @@ def profile_evidence_candidates_from_github_report(
 ) -> list[CareerContextEvidence]:
     """Return review-only profile evidence candidates from a GitHub analysis report."""
     candidates: list[CareerContextEvidence] = []
+    academic_markers = {
+        "academico",
+        "acadêmico",
+        "pesquisa",
+        "artigo",
+        "tcc",
+        "iniciacao cientifica",
+        "iniciação científica",
+        "mestrado",
+        "doutorado",
+        "laboratorio",
+        "laboratório",
+        "extensao",
+        "extensão",
+        "dataset",
+        "notebook",
+        "simulacao",
+        "simulação",
+        "relatorio tecnico",
+        "relatório técnico",
+    }
+    corpus = normalize_text(
+        " ".join(
+            [
+                report.repository_identity.name,
+                report.executive_summary.short_summary,
+                report.executive_summary.professional_summary,
+                report.executive_summary.recruiter_summary,
+                *report.portfolio_value.career_strengths,
+                *report.portfolio_value.how_to_present_in_interview,
+                *[skill.skill for skill in report.portfolio_value.skills_demonstrated],
+            ]
+        )
+    )
+    academic_kind = (
+        "portfolio_academic"
+        if any(marker in corpus for marker in academic_markers)
+        else "portfolio"
+    )
     for bullet in report.resume_evidence.safe_resume_bullets[:5]:
         candidates.append(
             CareerContextEvidence(
-                title="Evidencia de portfolio GitHub",
+                title=(
+                    "Evidência acadêmica de portfólio GitHub"
+                    if academic_kind == "portfolio_academic"
+                    else "Evidência de portfólio GitHub"
+                ),
                 content=bullet.bullet,
-                kind="portfolio",
+                kind=academic_kind,
                 source=report.repository_identity.url or "github",
                 confidence="high" if bullet.confidence >= 0.75 else "medium",
                 confirmed_by_user=False,
@@ -180,7 +252,7 @@ def profile_evidence_candidates_from_github_report(
             CareerContextEvidence(
                 title=skill.skill,
                 content="Skill detectada em arquivos do repositorio; revisar antes de salvar.",
-                kind="skill",
+                kind="technical_production" if academic_kind == "portfolio_academic" else "skill",
                 source=report.repository_identity.url or "github",
                 confidence="high" if skill.confidence >= 0.75 else "medium",
                 confirmed_by_user=False,
@@ -217,6 +289,20 @@ def _visible_evidence(
 
 
 def _memory_kind(kind: str) -> MemoryKind | None:
+    aliases = {
+        "academic": "education",
+        "academic_profile": "education",
+        "curriculum_lattes": "education",
+        "publication": "project_evidence",
+        "journal_article": "project_evidence",
+        "conference_paper": "project_evidence",
+        "research_project": "project",
+        "extension_project": "project",
+        "technical_production": "project_evidence",
+        "portfolio_academic": "portfolio",
+        "teaching_experience": "experience",
+    }
+    kind = aliases.get(kind, kind)
     allowed: set[MemoryKind] = {
         "resume",
         "project",
