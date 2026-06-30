@@ -1,6 +1,6 @@
-# SotuHire Web
+﻿# SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versao `v1.9.1`.
+Frontend moderno do SotuHire em `apps/web` para a versão `v1.9.2`.
 
 ## Stack
 
@@ -15,9 +15,9 @@ Frontend moderno do SotuHire em `apps/web` para a versao `v1.9.1`.
 - lucide-react
 - Playwright para smoke/E2E/cross-browser
 
-## Rodar localmente
+## Rodar Localmente
 
-Fluxo principal, a partir da raiz do repositorio:
+Fluxo principal, a partir da raiz do repositório:
 
 ```powershell
 .\start-sotuhire.ps1
@@ -35,11 +35,11 @@ Manual:
 ```powershell
 python scripts/run_api.py
 cd apps/web
-npm install
+npm ci
 npm run dev
 ```
 
-Build e validacao:
+Build e validação:
 
 ```powershell
 cd apps/web
@@ -50,51 +50,50 @@ npm run test:e2e
 npm run test:e2e:cross-browser
 ```
 
-Para iniciar tambem a Local Companion API usada pela extensao assistiva:
+Para iniciar também a Local Companion API usada pela extensão assistiva:
 
 ```powershell
 .\start-sotuhire.ps1 -WithCompanion
 ```
 
-## Configuracao da API
+## Configuração da API
 
-Crie um `.env.local` local se quiser trocar a URL padrao:
+Crie um `.env.local` local se quiser trocar a URL padrão:
 
 ```env
 VITE_SOTUHIRE_API_URL=http://127.0.0.1:8787/api/v1
 ```
 
-O padrao do app e `http://127.0.0.1:8787/api/v1`.
+O padrão do app é `http://127.0.0.1:8787/api/v1`.
 
 ## Modos
 
-- **Modo Demo:** usa dados ficticios locais para explorar todas as telas.
+- **Modo Demo:** usa dados fictícios locais para explorar todas as telas.
 - **Modo API Real:** consulta a FastAPI local em `/api/v1` e espera o envelope `{ ok, data, warnings, request_id }`.
 
-O frontend nao calcula score real, nao move regra de negocio para o cliente e nao salva segredos. A
-URL e o modo selecionados ficam apenas no estado da sessao aberta do app.
+O frontend não calcula score real, não move regra de negócio para o cliente e não salva segredos. A URL e o modo selecionados ficam apenas no estado da sessão aberta do app.
 
 ## Telas
 
-- Home/Landing
-- Dashboard
-- Curriculo
+- Home/Dashboard
+- Currículo
 - Vaga
-- Analise de Compatibilidade
-- Analise ATS
-- Ajuste de Curriculo
-- Analise de GitHub
+- Análise de Compatibilidade
+- Análise ATS
+- Ajuste de Currículo
+- Análise de GitHub
 - Radar de Vagas
-- Perfil
+- Perfil Profissional Universal
+- Acadêmico / Lattes
 - Candidaturas
-- Inteligencia de Candidaturas
+- Inteligência de Candidaturas
 - Fontes e Captura
-- Configuracoes
+- Configurações
 - Privacidade
 
 ## IA e Providers
 
-A secao **IA e Providers** em Configuracoes usa endpoints reais da API local:
+A seção **IA e Providers** em Configurações usa endpoints reais da API local:
 
 ```txt
 GET /api/v1/settings/ai
@@ -104,9 +103,7 @@ POST /api/v1/settings/ai/test
 DELETE /api/v1/settings/ai
 ```
 
-A chave digitada e enviada somente para o backend local e limpa do estado do componente apos salvar.
-Ela nao e persistida em `localStorage`, `sessionStorage` ou bundle publico. A API nunca retorna a
-chave; retorna apenas provider, modelo, `configured`, `status`, toggles, warnings e `updated_at`.
+A chave digitada é enviada somente para o backend local e limpa do estado do componente após salvar. Ela não é persistida em `localStorage`, `sessionStorage` ou bundle público. A API nunca retorna a chave; retorna apenas provider, modelo, `configured`, `status`, toggles, warnings e `updated_at`.
 
 Estados exibidos na UI:
 
@@ -114,35 +111,26 @@ Estados exibidos na UI:
 IA desativada
 Provider local
 Provider configurado
-Provider nao configurado
+Provider não configurado
 Analisando com IA
 Fallback local
 Limite/erro do provider
 Timeout do provider
-Chave invalida
+Chave inválida
 ```
 
-## Kanban e responsividade
-
-O Kanban de Candidaturas usa status reais do backend, drag-and-drop visual, rollback quando a API
-falha e select de status como alternativa para teclado/mobile. O teste responsivo valida:
-
-```txt
-Mobile: 390x844
-Tablet: 768x1024
-Desktop: 1440x1000
-```
-
-## Perfil Profissional
+## Perfil Profissional e Lattes
 
 A rota `/profile` implementa o Perfil Profissional Universal:
 
-- edicao de dados basicos;
-- itens com origem, evidencia, confianca e confirmacao do usuario;
+- edição de dados básicos;
+- itens com origem, evidência, confiança e confirmação do usuário;
 - filtro por tipo;
-- edicao inline de titulo, dominio e evidencia;
-- importacao de texto de curriculo, Lattes, portfolio, certificados e notas;
-- revisao de itens extraidos antes de adicionar ao perfil.
+- edição inline de título, domínio e evidência;
+- importação de texto de currículo, portfólio, certificados e notas;
+- aba **Acadêmico / Lattes** para texto colado do Currículo Lattes;
+- extração de formação, pesquisa, publicações, extensão, docência, monitoria, eventos, prêmios, bolsas e produção técnica/artística;
+- revisão de itens extraídos antes de adicionar ao Perfil.
 
 Endpoints usados:
 
@@ -151,140 +139,78 @@ GET/PUT /api/v1/profile
 POST /api/v1/profile/items
 PATCH/DELETE /api/v1/profile/items/{id}
 POST /api/v1/profile/import-text
+POST /api/v1/profile/import-lattes
+POST /api/v1/profile/lattes/draft
+POST /api/v1/profile/lattes/confirm
 POST /api/v1/profile/deduplicate
 GET /api/v1/profile/context
 ```
 
-O frontend nao confirma automaticamente itens vindos de IA/fallback e nao envia segredos ao backend.
+O frontend não confirma automaticamente itens vindos de IA/fallback e não envia segredos ao backend. O Lattes é aceito por texto colado; o app não faz login, scraping autenticado ou crawler do Lattes.
 
-## Fontes e Captura
+## Fontes, Captura e Extensão
 
-A tela **Fontes e Captura** inclui o fluxo `AUTHENTICATED_BROWSER` existente no backend local:
+A tela **Fontes e Captura** inclui importadores, Caixa de Entrada, Diretório de Fontes, fluxo da extensão assistiva e o fluxo `AUTHENTICATED_BROWSER` existente no backend local:
 
 - testa o CDP local em `http://127.0.0.1:9222`;
 - abre um Chromium dedicado para login manual;
-- exige confirmacao de uso autorizado antes de coletar;
+- exige confirmação de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-A v1.8.2 nao altera scraper autenticado, Chromium/CDP, crawler logado, login manual, auto-apply ou
-regras protegidas.
+O painel **Extensão Local** consulta `/api/v1/extension/status`, `/api/v1/extension/captures` e `/api/v1/extension/context`. Ele mostra capturas salvas pela Local Companion API, permite enviar para Vaga/GitHub/Candidaturas e gera candidatos revisáveis para o Perfil.
 
-O painel **Extensao Local** consulta `/api/v1/extension/status` e `/api/v1/extension/captures` para
-mostrar capturas ja salvas pela Local Companion API. Ele mostra status do companion, ultima
-sincronizacao, origem, URL, data, tipo de captura e acoes para Vaga, GitHub Analysis e
-Candidaturas. A v1.8.2 tambem permite marcar capturas locais como revisadas, ignoradas ou
-arquivadas sem tocar em browser autenticado.
-
-Na v1.8.2, a API tambem expoe `POST /api/v1/sources/authenticated-captures` para captura assistida
-autenticada iniciada pelo usuario. O payload aceita texto visivel ou selecionado e salva o item na
-Caixa de Entrada para revisao. A API rejeita metadados com cookie, token, sessao, headers ou
-segredos.
-
-### Caixa de Entrada e importadores
-
-Fontes e Captura inclui a **Caixa de Entrada de Oportunidades** para revisar entradas antes de
-analisar ou salvar:
-
-- texto colado manualmente;
-- link manual com leitura publica simples;
-- CSV com campos `cargo,empresa,link,local,descricao,fonte,status,observacoes`;
-- JSON com os mesmos campos ou aliases em ingles;
-- capturas da extensao/local companion.
-
-O painel oferece busca, filtros por status/origem, deduplicacao local e acoes para **Importar para
-Vaga**, **Salvar em Candidaturas**, **Copiar link**, **Arquivar** e **Ignorar**.
-
-Na v1.8.2, CSV/JSON tambem podem ser enviados por upload do navegador. O app mostra preview das
-primeiras linhas/itens e so importa depois de confirmacao. A Caixa tambem exporta todos, filtrados
-ou selecionados em CSV/JSON, e a comparacao de duplicatas permite **Mesclar**, **Manter separado**,
-**Arquivar novo** ou **Marcar como nao duplicata** preservando historico.
-
-O **Diretório de Fontes** organiza paginas de carreira abertas, feeds RSS publicos, APIs oficiais,
-CSV/JSON recorrente, links manuais e fontes observadas. Na v1.8.2, feeds RSS/Atom publicos podem
-ser configurados e atualizados manualmente pelo **Radar de Vagas**. APIs oficiais continuam como
-estrutura planejada ate existir conector documentado.
-
-O importador de URL nao faz crawler amplo. Se uma pagina bloquear acesso, exigir login ou nao
-permitir leitura publica simples, a API retorna um aviso para abrir a pagina manualmente e colar o
-texto da vaga.
+A extensão não acessa a API key do app, não coleta cookies, tokens, sessão, headers ou storage de terceiros e não automatiza candidatura.
 
 ## Radar de Vagas
 
-A tela `/radar` implementa o fluxo v1.9.0:
+A tela `/radar` permite:
 
-- criar wishlist com cargos, skills, locais, modelo de trabalho e score minimo;
+- criar wishlist com cargos, skills, locais, modelo de trabalho e score mínimo;
 - criar rascunho de wishlist a partir de texto livre com IA/local;
-- adicionar fonte RSS/Atom publica;
+- usar Perfil Profissional Universal como contexto opcional;
+- adicionar fonte RSS/Atom pública;
 - registrar API oficial planejada via adapter seguro;
 - rodar Radar manualmente;
-- revisar resultados, evidencias, lacunas e alertas;
-- criar agendamentos locais do Radar;
+- revisar resultados, evidências, lacunas e alertas;
+- criar e pausar agendamentos locais;
 - executar agendamento agora;
-- pausar/reativar agendas;
-- consultar historico de runs agendadas;
-- revisar notificacoes locais/in-app.
+- consultar histórico de runs agendadas;
+- revisar notificações locais/in-app.
 
-Agendamentos rodam somente enquanto a API local esta aberta. Eles respeitam quiet hours, cooldown,
-Perfil Profissional Universal opcional e revisao humana. O frontend nao agenda auto-apply, nao
-coleta segredo e nao salva candidatura final sem acao do usuario.
+Agendamentos rodam somente enquanto a API local está aberta. Eles respeitam quiet hours, cooldown, Perfil Profissional Universal opcional e revisão humana. O frontend não agenda auto-apply, não coleta segredo e não salva candidatura final sem ação do usuário.
 
-Endpoints adicionais da v1.9.0:
+## Kanban e Responsividade
 
-```txt
-GET/POST/PATCH/DELETE /api/v1/radar/schedules
-POST /api/v1/radar/schedules/{id}/run-now
-GET /api/v1/radar/scheduled-runs
-GET/POST /api/v1/radar/scheduler/status|start|stop
-GET/PATCH /api/v1/notifications/{id}
-POST /api/v1/notifications/mark-all-read
-DELETE /api/v1/notifications/read
-```
-- salvar resultado na Caixa de Entrada ou em Candidaturas.
-
-Endpoints usados:
+O Kanban de Candidaturas usa status reais do backend, drag-and-drop visual, rollback quando a API falha e select de status como alternativa para teclado/mobile. O teste responsivo valida:
 
 ```txt
-GET/POST/PATCH/DELETE /api/v1/radar/wishlists
-POST /api/v1/radar/wishlists/draft
-GET/POST/PATCH/DELETE /api/v1/radar/sources
-POST /api/v1/radar/run
-GET /api/v1/radar/runs
-GET/PATCH /api/v1/radar/results
-POST /api/v1/radar/results/{id}/save-inbox
-POST /api/v1/radar/results/{id}/save-tracker
-GET/PATCH /api/v1/radar/alerts
-GET /api/v1/radar/stats
+Mobile: 390x844
+Tablet: 768x1024
+Desktop: 1440x1000
 ```
 
-O score final do Radar fica no backend. IA, quando habilitada, apenas explica o match via
-`job_radar_match_explanation_v1` e cria rascunho de wishlist via `job_wishlist_builder_v1`. Se o
-provider falhar, o app cai para local. A wishlist nunca e salva automaticamente.
-
-Quando `use_profile_context=true`, o draft da wishlist usa o Perfil Profissional persistido pelo
-backend e mostra badge de contexto aplicado na tela.
-
-## Testes e screenshots
+## Testes e Screenshots
 
 ```powershell
 cd apps/web
 npm run test:e2e
 ```
 
-O Playwright cobre Home, Dashboard, fluxo guiado, demos de analise, IA Settings, Fontes e Captura,
-Kanban, cross-browser em Chromium/Firefox/WebKit e ausencia de branding legado publico. O spec
-`visual-capture.spec.ts` gera screenshots em:
+O Playwright cobre Home, Dashboard, fluxo guiado, demos de análise, IA Settings, Perfil/Lattes, Fontes e Captura, Kanban, cross-browser em Chromium/Firefox/WebKit e ausência de branding legado público.
+
+`scripts/capture_web_walkthrough.py` gera screenshots e GIF atuais em:
 
 ```txt
-docs/assets/screenshots/sotuhire-v1.8-web-*.png
+docs/assets/screenshots/
 ```
 
-Todos usam viewport `1440x1000`, `deviceScaleFactor=1` e `fullPage=false`.
+## Segurança e Limites
 
-## Seguranca e limites
-
-- Sem auto apply.
-- Sem automacao de LinkedIn, Gupy ou plataformas similares.
-- Sem API keys em `localStorage`, `sessionStorage` ou bundle publico.
-- GitHub Pages continua estatico/demo-oriented.
-- Backend/core continuam responsaveis por regras, score e validacoes.
-- Streamlit permanece disponivel como modo legado/dev/local debug.
+- Sem auto-apply.
+- Sem automação de LinkedIn, Gupy ou plataformas similares.
+- Sem login ou scraping autenticado do Lattes.
+- Sem inscrição automática em concursos ou editais.
+- Sem API keys em `localStorage`, `sessionStorage` ou bundle público.
+- GitHub Pages continua estático/demo-oriented.
+- Backend/core continuam responsáveis por regras, score e validações.
+- Streamlit permanece disponível como modo legado/dev/local debug.

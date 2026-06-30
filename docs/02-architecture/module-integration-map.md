@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.9.1 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.9.2 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -20,7 +20,7 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | --- | --- | --- | --- | --- | --- |
 | Currículo | `/resume` | `POST /api/v1/resume/extract` | `extract_resume` | `modules/parsers`, structured extractor | Real |
 | Vaga | `/job` | `POST /api/v1/job/extract` | `extract_job` | `modules/parsers`, structured extractor | Real |
-| Career Context Engine | varios fluxos | consumo interno | services API | `modules/context`, `modules/profile`, `modules/memory` | Real |
+| Career Context Engine | vários fluxos | consumo interno | services API | `modules/context`, `modules/profile`, `modules/memory` | Real |
 | Compatibilidade | `/match` | `POST /api/v1/match/analyze` | `analyze_match` | `modules/analyzer`, `modules/matching` | Real |
 | ATS | `/ats` | `POST /api/v1/ats/analyze` | `analyze_ats` | `modules/ats` | Real |
 | Tailor | `/tailor` | `POST /api/v1/resume/tailor` | `tailor_resume` | `modules/resume_tailor` | Real |
@@ -32,11 +32,12 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Radar de Vagas | `/radar` | `/api/v1/radar/*` | `apps.api.services.radar` | `modules/radar`, `modules/scraping`, `modules/sources`, `modules/tracker` | Real |
 | Wishlist com IA/local | `/radar` | `POST /api/v1/radar/wishlists/draft` | `radar_draft_wishlist` | `modules/radar/wishlist_draft.py`, `modules/profile/context.py`, Prompt Registry | Real |
 | Perfil Profissional Universal | `/profile` | `/api/v1/profile*` | `apps.api.services.profile` | `modules/profile` | Real |
+| Acadêmico / Lattes | `/profile` | `/api/v1/profile/import-lattes`, `/lattes/draft`, `/lattes/confirm` | `apps.api.services.profile` | `modules/academic`, `modules/profile`, `modules/context` | Real |
 | Extensão Local | `/sources` | `/api/v1/extension/*` | `apps.api.services.extension` | `modules/local_api`, `browser-extension/` | Real |
 | Navegador autenticado autorizado | `/sources` | `/api/v1/sources/authenticated-browser/*` | `apps.api.services.sources` | fluxo existente de scraping local | Parcial |
 | Captura assistida autenticada | `/sources` | `POST /api/v1/sources/authenticated-captures` | `apps.api.services.sources` | `modules/sources`, `modules/profile` | Real |
 | Streamlit | legado/dev | Não é API web | `app.py`, `modules/ui` | core antigo | Legado |
-| Concursos/Editais | sem tela web | sem endpoint web | Parcial | `modules/public_exams` | Roadmap |
+| Concursos/Editais | sem tela web | sem endpoint web | Parcial | `modules/public_exams`, `docs/02-architecture/public-exams-foundation.md` | Fundação documental |
 
 ## Roteamento de IA
 
@@ -71,7 +72,12 @@ Endpoints FastAPI:
 ```txt
 GET  /api/v1/extension/status
 GET  /api/v1/extension/captures
+GET  /api/v1/extension/context
 GET  /api/v1/extension/profile-analysis
+POST /api/v1/extension/captures/{capture_id}/profile-candidates
+POST /api/v1/extension/captures/{capture_id}/add-to-profile
+POST /api/v1/extension/projects/{project_id}/profile-candidates
+POST /api/v1/extension/projects/{project_id}/add-to-profile
 POST /api/v1/extension/import/job
 POST /api/v1/extension/import/github
 POST /api/v1/extension/import/tracker
@@ -82,7 +88,7 @@ A ponte lê o store local da Local Companion API e permite importar capturas par
 Candidaturas. Ela não reimplementa crawler logado, não controla contas de terceiros e não altera o
 browser autenticado existente.
 
-## Importadores e historico v1.7.1
+## Importadores e histórico v1.7.1
 
 Endpoints FastAPI:
 
@@ -106,17 +112,17 @@ GET    /api/v1/sources/stats
 `modules/sources/imports.py` centraliza o store local de fontes e capturas:
 
 - `JobSource`: fonte configurada ou observada;
-- `JobImport`: evento de importacao;
+- `JobImport`: evento de importação;
 - `CaptureRecord`: registro persistente da oportunidade;
 - `OpportunityInboxItem`: item exibido na Caixa de Entrada;
-- `ImportBatch`: resumo de importacao CSV/JSON/texto/link;
-- `DuplicateCandidate`: possivel duplicata explicavel.
-- `JobSourceDirectory`: fonte publica/oficial/manual segura para descoberta futura.
-- `SourceExportResult`: payload local de exportacao CSV/JSON.
+- `ImportBatch`: resumo de importação CSV/JSON/texto/link;
+- `DuplicateCandidate`: possível duplicata explicável.
+- `JobSourceDirectory`: fonte pública/oficial/manual segura para descoberta futura.
+- `SourceExportResult`: payload local de exportação CSV/JSON.
 
 O fluxo usa parser local para extrair vaga, preserva texto original, normaliza dedupe key e conecta
 o item ao tracker quando a pessoa escolhe **Salvar em Candidaturas**. A v1.7.1 permite IA opcional
-para enriquecer tags, dominio, senioridade e resumo via `source_import_enrichment_v1`, sempre com
+para enriquecer tags, domínio, senioridade e resumo via `source_import_enrichment_v1`, sempre com
 fallback local e sem retornar segredo ao frontend.
 
 ## Radar de Vagas v1.8.0
@@ -190,6 +196,9 @@ POST   /api/v1/profile/items
 PATCH  /api/v1/profile/items/{item_id}
 DELETE /api/v1/profile/items/{item_id}
 POST   /api/v1/profile/import-text
+POST   /api/v1/profile/import-lattes
+POST   /api/v1/profile/lattes/draft
+POST   /api/v1/profile/lattes/confirm
 POST   /api/v1/profile/deduplicate
 GET    /api/v1/profile/context
 ```
@@ -206,17 +215,20 @@ O prompt `profile_items_extractor_v1` é opcional e sempre retorna itens para re
 frontend `/profile` permite editar dados básicos, adicionar item manual, filtrar por tipo, editar
 evidências, importar texto e revisar drafts.
 
+O fluxo **Acadêmico / Lattes** usa `modules/academic` para transformar texto colado em candidatos
+revisáveis de `ProfileItem`. Gemini pode atuar como extrator assistido quando configurado, mas a
+resposta sempre exige revisão humana e cai para parser local quando falha.
+
 O `CareerContextEngine` usa `ProfileContextOrchestrator` e `MemoryRetriever` para entregar um
-contexto compacto por proposito. Wishlist, Radar, Scheduler, Match, ATS, Tailor, Tracker, Fontes,
-Notificacoes, Extensao e GitHub/Portfolio consultam essa camada. Dados do perfil/memoria so entram em
-provider externo quando `allow_memory_context=true`; evidencias sensiveis sao omitidas do payload
-externo.
+contexto compacto por propósito. Wishlist, Radar, Scheduler, Match, ATS, Tailor, Tracker, Fontes,
+Notificações, Extensão, Lattes/acadêmico e GitHub/Portfólio consultam essa camada. Dados do
+perfil/memória só entram em provider externo quando `allow_memory_context=true`; evidências
+sensíveis são omitidas do payload externo.
 
-Capturas e projetos da extensao agora podem gerar candidatos revisaveis de `ProfileItem` com
-`source_ref` local. Nada e salvo no Perfil Universal antes de confirmacao humana.
+Capturas e projetos da extensão agora podem gerar candidatos revisáveis de `ProfileItem` com
+`source_ref` local. Nada é salvo no Perfil Universal antes de confirmação humana.
 
-Leia tambem [Career Context Engine](career-context-engine.md) e
-[Extension Profile Bridge](extension-profile-bridge.md).
+Leia também [Career Context Engine](career-context-engine.md), [Extension Profile Bridge](extension-profile-bridge.md) e [Fundação para Editais e Concursos](public-exams-foundation.md).
 
 ## Captura Assistida Autenticada v1.8.2
 

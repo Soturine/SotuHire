@@ -24,8 +24,10 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [v1.8.2 Universal Career Profile](07-development/v1.8.2-universal-career-profile.md)
 - [v1.9.0 Scheduled Radar and Notifications](07-development/v1.9.0-scheduled-radar-notifications.md)
 - [v1.9.1 Release Integrity and Context Unification](07-development/v1.9.1-release-integrity-readme-context-unification.md)
+- [v1.9.2 Lattes and Academic Profile](07-development/v1.9.2-lattes-ai-universal-profile.md)
 - [Career Context Engine](02-architecture/career-context-engine.md)
 - [Extension Profile Bridge](02-architecture/extension-profile-bridge.md)
+- [Fundação para Editais e Concursos](02-architecture/public-exams-foundation.md)
 
 ## Frontend-ready
 
@@ -68,6 +70,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 
 - [Prompt Catalog](04-ai/prompt-catalog.md)
 - [Prompts individuais](04-ai/prompts/README.md)
+- [Prompt Lattes Extractor v1](04-ai/prompts/profile-lattes-extractor-v1.md)
 - [QA Testing](06-engineering/qa-testing.md)
 - [CI/CD](06-engineering/ci-cd.md)
 - [Security Privacy](06-engineering/security-privacy.md)

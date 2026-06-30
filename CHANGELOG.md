@@ -1,65 +1,91 @@
-# Changelog
+﻿# Changelog
 
 Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
+
+## [1.9.2] - 2026-06-30
+
+### Adicionado
+
+- `modules/academic` com parser local de texto colado do Currículo Lattes.
+- Endpoints `/api/v1/profile/import-lattes`, `/api/v1/profile/lattes/draft` e `/api/v1/profile/lattes/confirm`.
+- Prompt `profile_lattes_extractor_v1` para extração acadêmica assistida por Gemini.
+- Seção **Acadêmico / Lattes** na rota `/profile`.
+- Evidências acadêmicas no Career Context Engine com purposes `academic`, `lattes` e `public_exams`.
+- Fundação documental para editais e concursos.
+
+### Alterado
+
+- README e docs principais revisados com português, acentos e linguagem mais consistente.
+- ATS, Tailor e GitHub/Portfólio passam a considerar evidências acadêmicas confirmadas no Perfil Profissional Universal.
+- Roadmap, MkDocs, índice documental e catálogo de prompts documentam Lattes/acadêmico.
+- Versão do projeto, API e frontend atualizada para `1.9.2`.
+
+### Segurança
+
+- Nada extraído do Lattes é salvo sem revisão humana.
+- Gemini atua como extrator assistido, não como fonte de verdade.
+- Sem login, scraping autenticado ou crawler do Lattes.
+- Sem inscrição automática em concursos ou editais.
+- Sem alteração no fluxo `/api/v1/sources/authenticated-browser/*`.
 
 ## [1.9.1] - 2026-06-30
 
 ### Adicionado
 
 - `modules/context` com Career Context Engine para Perfil Universal, RAG local e sinais do produto.
-- Formatadores de contexto para prompts locais/externos, evidencias do Match Engine e candidatos de perfil vindos de GitHub/Portfolio.
-- Integracao inicial de contexto em Wishlist, Radar, Scheduler, Match, ATS, Tailor, Tracker, Fontes, Notificacoes e GitHub/Portfolio.
-- Testes para engine, deduplicacao, RAG local, privacidade, APIs de contexto e README.
+- Formatadores de contexto para prompts locais/externos, evidências do Match Engine e candidatos de perfil vindos de GitHub/Portfólio.
+- Integração inicial de contexto em Wishlist, Radar, Scheduler, Match, ATS, Tailor, Tracker, Fontes, Notificações e GitHub/Portfolio.
+- Testes para engine, deduplicação, RAG local, privacidade, APIs de contexto e README.
 - Script `scripts/capture_web_walkthrough.py` para screenshots/GIF do frontend web moderno.
-- Documentacao do Career Context Engine e release notes v1.9.1.
+- Documentação do Career Context Engine e release notes v1.9.1.
 
 ### Alterado
 
-- README reestruturado como pagina profissional do projeto, sem secoes internas presas a versoes antigas.
-- Screenshots e GIF principais agora usam nomes sem versao.
-- `MemoryStore()` passa a respeitar `SOTUHIRE_DATA_DIR` por padrao.
-- Roadmap, mapa de integracao, indice documental e MkDocs atualizados para refletir contexto unificado.
-- Versao do projeto, API e frontend atualizada para `1.9.1`.
+- README reestruturado como página profissional do projeto, sem seções internas presas a versões antigas.
+- Screenshots e GIF principais agora usam nomes sem versão.
+- `MemoryStore()` passa a respeitar `SOTUHIRE_DATA_DIR` por padrão.
+- Roadmap, mapa de integração, índice documental e MkDocs atualizados para refletir contexto unificado.
+- Versão do projeto, API e frontend atualizada para `1.9.1`.
 
 ### Corrigido
 
 - Tag `v1.9.0` revisada no commit final da main com `package-lock.json` validado.
-- Validacao do lockfile do frontend confirmada com `npm ci`.
+- Validação do lockfile do frontend confirmada com `npm ci`.
 
-### Seguranca
+### Segurança
 
-- Contexto sensivel e omitido de payload externo.
-- Dados de perfil/memoria so vao para provider externo quando `allow_memory_context=true`.
-- GitHub/Portfolio retorna candidatos de evidencia para revisao, sem salvar automaticamente no Perfil.
-- Nenhum fluxo de authenticated browser, Chromium/CDP, cookie, token, sessao, headers, CAPTCHA ou auto-apply foi alterado.
+- Contexto sensível é omitido de payload externo.
+- Dados de perfil/memória só vão para provider externo quando `allow_memory_context=true`.
+- GitHub/Portfólio retorna candidatos de evidência para revisão, sem salvar automaticamente no Perfil.
+- Nenhum fluxo de authenticated browser, Chromium/CDP, cookie, token, sessão, headers, CAPTCHA ou auto-apply foi alterado.
 
 ## [1.9.0] - 2026-06-29
 
 ### Adicionado
 
 - Scheduler local do Radar com CRUD em `/api/v1/radar/schedules`.
-- Execucao manual `run now` por agendamento.
-- Historico local de runs agendadas em `/api/v1/radar/scheduled-runs`.
+- Execução manual `run now` por agendamento.
+- Histórico local de runs agendadas em `/api/v1/radar/scheduled-runs`.
 - Runtime local com `/api/v1/radar/scheduler/status`, `start` e `stop`.
-- Quiet hours e cooldown contra notificacoes repetidas.
-- Central local de notificacoes em `/api/v1/notifications`.
-- Secao **Agendamentos** e painel de notificacoes na tela Radar.
+- Quiet hours e cooldown contra notificações repetidas.
+- Central local de notificações em `/api/v1/notifications`.
+- Seção **Agendamentos** e painel de notificações na tela Radar.
 - Uso opcional do Perfil Profissional Universal em agendamentos.
-- Testes backend e E2E para agendamentos, notificacoes e regressao de storage.
+- Testes backend e E2E para agendamentos, notificações e regressão de storage.
 
 ### Alterado
 
 - Health API anuncia capabilities de `scheduled_radar` e `local_notifications`.
-- Radar passa a aceitar fonte `authenticated_assisted_capture` como lembrete agendavel e revisavel.
+- Radar passa a aceitar fonte `authenticated_assisted_capture` como lembrete agendável e revisável.
 - README, roadmap e docs de desenvolvimento documentam v1.9.0.
-- Versao do projeto, API e frontend atualizada para `1.9.0`.
+- Versão do projeto, API e frontend atualizada para `1.9.0`.
 
-### Seguranca
+### Segurança
 
-- Agendamentos nao fazem auto-apply, envio automatico de curriculo ou candidatura.
-- Captura assistida autenticada agendada nao coleta cookie, token, sessao, headers ou storage de terceiros.
+- Agendamentos não fazem auto-apply, envio automático de currículo ou candidatura.
+- Captura assistida autenticada agendada não coleta cookie, token, sessão, headers ou storage de terceiros.
 - API key continua backend-side e nunca retorna ao frontend.
 
 ## [1.8.2] - 2026-06-29
@@ -203,38 +229,38 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 - Caixa de Entrada de Oportunidades em **Fontes e Captura**.
 - Importadores locais por texto, link, CSV e JSON.
-- Historico persistente de capturas/importacoes em store local ignorado pelo Git.
+- Histórico persistente de capturas/importações em store local ignorado pelo Git.
 - Modelos `JobSource`, `JobImport`, `CaptureRecord`, `OpportunityInboxItem`, `ImportBatch` e
   `DuplicateCandidate`.
 - Endpoints `/api/v1/sources/imports*`, `/api/v1/sources/captures*`, `/api/v1/sources/dedupe` e
   `/api/v1/sources/stats`.
-- Deduplicacao local explicavel por URL normalizada, empresa+cargo+localidade e texto normalizado.
-- Acoes para importar oportunidade para Vaga, salvar em Candidaturas e preservar origem no tracker.
-- Historico da extensao/local companion com patch seguro de status local.
-- Screenshots e GIF v1.7 padronizados para os fluxos de importacao.
+- Deduplicação local explicavel por URL normalizada, empresa+cargo+localidade e texto normalizado.
+- Ações para importar oportunidade para Vaga, salvar em Candidaturas e preservar origem no tracker.
+- Histórico da extensão/local companion com patch seguro de status local.
+- Screenshots e GIF v1.7 padronizados para os fluxos de importação.
 - Documento `docs/07-development/v1.7.0-public-sources-importers-capture-history.md`.
 
 ### Alterado
 
 - Fontes e Captura virou fluxo pratico de intake: texto/link/CSV/JSON, filtros, busca, duplicatas e
-  fontes publicas planejadas.
+  fontes públicas planejadas.
 - Cards do tracker preservam contexto de origem ao salvar itens importados.
-- README, docs de frontend, mapa de integracao, visual preview e guia da extensao foram atualizados
+- README, docs de frontend, mapa de integração, visual preview e guia da extensão foram atualizados
   para v1.7.0.
 
-### Seguranca
+### Segurança
 
-- O importador de URL faz apenas leitura publica simples e orienta colar texto quando a pagina
-  bloqueia acesso, exige login ou nao traz conteudo legivel.
-- Nenhum fluxo sensivel de authenticated browser, Chromium/CDP, login manual, crawler logado,
+- O importador de URL faz apenas leitura pública simples e orienta colar texto quando a página
+  bloqueia acesso, exige login ou não traz conteúdo legível.
+- Nenhum fluxo sensível de authenticated browser, Chromium/CDP, login manual, crawler logado,
   CAPTCHA ou auto-apply foi alterado.
 - Nenhum dado real, API key ou segredo foi usado em mocks, testes, docs ou screenshots.
 
-### Validacao
+### Validação
 
-- Testes backend cobrem importacao texto/link/CSV/JSON, dedupe, stats, captura para Vaga e tracker.
-- Playwright cobre Caixa de Entrada, importacoes fake, duplicata, Kanban com origem e ausencia de
-  branding legado publico.
+- Testes backend cobrem importação texto/link/CSV/JSON, dedupe, stats, captura para Vaga e tracker.
+- Playwright cobre Caixa de Entrada, importações fake, duplicata, Kanban com origem e ausencia de
+  branding legado público.
 
 ## [1.6.0] - 2026-06-24
 
@@ -242,33 +268,33 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 - Cobertura E2E cross-browser para Chromium, Firefox e WebKit.
 - QA responsivo para mobile `390x844`, tablet `768x1024` e desktop `1440x1000`.
-- Kanban com drag-and-drop visual, atualizacao otimista e rollback quando a API falha.
-- Historico mais rico da Extensao Local em Fontes e Captura.
-- Estados de IA/fallback mais claros para provider local, configurado, nao configurado, timeout,
+- Kanban com drag-and-drop visual, atualização otimista e rollback quando a API falha.
+- Histórico mais rico da Extensão Local em Fontes e Captura.
+- Estados de IA/fallback mais claros para provider local, configurado, não configurado, timeout,
   limite/erro e chave invalida.
-- Screenshots v1.6 e GIF walkthrough v1.6 com dimensoes padronizadas.
+- Screenshots v1.6 e GIF walkthrough v1.6 com dimensões padronizadas.
 - Documento `docs/07-development/v1.6.0-stability-cross-browser-kanban.md`.
 
 ### Alterado
 
 - Status do Kanban no frontend alinhados aos enums reais do backend.
-- Match, ATS, Tailor e GitHub agora mostram explicabilidade, evidencias usadas e prioridade de
+- Match, ATS, Tailor e GitHub agora mostram explicabilidade, evidências usadas e prioridade de
   melhoria.
 - Launcher Windows detecta portas ocupadas e mostra processo/PID.
 - README raiz, docs de frontend, scripts e visual preview atualizados para v1.6.0.
 
-### Seguranca
+### Segurança
 
 - A chave de IA continua backend-side e nunca retorna ao frontend.
 - Nenhum fluxo de authenticated browser, Chromium/CDP, scraper autenticado, crawler logado ou
   auto-apply foi alterado.
-- Screenshots e mocks usam apenas dados ficticios.
+- Screenshots e mocks usam apenas dados fictícios.
 
-### Validacao
+### Validação
 
 - Playwright executado em Chromium, Firefox e WebKit.
-- Testes backend cobrem metadados seguros da ponte da extensao.
-- Responsividade validada sem overflow horizontal de pagina nas rotas principais.
+- Testes backend cobrem metadados seguros da ponte da extensão.
+- Responsividade validada sem overflow horizontal de página nas rotas principais.
 
 ## [1.5.1] - 2026-06-23
 
@@ -434,7 +460,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
   `GET /api/v1/tracker/sources`.
 - DTOs Pydantic para requests/responses da API, com envelope `ok`, `data`, `warnings` e
   `request_id`.
-- Configuracao local por env: `SOTUHIRE_API_HOST`, `SOTUHIRE_API_PORT` e
+- Configuração local por env: `SOTUHIRE_API_HOST`, `SOTUHIRE_API_PORT` e
   `SOTUHIRE_API_ALLOWED_ORIGINS`.
 - Script `scripts/run_api.py` para subir a API local.
 - Funcoes de Application Intelligence em `modules/tracker/dashboard.py`, incluindo ranking por
@@ -444,25 +470,25 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ### Alterado
 
-- Versao do projeto atualizada para `1.2.0`.
+- Versão do projeto atualizada para `1.2.0`.
 - `docs/08-frontend/api-contract.md` passou a documentar a API real implementada na v1.2.0.
-- Documentacao de arquitetura passou a diferenciar Frontend API Layer e Local Companion API.
+- Documentação de arquitetura passou a diferenciar Frontend API Layer e Local Companion API.
 - README raiz passou a documentar `python scripts/run_api.py`, OpenAPI e `/api/v1`.
-- Dependencias FastAPI/Uvicorn/HTTPX foram adicionadas em `docs/requirements/requirements.txt`.
+- Dependências FastAPI/Uvicorn/HTTPX foram adicionadas em `docs/requirements/requirements.txt`.
 
-### Seguranca
+### Segurança
 
 - CORS e restrito por default, sem wildcard.
 - Respostas de resume/job extraction removem `raw_text` por default.
-- A API reutiliza regras do core e nao move Match, ATS, Tailor, GitHub Analyzer ou metricas oficiais
+- A API reutiliza regras do core e não move Match, ATS, Tailor, GitHub Analyzer ou métricas oficiais
   para o frontend.
-- Tracker continua local-first e sem armazenar curriculo bruto.
-- GitHub Analyzer aceita `fallback_payload` com dados publicos/capturados sem expor tokens no
+- Tracker continua local-first e sem armazenar currículo bruto.
+- GitHub Analyzer aceita `fallback_payload` com dados públicos/capturados sem expor tokens no
   frontend.
 
-### Validacao
+### Validação
 
-- Precheck antes da implementacao: `ruff check .`, `ruff format --check .`, `pytest`,
+- Precheck antes da implementação: `ruff check .`, `ruff format --check .`, `pytest`,
   `mkdocs build --strict`, `python -m compileall modules tests`, `pyright` e
   `node --check docs/javascripts/sotuhire-demo.js`.
 - Testes focados da API e Application Intelligence: `13 passed`.
@@ -690,7 +716,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - Assistive Browser Extension Companion em Manifest V3 para capturar, analisar e enviar a vaga
   atual ao tracker;
 - Local Companion API restrita a `127.0.0.1:8765`, com token opcional, Pydantic e sanitização;
-- importação paginada de candidaturas já realizadas, com lote local de até 500 itens;
+- importação páginada de candidaturas já realizadas, com lote local de até 500 itens;
 - ranking no dashboard dos requisitos mais recorrentes nas vagas candidatas;
 - calibração de evidências com pesos, limites por tipo, penalidades e feedback útil/não útil;
 - aba avançada **Extensão**, perfil profissional ampliado e extração opcional de currículo por
@@ -701,7 +727,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - modos standalone na extensão e conectado ao SotuHire, com evidências de projeto na memória.
 - botão **SotuHire AI** injetado em repositórios e perfis públicos do GitHub;
 - modal com score, grade, stack, README, commits, recomendações e ações conectadas;
-- pacote validado e documentação de publicação para a Chrome Web Store.
+- pacote validado e documentação de públicação para a Chrome Web Store.
 
 ### Changed
 
@@ -751,7 +777,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 ### Authenticated collection
 
 - modos explícitos `PUBLIC_SCRAPING`, `MANUAL_URL`, `USER_ASSISTED_CAPTURE` e `AUTHENTICATED_BROWSER`;
-- captura assistida da vaga ou publicação atualmente aberta pela pessoa usuária;
+- captura assistida da vaga ou públicação atualmente aberta pela pessoa usuária;
 - ações para salvar a vaga atual, analisar e enviar ao tracker;
 - roadmap dedicado para extensão de captura assistida;
 - crawling autorizado via sessão Chromium já autenticada, com presets para vagas e publicações do LinkedIn;

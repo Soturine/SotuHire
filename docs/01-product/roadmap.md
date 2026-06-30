@@ -1,6 +1,6 @@
-# Roadmap do SotuHire
+﻿# Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.9.1 e os proximos ciclos tecnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.9.2 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,47 +8,62 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.9.1 |
+| Versão atual considerada | v1.9.2 |
 | Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional e intake persistente |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v2.0 Assistant workflows with human approval |
-| Foco de produto | Copiloto de carreira multiárea com perfil central e Radar local-first |
-| Foco técnico imediato | Contexto de carreira unificado, RAG local aplicado e documentacao profissional |
-| Grande lacuna atual | Matching adaptativo por dominio, upload direto para Perfil e revisao avancada de evidencias GitHub/Portfolio |
+| Próximo ciclo técnico | v1.9.3 Public Exams / Edital Parser Foundation ou v2.0 Assistant workflows with human approval |
+| Foco de produto | Copiloto de carreira multiárea com Perfil central, Radar local-first e trajetórias acadêmicas |
+| Foco técnico imediato | Evidências acadêmicas, RAG local aplicado e documentação profissional |
+| Grande lacuna atual | Upload direto de PDF/HTML do Lattes, parser real de edital/concurso e matching adaptativo por domínio |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
+
+## Estado atual - v1.9.2
+
+A v1.9.2 entrega **Lattes, Perfil Acadêmico e Extração de Evidências Assistida por IA**:
+
+- cria `modules/academic` com parser local para texto colado do Currículo Lattes;
+- adiciona endpoints `/api/v1/profile/import-lattes`, `/api/v1/profile/lattes/draft` e `/api/v1/profile/lattes/confirm`;
+- registra o prompt `profile_lattes_extractor_v1` para Gemini opcional;
+- adiciona seção **Acadêmico / Lattes** em `/profile`;
+- gera candidatos revisáveis de `ProfileItem` para formação, pesquisa, publicações, extensão, docência, monitoria, eventos, prêmios, bolsas e produção técnica/artística;
+- confirma itens acadêmicos somente após seleção explícita da pessoa usuária;
+- integra evidências acadêmicas ao Career Context Engine com purposes `academic`, `lattes` e `public_exams`;
+- reforça ATS, Tailor, Match e GitHub/Portfólio para usar evidências acadêmicas sem tratá-las automaticamente como experiência corporativa;
+- documenta a fundação futura para editais e concursos, sem implementar inscrição automática nem Concurso Mode completo;
+- revisa README e docs principais em PT-BR com acentos e linguagem mais consistente.
 
 ## Estado atual - v1.9.1
 
 A v1.9.1 entrega **Integridade de Release, README profissional e Career Context Engine**:
 
 - revisa a integridade da tag `v1.9.0` para o estado final com lockfile validado;
-- confirma `npm ci` e validacoes do frontend antes da nova release;
-- reestrutura o README como pagina de produto/repo;
-- atualiza screenshots e GIF do frontend web moderno com nomes sem versao;
+- confirma `npm ci` e validações do frontend antes da nova release;
+- reestrutura o README como página de produto/repo;
+- atualiza screenshots e GIF do frontend web moderno com nomes sem versão;
 - cria `modules/context` como Career Context Engine;
-- unifica Perfil Profissional Universal, RAG local e sinais do produto em contexto serializavel;
-- integra contexto em Wishlist, Radar, Scheduler, Match, ATS, Tailor, Tracker, Fontes, Notificacoes e GitHub/Portfolio;
-- adiciona candidatos de evidencia de GitHub/Portfolio para revisao, sem salvar automaticamente no Perfil;
+- unifica Perfil Profissional Universal, RAG local e sinais do produto em contexto serializável;
+- integra contexto em Wishlist, Radar, Scheduler, Match, ATS, Tailor, Tracker, Fontes, Notificações e GitHub/Portfólio;
+- adiciona candidatos de evidência de GitHub/Portfólio para revisão, sem salvar automaticamente no Perfil;
 - preserva o fluxo authenticated browser existente.
 
 ## Estado atual - v1.9.0
 
-A v1.9.0 entrega **Radar Agendado e Notificacoes Locais**:
+A v1.9.0 entrega **Radar Agendado e Notificações Locais**:
 
-- cria agendamentos locais do Radar por wishlist, fonte, palavras-chave e preferencias;
-- adiciona store local para schedules, runs agendadas e notificacoes;
-- adiciona quiet hours, cooldown contra alertas repetidos e historico de execucoes;
-- expoe endpoints `/api/v1/radar/schedules`, `/api/v1/radar/scheduled-runs`,
+- cria agendamentos locais do Radar por wishlist, fonte, palavras-chave e preferências;
+- adiciona store local para schedules, runs agendadas e notificações;
+- adiciona quiet hours, cooldown contra alertas repetidos e histórico de execuções;
+- expõe endpoints `/api/v1/radar/schedules`, `/api/v1/radar/scheduled-runs`,
   `/api/v1/radar/scheduler/*` e `/api/v1/notifications`;
-- adiciona UI de Agendamentos e Central de Notificacoes dentro do Radar;
+- adiciona UI de Agendamentos e Central de Notificações dentro do Radar;
 - usa o Perfil Profissional Universal quando `use_profile_context=true`;
-- mantem execucao revisavel: resultados podem ir para Caixa de Entrada ou Tracker apenas por acao
-  manual da pessoa usuaria;
-- permite fontes de captura assistida autenticada como lembrete agendavel, sem coletar cookies,
-  tokens, sessao, headers ou storage de terceiros.
+- mantém execução revisável: resultados podem ir para Caixa de Entrada ou Tracker apenas por ação
+  manual da pessoa usuária;
+- permite fontes de captura assistida autenticada como lembrete agendável, sem coletar cookies,
+  tokens, sessão, headers ou storage de terceiros.
 
-O scheduler roda somente enquanto a API local esta ativa. Ele nao e daemon de sistema operacional,
-nao faz auto-apply e nao substitui revisao humana.
+O scheduler roda somente enquanto a API local está ativa. Ele não é daemon de sistema operacional,
+não faz auto-apply e não substitui revisão humana.
 
 ## Estado atual - v1.8.2
 
@@ -174,12 +189,12 @@ seguros, manter Streamlit como modo local/dev e preservar o core como fonte de v
 ### O que ainda está fraco
 
 - A apresentação web moderna já existe e tem screenshots e walkthroughs atuais.
-- Os parsers ainda carregam viés forte para tecnologia/dev.
-- O Prompt Registry existe, mas precisa governanca e cobertura continua.
-- Os prompts atuais implementados no código ainda podem ganhar exemplos e criterios por dominio.
-- Settings/IA existem, mas precisam auditoria continua de UX e seguranca.
-- A lacuna atual e aprofundar Career Context Engine/RAG unificado com Kanban, GitHub/Portfolio e ATS.
-- Upload direto de arquivos para Perfil e matching adaptativo por dominio seguem como evolucoes futuras.
+- Os parsers ainda precisam melhorar cobertura por domínio, apesar do avanço em Lattes/acadêmico.
+- O Prompt Registry existe, mas precisa de governança e cobertura contínua.
+- Os prompts atuais implementados no código ainda podem ganhar exemplos e critérios por domínio.
+- Settings/IA existem, mas precisam de auditoria contínua de UX e segurança.
+- A lacuna atual é aprofundar matching adaptativo por domínio, upload direto para Perfil e revisão avançada de evidências GitHub/Portfólio.
+- Upload direto de PDF/HTML do Lattes, parser real de edital/concurso e plano de estudo por edital seguem como evoluções futuras.
 - A documentação anterior misturava estado atual, histórico antigo e planos futuros.
 
 ### O que não deve acontecer agora
@@ -233,9 +248,11 @@ A evolução deve ser feita por camadas:
 | v1.8.0 | Job Radar, Public Feeds & Wishlist Alerts | Produto | Radar manual, RSS público, wishlist e alertas locais. |
 | v1.8.1 | AI Wishlist, Radar Stability & Profile Context Prep | Produto | Wishlist por IA/local, contexto profissional preparado e CI web. |
 | v1.8.2 | Universal Professional Profile | Produto/core | Perfil Profissional Universal editável, multiárea e evidence-first. |
-| v1.9.0 | Scheduled Radar & Notifications | Produto | Agendamento local do Radar, quiet hours, cooldown e notificacoes in-app. |
+| v1.9.0 | Scheduled Radar & Notifications | Produto | Agendamento local do Radar, quiet hours, cooldown e notificações in-app. |
 | v1.9.1 | Release Integrity, README Overhaul & Context Unification | Produto/core/docs | Integridade de tag, README profissional, screenshots web e Career Context Engine. |
-| v2.0.0 | Assistant autonomo com aprovacao manual | Produto/arquitetura | Autonomia local com aprovacoes explicitas e sem auto-apply. |
+| v1.9.2 | Lattes, Academic Profile & AI-Assisted Evidence Extraction | Produto/core/docs | Importação Lattes por texto, evidências acadêmicas revisáveis, Gemini opcional e fundação de editais. |
+| v1.9.3 | Public Exams / Edital Parser Foundation | Produto/core/docs | Parser inicial de edital, requisitos e cronogramas, sem inscrição automática. |
+| v2.0.0 | Assistant autônomo com aprovação manual | Produto/arquitetura | Autonomia local com aprovações explícitas e sem auto-apply. |
 
 ---
 
