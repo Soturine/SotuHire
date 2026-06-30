@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from modules.academic import LattesConfirmResult, LattesImportResult
 from modules.profile.context import ProfileContext
 from modules.profile.models import (
     ProfileConfidence,
@@ -94,6 +95,29 @@ class ProfileImportTextRequest(BaseModel):
     request_id: str = Field(default="", max_length=120)
 
 
+class ProfileLattesImportRequest(BaseModel):
+    """Import academic evidence from pasted Curriculo Lattes text."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    text: str = Field(min_length=1, max_length=300_000)
+    source_url: str = Field(default="", max_length=2048)
+    lattes_id: str = Field(default="", max_length=160)
+    orcid: str = Field(default="", max_length=80)
+    use_ai: bool = False
+    language: str = Field(default="pt-BR", max_length=20)
+    request_id: str = Field(default="", max_length=120)
+
+
+class ProfileLattesConfirmRequest(BaseModel):
+    """Confirm selected Lattes candidates into the Universal Career Profile."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[ProfileItem] = Field(default_factory=list, max_length=300)
+    request_id: str = Field(default="", max_length=120)
+
+
 class ProfileResponse(BaseModel):
     """Active profile response."""
 
@@ -114,6 +138,14 @@ class ProfileItemResponse(BaseModel):
 
 class ProfileImportTextResponse(ProfileImportDraft):
     """Draft extracted profile items."""
+
+
+class ProfileLattesImportResponse(LattesImportResult):
+    """Draft academic profile items extracted from Lattes-like text."""
+
+
+class ProfileLattesConfirmResponse(LattesConfirmResult):
+    """Selected academic items saved into the Universal Career Profile."""
 
 
 class ProfileDeduplicateResponse(BaseModel):

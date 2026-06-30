@@ -14,15 +14,21 @@ from apps.api.schemas.profile import (
     ProfileItemPatchRequest,
     ProfileItemRequest,
     ProfileItemResponse,
+    ProfileLattesConfirmRequest,
+    ProfileLattesConfirmResponse,
+    ProfileLattesImportRequest,
+    ProfileLattesImportResponse,
     ProfileResponse,
     ProfileUpdateRequest,
 )
 from apps.api.services.profile import (
     profile_add_item,
+    profile_confirm_lattes,
     profile_context,
     profile_deduplicate,
     profile_delete_item,
     profile_get,
+    profile_import_lattes,
     profile_import_text,
     profile_patch_item,
     profile_update,
@@ -71,6 +77,32 @@ def import_profile_text(
     """Extract draft profile items from pasted text."""
     data, warnings = profile_import_text(payload)
     return ok(data, warnings=warnings, request_id=payload.request_id)
+
+
+@router.post("/import-lattes", response_model=ApiEnvelope[ProfileLattesImportResponse])
+def import_lattes_profile(
+    payload: ProfileLattesImportRequest,
+) -> ApiEnvelope[ProfileLattesImportResponse]:
+    """Extract draft academic profile items from pasted Lattes text."""
+    data, warnings = profile_import_lattes(payload)
+    return ok(data, warnings=warnings, request_id=payload.request_id)
+
+
+@router.post("/lattes/draft", response_model=ApiEnvelope[ProfileLattesImportResponse])
+def draft_lattes_profile(
+    payload: ProfileLattesImportRequest,
+) -> ApiEnvelope[ProfileLattesImportResponse]:
+    """Alias for Lattes draft extraction used by the web UI."""
+    data, warnings = profile_import_lattes(payload)
+    return ok(data, warnings=warnings, request_id=payload.request_id)
+
+
+@router.post("/lattes/confirm", response_model=ApiEnvelope[ProfileLattesConfirmResponse])
+def confirm_lattes_profile(
+    payload: ProfileLattesConfirmRequest,
+) -> ApiEnvelope[ProfileLattesConfirmResponse]:
+    """Save selected academic drafts after explicit user review."""
+    return ok(profile_confirm_lattes(payload), request_id=payload.request_id)
 
 
 @router.post("/deduplicate", response_model=ApiEnvelope[ProfileDeduplicateResponse])

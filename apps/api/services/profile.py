@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from fastapi import HTTPException
+from modules.academic import LattesImportInput, LattesService
 from modules.ai.prompt_loader import default_prompt_registry
 from modules.profile import ProfileContextOrchestrator
 from modules.profile.models import ProfileImportDraft, ProfileItem
@@ -16,6 +17,10 @@ from apps.api.schemas.profile import (
     ProfileItemPatchRequest,
     ProfileItemRequest,
     ProfileItemResponse,
+    ProfileLattesConfirmRequest,
+    ProfileLattesConfirmResponse,
+    ProfileLattesImportRequest,
+    ProfileLattesImportResponse,
     ProfileResponse,
     ProfileUpdateRequest,
 )
@@ -140,6 +145,51 @@ def profile_import_text(
             }
         )
         return ProfileImportTextResponse.model_validate(fallback.model_dump()), fallback.warnings
+
+
+def profile_import_lattes(
+    request: ProfileLattesImportRequest,
+) -> tuple[ProfileLattesImportResponse, list[str]]:
+    """Extract Lattes and academic ProfileItem drafts without saving them."""
+    if not request.text.strip():
+        raise HTTPException(status_code=422, detail="Cole um texto do Lattes para importar.")
+    payload = LattesImportInput.model_validate(request.model_dump(exclude={"request_id"}))
+    if _contains_secret_field(payload.model_dump()):
+        raise HTTPException(status_code=422, detail="Payload contém campo inseguro.")
+
+    service = LattesService()
+    if not request.use_ai:
+        local = service.draft_local(payload)
+        return ProfileLattesImportResponse.model_validate(local.model_dump()), local.warnings
+
+    runtime = get_ai_runtime("resume")
+    warnings = list(runtime.warnings)
+    if not runtime.use_ai or runtime.provider_name == "local":
+        fallback = service.draft_local(
+            payload,
+            warnings=[*warnings, "IA indisponível; usei parser local de Lattes."],
+        )
+        return ProfileLattesImportResponse.model_validate(fallback.model_dump()), fallback.warnings
+
+    result = service.draft_with_ai(
+        payload,
+        provider=runtime.provider,
+        prompt_registry=default_prompt_registry(),
+        provider_name=runtime.provider_name,
+        requested_provider=str(runtime.requested_provider),
+        warnings=warnings,
+    )
+    return ProfileLattesImportResponse.model_validate(result.model_dump()), result.warnings
+
+
+def profile_confirm_lattes(
+    request: ProfileLattesConfirmRequest,
+) -> ProfileLattesConfirmResponse:
+    """Save explicitly selected academic items into the Universal Career Profile."""
+    if not request.items:
+        raise HTTPException(status_code=422, detail="Selecione ao menos um item para confirmar.")
+    result = LattesService().confirm_items(request.items)
+    return ProfileLattesConfirmResponse.model_validate(result.model_dump())
 
 
 def profile_deduplicate() -> ProfileDeduplicateResponse:
