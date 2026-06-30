@@ -31,6 +31,7 @@ import type {
   AuthenticatedBrowserStatus,
   ExtensionCapture,
   OpportunityInboxItem,
+  ProfileItem,
   SourceCaptureStatus,
   SourceDirectoryEntry,
   SourceOrigin,
@@ -82,6 +83,17 @@ type FilePreview = {
   text: string;
   rows: string[];
   error?: string;
+};
+
+type ExtensionCandidateReview = {
+  captureId: string;
+  title: string;
+  isProject: boolean;
+  candidates: ProfileItem[];
+  selectedIds: string[];
+  contextSummary: string;
+  warnings: string[];
+  message: string;
 };
 
 const MAX_IMPORT_FILE_BYTES = 512_000;
@@ -1270,6 +1282,11 @@ function LocalExtensionPanel() {
     queryFn: () => api.extensionCaptures(),
     retry: false,
   });
+  const contextQ = useQuery({
+    queryKey: ["extension-context", mode, baseUrl],
+    queryFn: () => api.extensionContext(),
+    retry: false,
+  });
 
   const importJob = useMutation({
     mutationFn: (captureId: string) => api.extensionImportJob(captureId),
@@ -1292,6 +1309,60 @@ function LocalExtensionPanel() {
       toast.error(
         error instanceof Error ? error.message : "Nao foi possivel enviar para GitHub Analysis.",
       ),
+  });
+
+  const [candidateReview, setCandidateReview] = useState<ExtensionCandidateReview | null>(null);
+
+  const profileCandidates = useMutation({
+    mutationFn: ({
+      captureId,
+      isProject,
+    }: {
+      captureId: string;
+      title: string;
+      isProject: boolean;
+    }) =>
+      isProject
+        ? api.extensionProjectProfileCandidates(captureId)
+        : api.extensionCaptureProfileCandidates(captureId),
+    onSuccess: (data, variables) => {
+      setCandidateReview({
+        captureId: variables.captureId,
+        title: variables.title,
+        isProject: variables.isProject,
+        candidates: data.candidates,
+        selectedIds: data.candidates.map((item) => item.item_id),
+        contextSummary: data.context_summary || "",
+        warnings: data.warnings,
+        message: data.message,
+      });
+      toast.success(data.message || "Evidencias geradas para revisao.");
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel gerar evidencias."),
+  });
+
+  const addToProfile = useMutation({
+    mutationFn: ({
+      captureId,
+      isProject,
+      candidateIds,
+    }: {
+      captureId: string;
+      isProject: boolean;
+      candidateIds: string[];
+    }) =>
+      isProject
+        ? api.extensionProjectAddToProfile(captureId, candidateIds)
+        : api.extensionCaptureAddToProfile(captureId, candidateIds),
+    onSuccess: (data) => {
+      toast.success(data.message || "Itens adicionados ao Perfil.");
+      setCandidateReview(null);
+      capturesQ.refetch();
+      contextQ.refetch();
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Nao foi possivel adicionar ao Perfil."),
   });
 
   const patchCapture = useMutation({
@@ -1317,8 +1388,23 @@ function LocalExtensionPanel() {
     importJob.isPending ||
     importTracker.isPending ||
     importGithub.isPending ||
-    patchCapture.isPending;
+    patchCapture.isPending ||
+    profileCandidates.isPending ||
+    addToProfile.isPending;
   const lastSync = statusQ.data?.last_capture_at || allCaptures[0]?.captured_at;
+
+  function toggleCandidate(candidateId: string, selected: boolean) {
+    setCandidateReview((current) =>
+      current
+        ? {
+            ...current,
+            selectedIds: selected
+              ? Array.from(new Set([...current.selectedIds, candidateId]))
+              : current.selectedIds.filter((id) => id !== candidateId),
+          }
+        : current,
+    );
+  }
 
   return (
     <div className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
@@ -1369,6 +1455,12 @@ function LocalExtensionPanel() {
           A extensão continua usando a Local Companion API existente. Esta tela apenas consulta e
           importa capturas já salvas localmente.
         </div>
+
+        <div className="rounded-lg border border-border bg-background p-3 text-xs text-muted-foreground">
+          <div className="mb-1 font-semibold text-foreground">Contexto relacionado</div>
+          {contextQ.data?.context_summary ||
+            "Perfil Universal, memoria local e capturas aparecem aqui quando houver evidencias."}
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -1407,12 +1499,35 @@ function LocalExtensionPanel() {
                 onImportJob={() => importJob.mutate(capture.id)}
                 onImportTracker={() => importTracker.mutate(capture.id)}
                 onImportGithub={() => importGithub.mutate(capture.id)}
+                onProfileCandidates={() =>
+                  profileCandidates.mutate({
+                    captureId: capture.id,
+                    title: capture.title,
+                    isProject:
+                      capture.kind === "github_repo" || capture.url.includes("github.com/"),
+                  })
+                }
                 onReview={() => patchCapture.mutate({ captureId: capture.id, status: "reviewed" })}
                 onArchive={() => patchCapture.mutate({ captureId: capture.id, status: "archived" })}
                 onIgnore={() => setIgnoredIds((current) => [...current, capture.id])}
               />
             ))}
           </ul>
+        )}
+        {candidateReview && (
+          <ExtensionProfileCandidatePanel
+            review={candidateReview}
+            busy={busy}
+            onToggle={toggleCandidate}
+            onClose={() => setCandidateReview(null)}
+            onAdd={() =>
+              addToProfile.mutate({
+                captureId: candidateReview.captureId,
+                isProject: candidateReview.isProject,
+                candidateIds: candidateReview.selectedIds,
+              })
+            }
+          />
         )}
       </div>
     </div>
@@ -1425,6 +1540,7 @@ function ExtensionCaptureRow({
   onImportJob,
   onImportTracker,
   onImportGithub,
+  onProfileCandidates,
   onReview,
   onArchive,
   onIgnore,
@@ -1434,6 +1550,7 @@ function ExtensionCaptureRow({
   onImportJob: () => void;
   onImportTracker: () => void;
   onImportGithub: () => void;
+  onProfileCandidates: () => void;
   onReview: () => void;
   onArchive: () => void;
   onIgnore: () => void;
@@ -1458,6 +1575,9 @@ function ExtensionCaptureRow({
             <span className="rounded-md bg-muted px-2 py-0.5">
               Tipo: {isGithub ? "GitHub/portfolio" : "Vaga"}
             </span>
+            <span className="rounded-md bg-muted px-2 py-0.5">
+              Perfil: {capture.profile_candidate_count ?? 0} candidato(s)
+            </span>
             {date && (
               <span className="rounded-md bg-muted px-2 py-0.5">
                 Data: {new Date(date).toLocaleString("pt-BR")}
@@ -1475,8 +1595,23 @@ function ExtensionCaptureRow({
               <span className="truncate">{capture.url}</span>
             </a>
           )}
+          {capture.context_signal && (
+            <p className="mt-1 max-w-2xl text-[11px] text-muted-foreground">
+              {capture.context_signal}
+            </p>
+          )}
         </div>
         <div className="flex shrink-0 flex-wrap gap-1.5">
+          <button
+            type="button"
+            onClick={onProfileCandidates}
+            disabled={busy}
+            data-testid="view-extension-profile-candidates"
+            className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent hover:bg-accent/15 disabled:opacity-50"
+          >
+            <CheckCircle2 className="h-3 w-3" />
+            {isGithub ? "Adicionar projeto ao Perfil" : "Ver evidencias para Perfil"}
+          </button>
           <button
             type="button"
             onClick={onImportJob}
@@ -1542,6 +1677,103 @@ function ExtensionCaptureRow({
         </div>
       </div>
     </li>
+  );
+}
+
+function ExtensionProfileCandidatePanel({
+  review,
+  busy,
+  onToggle,
+  onAdd,
+  onClose,
+}: {
+  review: ExtensionCandidateReview;
+  busy: boolean;
+  onToggle: (candidateId: string, selected: boolean) => void;
+  onAdd: () => void;
+  onClose: () => void;
+}) {
+  const selectedCount = review.selectedIds.length;
+  return (
+    <div
+      id="extension-profile-candidates"
+      data-testid="extension-profile-candidates"
+      className="rounded-lg border border-accent/30 bg-accent/5 p-3"
+    >
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-sm font-semibold">Evidencias para o Perfil</div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {review.title} · {review.message || "Revise os candidatos antes de salvar."}
+          </p>
+          {review.contextSummary && (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Contexto: {review.contextSummary}
+            </p>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted"
+        >
+          Fechar
+        </button>
+      </div>
+
+      <ul className="mt-3 space-y-2">
+        {review.candidates.map((candidate) => (
+          <li key={candidate.item_id} className="rounded-md border border-border bg-background p-2">
+            <label className="flex items-start gap-2">
+              <input
+                type="checkbox"
+                checked={review.selectedIds.includes(candidate.item_id)}
+                onChange={(event) => onToggle(candidate.item_id, event.target.checked)}
+                className="mt-1"
+              />
+              <span className="min-w-0 flex-1">
+                <span className="flex flex-wrap items-center gap-1.5 text-xs font-semibold">
+                  <span>{candidate.title}</span>
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
+                    {candidate.type}
+                  </span>
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
+                    {candidate.source}
+                  </span>
+                  <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-normal text-muted-foreground">
+                    {candidate.confidence}
+                  </span>
+                </span>
+                {candidate.evidence && (
+                  <span className="mt-1 line-clamp-2 block text-[11px] text-muted-foreground">
+                    {candidate.evidence}
+                  </span>
+                )}
+                <span className="mt-1 block text-[10px] text-muted-foreground">
+                  confirmed_by_user=false ate voce confirmar
+                </span>
+              </span>
+            </label>
+          </li>
+        ))}
+      </ul>
+
+      {review.warnings.length > 0 && (
+        <div className="mt-3 rounded-md border border-warning/30 bg-warning/5 p-2 text-[11px] text-muted-foreground">
+          {review.warnings.slice(0, 3).join(" ")}
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={onAdd}
+        disabled={busy || selectedCount === 0}
+        data-testid="add-extension-candidates-profile"
+        className="mt-3 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+      >
+        Adicionar selecionados ao Perfil ({selectedCount})
+      </button>
+    </div>
   );
 }
 

@@ -411,6 +411,8 @@ export interface ExtensionCapture {
   source?: string;
   status: string;
   tracker_id?: string;
+  profile_candidate_count?: number;
+  context_signal?: string;
   captured_at?: string;
   updated_at?: string;
 }
@@ -440,6 +442,28 @@ export interface ExtensionImportGithubResult {
 
 export interface ExtensionCapturePatchResult {
   capture: ExtensionCapture;
+  message: string;
+}
+
+export interface ExtensionContextResult {
+  context_summary: string;
+  message: string;
+}
+
+export interface ExtensionProfileCandidatesResult {
+  capture_id?: string;
+  project_id?: string;
+  candidates: ProfileItem[];
+  context_summary?: string;
+  warnings: string[];
+  message: string;
+}
+
+export interface ExtensionAddToProfileResult {
+  capture_id?: string;
+  project_id?: string;
+  added: ProfileItem[];
+  skipped: string[];
   message: string;
 }
 

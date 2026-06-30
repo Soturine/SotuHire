@@ -11,9 +11,12 @@ import type {
   AuthenticatedBrowserStatus,
   ExtensionCapturesResult,
   ExtensionCapturePatchResult,
+  ExtensionAddToProfileResult,
+  ExtensionContextResult,
   ExtensionImportGithubResult,
   ExtensionImportJobResult,
   ExtensionImportTrackerResult,
+  ExtensionProfileCandidatesResult,
   ExtensionStatus,
   GithubAnalyzeResult,
   GithubReport,
@@ -556,6 +559,8 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
               kind: "job",
               source: "Extensao local demo",
               status: "captured",
+              profile_candidate_count: 2,
+              context_signal: "Vaga pode atualizar objetivos, preferencias ou gaps revisaveis.",
               captured_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },
@@ -568,12 +573,87 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
               kind: "github_repo",
               source: "Extensao local demo",
               status: "analyzed",
+              profile_candidate_count: 2,
+              context_signal: "Projeto pode gerar evidencias revisaveis para o Perfil.",
               captured_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },
           ],
         },
         normalizeExtensionCaptures,
+      ),
+
+    extensionContext: () =>
+      call<ExtensionContextResult>(
+        mode,
+        baseUrl,
+        "/extension/context",
+        undefined,
+        {
+          context_summary: "Demo: objetivos, capturas e projetos locais a revisar.",
+          message: "Modo Demo: contexto da extensao pronto.",
+        },
+        normalizeExtensionContext,
+      ),
+
+    extensionCaptureProfileCandidates: (capture_id: string) =>
+      call<ExtensionProfileCandidatesResult>(
+        mode,
+        baseUrl,
+        `/extension/captures/${capture_id}/profile-candidates`,
+        { method: "POST" },
+        mockExtensionProfileCandidates(capture_id),
+        normalizeExtensionProfileCandidates,
+      ),
+
+    extensionCaptureAddToProfile: (capture_id: string, candidate_ids: string[]) =>
+      call<ExtensionAddToProfileResult>(
+        mode,
+        baseUrl,
+        `/extension/captures/${capture_id}/add-to-profile`,
+        {
+          method: "POST",
+          body: JSON.stringify({ candidate_ids, privacy_acknowledged: true }),
+        },
+        {
+          capture_id,
+          added: mockExtensionProfileCandidates(capture_id).candidates.filter(
+            (item) => candidate_ids.length === 0 || candidate_ids.includes(item.item_id),
+          ),
+          skipped: [],
+          message: "Modo Demo: itens selecionados adicionados ao Perfil.",
+        },
+        normalizeExtensionAddToProfile,
+      ),
+
+    extensionProjectProfileCandidates: (project_id: string) =>
+      call<ExtensionProfileCandidatesResult>(
+        mode,
+        baseUrl,
+        `/extension/projects/${project_id}/profile-candidates`,
+        { method: "POST" },
+        { ...mockExtensionProfileCandidates(project_id), project_id },
+        normalizeExtensionProfileCandidates,
+      ),
+
+    extensionProjectAddToProfile: (project_id: string, candidate_ids: string[]) =>
+      call<ExtensionAddToProfileResult>(
+        mode,
+        baseUrl,
+        `/extension/projects/${project_id}/add-to-profile`,
+        {
+          method: "POST",
+          body: JSON.stringify({ candidate_ids, privacy_acknowledged: true }),
+        },
+        {
+          project_id,
+          added: mockExtensionProfileCandidates(project_id).candidates.filter(
+            (item) => candidate_ids.length === 0 || candidate_ids.includes(item.item_id),
+          ),
+          skipped: [],
+          message: "Modo Demo: projeto adicionado ao Perfil.",
+        },
+        normalizeExtensionAddToProfile,
       ),
 
     extensionImportJob: (capture_id: string) =>
@@ -1961,6 +2041,71 @@ function mockProfileResult(): ProfileResult {
   };
 }
 
+function mockExtensionProfileCandidates(captureId: string): ExtensionProfileCandidatesResult {
+  const project = captureId.includes("2") || captureId.includes("github");
+  const candidates = project
+    ? [
+        normalizeProfileItem({
+          item_id: `${captureId}-project`,
+          type: "project",
+          title: "fictitious-api-lab",
+          description: "Projeto capturado pela extensao para revisao.",
+          evidence: "README cita FastAPI, testes e organizacao de API.",
+          source: "github_capture",
+          source_ref: captureId,
+          confidence: "medium",
+          confirmed_by_user: false,
+          skills: ["FastAPI", "Pytest"],
+          tags: ["project"],
+        }),
+        normalizeProfileItem({
+          item_id: `${captureId}-skill-fastapi`,
+          type: "technical_skill",
+          title: "FastAPI",
+          description: "Skill detectada no projeto capturado; confirmar antes de salvar.",
+          evidence: "README cita FastAPI.",
+          source: "github_capture",
+          source_ref: captureId,
+          confidence: "medium",
+          confirmed_by_user: false,
+          tags: ["project_skill"],
+        }),
+      ]
+    : [
+        normalizeProfileItem({
+          item_id: `${captureId}-target-role`,
+          type: "target_role",
+          title: "Backend Python Demo",
+          description: "Vaga capturada para revisar objetivo profissional.",
+          evidence: "Vaga ficticia pede Python e FastAPI.",
+          source: "extension_capture",
+          source_ref: captureId,
+          confidence: "medium",
+          confirmed_by_user: false,
+          tags: ["job_capture"],
+        }),
+        normalizeProfileItem({
+          item_id: `${captureId}-keyword-python`,
+          type: "keyword_to_review",
+          title: "Python",
+          description: "Requisito da vaga; usar como gap/interesse, nao habilidade confirmada.",
+          evidence: "Vaga ficticia pede Python.",
+          source: "extension_capture",
+          source_ref: captureId,
+          confidence: "low",
+          confirmed_by_user: false,
+          tags: ["gap"],
+        }),
+      ];
+  return {
+    capture_id: captureId,
+    candidates,
+    context_summary: "Demo: captura relacionada ao Perfil Universal.",
+    warnings: ["Revise antes de salvar no Perfil."],
+    message: "Modo Demo: candidatos gerados localmente.",
+  };
+}
+
 function mockSavedProfile(payload: Partial<ProfileResult["profile"]>): ProfileResult {
   const base = mockProfileResult();
   return {
@@ -2520,9 +2665,43 @@ function normalizeExtensionCaptures(value: unknown): ExtensionCapturesResult {
       source: asString(item.source),
       status: asString(item.status) || "captured",
       tracker_id: asString(item.tracker_id),
+      profile_candidate_count: asNumber(item.profile_candidate_count, 0),
+      context_signal: asString(item.context_signal),
       captured_at: asString(item.captured_at),
       updated_at: asString(item.updated_at),
     })),
+  };
+}
+
+function normalizeExtensionContext(value: unknown): ExtensionContextResult {
+  const raw = asRecord(value);
+  return {
+    context_summary:
+      asString(raw.context_summary) || asString(asRecord(raw.context).profile_summary),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeExtensionProfileCandidates(value: unknown): ExtensionProfileCandidatesResult {
+  const raw = asRecord(value);
+  return {
+    capture_id: asString(raw.capture_id),
+    project_id: asString(raw.project_id),
+    candidates: objectList(raw.candidates).map(normalizeProfileItem),
+    context_summary: asString(raw.context_summary),
+    warnings: stringList(raw.warnings),
+    message: asString(raw.message),
+  };
+}
+
+function normalizeExtensionAddToProfile(value: unknown): ExtensionAddToProfileResult {
+  const raw = asRecord(value);
+  return {
+    capture_id: asString(raw.capture_id),
+    project_id: asString(raw.project_id),
+    added: objectList(raw.added).map(normalizeProfileItem),
+    skipped: stringList(raw.skipped),
+    message: asString(raw.message),
   };
 }
 
