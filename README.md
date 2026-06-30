@@ -10,7 +10,7 @@ SotuHire e um copiloto de carreira local-first, multi area e baseado em evidenci
 
 Ele combina Perfil Profissional Universal, RAG local, Match, ATS, Tailor, Radar, Fontes, Kanban, GitHub/Portfolio e IA opcional sem transformar a candidatura em automacao cega. A regra central e simples: a pessoa revisa antes de salvar, exportar, aplicar ou compartilhar contexto com provider externo.
 
-[Documentacao](docs/) · [Roadmap](docs/01-product/roadmap.md) · [Visao](docs/01-product/vision.md) · [Estrategia multi area](docs/01-product/multi-domain-product-strategy.md) · [Arquitetura](docs/02-architecture/module-integration-map.md) · [RAG local](docs/04-ai/career-memory-rag.md) · [Seguranca](docs/06-engineering/security-privacy.md) · [Changelog](CHANGELOG.md)
+[Documentacao](docs/) · [Roadmap](docs/01-product/roadmap.md) · [Visao](docs/01-product/vision.md) · [Estrategia multi area](docs/01-product/multi-domain-product-strategy.md) · [Arquitetura](docs/02-architecture/module-integration-map.md) · [Contexto](docs/02-architecture/career-context-engine.md) · [Ponte da extensao](docs/02-architecture/extension-profile-bridge.md) · [RAG local](docs/04-ai/career-memory-rag.md) · [Seguranca](docs/06-engineering/security-privacy.md) · [Changelog](CHANGELOG.md)
 
 ## Para Quem Serve
 
@@ -33,6 +33,8 @@ SotuHire nao e uma ferramenta apenas para dev/TI. Ele foi desenhado para trajeto
 | Notificacoes | Tracker | Fontes |
 | --- | --- | --- |
 | ![Notificacoes locais](docs/assets/screenshots/sotuhire-web-notifications.png) | ![Kanban de candidaturas](docs/assets/screenshots/sotuhire-web-tracker.png) | ![Fontes e captura](docs/assets/screenshots/sotuhire-web-sources.png) |
+
+![Evidencias da extensao para o Perfil](docs/assets/screenshots/sotuhire-web-extension-profile-candidates.png)
 
 ![Configuracoes de IA](docs/assets/screenshots/sotuhire-web-settings-ai.png)
 
@@ -146,7 +148,7 @@ A chave fica somente no backend local, em arquivo ignorado pelo Git. O frontend 
 
 A extensao em [browser-extension/](browser-extension/README.md) usa uma Local Companion API para capturar vagas visiveis e analisar GitHub/portfolio. Ela pode trabalhar conectada ao SotuHire local e e compativel com a extensao v0.9.0.
 
-O fluxo assistivo nao faz candidatura automatica, nao captura cookies/tokens/sessao/headers, nao burla CAPTCHA e nao coloca API key no frontend. Capturas viram itens revisaveis antes de entrar em Vaga, Radar, Match ou Tracker.
+O fluxo assistivo nao faz candidatura automatica, nao captura cookies/tokens/sessao/headers, nao burla CAPTCHA e nao coloca API key no frontend. Capturas e projetos podem virar evidencias candidatas revisaveis para o Perfil Profissional Universal; o usuario confirma antes de salvar.
 
 ## Seguranca E Privacidade
 
@@ -174,7 +176,7 @@ apps/web
   -> data/ local ignorado pelo Git
 ```
 
-Leia o [mapa de integracao de modulos](docs/02-architecture/module-integration-map.md), a [documentacao do Career Context Engine](docs/02-architecture/career-context-engine.md), o [catalogo de prompts](docs/04-ai/prompt-catalog.md) e a [documentacao do frontend](apps/web/README.md).
+Leia o [mapa de integracao de modulos](docs/02-architecture/module-integration-map.md), a [documentacao do Career Context Engine](docs/02-architecture/career-context-engine.md), a [Extension Profile Bridge](docs/02-architecture/extension-profile-bridge.md), o [catalogo de prompts](docs/04-ai/prompt-catalog.md) e a [documentacao do frontend](apps/web/README.md).
 
 ## Documentacao
 
@@ -183,6 +185,7 @@ Leia o [mapa de integracao de modulos](docs/02-architecture/module-integration-m
 - [Visao do produto](docs/01-product/vision.md)
 - [Estrategia multi area](docs/01-product/multi-domain-product-strategy.md)
 - [Career Memory e RAG local](docs/04-ai/career-memory-rag.md)
+- [Extension Profile Bridge](docs/02-architecture/extension-profile-bridge.md)
 - [Prompt Catalog](docs/04-ai/prompt-catalog.md)
 - [Security & Privacy](docs/06-engineering/security-privacy.md)
 - [Release notes v1.9.1](docs/releases/v1.9.1.md)

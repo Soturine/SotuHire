@@ -11,6 +11,7 @@ def test_readme_references_current_web_screenshots_and_changelog():
         Path("docs/assets/screenshots/sotuhire-web-notifications.png"),
         Path("docs/assets/screenshots/sotuhire-web-tracker.png"),
         Path("docs/assets/screenshots/sotuhire-web-sources.png"),
+        Path("docs/assets/screenshots/sotuhire-web-extension-profile-candidates.png"),
         Path("docs/assets/screenshots/sotuhire-web-settings-ai.png"),
     ]
 
@@ -30,6 +31,7 @@ def test_readme_references_current_web_screenshots_and_changelog():
         "docs/01-product/vision.md",
         "docs/01-product/multi-domain-product-strategy.md",
         "docs/02-architecture/module-integration-map.md",
+        "docs/02-architecture/extension-profile-bridge.md",
         "docs/04-ai/prompt-catalog.md",
         "docs/04-ai/career-memory-rag.md",
         "docs/06-engineering/security-privacy.md",
