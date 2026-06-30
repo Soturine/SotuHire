@@ -32,25 +32,31 @@ class Shot:
 WALKTHROUGH = [
     Shot("/dashboard", "Dashboard", "sotuhire-web-dashboard.png"),
     Shot("/profile", "Perfil", "sotuhire-web-profile.png"),
-    Shot("/resume", "Curriculo"),
+    Shot(
+        "/profile",
+        "Acadêmico/Lattes",
+        "sotuhire-web-profile-lattes.png",
+        "[data-testid='profile-lattes-section']",
+    ),
+    Shot("/resume", "Currículo"),
     Shot("/job", "Vaga"),
     Shot("/match", "Match", "sotuhire-web-match.png"),
     Shot("/ats", "ATS"),
     Shot("/tailor", "Tailor"),
-    Shot("/github", "GitHub/Portfolio"),
+    Shot("/github", "GitHub/Portfólio"),
     Shot("/sources", "Fontes e Captura", "sotuhire-web-sources.png", "#opportunity-inbox"),
     Shot(
         "/sources",
-        "Extensao Local e Perfil",
+        "Extensão Local e Perfil",
         "sotuhire-web-extension-profile-candidates.png",
         "#local-extension",
     ),
     Shot("/radar", "Radar"),
     Shot("/radar", "Wishlist IA/local", selector="#radar-ai-wishlist"),
     Shot("/radar", "Agendamentos", "sotuhire-web-radar-schedules.png", "#radar-schedules"),
-    Shot("/radar", "Notificacoes", "sotuhire-web-notifications.png", "#radar-notifications"),
+    Shot("/radar", "Notificações", "sotuhire-web-notifications.png", "#radar-notifications"),
     Shot("/tracker", "Kanban/Tracker", "sotuhire-web-tracker.png"),
-    Shot("/settings", "Configuracoes IA", "sotuhire-web-settings-ai.png"),
+    Shot("/settings", "Configurações IA", "sotuhire-web-settings-ai.png"),
 ]
 GIF_FILE = "sotuhire-web-product-walkthrough.gif"
 
@@ -100,6 +106,19 @@ def _prepare(page: Page, shot: Shot) -> None:
     page.wait_for_timeout(800)
     if shot.selector:
         page.locator(shot.selector).scroll_into_view_if_needed()
+        page.wait_for_timeout(500)
+    if shot.file == "sotuhire-web-profile-lattes.png":
+        textarea = page.locator("[data-testid='profile-lattes-textarea']")
+        textarea.fill(
+            "Formação acadêmica/titulação\n"
+            "Mestrado em Geofísica Espacial.\n"
+            "Artigos completos publicados em periódicos\n"
+            "Artigo fictício com DOI 10.1234/demo.\n"
+            "Projetos de pesquisa\n"
+            "Projeto PIBIC com análise de dados em Python."
+        )
+        page.locator("[data-testid='profile-lattes-extract']").click()
+        page.locator("[data-testid='profile-lattes-candidates']").wait_for(timeout=5_000)
         page.wait_for_timeout(500)
     if shot.file == "sotuhire-web-extension-profile-candidates.png":
         button = page.locator("[data-testid='view-extension-profile-candidates']").first
