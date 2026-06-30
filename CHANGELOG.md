@@ -4,6 +4,37 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.9.1] - 2026-06-30
+
+### Adicionado
+
+- `modules/context` com Career Context Engine para Perfil Universal, RAG local e sinais do produto.
+- Formatadores de contexto para prompts locais/externos, evidencias do Match Engine e candidatos de perfil vindos de GitHub/Portfolio.
+- Integracao inicial de contexto em Wishlist, Radar, Scheduler, Match, ATS, Tailor, Tracker, Fontes, Notificacoes e GitHub/Portfolio.
+- Testes para engine, deduplicacao, RAG local, privacidade, APIs de contexto e README.
+- Script `scripts/capture_web_walkthrough.py` para screenshots/GIF do frontend web moderno.
+- Documentacao do Career Context Engine e release notes v1.9.1.
+
+### Alterado
+
+- README reestruturado como pagina profissional do projeto, sem secoes internas presas a versoes antigas.
+- Screenshots e GIF principais agora usam nomes sem versao.
+- `MemoryStore()` passa a respeitar `SOTUHIRE_DATA_DIR` por padrao.
+- Roadmap, mapa de integracao, indice documental e MkDocs atualizados para refletir contexto unificado.
+- Versao do projeto, API e frontend atualizada para `1.9.1`.
+
+### Corrigido
+
+- Tag `v1.9.0` revisada no commit final da main com `package-lock.json` validado.
+- Validacao do lockfile do frontend confirmada com `npm ci`.
+
+### Seguranca
+
+- Contexto sensivel e omitido de payload externo.
+- Dados de perfil/memoria so vao para provider externo quando `allow_memory_context=true`.
+- GitHub/Portfolio retorna candidatos de evidencia para revisao, sem salvar automaticamente no Perfil.
+- Nenhum fluxo de authenticated browser, Chromium/CDP, cookie, token, sessao, headers, CAPTCHA ou auto-apply foi alterado.
+
 ## [1.9.0] - 2026-06-29
 
 ### Adicionado
