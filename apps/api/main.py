@@ -14,6 +14,7 @@ from apps.api.routes import (
     health,
     notifications,
     profile,
+    public_exams,
     radar,
     sources,
     tracker,
@@ -43,6 +44,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(tracker.router)
     app.include_router(settings_routes.router)
     app.include_router(profile.router)
+    app.include_router(public_exams.router)
     app.include_router(sources.router)
     app.include_router(radar.router)
     app.include_router(notifications.router)

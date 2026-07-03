@@ -36,6 +36,7 @@ AiFeature = Literal[
     "career_advice",
     "source_import",
     "radar",
+    "public_exams",
 ]
 
 
@@ -415,6 +416,8 @@ def _feature_allowed(settings: AiSettingsResponse, feature: AiFeature) -> bool:
     if feature == "source_import":
         return settings.allow_source_import
     if feature == "radar":
+        return settings.allow_radar
+    if feature == "public_exams":
         return settings.allow_radar
     return True
 

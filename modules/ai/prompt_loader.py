@@ -315,6 +315,38 @@ PASTED LATTES OR ACADEMIC TEXT:
 Return only JSON matching the expected schema.
 """
 
+PUBLIC_EXAM_NOTICE_EXTRACTOR_SYSTEM_PROMPT = """Você é um extrator assistido de editais, concursos e chamadas públicas para o SotuHire.
+
+Use somente informações explícitas no texto fornecido pelo usuário. A IA organiza e sugere rascunhos, mas não é fonte de verdade.
+
+Não invente órgão, banca, cargo, salário, taxa, data, requisito, etapa, documento, conteúdo programático, número de vagas, local ou regra de cotas.
+Não faça login, scraping, crawler, inscrição, pagamento, envio de documento ou bypass de CAPTCHA.
+Não decida que a pessoa usuária está apta sem evidências do Perfil Profissional Universal.
+
+Extraia órgão/instituição, banca, número do edital, cargos, requisitos, documentos, datas, taxa, salário/bolsa, etapas, conteúdo programático, locais, cotas/reservas e warnings.
+
+Todo resultado é rascunho revisável. needs_user_review deve ser true.
+Inclua source_excerpts curtos para auditar a origem dos campos.
+Quando algo estiver implícito, incompleto ou ambíguo, coloque em warnings ou questions_to_confirm.
+
+Retorne somente JSON válido, sem markdown, compatível com o schema esperado.
+"""
+
+PUBLIC_EXAM_NOTICE_EXTRACTOR_USER_TEMPLATE = """Extract a structured public exam notice draft from this pasted edital text.
+
+Language: {language}
+Source URL: {source_url}
+Source name: {source_name}
+
+Local parser draft, for comparison only:
+{local_parser_draft}
+
+PASTED EDITAL TEXT:
+{text}
+
+Return only JSON matching the expected schema.
+"""
+
 
 def initial_prompt_specs(
     schema_overrides: dict[str, type[BaseModel]] | None = None,
@@ -439,6 +471,15 @@ def initial_prompt_specs(
             temperature=0.0,
             mode="profile_lattes_extractor",
         ),
+        PromptSpec(
+            prompt_id="public_exam_notice_extractor_v1",
+            version="1.0.0",
+            system_prompt=PUBLIC_EXAM_NOTICE_EXTRACTOR_SYSTEM_PROMPT,
+            user_template=PUBLIC_EXAM_NOTICE_EXTRACTOR_USER_TEMPLATE,
+            output_schema=schemas["public_exam_notice_extractor_v1"],
+            temperature=0.0,
+            mode="public_exam_notice_extractor",
+        ),
     ]
 
 
@@ -462,6 +503,7 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
     from modules.ai.schemas.resume_extraction import ResumeExtractionOutput
     from modules.github_analyzer.schemas import GitHubRepoAnalysisOutput
     from modules.profile.models import ProfileImportDraft
+    from modules.public_exams.models import PublicExamImportResult
     from modules.schemas.job_analysis import JobAnalysisSchema
 
     return {
@@ -478,4 +520,5 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         "job_wishlist_builder_v1": WishlistDraftOutput,
         "profile_items_extractor_v1": ProfileImportDraft,
         "profile_lattes_extractor_v1": LattesImportResult,
+        "public_exam_notice_extractor_v1": PublicExamImportResult,
     }
