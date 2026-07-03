@@ -172,6 +172,162 @@ export interface LattesConfirmResult {
   message: string;
 }
 
+export type ExamRequirementStatus = "matched" | "missing" | "uncertain";
+export type ExamRecommendation =
+  | "strong_fit"
+  | "good_fit"
+  | "review_requirements"
+  | "risky"
+  | "not_recommended"
+  | "insufficient_information";
+
+export interface ExamRequirement {
+  requirement_id: string;
+  kind: string;
+  description: string;
+  mandatory: boolean;
+  evidence_needed: string;
+  matched_profile_item_ids: string[];
+  match_status: ExamRequirementStatus;
+  confidence: ProfileConfidence;
+  warnings: string[];
+}
+
+export interface ExamSubject {
+  name: string;
+  topics: string[];
+  weight?: number | null;
+  questions?: number | null;
+  stage: string;
+  priority: string;
+  source_excerpt: string;
+}
+
+export interface ExamTimeline {
+  registration_start: string;
+  registration_end: string;
+  payment_deadline: string;
+  exam_date: string;
+  result_date: string;
+  appeal_deadlines: string[];
+  document_submission_deadline: string;
+  other_dates: string[];
+  warnings: string[];
+}
+
+export interface ExamRole {
+  role_id: string;
+  notice_id: string;
+  title: string;
+  area: string;
+  level: string;
+  education_level: string;
+  required_degree: string;
+  required_registry: string;
+  required_experience: string;
+  required_certifications: string[];
+  salary: string;
+  workload: string;
+  vacancies: string;
+  reserved_vacancies: string;
+  quota_notes: string;
+  contract_type: string;
+  employment_regime: string;
+  location: string;
+  requirements: ExamRequirement[];
+  subjects: ExamSubject[];
+  stages: string[];
+}
+
+export interface ExamNotice {
+  notice_id: string;
+  title: string;
+  raw_text: string;
+  source_url: string;
+  source_name: string;
+  organization: string;
+  exam_board: string;
+  notice_number: string;
+  publication_date: string;
+  registration_fee: string;
+  status: string;
+  opportunity_type: string;
+  locations: string[];
+  roles: ExamRole[];
+  timeline: ExamTimeline;
+  documents: string[];
+  general_requirements: ExamRequirement[];
+  subjects: ExamSubject[];
+  warnings: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ExamFitScore {
+  overall_score: number;
+  requirement_score: number;
+  timeline_score: number;
+  location_score: number;
+  salary_score: number;
+  study_effort_score: number;
+  profile_alignment_score: number;
+  risk_score: number;
+  recommendation: ExamRecommendation;
+  matched_requirements: ExamRequirement[];
+  missing_requirements: ExamRequirement[];
+  uncertain_requirements: ExamRequirement[];
+  warnings: string[];
+}
+
+export interface StudyPlanDraft {
+  days_until_exam?: number | null;
+  weekly_hours: number;
+  subjects: ExamSubject[];
+  priority_topics: string[];
+  schedule_blocks: string[];
+  warnings: string[];
+}
+
+export interface PublicExamImportResult {
+  notice: ExamNotice;
+  roles: ExamRole[];
+  timeline: ExamTimeline;
+  subjects: ExamSubject[];
+  requirements: ExamRequirement[];
+  warnings: string[];
+  questions_to_confirm: string[];
+  source_excerpts: string[];
+  needs_user_review: boolean;
+  provider_used: string;
+  requested_provider: string;
+  analysis_mode: AnalysisMode;
+}
+
+export interface PublicExamListResult {
+  notices: ExamNotice[];
+}
+
+export interface PublicExamConfirmResult {
+  notice: ExamNotice;
+  message: string;
+}
+
+export interface PublicExamAnalyzeResult {
+  notice: ExamNotice;
+  role?: ExamRole | null;
+  fit_score: ExamFitScore;
+  context_summary: string;
+  checklist: ExamRequirement[];
+  warnings: string[];
+}
+
+export interface PublicExamStudyPlanResult {
+  notice: ExamNotice;
+  role?: ExamRole | null;
+  study_plan: StudyPlanDraft;
+  warnings: string[];
+}
+
 export interface ProfileDeduplicateResult {
   suggestions: Array<{
     suggestion_id: string;
@@ -640,7 +796,12 @@ export type RadarSourceType =
   | "manual_public_page"
   | "manual_url"
   | "recurring_csv_json"
-  | "authenticated_assisted_capture";
+  | "authenticated_assisted_capture"
+  | "public_exam"
+  | "academic_call"
+  | "scholarship"
+  | "residency"
+  | "internship_public";
 
 export type RadarSourceStatus =
   | "available"
@@ -887,6 +1048,13 @@ export interface RadarResult {
   source_id?: string;
   source_name?: string;
   source_type: RadarSourceType;
+  opportunity_type?:
+    | "job"
+    | "public_exam"
+    | "academic_call"
+    | "scholarship"
+    | "residency"
+    | "internship_public";
   wishlist_id?: string;
   title: string;
   company?: string;

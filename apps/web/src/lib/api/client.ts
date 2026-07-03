@@ -39,6 +39,11 @@ import type {
   ProfileItem,
   ProfileItemResult,
   ProfileResult,
+  PublicExamAnalyzeResult,
+  PublicExamConfirmResult,
+  PublicExamImportResult,
+  PublicExamListResult,
+  PublicExamStudyPlanResult,
   RadarAlert,
   RadarAlertResult,
   RadarAlertsResult,
@@ -241,6 +246,65 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           message: "Modo Demo: itens acadêmicos adicionados ao Perfil.",
         },
         normalizeLattesConfirmResult,
+      ),
+
+    publicExamImport: (payload: {
+      text: string;
+      source_url?: string;
+      source_name?: string;
+      use_ai: boolean;
+      language?: string;
+    }) =>
+      call<PublicExamImportResult>(
+        mode,
+        baseUrl,
+        "/public-exams/import",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockPublicExamImport(payload),
+        normalizePublicExamImportResult,
+      ),
+
+    publicExamList: (query = "") =>
+      call<PublicExamListResult>(
+        mode,
+        baseUrl,
+        `/public-exams${query ? `?query=${encodeURIComponent(query)}` : ""}`,
+        undefined,
+        { notices: [mockPublicExamNotice()] },
+        normalizePublicExamListResult,
+      ),
+
+    publicExamConfirm: (noticeId: string, notice: PublicExamImportResult["notice"]) =>
+      call<PublicExamConfirmResult>(
+        mode,
+        baseUrl,
+        `/public-exams/${encodeURIComponent(noticeId)}/confirm`,
+        { method: "POST", body: JSON.stringify({ notice }) },
+        {
+          notice: normalizeExamNotice({ ...notice, notice_id: noticeId, status: "confirmed" }),
+          message: "Modo Demo: edital revisado salvo localmente. Nenhuma inscrição foi feita.",
+        },
+        normalizePublicExamConfirmResult,
+      ),
+
+    publicExamAnalyze: (noticeId: string, role_id = "") =>
+      call<PublicExamAnalyzeResult>(
+        mode,
+        baseUrl,
+        `/public-exams/${encodeURIComponent(noticeId)}/analyze`,
+        { method: "POST", body: JSON.stringify({ role_id }) },
+        mockPublicExamAnalyze(role_id),
+        normalizePublicExamAnalyzeResult,
+      ),
+
+    publicExamStudyPlan: (noticeId: string, payload: { role_id?: string; weekly_hours: number }) =>
+      call<PublicExamStudyPlanResult>(
+        mode,
+        baseUrl,
+        `/public-exams/${encodeURIComponent(noticeId)}/study-plan`,
+        { method: "POST", body: JSON.stringify(payload) },
+        mockPublicExamStudyPlan(payload.weekly_hours),
+        normalizePublicExamStudyPlanResult,
       ),
 
     profileDeduplicate: () =>
@@ -2306,6 +2370,241 @@ function mockLattesImport(payload: {
   };
 }
 
+function mockPublicExamNotice(): PublicExamImportResult["notice"] {
+  const now = new Date().toISOString();
+  const requirements = [
+    normalizeExamRequirement({
+      requirement_id: "exam-req-education",
+      kind: "degree",
+      description: "Graduação concluída em Engenharia Civil.",
+      evidence_needed: "Diploma ou certificado de conclusão.",
+      match_status: "uncertain",
+      confidence: "high",
+    }),
+    normalizeExamRequirement({
+      requirement_id: "exam-req-registry",
+      kind: "professional_registry",
+      description: "Registro ativo no CREA.",
+      evidence_needed: "Certidão ou carteira profissional ativa.",
+      match_status: "missing",
+      confidence: "high",
+    }),
+    normalizeExamRequirement({
+      requirement_id: "exam-req-doc",
+      kind: "document",
+      description: "Documento de identidade, CPF e comprovante de quitação eleitoral.",
+      evidence_needed: "Documentos conforme edital oficial.",
+      match_status: "uncertain",
+      confidence: "medium",
+    }),
+  ];
+  const subjects = [
+    normalizeExamSubject({
+      name: "Língua Portuguesa",
+      topics: ["interpretação de texto", "concordância", "pontuação"],
+      stage: "prova objetiva",
+      priority: "medium",
+      source_excerpt: "Conteúdo programático: Língua Portuguesa.",
+    }),
+    normalizeExamSubject({
+      name: "Conhecimentos Específicos",
+      topics: [
+        "licitações",
+        "obras públicas",
+        "fiscalização de contratos",
+        "segurança do trabalho",
+      ],
+      stage: "prova objetiva",
+      priority: "high",
+      source_excerpt: "Conhecimentos específicos para Engenharia Civil.",
+    }),
+  ];
+  const timeline = normalizeExamTimeline({
+    registration_start: "01/08/2026",
+    registration_end: "20/08/2026",
+    payment_deadline: "21/08/2026",
+    exam_date: "13/09/2026",
+    result_date: "30/09/2026",
+    other_dates: ["01/08/2026", "20/08/2026", "13/09/2026"],
+  });
+  const role = normalizeExamRole({
+    role_id: "exam-role-engenheiro",
+    notice_id: "exam-demo-prefeitura",
+    title: "Engenheiro Civil",
+    area: "Engenharia",
+    level: "superior",
+    education_level: "superior",
+    required_degree: "Graduação concluída em Engenharia Civil.",
+    required_registry: "CREA",
+    salary: "R$ 6.200,00",
+    workload: "40h semanais",
+    vacancies: "2",
+    contract_type: "public_exam",
+    employment_regime: "estatutário",
+    location: "São José dos Campos",
+    requirements,
+    subjects,
+    stages: ["prova objetiva", "prova de títulos"],
+  });
+  return normalizeExamNotice({
+    notice_id: "exam-demo-prefeitura",
+    title: "Edital nº 01/2026 - Concurso Público Prefeitura Exemplo",
+    raw_text: "Edital fictício de demonstração para revisão manual.",
+    source_url: "https://example.invalid/edital-01-2026.pdf",
+    source_name: "Prefeitura Exemplo",
+    organization: "Prefeitura Municipal de Exemplo",
+    exam_board: "Instituto Exemplo",
+    notice_number: "01/2026",
+    publication_date: "10/07/2026",
+    registration_fee: "R$ 120,00",
+    status: "draft",
+    opportunity_type: "public_exam",
+    locations: ["São José dos Campos"],
+    roles: [role],
+    timeline,
+    documents: [
+      "Documento de identidade",
+      "CPF",
+      "Diploma de graduação",
+      "Registro profissional no CREA",
+    ],
+    general_requirements: requirements,
+    subjects,
+    warnings: [
+      "O SotuHire ajuda a organizar e interpretar editais, mas o edital oficial sempre prevalece. Revise manualmente requisitos, datas, taxa, documentos, conteúdo programático e regras da banca.",
+      "Modo Demo: edital fictício para validação da interface.",
+    ],
+    created_at: now,
+    updated_at: now,
+  });
+}
+
+function mockPublicExamImport(payload: {
+  text: string;
+  source_url?: string;
+  source_name?: string;
+  use_ai: boolean;
+}): PublicExamImportResult {
+  const notice = normalizeExamNotice({
+    ...mockPublicExamNotice(),
+    raw_text: payload.text,
+    source_url: payload.source_url || "https://example.invalid/edital-01-2026.pdf",
+    source_name: payload.source_name || "Fonte demo",
+  });
+  return {
+    notice,
+    roles: notice.roles,
+    timeline: notice.timeline,
+    subjects: notice.subjects,
+    requirements: notice.general_requirements,
+    warnings: notice.warnings,
+    questions_to_confirm: [
+      "Os cargos, datas, taxa e requisitos batem com o edital oficial?",
+      "Qual cargo você quer comparar com o Perfil Profissional Universal?",
+    ],
+    source_excerpts: [
+      "Cargo: Engenheiro Civil",
+      "Inscrições: 01/08/2026 a 20/08/2026",
+      "Conteúdo programático: Língua Portuguesa e Conhecimentos Específicos.",
+    ],
+    needs_user_review: true,
+    provider_used: payload.use_ai ? "gemini-demo" : "local",
+    requested_provider: payload.use_ai ? "gemini" : "local",
+    analysis_mode: payload.use_ai ? "ai" : "local",
+  };
+}
+
+function mockPublicExamAnalyze(roleId = ""): PublicExamAnalyzeResult {
+  const notice = mockPublicExamNotice();
+  const role = notice.roles.find((item) => item.role_id === roleId) ?? notice.roles[0] ?? null;
+  const matched = [
+    normalizeExamRequirement({
+      requirement_id: "exam-req-degree-match",
+      kind: "degree",
+      description: "Graduação concluída em Engenharia Civil.",
+      evidence_needed: "Diploma ou certificado de conclusão.",
+      match_status: "matched",
+      matched_profile_item_ids: ["profile-demo-degree"],
+      confidence: "medium",
+      warnings: ["Modo Demo: evidência simulada; confirme no Perfil real."],
+    }),
+  ];
+  const missing = [
+    normalizeExamRequirement({
+      requirement_id: "exam-req-registry-missing",
+      kind: "professional_registry",
+      description: "Registro ativo no CREA.",
+      evidence_needed: "Certidão ou carteira profissional ativa.",
+      match_status: "missing",
+      confidence: "high",
+    }),
+  ];
+  const uncertain = [
+    normalizeExamRequirement({
+      requirement_id: "exam-req-doc-uncertain",
+      kind: "document",
+      description: "Documento de identidade, CPF e quitação eleitoral.",
+      evidence_needed: "Documentos conforme edital oficial.",
+      match_status: "uncertain",
+      confidence: "medium",
+    }),
+  ];
+  return {
+    notice,
+    role,
+    fit_score: {
+      overall_score: 64,
+      requirement_score: 58,
+      timeline_score: 80,
+      location_score: 70,
+      salary_score: 70,
+      study_effort_score: 65,
+      profile_alignment_score: 72,
+      risk_score: 42,
+      recommendation: "review_requirements",
+      matched_requirements: matched,
+      missing_requirements: missing,
+      uncertain_requirements: uncertain,
+      warnings: [
+        "Pontuação inicial: revise requisitos legais e edital oficial antes de decidir.",
+        "O SotuHire não presume registro profissional, graduação concluída ou inscrição feita.",
+      ],
+    },
+    context_summary: "Perfil demo com evidência acadêmica e formação técnica a confirmar.",
+    checklist: [...missing, ...uncertain, ...matched],
+    warnings: notice.warnings,
+  };
+}
+
+function mockPublicExamStudyPlan(weeklyHours: number): PublicExamStudyPlanResult {
+  const notice = mockPublicExamNotice();
+  const role = notice.roles[0] ?? null;
+  return {
+    notice,
+    role,
+    study_plan: {
+      days_until_exam: 72,
+      weekly_hours: weeklyHours,
+      subjects: role?.subjects ?? notice.subjects,
+      priority_topics: [
+        "Conhecimentos Específicos: licitações",
+        "Conhecimentos Específicos: obras públicas",
+        "Língua Portuguesa: interpretação de texto",
+      ],
+      schedule_blocks: [
+        `Semana: ${Math.max(1, Math.floor(weeklyHours / 2))}h para Conhecimentos Específicos + revisão.`,
+        `Semana: ${Math.max(1, Math.ceil(weeklyHours / 3))}h para Língua Portuguesa.`,
+        "Reserva: simulados, leitura do edital e revisão.",
+      ],
+      warnings: [
+        "Plano inicial: ajuste manualmente conforme edital oficial, banca e sua rotina.",
+        "O plano não promete aprovação e não substitui leitura do edital.",
+      ],
+    },
+    warnings: ["Plano inicial: ajuste manualmente conforme edital oficial, banca e sua rotina."],
+  };
+}
+
 function normalizeProfileResult(value: unknown): ProfileResult {
   const raw = asRecord(value);
   return {
@@ -2359,6 +2658,188 @@ function normalizeLattesConfirmResult(value: unknown): LattesConfirmResult {
     saved: objectList(raw.saved).map(normalizeProfileItem),
     skipped_duplicates: objectList(raw.skipped_duplicates).map(normalizeProfileItem),
     message: asString(raw.message),
+  };
+}
+
+function normalizePublicExamImportResult(value: unknown): PublicExamImportResult {
+  const raw = asRecord(value);
+  const notice = normalizeExamNotice(raw.notice);
+  return {
+    notice,
+    roles: objectList(raw.roles).map(normalizeExamRole),
+    timeline: normalizeExamTimeline(raw.timeline || notice.timeline),
+    subjects: objectList(raw.subjects).map(normalizeExamSubject),
+    requirements: objectList(raw.requirements).map(normalizeExamRequirement),
+    warnings: stringList(raw.warnings),
+    questions_to_confirm: stringList(raw.questions_to_confirm),
+    source_excerpts: stringList(raw.source_excerpts),
+    needs_user_review: asBoolean(raw.needs_user_review, true),
+    provider_used: asString(raw.provider_used) || "local",
+    requested_provider: asString(raw.requested_provider) || "local",
+    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
+  };
+}
+
+function normalizePublicExamListResult(value: unknown): PublicExamListResult {
+  return { notices: objectList(asRecord(value).notices).map(normalizeExamNotice) };
+}
+
+function normalizePublicExamConfirmResult(value: unknown): PublicExamConfirmResult {
+  const raw = asRecord(value);
+  return {
+    notice: normalizeExamNotice(raw.notice),
+    message: asString(raw.message),
+  };
+}
+
+function normalizePublicExamAnalyzeResult(value: unknown): PublicExamAnalyzeResult {
+  const raw = asRecord(value);
+  return {
+    notice: normalizeExamNotice(raw.notice),
+    role: raw.role ? normalizeExamRole(raw.role) : null,
+    fit_score: normalizeExamFitScore(raw.fit_score),
+    context_summary: asString(raw.context_summary),
+    checklist: objectList(raw.checklist).map(normalizeExamRequirement),
+    warnings: stringList(raw.warnings),
+  };
+}
+
+function normalizePublicExamStudyPlanResult(value: unknown): PublicExamStudyPlanResult {
+  const raw = asRecord(value);
+  return {
+    notice: normalizeExamNotice(raw.notice),
+    role: raw.role ? normalizeExamRole(raw.role) : null,
+    study_plan: normalizeStudyPlan(raw.study_plan),
+    warnings: stringList(raw.warnings),
+  };
+}
+
+function normalizeExamNotice(value: unknown): PublicExamImportResult["notice"] {
+  const raw = asRecord(value);
+  const now = new Date().toISOString();
+  return {
+    notice_id: asString(raw.notice_id) || "exam-demo",
+    title: asString(raw.title) || "Edital importado para revisão",
+    raw_text: asString(raw.raw_text),
+    source_url: asString(raw.source_url),
+    source_name: asString(raw.source_name),
+    organization: asString(raw.organization),
+    exam_board: asString(raw.exam_board),
+    notice_number: asString(raw.notice_number),
+    publication_date: asString(raw.publication_date),
+    registration_fee: asString(raw.registration_fee),
+    status: asString(raw.status) || "draft",
+    opportunity_type: asString(raw.opportunity_type) || "public_exam",
+    locations: stringList(raw.locations),
+    roles: objectList(raw.roles).map(normalizeExamRole),
+    timeline: normalizeExamTimeline(raw.timeline),
+    documents: stringList(raw.documents),
+    general_requirements: objectList(raw.general_requirements).map(normalizeExamRequirement),
+    subjects: objectList(raw.subjects).map(normalizeExamSubject),
+    warnings: stringList(raw.warnings),
+    created_at: asString(raw.created_at) || now,
+    updated_at: asString(raw.updated_at) || now,
+  };
+}
+
+function normalizeExamRole(value: unknown): PublicExamImportResult["roles"][number] {
+  const raw = asRecord(value);
+  return {
+    role_id: asString(raw.role_id) || `role_${Math.random().toString(36).slice(2, 8)}`,
+    notice_id: asString(raw.notice_id),
+    title: asString(raw.title) || "Cargo a revisar",
+    area: asString(raw.area),
+    level: asString(raw.level),
+    education_level: asString(raw.education_level),
+    required_degree: asString(raw.required_degree),
+    required_registry: asString(raw.required_registry),
+    required_experience: asString(raw.required_experience),
+    required_certifications: stringList(raw.required_certifications),
+    salary: asString(raw.salary),
+    workload: asString(raw.workload),
+    vacancies: asString(raw.vacancies),
+    reserved_vacancies: asString(raw.reserved_vacancies),
+    quota_notes: asString(raw.quota_notes),
+    contract_type: asString(raw.contract_type) || "public_exam",
+    employment_regime: asString(raw.employment_regime),
+    location: asString(raw.location),
+    requirements: objectList(raw.requirements).map(normalizeExamRequirement),
+    subjects: objectList(raw.subjects).map(normalizeExamSubject),
+    stages: stringList(raw.stages),
+  };
+}
+
+function normalizeExamRequirement(value: unknown): PublicExamImportResult["requirements"][number] {
+  const raw = asRecord(value);
+  return {
+    requirement_id: asString(raw.requirement_id) || `req_${Math.random().toString(36).slice(2, 8)}`,
+    kind: asString(raw.kind) || "other",
+    description: asString(raw.description) || "Requisito a revisar",
+    mandatory: asBoolean(raw.mandatory, true),
+    evidence_needed: asString(raw.evidence_needed),
+    matched_profile_item_ids: stringList(raw.matched_profile_item_ids),
+    match_status: normalizeRequirementStatus(raw.match_status),
+    confidence: normalizeProfileConfidence(raw.confidence),
+    warnings: stringList(raw.warnings),
+  };
+}
+
+function normalizeExamSubject(value: unknown): PublicExamImportResult["subjects"][number] {
+  const raw = asRecord(value);
+  return {
+    name: asString(raw.name) || "Conteúdo programático a revisar",
+    topics: stringList(raw.topics),
+    weight: definedNumber(raw.weight) ?? null,
+    questions: definedNumber(raw.questions) ?? null,
+    stage: asString(raw.stage),
+    priority: asString(raw.priority) || "medium",
+    source_excerpt: asString(raw.source_excerpt),
+  };
+}
+
+function normalizeExamTimeline(value: unknown): PublicExamImportResult["timeline"] {
+  const raw = asRecord(value);
+  return {
+    registration_start: asString(raw.registration_start),
+    registration_end: asString(raw.registration_end),
+    payment_deadline: asString(raw.payment_deadline),
+    exam_date: asString(raw.exam_date),
+    result_date: asString(raw.result_date),
+    appeal_deadlines: stringList(raw.appeal_deadlines),
+    document_submission_deadline: asString(raw.document_submission_deadline),
+    other_dates: stringList(raw.other_dates),
+    warnings: stringList(raw.warnings),
+  };
+}
+
+function normalizeExamFitScore(value: unknown): PublicExamAnalyzeResult["fit_score"] {
+  const raw = asRecord(value);
+  return {
+    overall_score: asNumber(raw.overall_score, 0),
+    requirement_score: asNumber(raw.requirement_score, 0),
+    timeline_score: asNumber(raw.timeline_score, 0),
+    location_score: asNumber(raw.location_score, 0),
+    salary_score: asNumber(raw.salary_score, 0),
+    study_effort_score: asNumber(raw.study_effort_score, 0),
+    profile_alignment_score: asNumber(raw.profile_alignment_score, 0),
+    risk_score: asNumber(raw.risk_score, 0),
+    recommendation: normalizeExamRecommendation(raw.recommendation),
+    matched_requirements: objectList(raw.matched_requirements).map(normalizeExamRequirement),
+    missing_requirements: objectList(raw.missing_requirements).map(normalizeExamRequirement),
+    uncertain_requirements: objectList(raw.uncertain_requirements).map(normalizeExamRequirement),
+    warnings: stringList(raw.warnings),
+  };
+}
+
+function normalizeStudyPlan(value: unknown): PublicExamStudyPlanResult["study_plan"] {
+  const raw = asRecord(value);
+  return {
+    days_until_exam: definedNumber(raw.days_until_exam) ?? null,
+    weekly_hours: asNumber(raw.weekly_hours, 8),
+    subjects: objectList(raw.subjects).map(normalizeExamSubject),
+    priority_topics: stringList(raw.priority_topics),
+    schedule_blocks: stringList(raw.schedule_blocks),
+    warnings: stringList(raw.warnings),
   };
 }
 
@@ -2565,6 +3046,26 @@ function normalizeAiStatus(value: unknown): AiSettingsStatus {
 
 function normalizeAnalysisMode(value: unknown): "local" | "ai" | "fallback" {
   return value === "ai" || value === "fallback" || value === "local" ? value : "local";
+}
+
+function normalizeRequirementStatus(value: unknown): "matched" | "missing" | "uncertain" {
+  return value === "matched" || value === "missing" || value === "uncertain" ? value : "uncertain";
+}
+
+function normalizeExamRecommendation(
+  value: unknown,
+): PublicExamAnalyzeResult["fit_score"]["recommendation"] {
+  const allowed: PublicExamAnalyzeResult["fit_score"]["recommendation"][] = [
+    "strong_fit",
+    "good_fit",
+    "review_requirements",
+    "risky",
+    "not_recommended",
+    "insufficient_information",
+  ];
+  return allowed.includes(value as PublicExamAnalyzeResult["fit_score"]["recommendation"])
+    ? (value as PublicExamAnalyzeResult["fit_score"]["recommendation"])
+    : "insufficient_information";
 }
 
 function normalizeAuthenticatedBrowserStatus(value: unknown): AuthenticatedBrowserStatus {
@@ -3319,6 +3820,7 @@ function normalizeRadarResult(value: unknown): RadarResult {
     source_id: asString(raw.source_id),
     source_name: asString(raw.source_name),
     source_type: normalizeRadarSourceType(raw.source_type),
+    opportunity_type: normalizeOpportunityType(raw.opportunity_type),
     wishlist_id: asString(raw.wishlist_id),
     title: asString(raw.title) || "Vaga sem titulo",
     company: asString(raw.company),
@@ -3441,10 +3943,29 @@ function normalizeRadarSourceType(value: unknown): RadarSource["source_type"] {
     "manual_url",
     "recurring_csv_json",
     "authenticated_assisted_capture",
+    "public_exam",
+    "academic_call",
+    "scholarship",
+    "residency",
+    "internship_public",
   ];
   return allowed.includes(value as RadarSource["source_type"])
     ? (value as RadarSource["source_type"])
     : "public_feed";
+}
+
+function normalizeOpportunityType(value: unknown): NonNullable<RadarResult["opportunity_type"]> {
+  const allowed: NonNullable<RadarResult["opportunity_type"]>[] = [
+    "job",
+    "public_exam",
+    "academic_call",
+    "scholarship",
+    "residency",
+    "internship_public",
+  ];
+  return allowed.includes(value as NonNullable<RadarResult["opportunity_type"]>)
+    ? (value as NonNullable<RadarResult["opportunity_type"]>)
+    : "job";
 }
 
 function normalizeRadarSourceStatus(value: unknown): RadarSource["status"] {

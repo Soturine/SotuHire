@@ -1025,6 +1025,7 @@ function RadarPage() {
                 <option value="official_api">API oficial</option>
                 <option value="manual_public_page">Página pública</option>
                 <option value="authenticated_assisted_capture">Captura assistida</option>
+                <option value="public_exam">Edital / concurso</option>
               </select>
             }
           >
@@ -1501,6 +1502,11 @@ function sourceLabel(sourceType: RadarSource["source_type"]): string {
     manual_url: "Link manual",
     recurring_csv_json: "CSV/JSON recorrente",
     authenticated_assisted_capture: "Captura assistida",
+    public_exam: "Edital/concurso",
+    academic_call: "Chamada acadêmica",
+    scholarship: "Bolsa",
+    residency: "Residência",
+    internship_public: "Estágio público",
   };
   return labels[sourceType];
 }

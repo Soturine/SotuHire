@@ -15,6 +15,7 @@ import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as RadarRouteImport } from './routes/radar'
+import { Route as PublicExamsRouteImport } from './routes/public-exams'
 import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MatchRouteImport } from './routes/match'
@@ -53,6 +54,11 @@ const ResumeRoute = ResumeRouteImport.update({
 const RadarRoute = RadarRouteImport.update({
   id: '/radar',
   path: '/radar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicExamsRoute = PublicExamsRouteImport.update({
+  id: '/public-exams',
+  path: '/public-exams',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProfileRoute = ProfileRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/match': typeof MatchRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/public-exams': typeof PublicExamsRoute
   '/radar': typeof RadarRoute
   '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
@@ -128,6 +135,7 @@ export interface FileRoutesByTo {
   '/match': typeof MatchRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/public-exams': typeof PublicExamsRoute
   '/radar': typeof RadarRoute
   '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/match': typeof MatchRoute
   '/privacy': typeof PrivacyRoute
   '/profile': typeof ProfileRoute
+  '/public-exams': typeof PublicExamsRoute
   '/radar': typeof RadarRoute
   '/resume': typeof ResumeRoute
   '/settings': typeof SettingsRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/match'
     | '/privacy'
     | '/profile'
+    | '/public-exams'
     | '/radar'
     | '/resume'
     | '/settings'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
     | '/match'
     | '/privacy'
     | '/profile'
+    | '/public-exams'
     | '/radar'
     | '/resume'
     | '/settings'
@@ -199,6 +210,7 @@ export interface FileRouteTypes {
     | '/match'
     | '/privacy'
     | '/profile'
+    | '/public-exams'
     | '/radar'
     | '/resume'
     | '/settings'
@@ -217,6 +229,7 @@ export interface RootRouteChildren {
   MatchRoute: typeof MatchRoute
   PrivacyRoute: typeof PrivacyRoute
   ProfileRoute: typeof ProfileRoute
+  PublicExamsRoute: typeof PublicExamsRoute
   RadarRoute: typeof RadarRoute
   ResumeRoute: typeof ResumeRoute
   SettingsRoute: typeof SettingsRoute
@@ -267,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/radar'
       fullPath: '/radar'
       preLoaderRoute: typeof RadarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/public-exams': {
+      id: '/public-exams'
+      path: '/public-exams'
+      fullPath: '/public-exams'
+      preLoaderRoute: typeof PublicExamsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/profile': {
@@ -345,6 +365,7 @@ const rootRouteChildren: RootRouteChildren = {
   MatchRoute: MatchRoute,
   PrivacyRoute: PrivacyRoute,
   ProfileRoute: ProfileRoute,
+  PublicExamsRoute: PublicExamsRoute,
   RadarRoute: RadarRoute,
   ResumeRoute: ResumeRoute,
   SettingsRoute: SettingsRoute,

@@ -10,6 +10,7 @@ const coreScreens = [
   { path: "/tailor", heading: /Ajuste/ },
   { path: "/github", heading: /GitHub/ },
   { path: "/radar", heading: "Radar de Vagas" },
+  { path: "/public-exams", heading: "Editais / Concursos" },
   { path: "/profile", heading: "Perfil" },
   { path: "/tracker", heading: "Candidaturas" },
   { path: "/intelligence", heading: /Intelig.ncia/ },
@@ -50,6 +51,7 @@ test("sidebar navigates across core screens", async ({ page }) => {
     { label: /Vaga/i, url: /\/job$/, heading: "Vaga" },
     { label: /Compatibilidade/i, url: /\/match$/, heading: /Compatibilidade/ },
     { label: /Radar/i, url: /\/radar$/, heading: "Radar de Vagas" },
+    { label: /Editais \/ Concursos/i, url: /\/public-exams$/, heading: "Editais / Concursos" },
     { label: /Perfil/i, url: /\/profile$/, heading: "Perfil" },
     { label: /Fontes e Captura/i, url: /\/sources$/, heading: "Fontes e Captura" },
     { label: /Configura..es/i, url: /\/settings$/, heading: /Configura..es/ },
@@ -260,6 +262,48 @@ test("job radar creates wishlist/source, runs demo and saves results", async ({ 
     session: JSON.stringify(sessionStorage),
   }));
   expect(storage.local + storage.session).not.toMatch(/AIza|api_key|secret/i);
+});
+
+test("public exams flow analyzes edital, compares profile and creates study plan", async ({
+  page,
+}) => {
+  await page.goto("/public-exams");
+
+  await expect(page.getByRole("heading", { name: "Editais / Concursos" })).toBeVisible();
+  await expect(page.getByTestId("public-exams-official-warning")).toContainText(
+    "edital oficial sempre prevalece",
+  );
+  await page.getByTestId("public-exams-textarea").fill(`
+Edital nº 01/2026 - Concurso Público Prefeitura Exemplo
+Órgão: Prefeitura Municipal de Exemplo
+Banca organizadora: Instituto Exemplo
+Cargo: Engenheiro Civil
+Salário: R$ 6.200,00
+Taxa de inscrição: R$ 120,00
+Inscrições: 01/08/2026 a 20/08/2026
+Prova objetiva: 13/09/2026
+Requisitos: graduação concluída em Engenharia Civil e registro ativo no CREA.
+Documentos: identidade, CPF, diploma e registro profissional.
+Conteúdo programático: Língua Portuguesa; Conhecimentos Específicos: obras públicas.
+`);
+  await page.getByTestId("public-exams-analyze").click();
+  await expect(page.getByTestId("public-exams-role-summary")).toContainText("Engenheiro Civil");
+  await expect(page.getByTestId("public-exams-requirements")).toContainText(/CREA|Graduação/);
+  await expect(page.getByTestId("public-exams-warnings")).toContainText(/edital oficial/i);
+  await page.getByTestId("public-exams-save").click();
+  await expect(page.getByText(/Edital salvo|Modo Demo/i).first()).toBeVisible();
+  await page.getByTestId("public-exams-compare").click();
+  await expect(page.getByTestId("public-exams-fit-score")).toContainText("Exam Fit Score");
+  await expect(page.getByTestId("public-exams-checklist")).toContainText(
+    /Ausente|Incerto|Atendido/,
+  );
+  await page.getByTestId("public-exams-generate-study-plan").click();
+  await expect(page.getByTestId("public-exams-study-plan")).toContainText(
+    /Tópicos prioritários|Blocos sugeridos/,
+  );
+  await expect(page.getByRole("button", { name: /inscrever|inscrição automática/i })).toHaveCount(
+    0,
+  );
 });
 
 test("sources supports browser CSV/JSON upload preview, duplicate merge, export and source directory", async ({
