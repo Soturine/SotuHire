@@ -55,6 +55,7 @@ WALKTHROUGH = [
     Shot("/radar", "Wishlist IA/local", selector="#radar-ai-wishlist"),
     Shot("/radar", "Agendamentos", "sotuhire-web-radar-schedules.png", "#radar-schedules"),
     Shot("/radar", "Notificações", "sotuhire-web-notifications.png", "#radar-notifications"),
+    Shot("/public-exams", "Editais/Concursos", "sotuhire-web-public-exams.png"),
     Shot("/tracker", "Kanban/Tracker", "sotuhire-web-tracker.png"),
     Shot("/settings", "Configurações IA", "sotuhire-web-settings-ai.png"),
 ]
@@ -124,6 +125,10 @@ def _prepare(page: Page, shot: Shot) -> None:
         button = page.locator("[data-testid='view-extension-profile-candidates']").first
         button.click()
         page.locator("[data-testid='extension-profile-candidates']").wait_for(timeout=5_000)
+        page.wait_for_timeout(500)
+    if shot.file == "sotuhire-web-public-exams.png":
+        page.locator("[data-testid='public-exams-analyze']").click()
+        page.locator("[data-testid='public-exams-role-summary']").wait_for(timeout=5_000)
         page.wait_for_timeout(500)
 
 
