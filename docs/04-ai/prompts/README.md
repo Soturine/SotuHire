@@ -39,6 +39,7 @@ Cada documento deve conter:
 - `hidden-job-detection-v1.md`
 - `career-advice-v1.md`
 - `profile-lattes-extractor-v1.md`
+- `public-exam-notice-extractor-v1.md`
 
 ## Regra de ouro
 

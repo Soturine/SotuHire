@@ -67,7 +67,8 @@ class PromptRegistry:
 - `job_radar_match_explanation_v1`;
 - `job_wishlist_builder_v1`;
 - `profile_items_extractor_v1`;
-- `profile_lattes_extractor_v1`.
+- `profile_lattes_extractor_v1`;
+- `public_exam_notice_extractor_v1`.
 
 O prompt do Radar explica evidências e lacunas, mas não altera score final.
 
@@ -83,6 +84,10 @@ de fato confirmado e não inclui segredos, cookies, tokens ou API keys.
 `profile_lattes_extractor_v1` extrai evidências acadêmicas/Lattes como candidatos de `ProfileItem`.
 Ele não inventa publicação, DOI, ORCID, instituição, orientador, vínculo, prêmio ou titulação. Tudo
 continua com `confirmed_by_user=false` até confirmação explícita no Perfil Profissional Universal.
+
+`public_exam_notice_extractor_v1` estrutura editais, concursos e chamadas públicas como rascunhos
+revisáveis. Ele não inventa órgão, banca, datas, taxa, salário, requisitos ou conteúdo programático
+e não substitui o edital oficial.
 
 ## Dados salvos por execução
 
