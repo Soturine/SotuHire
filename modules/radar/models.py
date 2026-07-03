@@ -21,6 +21,19 @@ RadarSourceType = Literal[
     "manual_url",
     "recurring_csv_json",
     "authenticated_assisted_capture",
+    "public_exam",
+    "academic_call",
+    "scholarship",
+    "residency",
+    "internship_public",
+]
+RadarOpportunityType = Literal[
+    "job",
+    "public_exam",
+    "academic_call",
+    "scholarship",
+    "residency",
+    "internship_public",
 ]
 RadarSourceStatus = Literal[
     "available",
@@ -189,6 +202,7 @@ class RadarResult(BaseModel):
     source_id: str = ""
     source_name: str = ""
     source_type: RadarSourceType = "public_feed"
+    opportunity_type: RadarOpportunityType = "job"
     wishlist_id: str = ""
     title: str
     company: str = ""

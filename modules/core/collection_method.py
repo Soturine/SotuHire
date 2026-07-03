@@ -14,5 +14,6 @@ CollectionMethod = Literal[
     "extension_capture",
     "companion_capture",
     "official_api_future",
+    "public_exam_manual",
     "demo_fixture",
 ]

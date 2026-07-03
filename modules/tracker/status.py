@@ -19,3 +19,19 @@ class JobStatus(StrEnum):
     REJECTED = "rejected"
     OFFER = "offer"
     ARCHIVED = "archived"
+
+
+class PublicOpportunityStatus(StrEnum):
+    """Prepared statuses for public exams without changing the private-job Kanban."""
+
+    NOTICED = "noticed"
+    REVIEWING_NOTICE = "reviewing_notice"
+    REQUIREMENTS_REVIEW = "requirements_review"
+    REGISTERED_MANUALLY = "registered_manually"
+    STUDYING = "studying"
+    EXAM_SCHEDULED = "exam_scheduled"
+    DOCUMENT_PENDING = "document_pending"
+    RESULT_WAITING = "result_waiting"
+    APPROVED = "approved"
+    REJECTED = "rejected"
+    ARCHIVED = "archived"

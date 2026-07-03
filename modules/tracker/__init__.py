@@ -1,5 +1,5 @@
 """Local tracker modules."""
 
-from .status import JobStatus
+from .status import JobStatus, PublicOpportunityStatus
 
-__all__ = ["JobStatus"]
+__all__ = ["JobStatus", "PublicOpportunityStatus"]
