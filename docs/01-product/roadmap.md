@@ -1,6 +1,6 @@
 ﻿# Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.9.2 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.9.3 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,14 +8,32 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.9.2 |
+| Versão atual considerada | v1.9.3 |
 | Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional e intake persistente |
 | Próximo ciclo documental | contínuo |
-| Próximo ciclo técnico | v1.9.3 Public Exams / Edital Parser Foundation ou v2.0 Assistant workflows with human approval |
-| Foco de produto | Copiloto de carreira multiárea com Perfil central, Radar local-first e trajetórias acadêmicas |
-| Foco técnico imediato | Evidências acadêmicas, RAG local aplicado e documentação profissional |
-| Grande lacuna atual | Upload direto de PDF/HTML do Lattes, parser real de edital/concurso e matching adaptativo por domínio |
+| Próximo ciclo técnico | v2.0 Assistant workflows with human approval ou evolução segura de PDF/HTML para editais |
+| Foco de produto | Copiloto de carreira multiárea com Perfil central, Radar local-first, trajetórias acadêmicas e editais revisáveis |
+| Foco técnico imediato | Robustez de editais, RAG local aplicado e workflows com aprovação explícita |
+| Grande lacuna atual | Upload direto de PDF/HTML do Lattes/editais, parsers por banca e matching adaptativo por domínio |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
+
+## Estado atual - v1.9.3
+
+A v1.9.3 entrega **Public Exams & Edital Intelligence Foundation**:
+
+- cria `modules/public_exams` como módulo separado para editais e oportunidades públicas;
+- adiciona importação de edital por texto colado, com rascunho revisável e sem salvar automaticamente;
+- extrai localmente órgão, banca, cargo, salário, taxa, datas, requisitos, documentos, etapas e conteúdo programático;
+- registra o prompt `public_exam_notice_extractor_v1` para Gemini opcional, com fallback local e revisão obrigatória;
+- expõe endpoints `/api/v1/public-exams` para importar, listar, confirmar, analisar e gerar plano de estudo;
+- adiciona tela **Editais / Concursos** em `/public-exams`;
+- compara requisitos com o Perfil Profissional Universal, Career Context Engine e evidências acadêmicas/Lattes confirmadas;
+- gera `ExamFitScore`, checklist de requisitos/documentos e `StudyPlanDraft` inicial;
+- prepara Radar e Tracker para `public_exam`, `academic_call`, `scholarship`, `residency` e `internship_public`;
+- preserva a separação entre edital público e vaga privada;
+- reforça que não há inscrição automática, pagamento automático, envio automático de documento, login em banca/órgão ou scraping autenticado.
+
+O edital oficial sempre prevalece. A fundação ajuda a organizar e comparar, mas não decide elegibilidade final.
 
 ## Estado atual - v1.9.2
 
@@ -251,7 +269,7 @@ A evolução deve ser feita por camadas:
 | v1.9.0 | Scheduled Radar & Notifications | Produto | Agendamento local do Radar, quiet hours, cooldown e notificações in-app. |
 | v1.9.1 | Release Integrity, README Overhaul & Context Unification | Produto/core/docs | Integridade de tag, README profissional, screenshots web e Career Context Engine. |
 | v1.9.2 | Lattes, Academic Profile & AI-Assisted Evidence Extraction | Produto/core/docs | Importação Lattes por texto, evidências acadêmicas revisáveis, Gemini opcional e fundação de editais. |
-| v1.9.3 | Public Exams / Edital Parser Foundation | Produto/core/docs | Parser inicial de edital, requisitos e cronogramas, sem inscrição automática. |
+| v1.9.3 | Public Exams & Edital Intelligence Foundation | Produto/core/docs | Fundação de editais por texto colado, comparação com Perfil Universal, checklist, plano inicial e tela web, sem inscrição automática. |
 | v2.0.0 | Assistant autônomo com aprovação manual | Produto/arquitetura | Autonomia local com aprovações explícitas e sem auto-apply. |
 
 ---

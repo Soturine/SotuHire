@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.9.2 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.9.3 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -37,7 +37,33 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Navegador autenticado autorizado | `/sources` | `/api/v1/sources/authenticated-browser/*` | `apps.api.services.sources` | fluxo existente de scraping local | Parcial |
 | Captura assistida autenticada | `/sources` | `POST /api/v1/sources/authenticated-captures` | `apps.api.services.sources` | `modules/sources`, `modules/profile` | Real |
 | Streamlit | legado/dev | Não é API web | `app.py`, `modules/ui` | core antigo | Legado |
-| Concursos/Editais | sem tela web | sem endpoint web | Parcial | `modules/public_exams`, `docs/02-architecture/public-exams-foundation.md` | Fundação documental |
+| Editais / Concursos | `/public-exams` | `/api/v1/public-exams/*` | `apps.api.services.public_exams` | `modules/public_exams`, `modules/context`, `modules/profile` | Fundação real v1.9.3 |
+
+## Editais e concursos v1.9.3
+
+Endpoints FastAPI:
+
+```txt
+POST   /api/v1/public-exams/import
+GET    /api/v1/public-exams
+GET    /api/v1/public-exams/{notice_id}
+DELETE /api/v1/public-exams/{notice_id}
+POST   /api/v1/public-exams/{notice_id}/confirm
+POST   /api/v1/public-exams/{notice_id}/analyze
+POST   /api/v1/public-exams/{notice_id}/study-plan
+```
+
+`modules/public_exams` centraliza modelos, parser local, store, scoring, checklist e plano de estudo:
+
+- `ExamNotice`, `ExamRole`, `ExamRequirement`, `ExamTimeline`, `ExamSubject`, `ExamFitScore` e `StudyPlanDraft`;
+- importação por texto colado, sem PDF/HTML direto nesta versão;
+- IA/Gemini opcional pelo prompt `public_exam_notice_extractor_v1`, sempre como rascunho revisável;
+- fallback local obrigatório quando a IA falha, vem vazia ou não está configurada;
+- confirmação manual antes de salvar em `data/public_exams/notices.json`;
+- análise com `CareerContextPurpose.PUBLIC_EXAMS`, Perfil Profissional Universal e evidências acadêmicas/Lattes confirmadas;
+- Radar e Tracker preparados para oportunidade pública sem tratar edital como vaga privada.
+
+O fluxo não faz inscrição automática, pagamento, boleto, envio de documentos, login em banca/órgão, scraping autenticado ou CAPTCHA bypass. O endpoint `/api/v1/sources/authenticated-browser/collect` permanece fora do escopo de alteração.
 
 ## Roteamento de IA
 
@@ -59,10 +85,11 @@ allow_resume
 allow_job
 allow_source_import
 allow_radar
+public_exams via allow_radar na v1.9.3
 allow_memory_context
 ```
 
-Currículo, vaga, importações e Radar usam IA quando `use_ai=true` e `provider=gemini` configurado.
+Currículo, vaga, importações, Radar e o rascunho de editais usam IA quando `use_ai=true` e `provider=gemini` configurado.
 A UI mostra provider, modo e baixa confiança sem expor segredo.
 
 ## Ponte da extensão

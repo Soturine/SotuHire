@@ -2,15 +2,15 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.9.2-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.2)
+[![Release](https://img.shields.io/badge/release-v1.9.3-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.3)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
-SotuHire é um copiloto de carreira local-first, multiárea e baseado em evidências para analisar currículos, comparar vagas, melhorar ATS, descobrir oportunidades, acompanhar candidaturas e organizar o Perfil Profissional Universal da pessoa usuária.
+SotuHire é um copiloto de carreira local-first, multiárea e baseado em evidências para analisar currículos, comparar vagas, melhorar ATS, entender editais, descobrir oportunidades, acompanhar candidaturas e organizar o Perfil Profissional Universal da pessoa usuária.
 
-Ele combina Perfil Profissional Universal, RAG local, Match, ATS, Tailor, Radar, Fontes, Kanban, GitHub/Portfólio, Lattes/acadêmico, extensão assistiva e IA opcional sem transformar candidatura em automação cega. A regra central é simples: a pessoa revisa antes de salvar, exportar, aplicar ou compartilhar contexto com provider externo.
+Ele combina Perfil Profissional Universal, RAG local, Match, ATS, Tailor, Radar, Fontes, Kanban, GitHub/Portfólio, Lattes/acadêmico, Editais/Concursos, extensão assistiva e IA opcional sem transformar candidatura, inscrição ou decisão crítica em automação cega. A regra central é simples: a pessoa revisa antes de salvar, exportar, aplicar, se inscrever manualmente ou compartilhar contexto com provider externo.
 
-[Documentação](docs/) · [Roadmap](docs/01-product/roadmap.md) · [Visão](docs/01-product/vision.md) · [Estratégia multiárea](docs/01-product/multi-domain-product-strategy.md) · [Arquitetura](docs/02-architecture/module-integration-map.md) · [Contexto](docs/02-architecture/career-context-engine.md) · [Ponte da extensão](docs/02-architecture/extension-profile-bridge.md) · [Lattes e acadêmico](docs/07-development/v1.9.2-lattes-ai-universal-profile.md) · [RAG local](docs/04-ai/career-memory-rag.md) · [Segurança](docs/06-engineering/security-privacy.md) · [Release v1.9.2](docs/releases/v1.9.2.md) · [Changelog](CHANGELOG.md)
+[Documentação](docs/) · [Roadmap](docs/01-product/roadmap.md) · [Visão](docs/01-product/vision.md) · [Estratégia multiárea](docs/01-product/multi-domain-product-strategy.md) · [Arquitetura](docs/02-architecture/module-integration-map.md) · [Contexto](docs/02-architecture/career-context-engine.md) · [Ponte da extensão](docs/02-architecture/extension-profile-bridge.md) · [Lattes e acadêmico](docs/07-development/v1.9.2-lattes-ai-universal-profile.md) · [Editais e concursos](docs/07-development/v1.9.3-public-exams-edital-foundation.md) · [RAG local](docs/04-ai/career-memory-rag.md) · [Segurança](docs/06-engineering/security-privacy.md) · [Release v1.9.3](docs/releases/v1.9.3.md) · [Changelog](CHANGELOG.md)
 
 ## Para Quem Serve
 
@@ -37,6 +37,8 @@ SotuHire não é uma ferramenta apenas para dev/TI. Ele foi desenhado para traje
 
 ![Perfil Acadêmico / Lattes](docs/assets/screenshots/sotuhire-web-profile-lattes.png)
 
+![Editais / Concursos](docs/assets/screenshots/sotuhire-web-public-exams.png)
+
 ![Evidências da extensão para o Perfil](docs/assets/screenshots/sotuhire-web-extension-profile-candidates.png)
 
 ![Configurações de IA](docs/assets/screenshots/sotuhire-web-settings-ai.png)
@@ -45,9 +47,10 @@ SotuHire não é uma ferramenta apenas para dev/TI. Ele foi desenhado para traje
 
 - **Perfil Profissional Universal**: centraliza objetivos, áreas, senioridade, localidades, modelos de trabalho, contratos, restrições e evidências revisáveis.
 - **Acadêmico / Lattes**: importa texto colado do Currículo Lattes, projetos, publicações, extensão, docência e produção técnica/artística como candidatos revisáveis.
+- **Editais / Concursos**: importa edital por texto colado, extrai órgão, banca, cargo, datas, taxa, requisitos, etapas e conteúdo programático, compara com o Perfil Universal e gera checklist/plano inicial.
 - **Career Context Engine**: monta contexto compacto para Wishlist, Radar, Match, ATS, Tailor, Tracker, Fontes, GitHub/Portfólio, Notificações e Dashboard.
 - **Análise de currículo e vaga**: extrai dados estruturados com fallback local e IA opcional.
-- **Match, ATS e Tailor**: compara evidências reais, separa gaps, sugere ajustes seguros e evita inventar experiência, certificação, públicação ou registro.
+- **Match, ATS e Tailor**: compara evidências reais, separa gaps, sugere ajustes seguros e evita inventar experiência, certificação, publicação ou registro.
 - **Radar, Wishlist e agendamentos**: monitora fontes configuradas, RSS/Atom público e buscas revisáveis com quiet hours, cooldown e notificações locais.
 - **Fontes, captura e extensão**: importa texto, link, CSV, JSON, capturas da extensão e capturas assistidas, sempre com revisão humana.
 - **Kanban/Tracker**: acompanha candidaturas, status, fontes, requisitos recorrentes, funil e próximas ações.
@@ -61,7 +64,7 @@ SotuHire não é uma ferramenta apenas para dev/TI. Ele foi desenhado para traje
 Dados do usuário
   -> Perfil Profissional Universal + Memória local + Lattes/Acadêmico + Extensão
   -> Career Context Engine
-  -> Match / ATS / Tailor / Radar / Kanban / Fontes / GitHub / Dashboard
+  -> Match / ATS / Tailor / Radar / Editais / Kanban / Fontes / GitHub / Dashboard
   -> revisão humana antes de salvar, exportar, aplicar ou compartilhar
 ```
 
@@ -137,9 +140,17 @@ A seção **Perfil > Acadêmico / Lattes** aceita texto colado do Currículo Lat
 
 Nada é salvo automaticamente. O usuário revisa, seleciona e confirma os itens antes de entrarem no Perfil Profissional Universal. O SotuHire não faz login no Lattes, não usa scraping autenticado e não coleta cookies, tokens, sessão, headers ou storage de terceiros.
 
+## Editais e Concursos
+
+A seção **Editais / Concursos** aceita texto colado de edital, concurso público, processo seletivo público, bolsa, residência, estágio público ou chamada institucional. A v1.9.3 cria uma fundação inicial: parser local, IA/Gemini opcional como extrator assistido, store local, endpoints `/api/v1/public-exams`, comparação com o Perfil Profissional Universal, uso de evidências acadêmicas/Lattes já confirmadas, Exam Fit Score, checklist e plano de estudo inicial.
+
+Edital não é vaga privada. O SotuHire ajuda a organizar e interpretar editais, mas o edital oficial sempre prevalece. Revise manualmente requisitos, datas, taxa, documentos, conteúdo programático e regras da banca.
+
+O módulo não faz inscrição automática, pagamento automático, boleto, envio automático de documentos, login em banca/órgão, scraping autenticado, crawler logado, CAPTCHA bypass ou auto-apply.
+
 ## Extensão Assistiva
 
-A extensão do navegador continua com versionamento independente e compatível com o app. Ela conversa com o site por meio da Local Companion API, salva capturas revisáveis e pode gerar evidências candidatas para o Perfil Universal.
+A extensão do navegador continua com versionamento independente e compatível com o app. SotuHire v1.9.3 é compatível com extensão v0.9.0. Ela conversa com o site por meio da Local Companion API, salva capturas revisáveis e pode gerar evidências candidatas para o Perfil Universal.
 
 A extensão não acessa a API key do app, não automatiza candidatura, não captura cookies/tokens/sessão/headers e não altera o fluxo `/api/v1/sources/authenticated-browser/collect`.
 
@@ -150,14 +161,15 @@ Leia também: [browser-extension/README.md](browser-extension/README.md).
 - Sem auto-apply.
 - Sem candidatura automática.
 - Sem inscrição automática em concursos ou editais.
+- Sem pagamento automático de taxa, boleto ou envio automático de documento.
 - Sem bypass de CAPTCHA.
-- Sem login ou scraping autenticado do Lattes.
+- Sem login ou scraping autenticado do Lattes, banca ou órgão.
 - Sem API key do app no frontend.
 - Evidências de IA, extensão, Lattes, GitHub ou portfólio exigem revisão humana antes de virar fato do Perfil.
 
 ## Arquitetura
 
-- `modules/`: core local-first, parsers, IA opcional, Perfil, memória, contexto, Radar, Tracker, fontes e extensão.
+- `modules/`: core local-first, parsers, IA opcional, Perfil, memória, contexto, Editais/Concursos, Radar, Tracker, fontes e extensão.
 - `apps/api/`: API FastAPI local, com envelope `{ ok, data, warnings, request_id }`.
 - `apps/web/`: frontend React/Vite com modo Demo e API Real.
 - `browser-extension/`: extensão assistiva e integração com Local Companion API.
@@ -172,16 +184,17 @@ Leia também: [browser-extension/README.md](browser-extension/README.md).
 - [Fundação para editais e concursos](docs/02-architecture/public-exams-foundation.md)
 - [Prompt Catalog](docs/04-ai/prompt-catalog.md)
 - [Prompt Lattes Extractor](docs/04-ai/prompts/profile-lattes-extractor-v1.md)
+- [Prompt Public Exam Notice Extractor](docs/04-ai/prompts/public-exam-notice-extractor-v1.md)
 - [Career Memory e RAG local](docs/04-ai/career-memory-rag.md)
 - [Segurança e privacidade](docs/06-engineering/security-privacy.md)
 - [Frontend web](apps/web/README.md)
-- [Release notes](docs/releases/v1.9.2.md)
+- [Release notes](docs/releases/v1.9.3.md)
 
 ## Roadmap Curto
 
-- Upload direto de PDF/HTML do Lattes.
-- Parser real de edital/concurso.
-- Plano de estudo por edital.
+- Upload direto de PDF/HTML do Lattes e de editais.
+- Parser avançado de edital por banca/órgão.
+- Plano de estudo avançado por edital.
 - Matching adaptativo por domínio.
 - Integração ainda mais profunda entre GitHub/Portfólio e Perfil.
 

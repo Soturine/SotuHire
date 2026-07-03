@@ -4,6 +4,35 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.9.3] - 2026-07-03
+
+### Adicionado
+
+- `modules/public_exams` com modelos, parser local, service, scoring, store, formatadores e plano de estudo inicial.
+- Importação de edital por texto colado com extração local de órgão, banca, cargo, salário, taxa, datas, requisitos, etapas, documentos e conteúdo programático.
+- Endpoints `/api/v1/public-exams` para importar draft, listar, consultar, confirmar, excluir, analisar e gerar plano de estudo.
+- Prompt `public_exam_notice_extractor_v1` para estruturar editais com Gemini opcional como rascunho revisável.
+- Tela `/public-exams` no frontend web com análise, warnings, cargos, timeline, requisitos, checklist, Exam Fit Score e plano inicial.
+- Comparação inicial com o Perfil Profissional Universal, Career Context Engine `public_exams` e evidências acadêmicas/Lattes já confirmadas.
+- Preparação de Radar/Tracker para tipos e status de oportunidades públicas sem misturar com candidatura privada.
+
+### Alterado
+
+- Health API anuncia `public_exams_foundation`.
+- Radar passa a reconhecer `public_exam`, `academic_call`, `scholarship`, `residency` e `internship_public` como tipos separados.
+- README, roadmap, mapa de integração, docs de concursos/editais, Prompt Registry e MkDocs documentam a fundação v1.9.3.
+- Versão do projeto, API e frontend atualizada para `1.9.3`.
+
+### Segurança
+
+- Sem inscrição automática em concurso, edital, bolsa, residência, estágio público ou chamada pública.
+- Sem pagamento automático, boleto automático ou envio automático de documentos.
+- Sem login em banca/órgão, scraping autenticado, crawler logado ou bypass de CAPTCHA.
+- Sem API key do app no frontend.
+- IA não salva edital nem decide elegibilidade final sem revisão humana.
+- O edital oficial sempre prevalece.
+- Sem alteração no fluxo `/api/v1/sources/authenticated-browser/collect`.
+
 ## [1.9.2] - 2026-06-30
 
 ### Adicionado

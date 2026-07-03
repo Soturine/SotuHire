@@ -83,7 +83,33 @@ Evidências são deduplicadas por título/conteúdo normalizado. Quando há dupl
 | Lattes/acadêmico | incluir formação, pesquisa, publicações, extensão e docência confirmadas no Perfil |
 | Notificações | melhorar mensagem do Radar com sinais seguros do contexto |
 | GitHub/Portfólio | gerar candidatos de evidência revisáveis para o Perfil |
-| Editais/Concursos | preparar consulta futura a formação, títulos, registros e evidências acadêmicas |
+| Editais/Concursos | comparar requisitos de edital com formação, títulos, registros, certificações, experiência, localização e evidências acadêmicas/Lattes confirmadas |
+
+## Public exams
+
+A partir da v1.9.3, `CareerContextPurpose.PUBLIC_EXAMS` é usado pelo módulo `modules/public_exams` no endpoint:
+
+```txt
+POST /api/v1/public-exams/{notice_id}/analyze
+```
+
+O contexto de editais inclui sinais confirmados do Perfil Profissional Universal, especialmente:
+
+- formação concluída ou em andamento;
+- registros profissionais confirmados;
+- certificações;
+- experiência profissional;
+- localização e disponibilidade;
+- preferências de contrato/regime;
+- evidências acadêmicas/Lattes, como pesquisa, extensão, docência, publicações, bolsas e produção técnica.
+
+Regras importantes:
+
+- edital não adiciona formação, registro ou certificação ao Perfil;
+- requisitos legais sem evidência viram `missing` ou `uncertain`;
+- graduação em andamento não passa como graduação concluída;
+- registro profissional não é presumido;
+- o score usa linguagem condicional e não substitui a leitura oficial do edital.
 
 ## Arquivos
 
