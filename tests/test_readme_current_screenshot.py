@@ -13,8 +13,10 @@ def test_readme_references_current_web_screenshots_and_changelog():
         Path("docs/assets/screenshots/sotuhire-web-sources.png"),
         Path("docs/assets/screenshots/sotuhire-web-profile-lattes.png"),
         Path("docs/assets/screenshots/sotuhire-web-public-exams.png"),
+        Path("docs/assets/screenshots/sotuhire-web-public-exams-ai.png"),
         Path("docs/assets/screenshots/sotuhire-web-extension-profile-candidates.png"),
-        Path("docs/assets/screenshots/sotuhire-web-settings-ai.png"),
+        Path("docs/assets/screenshots/sotuhire-web-extension-public-exams.png"),
+        Path("docs/assets/screenshots/sotuhire-web-settings-ai-providers.png"),
     ]
 
     for screenshot in screenshots:
@@ -23,7 +25,7 @@ def test_readme_references_current_web_screenshots_and_changelog():
         assert 10_000 < screenshot.stat().st_size < 2_000_000
     assert readme.count("docs/assets/screenshots/") == len(screenshots)
     assert "[Changelog](CHANGELOG.md)" in readme
-    assert "release-v1.9.3" in readme
+    assert "release-v1.9.4" in readme
     assert "Frontend moderno v1.9.0" not in readme
     assert "API local v1.9.0" not in readme
     assert "Na v1.8.2" not in readme
@@ -35,6 +37,7 @@ def test_readme_references_current_web_screenshots_and_changelog():
         "docs/02-architecture/module-integration-map.md",
         "docs/02-architecture/career-context-engine.md",
         "docs/02-architecture/extension-profile-bridge.md",
+        "docs/02-architecture/ai-provider-model-catalog.md",
         "docs/02-architecture/public-exams-foundation.md",
         "docs/04-ai/prompt-catalog.md",
         "docs/04-ai/prompts/profile-lattes-extractor-v1.md",
@@ -43,7 +46,7 @@ def test_readme_references_current_web_screenshots_and_changelog():
         "docs/06-engineering/security-privacy.md",
         "docs/07-development/v1.9.2-lattes-ai-universal-profile.md",
         "docs/07-development/v1.9.3-public-exams-edital-foundation.md",
-        "docs/releases/v1.9.3.md",
+        "docs/releases/v1.9.4.md",
         "CHANGELOG.md",
         "browser-extension/README.md",
         "apps/web/README.md",

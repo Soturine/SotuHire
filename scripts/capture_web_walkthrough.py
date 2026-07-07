@@ -56,8 +56,15 @@ WALKTHROUGH = [
     Shot("/radar", "Agendamentos", "sotuhire-web-radar-schedules.png", "#radar-schedules"),
     Shot("/radar", "Notificações", "sotuhire-web-notifications.png", "#radar-notifications"),
     Shot("/public-exams", "Editais/Concursos", "sotuhire-web-public-exams.png"),
+    Shot("/public-exams", "Editais/Concursos IA", "sotuhire-web-public-exams-ai.png"),
     Shot("/tracker", "Kanban/Tracker", "sotuhire-web-tracker.png"),
-    Shot("/settings", "Configurações IA", "sotuhire-web-settings-ai.png"),
+    Shot("/settings", "Configurações IA", "sotuhire-web-settings-ai-providers.png"),
+    Shot(
+        "/sources",
+        "Extensão Editais",
+        "sotuhire-web-extension-public-exams.png",
+        "#local-extension",
+    ),
 ]
 GIF_FILE = "sotuhire-web-product-walkthrough.gif"
 
@@ -126,7 +133,7 @@ def _prepare(page: Page, shot: Shot) -> None:
         button.click()
         page.locator("[data-testid='extension-profile-candidates']").wait_for(timeout=5_000)
         page.wait_for_timeout(500)
-    if shot.file == "sotuhire-web-public-exams.png":
+    if shot.file in {"sotuhire-web-public-exams.png", "sotuhire-web-public-exams-ai.png"}:
         page.locator("[data-testid='public-exams-analyze']").click()
         page.locator("[data-testid='public-exams-role-summary']").wait_for(timeout=5_000)
         page.wait_for_timeout(500)
