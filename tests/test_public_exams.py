@@ -174,6 +174,54 @@ def test_public_exam_ai_failure_falls_back_to_local(tmp_path: Path, monkeypatch)
     assert data["roles"][0]["title"] == "Engenheiro Civil"
 
 
+def test_public_exam_import_uses_selected_openai_model_without_saving(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    captured: dict[str, str] = {}
+
+    class FakeOpenAIProvider:
+        name = "openai"
+
+        def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+            captured["api_key"] = api_key or ""
+            captured["model"] = model or ""
+            self.model = model or ""
+
+        def generate_structured(self, prompt, payload):  # noqa: ANN001
+            assert prompt.prompt_id == "public_exam_notice_extractor_v1"
+            return payload["local_parser_draft"]
+
+    monkeypatch.setattr("apps.api.services.ai_settings.OpenAIProvider", FakeOpenAIProvider)
+    client = api_client()
+    client.post(
+        "/api/v1/settings/ai",
+        json={
+            "provider": "openai",
+            "model": "gpt-public-exam-test",
+            "api_key": "openai-fake-secret",
+            "use_ai": True,
+            "allow_public_exams": True,
+        },
+    )
+
+    response = client.post(
+        "/api/v1/public-exams/import",
+        json={"text": EDITAL_TEXT, "use_ai": True},
+    )
+
+    assert response.status_code == 200
+    data = response.json()["data"]
+    assert data["provider_used"] == "openai"
+    assert data["requested_provider"] == "openai"
+    assert data["analysis_mode"] == "ai"
+    assert data["needs_user_review"] is True
+    assert captured["model"] == "gpt-public-exam-test"
+    assert client.get("/api/v1/public-exams").json()["data"]["notices"] == []
+    assert "openai-fake-secret" not in json.dumps(data)
+
+
 def test_public_exam_analyze_is_conservative_with_profile_evidence(
     tmp_path: Path,
     monkeypatch,

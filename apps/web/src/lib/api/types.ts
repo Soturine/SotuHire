@@ -27,23 +27,30 @@ export interface AnalysisMeta {
   model?: string;
 }
 
-export type AiProvider = "local" | "gemini" | "openai_future";
+export type AiProvider = "local" | "gemini" | "openai" | "openai_future";
 export type AiSettingsStatus = "ready" | "configured" | "not_configured" | "planned" | "error";
+export type AiSettingsPreset = "local_safe" | "basic" | "complete" | "custom";
 
 export interface AiSettings {
   provider: AiProvider;
   model: string;
   configured: boolean;
   status: AiSettingsStatus;
+  preset: AiSettingsPreset;
   use_ai: boolean;
+  allow_profile: boolean;
+  allow_lattes: boolean;
   allow_resume: boolean;
   allow_job: boolean;
+  allow_public_exams: boolean;
   allow_match: boolean;
   allow_ats: boolean;
   allow_tailor: boolean;
   allow_github: boolean;
   allow_source_import: boolean;
+  allow_extension: boolean;
   allow_radar: boolean;
+  allow_notifications: boolean;
   allow_memory_context: boolean;
   updated_at?: string;
   warnings?: string[];
@@ -53,15 +60,21 @@ export interface AiSettingsPayload {
   provider: AiProvider;
   model: string;
   api_key?: string;
+  preset?: AiSettingsPreset;
   use_ai: boolean;
+  allow_profile?: boolean;
+  allow_lattes?: boolean;
   allow_resume: boolean;
   allow_job: boolean;
+  allow_public_exams?: boolean;
   allow_match: boolean;
   allow_ats: boolean;
   allow_tailor: boolean;
   allow_github: boolean;
   allow_source_import: boolean;
+  allow_extension?: boolean;
   allow_radar: boolean;
+  allow_notifications?: boolean;
   allow_memory_context: boolean;
 }
 
@@ -78,6 +91,37 @@ export interface AiSettingsTestResult {
   configured: boolean;
   status: AiSettingsStatus;
   message: string;
+}
+
+export interface AiProviderInfo {
+  id: "local" | "gemini" | "openai";
+  label: string;
+  status: string;
+  requires_api_key: boolean;
+  key_url?: string;
+  supports_model_catalog: boolean;
+  warnings?: string[];
+}
+
+export interface AiProvidersResult {
+  providers: AiProviderInfo[];
+}
+
+export interface AiModelInfo {
+  id: string;
+  label: string;
+  status: string;
+  supports_structured_output: boolean;
+  supports_json: boolean;
+  recommended_for: string[];
+}
+
+export interface AiModelsResult {
+  provider: "local" | "gemini" | "openai";
+  models: AiModelInfo[];
+  source: "cache" | "provider_api" | "builtin";
+  updated_at?: string;
+  warnings?: string[];
 }
 
 export type ProfileConfidence = "low" | "medium" | "high";
@@ -574,6 +618,11 @@ export interface ExtensionStatus {
   capture_count: number;
   last_capture_at?: string;
   message?: string;
+  profile_available?: boolean;
+  profile_summary?: string;
+  enabled_flows?: string[];
+  ai_provider_status?: string;
+  warnings?: string[];
 }
 
 export interface ExtensionCapture {
@@ -615,6 +664,12 @@ export interface ExtensionImportGithubResult {
   message: string;
 }
 
+export interface ExtensionImportPublicExamResult {
+  capture_id: string;
+  draft: PublicExamImportResult;
+  message: string;
+}
+
 export interface ExtensionCapturePatchResult {
   capture: ExtensionCapture;
   message: string;
@@ -623,6 +678,11 @@ export interface ExtensionCapturePatchResult {
 export interface ExtensionContextResult {
   context_summary: string;
   message: string;
+  profile_available?: boolean;
+  profile_summary?: string;
+  enabled_flows?: string[];
+  ai_provider_status?: string;
+  warnings?: string[];
 }
 
 export interface ExtensionProfileCandidatesResult {

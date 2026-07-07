@@ -1,6 +1,8 @@
 import type {
   ApiEnvelope,
   AiProvider,
+  AiProvidersResult,
+  AiModelsResult,
   AiSettings,
   AiSettingsPayload,
   AiSettingsStatus,
@@ -15,6 +17,7 @@ import type {
   ExtensionContextResult,
   ExtensionImportGithubResult,
   ExtensionImportJobResult,
+  ExtensionImportPublicExamResult,
   ExtensionImportTrackerResult,
   ExtensionProfileCandidatesResult,
   ExtensionStatus,
@@ -337,6 +340,36 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeAiSettings,
       ),
 
+    aiProviders: () =>
+      call<AiProvidersResult>(
+        mode,
+        baseUrl,
+        "/settings/ai/providers",
+        undefined,
+        mockAiProviders(),
+        normalizeAiProviders,
+      ),
+
+    aiModels: (provider: AiProvider) =>
+      call<AiModelsResult>(
+        mode,
+        baseUrl,
+        `/settings/ai/models?provider=${encodeURIComponent(provider)}`,
+        undefined,
+        mockAiModels(provider),
+        normalizeAiModels,
+      ),
+
+    aiModelsRefresh: (provider: "gemini" | "openai") =>
+      call<AiModelsResult>(
+        mode,
+        baseUrl,
+        "/settings/ai/models/refresh",
+        { method: "POST", body: JSON.stringify({ provider }) },
+        { ...mockAiModels(provider), source: "provider_api" },
+        normalizeAiModels,
+      ),
+
     aiSettingsSave: (payload: AiSettingsPayload) =>
       call<AiSettings>(
         mode,
@@ -632,9 +665,13 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         {
           available: true,
           companion_url: "http://127.0.0.1:8765",
-          capture_count: 2,
+          capture_count: 3,
           last_capture_at: new Date().toISOString(),
           message: "Modo Demo: capturas ficticias da extensao local.",
+          profile_available: true,
+          profile_summary: "Resumo seguro demo do Perfil Universal.",
+          enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
+          ai_provider_status: "local",
         },
         normalizeExtensionStatus,
       ),
@@ -658,6 +695,21 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
               status: "captured",
               profile_candidate_count: 2,
               context_signal: "Vaga pode atualizar objetivos, preferencias ou gaps revisaveis.",
+              captured_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
+            {
+              id: "demo-capture-public-exam",
+              title: "Edital 01/2026 - Analista Administrativo",
+              company: "",
+              url: "https://example.invalid/editais/edital-01-2026",
+              domain: "example.invalid",
+              kind: "public_exam",
+              source: "Extensao local demo",
+              status: "captured",
+              profile_candidate_count: 0,
+              context_signal:
+                "Edital/concurso capturado para importacao revisavel; nao altera o Perfil automaticamente.",
               captured_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },
@@ -790,6 +842,20 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           message: "Modo Demo: captura enviada para Analise de GitHub.",
         },
         normalizeExtensionImportGithub,
+      ),
+
+    extensionImportPublicExam: (capture_id: string, use_ai = false) =>
+      call<ExtensionImportPublicExamResult>(
+        mode,
+        baseUrl,
+        "/extension/import/public-exam",
+        { method: "POST", body: JSON.stringify({ capture_id, use_ai }) },
+        {
+          capture_id,
+          draft: mockPublicExamImport({ text: "Cargo: Analista Administrativo", use_ai }),
+          message: "Modo Demo: captura enviada para Editais/Concursos.",
+        },
+        normalizeExtensionImportPublicExam,
       ),
 
     extensionPatchCapture: (capture_id: string, status: string) =>
@@ -2944,18 +3010,24 @@ function normalizeAiSettings(value: unknown): AiSettings {
   const status = normalizeAiStatus(raw.status);
   return {
     provider,
-    model: asString(raw.model) || (provider === "local" ? "local" : "gemini-2.5-flash"),
+    model: asString(raw.model) || defaultAiModel(provider),
     configured: asBoolean(raw.configured, provider === "local"),
     status,
+    preset: normalizeAiPreset(raw.preset),
     use_ai: asBoolean(raw.use_ai, false),
+    allow_profile: asBoolean(raw.allow_profile, true),
+    allow_lattes: asBoolean(raw.allow_lattes, true),
     allow_resume: asBoolean(raw.allow_resume, true),
     allow_job: asBoolean(raw.allow_job, true),
+    allow_public_exams: asBoolean(raw.allow_public_exams, asBoolean(raw.allow_radar, true)),
     allow_match: asBoolean(raw.allow_match, true),
     allow_ats: asBoolean(raw.allow_ats, true),
     allow_tailor: asBoolean(raw.allow_tailor, true),
     allow_github: asBoolean(raw.allow_github, true),
     allow_source_import: asBoolean(raw.allow_source_import, true),
+    allow_extension: asBoolean(raw.allow_extension, true),
     allow_radar: asBoolean(raw.allow_radar, true),
+    allow_notifications: asBoolean(raw.allow_notifications, true),
     allow_memory_context: asBoolean(raw.allow_memory_context, false),
     updated_at: asString(raw.updated_at),
     warnings: stringList(raw.warnings),
@@ -2967,7 +3039,7 @@ function normalizeAiSettingsTest(value: unknown): AiSettingsTestResult {
   const provider = normalizeAiProvider(raw.provider);
   return {
     provider,
-    model: asString(raw.model) || (provider === "local" ? "local" : "gemini-2.5-flash"),
+    model: asString(raw.model) || defaultAiModel(provider),
     success: asBoolean(raw.success, false),
     configured: asBoolean(raw.configured, false),
     status: normalizeAiStatus(raw.status),
@@ -2977,33 +3049,127 @@ function normalizeAiSettingsTest(value: unknown): AiSettingsTestResult {
 
 function mockSavedAiSettings(payload: AiSettingsPayload): AiSettings {
   const configured =
-    payload.provider === "local" || (payload.provider === "gemini" && Boolean(payload.api_key));
+    payload.provider === "local" ||
+    ((payload.provider === "gemini" || payload.provider === "openai") && Boolean(payload.api_key));
   return {
     ...mockAiSettings,
-    provider: payload.provider,
+    provider: payload.provider === "openai_future" ? "openai" : payload.provider,
     model: payload.provider === "local" ? "local" : payload.model,
     configured,
-    status:
-      payload.provider === "openai_future"
-        ? "planned"
-        : configured
-          ? payload.provider === "local"
-            ? "ready"
-            : "configured"
-          : "not_configured",
+    status: configured ? (payload.provider === "local" ? "ready" : "configured") : "not_configured",
+    preset: payload.preset || "custom",
     use_ai: payload.use_ai,
+    allow_profile: payload.allow_profile ?? true,
+    allow_lattes: payload.allow_lattes ?? true,
     allow_resume: payload.allow_resume,
     allow_job: payload.allow_job,
+    allow_public_exams: payload.allow_public_exams ?? true,
     allow_match: payload.allow_match,
     allow_ats: payload.allow_ats,
     allow_tailor: payload.allow_tailor,
     allow_github: payload.allow_github,
     allow_source_import: payload.allow_source_import,
+    allow_extension: payload.allow_extension ?? true,
     allow_radar: payload.allow_radar,
+    allow_notifications: payload.allow_notifications ?? true,
     allow_memory_context: payload.allow_memory_context,
     updated_at: new Date().toISOString(),
-    warnings:
-      payload.provider === "openai_future" ? ["OpenAI esta planejado para uma versao futura."] : [],
+    warnings: [],
+  };
+}
+
+function mockAiProviders(): AiProvidersResult {
+  return {
+    providers: [
+      {
+        id: "local",
+        label: "Local seguro",
+        status: "ready",
+        requires_api_key: false,
+        supports_model_catalog: false,
+      },
+      {
+        id: "gemini",
+        label: "Gemini",
+        status: "not_configured",
+        requires_api_key: true,
+        key_url: "https://aistudio.google.com/app/apikey",
+        supports_model_catalog: true,
+      },
+      {
+        id: "openai",
+        label: "OpenAI",
+        status: "not_configured",
+        requires_api_key: true,
+        key_url: "https://platform.openai.com/api-keys",
+        supports_model_catalog: true,
+      },
+    ],
+  };
+}
+
+function mockAiModels(provider: AiProvider): AiModelsResult {
+  if (provider === "openai" || provider === "openai_future") {
+    return {
+      provider: "openai",
+      source: "builtin",
+      models: [
+        {
+          id: "gpt-5-mini",
+          label: "GPT-5 mini",
+          status: "known",
+          supports_structured_output: true,
+          supports_json: true,
+          recommended_for: ["fast", "cost_effective", "general"],
+        },
+        {
+          id: "gpt-5",
+          label: "GPT-5",
+          status: "known",
+          supports_structured_output: true,
+          supports_json: true,
+          recommended_for: ["reasoning", "review"],
+        },
+      ],
+    };
+  }
+  if (provider === "gemini") {
+    return {
+      provider: "gemini",
+      source: "builtin",
+      models: [
+        {
+          id: "gemini-2.5-flash",
+          label: "Gemini 2.5 Flash",
+          status: "known",
+          supports_structured_output: true,
+          supports_json: true,
+          recommended_for: ["fast", "cost_effective", "general"],
+        },
+        {
+          id: "gemini-2.5-pro",
+          label: "Gemini 2.5 Pro",
+          status: "known",
+          supports_structured_output: true,
+          supports_json: true,
+          recommended_for: ["reasoning", "review"],
+        },
+      ],
+    };
+  }
+  return {
+    provider: "local",
+    source: "builtin",
+    models: [
+      {
+        id: "local",
+        label: "Análise local",
+        status: "known",
+        supports_structured_output: false,
+        supports_json: true,
+        recommended_for: ["safe", "offline", "fallback"],
+      },
+    ],
   };
 }
 
@@ -3012,26 +3178,79 @@ function mockAiSettingsTest(payload: AiSettingsTestPayload): AiSettingsTestResul
   const configured = provider === "local" || Boolean(payload.api_key);
   return {
     provider,
-    model: provider === "local" ? "local" : payload.model || "gemini-2.5-flash",
-    success: configured && provider !== "openai_future",
+    model: provider === "local" ? "local" : payload.model || defaultAiModel(provider),
+    success: configured,
     configured,
-    status:
-      provider === "openai_future"
-        ? "planned"
-        : configured
-          ? provider === "local"
-            ? "ready"
-            : "configured"
-          : "not_configured",
-    message:
-      configured && provider !== "openai_future"
-        ? "Provider configurado com sucesso."
-        : "Nao foi possivel testar o provider. Verifique a chave e o modelo.",
+    status: configured ? (provider === "local" ? "ready" : "configured") : "not_configured",
+    message: configured
+      ? "Provider configurado com sucesso."
+      : "Nao foi possivel testar o provider. Verifique a chave e o modelo.",
   };
 }
 
 function normalizeAiProvider(value: unknown): AiProvider {
-  return value === "gemini" || value === "openai_future" || value === "local" ? value : "local";
+  if (value === "openai_future") return "openai";
+  return value === "gemini" || value === "openai" || value === "local" ? value : "local";
+}
+
+function normalizeAiPreset(value: unknown): AiSettings["preset"] {
+  return value === "local_safe" || value === "basic" || value === "complete" || value === "custom"
+    ? value
+    : "custom";
+}
+
+function defaultAiModel(provider: AiProvider): string {
+  if (provider === "local") return "local";
+  if (provider === "openai" || provider === "openai_future") return "gpt-5-mini";
+  return "gemini-2.5-flash";
+}
+
+function providerDisplayName(provider: "local" | "gemini" | "openai"): string {
+  if (provider === "gemini") return "Gemini";
+  if (provider === "openai") return "OpenAI";
+  return "Local seguro";
+}
+
+function normalizeAiProviders(value: unknown): AiProvidersResult {
+  const raw = asRecord(value);
+  return {
+    providers: objectList(raw.providers).map((item) => ({
+      id: normalizeCatalogProvider(item.id),
+      label: asString(item.label) || providerDisplayName(normalizeCatalogProvider(item.id)),
+      status: asString(item.status) || "available",
+      requires_api_key: asBoolean(item.requires_api_key, false),
+      key_url: asString(item.key_url),
+      supports_model_catalog: asBoolean(item.supports_model_catalog, false),
+      warnings: stringList(item.warnings),
+    })),
+  };
+}
+
+function normalizeAiModels(value: unknown): AiModelsResult {
+  const raw = asRecord(value);
+  const provider = normalizeCatalogProvider(raw.provider);
+  return {
+    provider,
+    models: objectList(raw.models).map((item) => ({
+      id: asString(item.id),
+      label: asString(item.label) || asString(item.id),
+      status: asString(item.status) || "known",
+      supports_structured_output: asBoolean(item.supports_structured_output, true),
+      supports_json: asBoolean(item.supports_json, true),
+      recommended_for: stringList(item.recommended_for),
+    })),
+    source:
+      raw.source === "cache" || raw.source === "provider_api" || raw.source === "builtin"
+        ? raw.source
+        : "builtin",
+    updated_at: asString(raw.updated_at),
+    warnings: stringList(raw.warnings),
+  };
+}
+
+function normalizeCatalogProvider(value: unknown): "local" | "gemini" | "openai" {
+  if (value === "gemini" || value === "openai") return value;
+  return "local";
 }
 
 function normalizeAiStatus(value: unknown): AiSettingsStatus {
@@ -3320,6 +3539,11 @@ function normalizeExtensionStatus(value: unknown): ExtensionStatus {
     capture_count: asNumber(raw.capture_count, 0),
     last_capture_at: asString(raw.last_capture_at),
     message: asString(raw.message),
+    profile_available: asBoolean(raw.profile_available, false),
+    profile_summary: asString(raw.profile_summary),
+    enabled_flows: stringList(raw.enabled_flows),
+    ai_provider_status: asString(raw.ai_provider_status) || "local",
+    warnings: stringList(raw.warnings),
   };
 }
 
@@ -3350,6 +3574,11 @@ function normalizeExtensionContext(value: unknown): ExtensionContextResult {
     context_summary:
       asString(raw.context_summary) || asString(asRecord(raw.context).profile_summary),
     message: asString(raw.message),
+    profile_available: asBoolean(raw.profile_available, false),
+    profile_summary: asString(raw.profile_summary),
+    enabled_flows: stringList(raw.enabled_flows),
+    ai_provider_status: asString(raw.ai_provider_status) || "local",
+    warnings: stringList(raw.warnings),
   };
 }
 
@@ -3402,6 +3631,15 @@ function normalizeExtensionImportGithub(value: unknown): ExtensionImportGithubRe
     report: Object.keys(asRecord(raw.report)).length
       ? normalizeGithubReport(raw.report)
       : undefined,
+    message: asString(raw.message),
+  };
+}
+
+function normalizeExtensionImportPublicExam(value: unknown): ExtensionImportPublicExamResult {
+  const raw = asRecord(value);
+  return {
+    capture_id: asString(raw.capture_id),
+    draft: normalizePublicExamImportResult(raw.draft),
     message: asString(raw.message),
   };
 }

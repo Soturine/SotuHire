@@ -3,10 +3,12 @@ import {
   Activity,
   Beaker,
   Brain,
+  ExternalLink,
   Eye,
   EyeOff,
   Loader2,
   Radio,
+  RefreshCw,
   ShieldAlert,
   Trash2,
   WifiOff,
@@ -18,7 +20,7 @@ import { useApiStatus } from "@/components/api-mode-badge";
 import { useApi } from "@/lib/api/hooks";
 import { DEFAULT_API_URL, useApiMode } from "@/lib/api/mode";
 import { APP_VERSION } from "@/lib/labels";
-import type { AiProvider, AiSettings, AiSettingsStatus } from "@/lib/api/types";
+import type { AiProvider, AiSettings, AiSettingsPreset, AiSettingsStatus } from "@/lib/api/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 
@@ -102,7 +104,7 @@ function SettingsPage() {
           />
         </SectionCard>
 
-        <AiProvidersCard />
+        <AiProvidersCardV194 />
 
         <SectionCard title="Sobre">
           <div className="grid gap-3 text-sm">
@@ -197,6 +199,573 @@ function ApiStatusPanel({
 // ---------------- AI Providers ----------------
 
 type AiUiStatus = "idle" | "testing" | "ready" | "configured" | "planned" | "error";
+
+const AI_PRESETS: Array<{
+  id: AiSettingsPreset;
+  label: string;
+  description: string;
+}> = [
+  {
+    id: "local_safe",
+    label: "Local seguro",
+    description: "Sem provider externo e sem memória enviada.",
+  },
+  {
+    id: "basic",
+    label: "IA básica",
+    description: "Perfil, Lattes, vaga, edital, match, ATS e tailor.",
+  },
+  {
+    id: "complete",
+    label: "IA completa",
+    description: "Inclui Radar, extensão e GitHub; memória continua desligada.",
+  },
+  {
+    id: "custom",
+    label: "Personalizado",
+    description: "Mostra permissões avançadas agrupadas.",
+  },
+];
+
+type AiToggleState = {
+  enabled: boolean;
+  profile: boolean;
+  lattes: boolean;
+  resume: boolean;
+  job: boolean;
+  publicExams: boolean;
+  match: boolean;
+  ats: boolean;
+  tailor: boolean;
+  github: boolean;
+  sourceImport: boolean;
+  extension: boolean;
+  radar: boolean;
+  notifications: boolean;
+  memory: boolean;
+};
+
+function AiProvidersCardV194() {
+  const { mode, baseUrl } = useApiMode();
+  const api = useApi();
+  const queryClient = useQueryClient();
+  const aiQueryKey = ["ai-settings", mode, baseUrl];
+  const [provider, setProvider] = useState<AiProvider>("local");
+  const [apiKey, setApiKey] = useState("");
+  const [model, setModel] = useState("local");
+  const [customModel, setCustomModel] = useState("");
+  const [preset, setPreset] = useState<AiSettingsPreset>("local_safe");
+  const [showKey, setShowKey] = useState(false);
+  const [status, setStatus] = useState<AiUiStatus>("idle");
+  const [toggles, setToggles] = useState<AiToggleState>(localAiToggles());
+
+  const settingsQ = useQuery({
+    queryKey: aiQueryKey,
+    queryFn: () => api.aiSettings(),
+    retry: false,
+  });
+  const providersQ = useQuery({
+    queryKey: ["ai-providers", mode, baseUrl],
+    queryFn: () => api.aiProviders(),
+    retry: false,
+  });
+  const modelsQ = useQuery({
+    queryKey: ["ai-models", mode, baseUrl, provider],
+    queryFn: () => api.aiModels(provider),
+    retry: false,
+  });
+
+  useEffect(() => {
+    if (!settingsQ.data) return;
+    const data = settingsQ.data;
+    setProvider(data.provider);
+    setModel(data.model || defaultModel(data.provider));
+    setCustomModel("");
+    setPreset(data.preset || "custom");
+    setStatus(statusFromSettings(data));
+    setToggles({
+      enabled: data.use_ai,
+      profile: data.allow_profile,
+      lattes: data.allow_lattes,
+      resume: data.allow_resume,
+      job: data.allow_job,
+      publicExams: data.allow_public_exams,
+      match: data.allow_match,
+      ats: data.allow_ats,
+      tailor: data.allow_tailor,
+      github: data.allow_github,
+      sourceImport: data.allow_source_import,
+      extension: data.allow_extension,
+      radar: data.allow_radar,
+      notifications: data.allow_notifications,
+      memory: data.allow_memory_context,
+    });
+  }, [settingsQ.data]);
+
+  const providerAllowsKey = provider === "gemini" || provider === "openai";
+  const selectedProviderInfo = providersQ.data?.providers.find((item) => item.id === provider);
+  const modelOptions = modelsQ.data?.models ?? [];
+  const selectedModel = provider === "local" ? "local" : customModel.trim() || model;
+
+  const saveMutation = useMutation({
+    mutationFn: () =>
+      api.aiSettingsSave({
+        provider,
+        model: selectedModel,
+        api_key: providerAllowsKey && apiKey.trim() ? apiKey.trim() : undefined,
+        preset,
+        use_ai: toggles.enabled,
+        allow_profile: toggles.profile,
+        allow_lattes: toggles.lattes,
+        allow_resume: toggles.resume,
+        allow_job: toggles.job,
+        allow_public_exams: toggles.publicExams,
+        allow_match: toggles.match,
+        allow_ats: toggles.ats,
+        allow_tailor: toggles.tailor,
+        allow_github: toggles.github,
+        allow_source_import: toggles.sourceImport,
+        allow_extension: toggles.extension,
+        allow_radar: toggles.radar,
+        allow_notifications: toggles.notifications,
+        allow_memory_context: toggles.memory,
+      }),
+    onSuccess: (data) => {
+      setApiKey("");
+      setStatus(statusFromSettings(data));
+      queryClient.setQueryData(aiQueryKey, data);
+      toast.success("Configuração salva no backend local.");
+    },
+    onError: (error) => {
+      setStatus("error");
+      toast.error(
+        error instanceof Error ? error.message : "Não foi possível salvar a configuração.",
+      );
+    },
+  });
+
+  const testMutation = useMutation({
+    mutationFn: () =>
+      api.aiSettingsTest({
+        provider,
+        model: selectedModel,
+        api_key: providerAllowsKey && apiKey.trim() ? apiKey.trim() : undefined,
+      }),
+    onMutate: () => setStatus("testing"),
+    onSuccess: (data) => {
+      setStatus(statusFromTest(data.status, data.success));
+      if (data.success) {
+        toast.success(data.message || "Provider configurado.");
+      } else {
+        toast.warning(data.message || "Provider indisponível.");
+      }
+    },
+    onError: (error) => {
+      setStatus("error");
+      toast.error(error instanceof Error ? error.message : "Não foi possível testar o provider.");
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => api.aiSettingsDelete(),
+    onSuccess: (data) => {
+      setApiKey("");
+      setStatus(statusFromSettings(data));
+      queryClient.setQueryData(aiQueryKey, data);
+      toast.success("Chave removida do backend local.");
+    },
+    onError: (error) => {
+      setStatus("error");
+      toast.error(error instanceof Error ? error.message : "Não foi possível remover a chave.");
+    },
+  });
+
+  const refreshModels = useMutation({
+    mutationFn: () =>
+      provider === "gemini" || provider === "openai"
+        ? api.aiModelsRefresh(provider)
+        : api.aiModels(provider),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["ai-models", mode, baseUrl, provider], data);
+      toast.success("Catálogo de modelos atualizado ou fallback mantido.");
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Não foi possível atualizar modelos."),
+  });
+
+  function applyPreset(nextPreset: AiSettingsPreset) {
+    setPreset(nextPreset);
+    if (nextPreset === "local_safe") {
+      setProvider("local");
+      setModel("local");
+      setCustomModel("");
+      setToggles(localAiToggles());
+      return;
+    }
+    if (provider === "local") {
+      setProvider("gemini");
+      setModel("gemini-2.5-flash");
+    }
+    if (nextPreset === "basic") setToggles(basicAiToggles());
+    if (nextPreset === "complete") setToggles(completeAiToggles());
+  }
+
+  const busy =
+    saveMutation.isPending ||
+    testMutation.isPending ||
+    deleteMutation.isPending ||
+    refreshModels.isPending;
+
+  return (
+    <SectionCard
+      className="lg:col-span-2"
+      title={
+        <span className="flex items-center gap-2">
+          <Brain className="h-4 w-4 text-accent" /> IA e Providers
+        </span>
+      }
+      description="Escolha um preset simples. A API key vai apenas para o backend local e nunca é salva no frontend."
+    >
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Preset
+            </label>
+            <div className="mt-1.5 grid grid-cols-2 gap-2">
+              {AI_PRESETS.map((item) => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => applyPreset(item.id)}
+                  data-testid={`ai-preset-${item.id}`}
+                  className={`rounded-md border px-3 py-2 text-left text-xs transition-colors ${
+                    preset === item.id
+                      ? "border-accent/50 bg-accent/10 text-foreground"
+                      : "border-input bg-background hover:bg-muted"
+                  }`}
+                >
+                  <span className="block font-semibold">{item.label}</span>
+                  <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                    {item.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Provider
+            </label>
+            <div className="mt-1.5 grid grid-cols-3 gap-2">
+              {(["local", "gemini", "openai"] as AiProvider[]).map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => {
+                    setProvider(item);
+                    setModel(defaultModel(item));
+                    setCustomModel("");
+                    if (item === "local") {
+                      setPreset("local_safe");
+                      setToggles(localAiToggles());
+                    } else if (preset === "local_safe") {
+                      setPreset("basic");
+                      setToggles(basicAiToggles());
+                    }
+                  }}
+                  data-testid={`ai-provider-${item}`}
+                  className={`rounded-md border px-3 py-2 text-xs font-medium transition-colors ${
+                    provider === item
+                      ? "border-accent/50 bg-accent/10 text-foreground"
+                      : "border-input bg-background hover:bg-muted"
+                  }`}
+                >
+                  {providerLabel(item)}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Chave de IA
+            </label>
+            <div className="mt-1.5 flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type={showKey ? "text" : "password"}
+                  value={apiKey}
+                  onChange={(e) => setApiKey(e.target.value)}
+                  data-testid="ai-api-key-input"
+                  placeholder={
+                    providerAllowsKey
+                      ? `Cole a chave ${providerLabel(provider)} para salvar no backend`
+                      : "Não necessário"
+                  }
+                  disabled={!providerAllowsKey}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 pr-9 font-mono text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20 disabled:opacity-50"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowKey((v) => !v)}
+                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
+                  aria-label="Alternar visualização"
+                >
+                  {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
+              </div>
+            </div>
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Após salvar, a chave nunca é exibida novamente. Use variáveis de ambiente para testes
+              reais locais.
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <ProviderKeyLink provider="gemini" />
+              <ProviderKeyLink provider="openai" />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Modelo
+            </label>
+            <div className="mt-1.5 flex gap-2">
+              <select
+                value={model}
+                onChange={(event) => {
+                  setModel(event.target.value);
+                  setCustomModel("");
+                }}
+                disabled={provider === "local"}
+                data-testid="ai-model-select"
+                className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20 disabled:opacity-50"
+              >
+                {(modelOptions.length
+                  ? modelOptions
+                  : [{ id: defaultModel(provider), label: defaultModel(provider) }]
+                ).map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label || item.id}
+                  </option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={() => refreshModels.mutate()}
+                disabled={busy || provider === "local"}
+                data-testid="ai-refresh-models"
+                className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted disabled:opacity-50"
+              >
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${refreshModels.isPending ? "animate-spin" : ""}`}
+                />
+                Atualizar modelos
+              </button>
+            </div>
+            <details className="mt-2 rounded-md border border-border bg-muted/30 p-2 text-xs">
+              <summary className="cursor-pointer font-medium">Modelo customizado avançado</summary>
+              <input
+                value={customModel}
+                onChange={(event) => setCustomModel(event.target.value)}
+                disabled={provider === "local"}
+                data-testid="ai-custom-model"
+                placeholder="Ex.: modelo customizado do provider"
+                className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20 disabled:opacity-50"
+              />
+            </details>
+            <p className="mt-1.5 text-[11px] text-muted-foreground">
+              Atual: {selectedModel}. Fonte do catálogo: {modelsQ.data?.source || "builtin"}.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => testMutation.mutate()}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"
+            >
+              {testMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Testar conexão
+            </button>
+            <button
+              type="button"
+              onClick={() => saveMutation.mutate()}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {saveMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+              Salvar no backend local
+            </button>
+            <button
+              type="button"
+              onClick={() => deleteMutation.mutate()}
+              disabled={busy}
+              className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Remover chave
+            </button>
+            <StatusPill status={status} />
+          </div>
+          <p className="rounded-md border border-border bg-muted/30 p-2 text-[11px] text-muted-foreground">
+            Provider atual: {providerLabel(provider)} · Modelo: {selectedModel} · IA{" "}
+            {toggles.enabled ? "ligada" : "desligada"} · Chave{" "}
+            {settingsQ.data?.configured ? "salva no backend local" : "não configurada"}.
+            {selectedProviderInfo?.status ? ` Status: ${selectedProviderInfo.status}.` : ""}
+          </p>
+          <p className="rounded-md border border-border bg-muted/30 p-2 text-[11px] text-muted-foreground">
+            {aiStatusMessage(status, provider)}
+          </p>
+          {[...(settingsQ.data?.warnings ?? []), ...(modelsQ.data?.warnings ?? [])].map(
+            (warning) => (
+              <p key={warning} className="rounded-md bg-warning/10 p-2 text-[11px] text-warning">
+                {warning}
+              </p>
+            ),
+          )}
+        </div>
+
+        <div className="space-y-3">
+          <Toggle
+            label="Usar IA nos fluxos permitidos"
+            checked={toggles.enabled}
+            onChange={(value) => {
+              setPreset("custom");
+              setToggles({ ...toggles, enabled: value });
+            }}
+          />
+          <div className="rounded-lg border border-border bg-muted/30 p-3 text-xs">
+            <div className="font-semibold text-foreground">Fluxos usando IA</div>
+            <p className="mt-1 text-muted-foreground">{enabledFlowSummary(toggles)}</p>
+          </div>
+          <details
+            className="rounded-lg border border-border bg-card p-3 text-xs"
+            open={preset === "custom"}
+          >
+            <summary className="cursor-pointer font-semibold text-foreground">
+              Avançado: permissões por grupo
+            </summary>
+            <div className="mt-3 space-y-3">
+              <ToggleGroup title="Documentos e Perfil">
+                <Toggle
+                  label="Currículo"
+                  checked={toggles.resume}
+                  onChange={(value) => setToggles({ ...toggles, resume: value })}
+                  disabled={!toggles.enabled}
+                />
+                <Toggle
+                  label="Lattes"
+                  checked={toggles.lattes}
+                  onChange={(value) => setToggles({ ...toggles, lattes: value })}
+                  disabled={!toggles.enabled}
+                />
+                <Toggle
+                  label="Perfil Universal"
+                  checked={toggles.profile}
+                  onChange={(value) => setToggles({ ...toggles, profile: value })}
+                  disabled={!toggles.enabled}
+                />
+              </ToggleGroup>
+              <ToggleGroup title="Oportunidades">
+                <Toggle
+                  label="Vagas"
+                  checked={toggles.job}
+                  onChange={(value) => setToggles({ ...toggles, job: value })}
+                  disabled={!toggles.enabled}
+                />
+                <Toggle
+                  label="Editais / Concursos"
+                  checked={toggles.publicExams}
+                  onChange={(value) => setToggles({ ...toggles, publicExams: value })}
+                  disabled={!toggles.enabled}
+                />
+                <Toggle
+                  label="Fontes / Extensão"
+                  checked={toggles.sourceImport && toggles.extension}
+                  onChange={(value) =>
+                    setToggles({ ...toggles, sourceImport: value, extension: value })
+                  }
+                  disabled={!toggles.enabled}
+                />
+              </ToggleGroup>
+              <ToggleGroup title="Análises">
+                <Toggle
+                  label="Match"
+                  checked={toggles.match}
+                  onChange={(value) => setToggles({ ...toggles, match: value })}
+                  disabled={!toggles.enabled}
+                />
+                <Toggle
+                  label="ATS"
+                  checked={toggles.ats}
+                  onChange={(value) => setToggles({ ...toggles, ats: value })}
+                  disabled={!toggles.enabled}
+                />
+                <Toggle
+                  label="Tailor"
+                  checked={toggles.tailor}
+                  onChange={(value) => setToggles({ ...toggles, tailor: value })}
+                  disabled={!toggles.enabled}
+                />
+                <Toggle
+                  label="GitHub / Portfólio"
+                  checked={toggles.github}
+                  onChange={(value) => setToggles({ ...toggles, github: value })}
+                  disabled={!toggles.enabled}
+                />
+              </ToggleGroup>
+              <ToggleGroup title="Radar e Memória">
+                <Toggle
+                  label="Radar / Wishlist"
+                  checked={toggles.radar}
+                  onChange={(value) => setToggles({ ...toggles, radar: value })}
+                  disabled={!toggles.enabled}
+                />
+                <Toggle
+                  label="Notificações"
+                  checked={toggles.notifications}
+                  onChange={(value) => setToggles({ ...toggles, notifications: value })}
+                  disabled={!toggles.enabled}
+                />
+                <Toggle
+                  label="Contexto da memória local"
+                  hint="Desligado por padrão"
+                  checked={toggles.memory}
+                  onChange={(value) => setToggles({ ...toggles, memory: value })}
+                  disabled={!toggles.enabled}
+                />
+              </ToggleGroup>
+            </div>
+          </details>
+          <div className="mt-2 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs">
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+            <p className="text-muted-foreground">
+              A chave de IA nunca é salva no frontend, localStorage ou sessionStorage. O backend
+              local executa Gemini/OpenAI e usa fallback local quando necessário.
+            </p>
+          </div>
+          <details className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+            <summary className="cursor-pointer font-medium text-foreground">
+              Endpoints ativos no backend local
+            </summary>
+            <ul className="mt-2 space-y-0.5 font-mono">
+              <li>GET /api/v1/settings/ai</li>
+              <li>POST /api/v1/settings/ai</li>
+              <li>POST /api/v1/settings/ai/test</li>
+              <li>DELETE /api/v1/settings/ai</li>
+              <li>GET /api/v1/settings/ai/status</li>
+              <li>GET /api/v1/settings/ai/providers</li>
+              <li>GET /api/v1/settings/ai/models</li>
+              <li>POST /api/v1/settings/ai/models/refresh</li>
+            </ul>
+          </details>
+        </div>
+      </div>
+    </SectionCard>
+  );
+}
 
 function AiProvidersCard() {
   const { mode, baseUrl } = useApiMode();
@@ -316,7 +885,7 @@ function AiProvidersCard() {
     },
   });
 
-  const providerAllowsKey = provider === "gemini";
+  const providerAllowsKey = provider === "gemini" || provider === "openai";
   const busy = saveMutation.isPending || testMutation.isPending || deleteMutation.isPending;
 
   return (
@@ -336,7 +905,7 @@ function AiProvidersCard() {
               Provider
             </label>
             <div className="mt-1.5 grid grid-cols-3 gap-2">
-              {(["local", "gemini", "openai_future"] as AiProvider[]).map((p) => (
+              {(["local", "gemini", "openai"] as AiProvider[]).map((p) => (
                 <button
                   key={p}
                   onClick={() => {
@@ -590,6 +1159,103 @@ function Toggle({
   );
 }
 
+function ToggleGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="space-y-2 rounded-lg border border-border bg-muted/20 p-2">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ProviderKeyLink({ provider }: { provider: "gemini" | "openai" }) {
+  const href =
+    provider === "gemini"
+      ? "https://aistudio.google.com/app/apikey"
+      : "https://platform.openai.com/api-keys";
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noreferrer"
+      data-testid={`ai-key-link-${provider}`}
+      className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted"
+    >
+      <ExternalLink className="h-3 w-3" />
+      Obter chave {provider === "gemini" ? "Gemini" : "OpenAI"}
+    </a>
+  );
+}
+
+function localAiToggles(): AiToggleState {
+  return {
+    enabled: false,
+    profile: false,
+    lattes: false,
+    resume: false,
+    job: false,
+    publicExams: false,
+    match: false,
+    ats: false,
+    tailor: false,
+    github: false,
+    sourceImport: false,
+    extension: false,
+    radar: false,
+    notifications: false,
+    memory: false,
+  };
+}
+
+function basicAiToggles(): AiToggleState {
+  return {
+    ...localAiToggles(),
+    enabled: true,
+    profile: true,
+    lattes: true,
+    resume: true,
+    job: true,
+    publicExams: true,
+    match: true,
+    ats: true,
+    tailor: true,
+  };
+}
+
+function completeAiToggles(): AiToggleState {
+  return {
+    ...basicAiToggles(),
+    github: true,
+    sourceImport: true,
+    extension: true,
+    radar: true,
+    notifications: true,
+    memory: false,
+  };
+}
+
+function enabledFlowSummary(toggles: AiToggleState): string {
+  if (!toggles.enabled) return "IA desligada. Todos os fluxos usam fallback local.";
+  const flows = [
+    toggles.resume && "Currículo",
+    toggles.lattes && "Lattes",
+    toggles.profile && "Perfil Universal",
+    toggles.job && "Vagas",
+    toggles.publicExams && "Editais/Concursos",
+    toggles.match && "Match",
+    toggles.ats && "ATS",
+    toggles.tailor && "Tailor",
+    toggles.github && "GitHub/Portfólio",
+    toggles.sourceImport && "Fontes",
+    toggles.extension && "Extensão",
+    toggles.radar && "Radar/Wishlist",
+    toggles.notifications && "Notificações",
+  ].filter(Boolean);
+  return flows.length ? flows.join(", ") : "IA ligada, mas nenhum fluxo avançado está permitido.";
+}
+
 function ModeCard({
   active,
   onClick,
@@ -632,7 +1298,7 @@ function ModeCard({
 }
 
 function providerLabel(provider: AiProvider): string {
-  if (provider === "openai_future") return "OpenAI (futuro)";
+  if (provider === "openai" || provider === "openai_future") return "OpenAI";
   if (provider === "gemini") return "Gemini";
   return "Local";
 }
@@ -640,7 +1306,7 @@ function providerLabel(provider: AiProvider): string {
 function defaultModel(provider: AiProvider): string {
   if (provider === "local") return "local";
   if (provider === "gemini") return "gemini-2.5-flash";
-  return "planned";
+  return "gpt-5-mini";
 }
 
 function statusFromSettings(settings: AiSettings): AiUiStatus {
@@ -662,7 +1328,8 @@ function aiStatusMessage(status: AiUiStatus, provider: AiProvider): string {
   if (provider === "local") return "Provider local: regras internas, sem chave externa.";
   if (status === "configured")
     return "Provider configurado: a chave fica somente no backend local.";
-  if (status === "planned") return "Provider planejado: mantenha o fluxo local por enquanto.";
+  if (status === "planned")
+    return "Provider legado detectado; use Gemini ou OpenAI no backend local.";
   if (status === "error") {
     return "Limite, timeout, chave invalida ou erro do provider: use fallback local e revise a configuracao.";
   }

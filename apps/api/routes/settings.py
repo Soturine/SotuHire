@@ -7,6 +7,9 @@ from fastapi import APIRouter
 from apps.api.routes.responses import ok
 from apps.api.schemas.common import ApiEnvelope
 from apps.api.schemas.settings import (
+    AiModelsRefreshRequest,
+    AiModelsResponse,
+    AiProvidersResponse,
     AiSettingsResponse,
     AiSettingsTestRequest,
     AiSettingsTestResponse,
@@ -16,6 +19,9 @@ from apps.api.services.ai_settings import (
     delete_ai_settings_secret,
     get_ai_settings,
     get_ai_settings_status,
+    list_ai_models,
+    list_ai_providers,
+    refresh_ai_models,
     save_ai_settings,
     test_ai_settings,
 )
@@ -35,6 +41,28 @@ def ai_settings_status() -> ApiEnvelope[AiSettingsResponse]:
     """Return safe local AI provider status."""
     data = get_ai_settings_status()
     return ok(data, warnings=data.warnings)
+
+
+@router.get("/ai/providers", response_model=ApiEnvelope[AiProvidersResponse])
+def ai_settings_providers() -> ApiEnvelope[AiProvidersResponse]:
+    """Return available AI providers without secrets."""
+    return ok(list_ai_providers())
+
+
+@router.get("/ai/models", response_model=ApiEnvelope[AiModelsResponse])
+def ai_settings_models(provider: str = "gemini") -> ApiEnvelope[AiModelsResponse]:
+    """Return builtin/cache model catalog for one provider."""
+    data = list_ai_models(provider)
+    return ok(data, warnings=data.warnings)
+
+
+@router.post("/ai/models/refresh", response_model=ApiEnvelope[AiModelsResponse])
+def ai_settings_models_refresh(
+    payload: AiModelsRefreshRequest,
+) -> ApiEnvelope[AiModelsResponse]:
+    """Refresh model catalog using backend-local provider credentials."""
+    data = refresh_ai_models(payload)
+    return ok(data, warnings=data.warnings, request_id=payload.request_id)
 
 
 @router.post("/ai", response_model=ApiEnvelope[AiSettingsResponse])

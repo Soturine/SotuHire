@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import os
+
 from pydantic import BaseModel, ConfigDict, Field
 
 from modules.ai.diagnostics import GeminiDiagnostic, diagnose_gemini_error
-from modules.ai.providers import AIProvider, GeminiProvider, MockProvider
+from modules.ai.providers import AIProvider, GeminiProvider, MockProvider, OpenAIProvider
+from modules.ai.providers.openai_provider import DEFAULT_OPENAI_MODEL
 from modules.ai.setup import (
     default_ai_provider,
     gemini_key_source,
@@ -49,6 +52,11 @@ def get_provider(
     provider_name = _configured_provider(name)
     if provider_name == "gemini":
         return GeminiProvider(api_key=api_key, model=model)
+    if provider_name == "openai":
+        return OpenAIProvider(
+            api_key=api_key or os.getenv("OPENAI_API_KEY", ""),
+            model=model or os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
+        )
     return MockProvider()
 
 
@@ -73,7 +81,8 @@ def analyze_structured(
     memory_context = summarize_evidence(evidence)
     provider_memory_context = (
         memory_context
-        if selected.name == "local" or (selected.name == "gemini" and share_memory_with_provider)
+        if selected.name == "local"
+        or (selected.name in {"gemini", "openai"} and share_memory_with_provider)
         else ""
     )
     try:
@@ -101,7 +110,7 @@ def analyze_structured(
             evidence=evidence,
             memory_used=bool(evidence),
             memory_shared_with_provider=bool(
-                evidence and selected.name == "gemini" and share_memory_with_provider
+                evidence and selected.name in {"gemini", "openai"} and share_memory_with_provider
             ),
         )
     except Exception as exc:

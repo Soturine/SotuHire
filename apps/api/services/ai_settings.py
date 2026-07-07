@@ -9,14 +9,20 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
+from modules.ai import model_catalog
 from modules.ai import setup as ai_setup
-from modules.ai.providers import AIProvider, GeminiProvider, MockProvider
+from modules.ai.providers import AIProvider, GeminiProvider, MockProvider, OpenAIProvider
+from modules.ai.providers.openai_provider import DEFAULT_OPENAI_MODEL
 from pydantic import ValidationError
 
 from apps.api.schemas.settings import (
+    AiModelsRefreshRequest,
+    AiModelsResponse,
     AiProvider,
+    AiProvidersResponse,
+    AiSettingsPreset,
     AiSettingsResponse,
     AiSettingsTestRequest,
     AiSettingsTestResponse,
@@ -98,6 +104,21 @@ def delete_ai_settings_secret() -> AiSettingsResponse:
     return AiSettingsStore.from_env().delete_secret()
 
 
+def list_ai_providers() -> AiProvidersResponse:
+    """Return safe AI providers metadata for frontend clients."""
+    return AiSettingsStore.from_env().providers()
+
+
+def list_ai_models(provider: str) -> AiModelsResponse:
+    """Return builtin/cache model catalog for one provider."""
+    return AiSettingsStore.from_env().models(provider)
+
+
+def refresh_ai_models(payload: AiModelsRefreshRequest) -> AiModelsResponse:
+    """Refresh provider models only after explicit user action."""
+    return AiSettingsStore.from_env().refresh_models(payload.provider)
+
+
 def get_ai_runtime(feature: AiFeature) -> AiRuntime:
     """Return an internal provider for one analysis area."""
     return AiSettingsStore.from_env().runtime(feature)
@@ -128,27 +149,33 @@ class AiSettingsStore:
         return self._to_response(metadata)
 
     def save(self, payload: AiSettingsUpdateRequest) -> AiSettingsResponse:
+        normalized_provider = _provider(payload.provider)
+        settings = _settings_from_payload(payload, normalized_provider)
         metadata = {
-            "provider": payload.provider,
-            "model": _default_model(payload.provider, payload.model),
-            "use_ai": payload.use_ai,
-            "allow_resume": payload.allow_resume,
-            "allow_job": payload.allow_job,
-            "allow_match": payload.allow_match,
-            "allow_ats": payload.allow_ats,
-            "allow_tailor": payload.allow_tailor,
-            "allow_github": payload.allow_github,
-            "allow_source_import": payload.allow_source_import,
-            "allow_radar": payload.allow_radar,
-            "allow_memory_context": payload.allow_memory_context,
+            "provider": normalized_provider,
+            "model": _default_model(normalized_provider, payload.model),
+            "preset": settings["preset"],
+            "use_ai": settings["use_ai"],
+            "allow_profile": settings["allow_profile"],
+            "allow_lattes": settings["allow_lattes"],
+            "allow_resume": settings["allow_resume"],
+            "allow_job": settings["allow_job"],
+            "allow_public_exams": settings["allow_public_exams"],
+            "allow_match": settings["allow_match"],
+            "allow_ats": settings["allow_ats"],
+            "allow_tailor": settings["allow_tailor"],
+            "allow_github": settings["allow_github"],
+            "allow_source_import": settings["allow_source_import"],
+            "allow_extension": settings["allow_extension"],
+            "allow_radar": settings["allow_radar"],
+            "allow_notifications": settings["allow_notifications"],
+            "allow_memory_context": settings["allow_memory_context"],
             "updated_at": _utc_now(),
         }
 
         cleaned_key = (payload.api_key or "").strip()
-        if payload.provider == "gemini" and cleaned_key:
-            self._write_secret(provider="gemini", api_key=cleaned_key)
-        elif payload.provider != "gemini":
-            self._delete_secret_file()
+        if normalized_provider in {"gemini", "openai"} and cleaned_key:
+            self._write_secret(provider=normalized_provider, api_key=cleaned_key)
 
         self._write_json(self.paths.settings, metadata)
         return self._to_response(metadata)
@@ -168,20 +195,11 @@ class AiSettingsStore:
                 message="Provider configurado com sucesso.",
             )
 
-        if provider == "openai_future":
-            return AiSettingsTestResponse(
-                provider=provider,
-                model=model,
-                success=False,
-                configured=False,
-                status="planned",
-                message="Provider planejado para uma versao futura.",
-            )
-
-        api_key = (payload.api_key or "").strip() or self._read_secret_for_provider("gemini")
+        secret_provider = "openai" if provider == "openai_future" else provider
+        api_key = (payload.api_key or "").strip() or self._read_secret_for_provider(secret_provider)
         if not api_key:
             return AiSettingsTestResponse(
-                provider="gemini",
+                provider=provider,
                 model=model,
                 success=False,
                 configured=False,
@@ -189,10 +207,14 @@ class AiSettingsStore:
                 message="Nao foi possivel testar o provider. Verifique a chave e o modelo.",
             )
 
-        diagnostic = self._test_gemini(api_key=api_key, model=model)
+        diagnostic = (
+            self._test_gemini(api_key=api_key, model=model)
+            if provider == "gemini"
+            else self._test_openai(api_key=api_key, model=model)
+        )
         success = bool(getattr(diagnostic, "success", False))
         return AiSettingsTestResponse(
-            provider="gemini",
+            provider=provider,
             model=model,
             success=success,
             configured=success,
@@ -211,6 +233,36 @@ class AiSettingsStore:
         self._delete_secret_file()
         self._write_json(self.paths.settings, metadata)
         return self._to_response(metadata)
+
+    def providers(self) -> AiProvidersResponse:
+        """Return safe provider status and key URLs."""
+        configured = {
+            "gemini": bool(self._read_secret_for_provider("gemini")),
+            "openai": bool(self._read_secret_for_provider("openai")),
+        }
+        return AiProvidersResponse.model_validate(
+            {
+                "providers": [
+                    provider.model_dump(mode="json")
+                    for provider in model_catalog.providers_catalog(configured=configured)
+                ]
+            }
+        )
+
+    def models(self, provider: str) -> AiModelsResponse:
+        """Return local model catalog without calling external providers."""
+        result = model_catalog.list_models(provider, cache_path=self._models_cache_path())
+        return AiModelsResponse.model_validate(result.model_dump(mode="json"))
+
+    def refresh_models(self, provider: str) -> AiModelsResponse:
+        """Refresh one provider catalog using a backend-stored key when available."""
+        normalized = model_catalog.normalize_provider(provider)
+        result = model_catalog.refresh_models(
+            normalized,
+            api_key=self._read_secret_for_provider(normalized),
+            cache_path=self._models_cache_path(),
+        )
+        return AiModelsResponse.model_validate(result.model_dump(mode="json"))
 
     def runtime(self, feature: AiFeature) -> AiRuntime:
         metadata = self._read_metadata()
@@ -234,8 +286,12 @@ class AiSettingsStore:
                 warnings=tuple(warnings),
             )
 
-        if requested_provider == "openai_future":
-            warnings.append("OpenAI ainda esta planejado; usei analise local.")
+        secret_provider = "openai" if requested_provider == "openai_future" else requested_provider
+        api_key = self._read_secret_for_provider(secret_provider)
+        if not api_key:
+            warnings.append(
+                f"{provider_label(secret_provider)} sem chave no backend local; usei analise local."
+            )
             return AiRuntime(
                 provider=MockProvider(),
                 provider_name="local",
@@ -248,26 +304,15 @@ class AiSettingsStore:
                 warnings=tuple(warnings),
             )
 
-        api_key = self._read_secret_for_provider("gemini")
-        if not api_key:
-            warnings.append("Gemini sem chave no backend local; usei analise local.")
-            return AiRuntime(
-                provider=MockProvider(),
-                provider_name="local",
-                requested_provider="gemini",
-                model="local",
-                use_ai=settings.use_ai,
-                configured=False,
-                allowed=allowed,
-                allow_memory_context=False,
-                warnings=tuple(warnings),
-            )
-
-        provider = GeminiProvider(api_key=api_key, model=settings.model)
+        provider = (
+            GeminiProvider(api_key=api_key, model=settings.model)
+            if secret_provider == "gemini"
+            else OpenAIProvider(api_key=api_key, model=settings.model)
+        )
         return AiRuntime(
             provider=provider,
             provider_name=provider.name,
-            requested_provider="gemini",
+            requested_provider=requested_provider,
             model=provider.model,
             use_ai=settings.use_ai,
             configured=True,
@@ -277,10 +322,13 @@ class AiSettingsStore:
         )
 
     def _to_response(self, metadata: dict[str, Any]) -> AiSettingsResponse:
+        raw_provider = str(metadata.get("provider", "local"))
         provider = _provider(metadata.get("provider"))
         model = _default_model(provider, str(metadata.get("model", "")))
+        secret_provider = "openai" if provider == "openai_future" else provider
         configured = provider == "local" or (
-            provider == "gemini" and bool(self._read_secret_for_provider("gemini"))
+            secret_provider in {"gemini", "openai"}
+            and bool(self._read_secret_for_provider(secret_provider))
         )
         warnings: list[str] = []
         status = "ready"
@@ -289,25 +337,36 @@ class AiSettingsStore:
             status = "configured" if configured else "not_configured"
             if not configured:
                 warnings.append("Gemini selecionado, mas nenhuma chave foi salva no backend local.")
-        elif provider == "openai_future":
-            configured = False
-            status = "planned"
-            warnings.append("OpenAI esta planejado para uma versao futura.")
+        elif provider in {"openai", "openai_future"}:
+            status = "configured" if configured else "not_configured"
+            if raw_provider.strip().lower() == "openai_future":
+                warnings.append("openai_future foi migrado para OpenAI real no backend local.")
+            if not configured:
+                warnings.append("OpenAI selecionado, mas nenhuma chave foi salva no backend local.")
 
         return AiSettingsResponse(
             provider=provider,
             model=model,
             configured=configured,
             status=status,
+            preset=_preset(metadata.get("preset")),
             use_ai=_bool(metadata.get("use_ai"), False),
+            allow_profile=_bool(metadata.get("allow_profile"), True),
+            allow_lattes=_bool(metadata.get("allow_lattes"), True),
             allow_resume=_bool(metadata.get("allow_resume"), True),
             allow_job=_bool(metadata.get("allow_job"), True),
+            allow_public_exams=_bool(
+                metadata.get("allow_public_exams"),
+                _bool(metadata.get("allow_radar"), True),
+            ),
             allow_match=_bool(metadata.get("allow_match"), True),
             allow_ats=_bool(metadata.get("allow_ats"), True),
             allow_tailor=_bool(metadata.get("allow_tailor"), True),
             allow_github=_bool(metadata.get("allow_github"), True),
             allow_source_import=_bool(metadata.get("allow_source_import"), True),
+            allow_extension=_bool(metadata.get("allow_extension"), True),
             allow_radar=_bool(metadata.get("allow_radar"), True),
+            allow_notifications=_bool(metadata.get("allow_notifications"), True),
             allow_memory_context=_bool(metadata.get("allow_memory_context"), False),
             updated_at=str(metadata.get("updated_at", "")),
             warnings=warnings,
@@ -324,37 +383,70 @@ class AiSettingsStore:
         finally:
             executor.shutdown(wait=False, cancel_futures=True)
 
+    def _test_openai(self, *, api_key: str, model: str):
+        executor = ThreadPoolExecutor(max_workers=1)
+        future = executor.submit(OpenAIProvider(api_key=api_key, model=model).ping)
+        try:
+            future.result(timeout=AI_TEST_TIMEOUT_SECONDS)
+            return _DiagnosticSuccess()
+        except Exception:
+            future.cancel()
+            return _DiagnosticFailure()
+        finally:
+            executor.shutdown(wait=False, cancel_futures=True)
+
     def _read_metadata(self) -> dict[str, Any]:
         raw = self._read_json(self.paths.settings)
         defaults: dict[str, Any] = {
             "provider": "local",
             "model": "local",
+            "preset": "local_safe",
             "use_ai": False,
+            "allow_profile": True,
+            "allow_lattes": True,
             "allow_resume": True,
             "allow_job": True,
+            "allow_public_exams": True,
             "allow_match": True,
             "allow_ats": True,
             "allow_tailor": True,
             "allow_github": True,
             "allow_source_import": True,
+            "allow_extension": True,
             "allow_radar": True,
+            "allow_notifications": True,
             "allow_memory_context": False,
             "updated_at": "",
         }
         defaults.update(raw)
         return defaults
 
-    def _read_secret_for_provider(self, provider: AiProvider) -> str:
+    def _read_secret_for_provider(self, provider: str) -> str:
         raw = self._read_json(self.paths.secrets)
-        if _provider(raw.get("provider")) != provider:
-            return ""
-        return str(raw.get("api_key", "")).strip()
+        normalized = _provider(provider)
+        providers = raw.get("providers", {})
+        if isinstance(providers, dict):
+            entry = providers.get(normalized, {})
+            if isinstance(entry, dict):
+                return str(entry.get("api_key", "")).strip()
+        if _provider(raw.get("provider")) == normalized:
+            return str(raw.get("api_key", "")).strip()
+        return ""
 
-    def _write_secret(self, *, provider: AiProvider, api_key: str) -> None:
-        self._write_json(
-            self.paths.secrets,
-            {"provider": provider, "api_key": api_key, "updated_at": _utc_now()},
-        )
+    def _write_secret(self, *, provider: str, api_key: str) -> None:
+        raw = self._read_json(self.paths.secrets)
+        providers = raw.get("providers", {})
+        if not isinstance(providers, dict):
+            providers = {}
+        legacy_provider = raw.get("provider")
+        legacy_key = raw.get("api_key")
+        if legacy_provider and legacy_key:
+            providers[_provider(legacy_provider)] = {
+                "api_key": str(legacy_key),
+                "updated_at": str(raw.get("updated_at", "")),
+            }
+        providers[_provider(provider)] = {"api_key": api_key, "updated_at": _utc_now()}
+        self._write_json(self.paths.secrets, {"providers": providers, "updated_at": _utc_now()})
         with suppress(OSError):
             os.chmod(self.paths.secrets, 0o600)
 
@@ -375,14 +467,23 @@ class AiSettingsStore:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
+    def _models_cache_path(self) -> Path:
+        return self.paths.settings.parent / "ai-models-cache.json"
+
 
 class _DiagnosticFailure:
     success = False
 
 
+class _DiagnosticSuccess:
+    success = True
+
+
 def _provider(value: object) -> AiProvider:
     raw = str(value or "local").strip().lower()
-    if raw in {"local", "gemini", "openai_future"}:
+    if raw == "openai_future":
+        return "openai"
+    if raw in {"local", "gemini", "openai"}:
         return raw  # type: ignore[return-value]
     return "local"
 
@@ -393,7 +494,95 @@ def _default_model(provider: AiProvider, model: str | None = None) -> str:
         return "local"
     if provider == "gemini":
         return cleaned or ai_setup.DEFAULT_GEMINI_MODEL
-    return cleaned or "planned"
+    if provider in {"openai", "openai_future"}:
+        return cleaned or DEFAULT_OPENAI_MODEL
+    return cleaned or "local"
+
+
+def _preset(value: object) -> AiSettingsPreset:
+    raw = str(value or "local_safe").strip().lower()
+    if raw in {"local_safe", "basic", "complete", "custom"}:
+        return cast(AiSettingsPreset, raw)
+    return "custom"
+
+
+def _settings_from_payload(
+    payload: AiSettingsUpdateRequest,
+    provider: AiProvider,
+) -> dict[str, bool | str]:
+    preset = _preset(payload.preset)
+    if preset == "local_safe":
+        return {
+            **_feature_defaults(enabled=False),
+            "preset": preset,
+            "use_ai": False,
+            "allow_memory_context": False,
+        }
+    if preset == "basic":
+        values = _feature_defaults(enabled=False)
+        values.update(
+            {
+                "preset": preset,
+                "use_ai": provider != "local",
+                "allow_profile": True,
+                "allow_lattes": True,
+                "allow_resume": True,
+                "allow_job": True,
+                "allow_public_exams": True,
+                "allow_match": True,
+                "allow_ats": True,
+                "allow_tailor": True,
+                "allow_memory_context": False,
+            }
+        )
+        return values
+    if preset == "complete":
+        values = _feature_defaults(enabled=True)
+        values.update(
+            {
+                "preset": preset,
+                "use_ai": provider != "local",
+                "allow_memory_context": bool(payload.allow_memory_context),
+            }
+        )
+        return values
+    return {
+        "preset": "custom",
+        "use_ai": bool(payload.use_ai and provider != "local"),
+        "allow_profile": payload.allow_profile,
+        "allow_lattes": payload.allow_lattes,
+        "allow_resume": payload.allow_resume,
+        "allow_job": payload.allow_job,
+        "allow_public_exams": payload.allow_public_exams,
+        "allow_match": payload.allow_match,
+        "allow_ats": payload.allow_ats,
+        "allow_tailor": payload.allow_tailor,
+        "allow_github": payload.allow_github,
+        "allow_source_import": payload.allow_source_import,
+        "allow_extension": payload.allow_extension,
+        "allow_radar": payload.allow_radar,
+        "allow_notifications": payload.allow_notifications,
+        "allow_memory_context": payload.allow_memory_context,
+    }
+
+
+def _feature_defaults(*, enabled: bool) -> dict[str, bool | str]:
+    return {
+        "allow_profile": enabled,
+        "allow_lattes": enabled,
+        "allow_resume": enabled,
+        "allow_job": enabled,
+        "allow_public_exams": enabled,
+        "allow_match": enabled,
+        "allow_ats": enabled,
+        "allow_tailor": enabled,
+        "allow_github": enabled,
+        "allow_source_import": enabled,
+        "allow_extension": enabled,
+        "allow_radar": enabled,
+        "allow_notifications": enabled,
+        "allow_memory_context": False,
+    }
 
 
 def _bool(value: object, fallback: bool) -> bool:
@@ -405,6 +594,8 @@ def _feature_allowed(settings: AiSettingsResponse, feature: AiFeature) -> bool:
         return settings.allow_resume
     if feature == "job":
         return settings.allow_job
+    if feature == "public_exams":
+        return settings.allow_public_exams
     if feature == "match":
         return settings.allow_match
     if feature == "ats":
@@ -417,9 +608,15 @@ def _feature_allowed(settings: AiSettingsResponse, feature: AiFeature) -> bool:
         return settings.allow_source_import
     if feature == "radar":
         return settings.allow_radar
-    if feature == "public_exams":
-        return settings.allow_radar
     return True
+
+
+def provider_label(provider: str) -> str:
+    if provider == "openai":
+        return "OpenAI"
+    if provider == "gemini":
+        return "Gemini"
+    return "Provider local"
 
 
 def _utc_now() -> str:
