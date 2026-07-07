@@ -1,6 +1,6 @@
 [project]
 name = "sotuhire"
-version = "1.9.3"
+version = "1.9.4"
 description = "AI-assisted career copilot for resume analysis, job matching and responsible opportunity discovery."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -13,6 +13,9 @@ authors = [
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-ra"
+markers = [
+  "external_ai: tests that call external AI providers and require local opt-in environment variables"
+]
 
 [tool.ruff]
 line-length = 100
