@@ -26,8 +26,11 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 - [v1.9.1 Release Integrity and Context Unification](07-development/v1.9.1-release-integrity-readme-context-unification.md)
 - [v1.9.2 Lattes and Academic Profile](07-development/v1.9.2-lattes-ai-universal-profile.md)
 - [v1.9.3 Public Exams and Edital Foundation](07-development/v1.9.3-public-exams-edital-foundation.md)
+- [v1.9.4 AI Providers Extension QA](07-development/v1.9.4-ai-providers-extension-qa.md)
+- [v1.9.4 End-to-End QA](07-development/v1.9.4-end-to-end-qa.md)
 - [Career Context Engine](02-architecture/career-context-engine.md)
 - [Extension Profile Bridge](02-architecture/extension-profile-bridge.md)
+- [Catálogo de providers e modelos de IA](02-architecture/ai-provider-model-catalog.md)
 - [Fundação para Editais e Concursos](02-architecture/public-exams-foundation.md)
 
 ## Frontend-ready
@@ -70,6 +73,7 @@ mas o MkDocs usa `docs/index.md` como home pública do site.
 ## IA e desenvolvimento
 
 - [Prompt Catalog](04-ai/prompt-catalog.md)
+- [Catálogo de providers e modelos de IA](02-architecture/ai-provider-model-catalog.md)
 - [Prompts individuais](04-ai/prompts/README.md)
 - [Prompt Lattes Extractor v1](04-ai/prompts/profile-lattes-extractor-v1.md)
 - [Prompt Public Exam Notice Extractor v1](04-ai/prompts/public-exam-notice-extractor-v1.md)

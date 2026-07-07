@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.9.3 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
+Este mapa registra como a v1.9.4 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
 negócio para o frontend.
 
 ```text
@@ -27,7 +27,7 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | GitHub | `/github` | `POST /api/v1/github/repo/analyze` | `analyze_github_repo` | `modules/github_analyzer`, `modules/portfolio` | Real |
 | Tracker | `/tracker` | `GET/POST/PATCH /api/v1/tracker/jobs` | `apps.api.services.tracker` | `modules/tracker`, `modules/storage` | Real |
 | Intelligence | `/intelligence` | `/api/v1/tracker/metrics`, `/requirements`, `/funnel`, `/sources` | tracker service | `modules/tracker` | Real |
-| IA e Providers | `/settings` | `/api/v1/settings/ai*` | `apps.api.services.ai_settings` | `modules/ai/providers` | Real |
+| IA e Providers | `/settings` | `/api/v1/settings/ai*` | `apps.api.services.ai_settings` | `modules/ai/providers`, `modules/ai/model_catalog.py` | Real v1.9.4 |
 | Caixa de Entrada de Oportunidades | `/sources` | `/api/v1/sources/imports*`, `/captures*`, `/dedupe`, `/stats`, `/export`, `/directory` | `apps.api.services.sources` | `modules/sources`, `modules/parsers`, `modules/tracker` | Real |
 | Radar de Vagas | `/radar` | `/api/v1/radar/*` | `apps.api.services.radar` | `modules/radar`, `modules/scraping`, `modules/sources`, `modules/tracker` | Real |
 | Wishlist com IA/local | `/radar` | `POST /api/v1/radar/wishlists/draft` | `radar_draft_wishlist` | `modules/radar/wishlist_draft.py`, `modules/profile/context.py`, Prompt Registry | Real |
@@ -37,7 +37,7 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Navegador autenticado autorizado | `/sources` | `/api/v1/sources/authenticated-browser/*` | `apps.api.services.sources` | fluxo existente de scraping local | Parcial |
 | Captura assistida autenticada | `/sources` | `POST /api/v1/sources/authenticated-captures` | `apps.api.services.sources` | `modules/sources`, `modules/profile` | Real |
 | Streamlit | legado/dev | Não é API web | `app.py`, `modules/ui` | core antigo | Legado |
-| Editais / Concursos | `/public-exams` | `/api/v1/public-exams/*` | `apps.api.services.public_exams` | `modules/public_exams`, `modules/context`, `modules/profile` | Fundação real v1.9.3 |
+| Editais / Concursos | `/public-exams` | `/api/v1/public-exams/*` | `apps.api.services.public_exams` | `modules/public_exams`, `modules/context`, `modules/profile` | Fundação real com IA/fallback v1.9.4 |
 
 ## Editais e concursos v1.9.3
 
@@ -57,7 +57,7 @@ POST   /api/v1/public-exams/{notice_id}/study-plan
 
 - `ExamNotice`, `ExamRole`, `ExamRequirement`, `ExamTimeline`, `ExamSubject`, `ExamFitScore` e `StudyPlanDraft`;
 - importação por texto colado, sem PDF/HTML direto nesta versão;
-- IA/Gemini opcional pelo prompt `public_exam_notice_extractor_v1`, sempre como rascunho revisável;
+- IA Gemini/OpenAI opcional pelo prompt `public_exam_notice_extractor_v1`, sempre como rascunho revisável;
 - fallback local obrigatório quando a IA falha, vem vazia ou não está configurada;
 - confirmação manual antes de salvar em `data/public_exams/notices.json`;
 - análise com `CareerContextPurpose.PUBLIC_EXAMS`, Perfil Profissional Universal e evidências acadêmicas/Lattes confirmadas;
@@ -65,14 +65,35 @@ POST   /api/v1/public-exams/{notice_id}/study-plan
 
 O fluxo não faz inscrição automática, pagamento, boleto, envio de documentos, login em banca/órgão, scraping autenticado ou CAPTCHA bypass. O endpoint `/api/v1/sources/authenticated-browser/collect` permanece fora do escopo de alteração.
 
+## IA, providers e catálogo de modelos v1.9.4
+
+`apps/api/services/ai_settings.py` seleciona o runtime por preset, provider e modelo salvo:
+
+- `local`: fallback local determinístico.
+- `gemini`: `GeminiProvider` com chave e modelo salvos no backend local.
+- `openai`: `OpenAIProvider` com chave e modelo salvos no backend local.
+- `openai_future`: alias legado normalizado para `openai`.
+
+Endpoints:
+
+```txt
+GET  /api/v1/settings/ai/providers
+GET  /api/v1/settings/ai/models?provider=gemini
+GET  /api/v1/settings/ai/models?provider=openai
+POST /api/v1/settings/ai/models/refresh
+```
+
+O catálogo usa lista builtin, cache local e refresh opcional via provider. Segredos não entram nas respostas.
+
 ## Roteamento de IA
 
 `apps/api/services/ai_settings.py` seleciona o runtime por área:
 
 - `use_ai=false`, provider `local` ou toggle desligado: provider local determinístico.
 - `provider=gemini`, chave salva no backend e toggle ligado: Gemini via Prompt Registry.
+- `provider=openai`, chave salva no backend e toggle ligado: OpenAI via Prompt Registry.
 - falha de provider: fallback local com warning.
-- `openai_future`: status planejado, sem chamada externa.
+- `openai_future`: compatibilidade com dados antigos, normalizada para `openai`.
 
 Toggles atuais:
 
@@ -85,11 +106,12 @@ allow_resume
 allow_job
 allow_source_import
 allow_radar
-public_exams via allow_radar na v1.9.3
+allow_public_exams
+allow_extension
 allow_memory_context
 ```
 
-Currículo, vaga, importações, Radar e o rascunho de editais usam IA quando `use_ai=true` e `provider=gemini` configurado.
+Currículo, vaga, importações, Radar e o rascunho de editais usam IA quando `use_ai=true` e `provider=gemini` ou `provider=openai` está configurado.
 A UI mostra provider, modo e baixa confiança sem expor segredo.
 
 ## Ponte da extensão
@@ -106,6 +128,7 @@ POST /api/v1/extension/captures/{capture_id}/add-to-profile
 POST /api/v1/extension/projects/{project_id}/profile-candidates
 POST /api/v1/extension/projects/{project_id}/add-to-profile
 POST /api/v1/extension/import/job
+POST /api/v1/extension/import/public-exam
 POST /api/v1/extension/import/github
 POST /api/v1/extension/import/tracker
 PATCH /api/v1/extension/captures/{capture_id}
@@ -114,6 +137,8 @@ PATCH /api/v1/extension/captures/{capture_id}
 A ponte lê o store local da Local Companion API e permite importar capturas para Vaga, GitHub ou
 Candidaturas. Ela não reimplementa crawler logado, não controla contas de terceiros e não altera o
 browser autenticado existente.
+
+Na v1.9.4, capturas com `kind=public_exam` podem ser importadas para `/public-exams` como rascunho revisável. A extensão também expõe um contexto seguro com resumo curto do Perfil Universal, fluxos habilitados e status de IA, sem entregar perfil inteiro, memória completa ou API key.
 
 ## Importadores e histórico v1.7.1
 

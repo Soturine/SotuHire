@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.9.3-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.3)
+[![Release](https://img.shields.io/badge/release-v1.9.4-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.4)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -10,7 +10,7 @@ SotuHire é um copiloto de carreira local-first, multiárea e baseado em evidên
 
 Ele combina Perfil Profissional Universal, RAG local, Match, ATS, Tailor, Radar, Fontes, Kanban, GitHub/Portfólio, Lattes/acadêmico, Editais/Concursos, extensão assistiva e IA opcional sem transformar candidatura, inscrição ou decisão crítica em automação cega. A regra central é simples: a pessoa revisa antes de salvar, exportar, aplicar, se inscrever manualmente ou compartilhar contexto com provider externo.
 
-[Documentação](docs/) · [Roadmap](docs/01-product/roadmap.md) · [Visão](docs/01-product/vision.md) · [Estratégia multiárea](docs/01-product/multi-domain-product-strategy.md) · [Arquitetura](docs/02-architecture/module-integration-map.md) · [Contexto](docs/02-architecture/career-context-engine.md) · [Ponte da extensão](docs/02-architecture/extension-profile-bridge.md) · [Lattes e acadêmico](docs/07-development/v1.9.2-lattes-ai-universal-profile.md) · [Editais e concursos](docs/07-development/v1.9.3-public-exams-edital-foundation.md) · [RAG local](docs/04-ai/career-memory-rag.md) · [Segurança](docs/06-engineering/security-privacy.md) · [Release v1.9.3](docs/releases/v1.9.3.md) · [Changelog](CHANGELOG.md)
+[Documentação](docs/) · [Roadmap](docs/01-product/roadmap.md) · [Visão](docs/01-product/vision.md) · [Estratégia multiárea](docs/01-product/multi-domain-product-strategy.md) · [Arquitetura](docs/02-architecture/module-integration-map.md) · [Contexto](docs/02-architecture/career-context-engine.md) · [Ponte da extensão](docs/02-architecture/extension-profile-bridge.md) · [Lattes e acadêmico](docs/07-development/v1.9.2-lattes-ai-universal-profile.md) · [Editais e concursos](docs/07-development/v1.9.3-public-exams-edital-foundation.md) · [Catálogo de modelos](docs/02-architecture/ai-provider-model-catalog.md) · [RAG local](docs/04-ai/career-memory-rag.md) · [Segurança](docs/06-engineering/security-privacy.md) · [Release v1.9.4](docs/releases/v1.9.4.md) · [Changelog](CHANGELOG.md)
 
 ## Para Quem Serve
 
@@ -39,9 +39,13 @@ SotuHire não é uma ferramenta apenas para dev/TI. Ele foi desenhado para traje
 
 ![Editais / Concursos](docs/assets/screenshots/sotuhire-web-public-exams.png)
 
+![Editais / Concursos com IA](docs/assets/screenshots/sotuhire-web-public-exams-ai.png)
+
 ![Evidências da extensão para o Perfil](docs/assets/screenshots/sotuhire-web-extension-profile-candidates.png)
 
-![Configurações de IA](docs/assets/screenshots/sotuhire-web-settings-ai.png)
+![Captura de edital pela extensão](docs/assets/screenshots/sotuhire-web-extension-public-exams.png)
+
+![Configurações de IA](docs/assets/screenshots/sotuhire-web-settings-ai-providers.png)
 
 ## Principais Recursos
 
@@ -55,7 +59,7 @@ SotuHire não é uma ferramenta apenas para dev/TI. Ele foi desenhado para traje
 - **Fontes, captura e extensão**: importa texto, link, CSV, JSON, capturas da extensão e capturas assistidas, sempre com revisão humana.
 - **Kanban/Tracker**: acompanha candidaturas, status, fontes, requisitos recorrentes, funil e próximas ações.
 - **GitHub/Portfólio**: analisa repositórios públicos e sugere candidatos de evidência para o Perfil, sem salvar automaticamente.
-- **IA opcional e fallback local**: Gemini pode ser usado pelo backend local; sem chave, o produto continua funcionando localmente.
+- **IA opcional e fallback local**: Gemini e OpenAI podem ser configurados no backend local com catálogo de modelos; sem chave, o produto continua funcionando localmente.
 - **RAG/Memória local**: recupera evidências lexicais locais por relevância, score e origem.
 
 ## Como Funciona
@@ -77,7 +81,7 @@ Requisitos:
 - Python 3.11 ou superior;
 - Node.js e npm para o frontend web;
 - Git;
-- chave Gemini apenas se desejar IA externa opcional.
+- chave Gemini ou OpenAI apenas se desejar IA externa opcional.
 
 ```bash
 git clone https://github.com/Soturine/SotuHire.git
@@ -124,15 +128,16 @@ O frontend usa modo Demo por padrão e pode alternar para API Real em `http://12
 
 ## IA Opcional
 
-O SotuHire funciona sem provider externo. Para usar Gemini:
+O SotuHire funciona sem provider externo. Na v1.9.4, **Configurações / IA** foi simplificada com presets, catálogo de modelos por provider e botões para abrir as páginas oficiais de criação de chave Gemini/OpenAI.
 
-1. abra a tela **Configurações / IA**;
-2. escolha Gemini;
-3. informe a chave apenas no backend local;
-4. teste a conexão;
-5. habilite explicitamente os fluxos desejados.
+Presets disponíveis:
 
-A chave não é enviada ao frontend e não deve ser gravada em `localStorage` ou `sessionStorage`. Quando Gemini falha ou não está configurado, o SotuHire usa fallback local.
+- **Local seguro**: IA externa desligada e fallback local.
+- **IA básica**: currículo/Lattes, vaga/edital, match, ATS e tailor.
+- **IA completa**: inclui Radar/Wishlist, Fontes/Extensão e GitHub/Portfólio.
+- **Personalizado**: opções avançadas agrupadas por fluxo.
+
+Para usar Gemini ou OpenAI, escolha o provider, selecione um modelo conhecido ou informe um modelo customizado avançado, cole a chave apenas no backend local, salve e teste a conexão. A chave não é enviada ao frontend, não fica em `localStorage` ou `sessionStorage` e não é usada pela extensão. Quando o provider falha ou não está configurado, o SotuHire registra o fallback local.
 
 ## Lattes e Acadêmico
 
@@ -142,7 +147,7 @@ Nada é salvo automaticamente. O usuário revisa, seleciona e confirma os itens 
 
 ## Editais e Concursos
 
-A seção **Editais / Concursos** aceita texto colado de edital, concurso público, processo seletivo público, bolsa, residência, estágio público ou chamada institucional. A v1.9.3 cria uma fundação inicial: parser local, IA/Gemini opcional como extrator assistido, store local, endpoints `/api/v1/public-exams`, comparação com o Perfil Profissional Universal, uso de evidências acadêmicas/Lattes já confirmadas, Exam Fit Score, checklist e plano de estudo inicial.
+A seção **Editais / Concursos** aceita texto colado de edital, concurso público, processo seletivo público, bolsa, residência, estágio público ou chamada institucional. A v1.9.3 criou a fundação inicial; a v1.9.4 valida o uso real de Gemini/OpenAI via provider e modelo selecionados, mantém fallback local, importa capturas da extensão e preserva a comparação com Perfil Profissional Universal, evidências acadêmicas/Lattes confirmadas, Exam Fit Score, checklist e plano de estudo inicial.
 
 Edital não é vaga privada. O SotuHire ajuda a organizar e interpretar editais, mas o edital oficial sempre prevalece. Revise manualmente requisitos, datas, taxa, documentos, conteúdo programático e regras da banca.
 
@@ -150,9 +155,9 @@ O módulo não faz inscrição automática, pagamento automático, boleto, envio
 
 ## Extensão Assistiva
 
-A extensão do navegador continua com versionamento independente e compatível com o app. SotuHire v1.9.3 é compatível com extensão v0.9.0. Ela conversa com o site por meio da Local Companion API, salva capturas revisáveis e pode gerar evidências candidatas para o Perfil Universal.
+A extensão do navegador continua com versionamento independente e compatível com o app. SotuHire v1.9.4 é compatível com extensão v0.9.0. Ela conversa com o site por meio da Local Companion API, salva capturas revisáveis, captura edital/concurso como tipo próprio e pode gerar evidências candidatas para o Perfil Universal.
 
-A extensão não acessa a API key do app, não automatiza candidatura, não captura cookies/tokens/sessão/headers e não altera o fluxo `/api/v1/sources/authenticated-browser/collect`.
+A extensão consulta apenas um resumo seguro de status/contexto do Perfil, sem receber o perfil inteiro, memória completa ou chave de IA. Ela não acessa a API key do app, não automatiza candidatura/inscrição, não captura cookies/tokens/sessão/headers e não altera o fluxo `/api/v1/sources/authenticated-browser/collect`.
 
 Leia também: [browser-extension/README.md](browser-extension/README.md).
 
@@ -183,12 +188,13 @@ Leia também: [browser-extension/README.md](browser-extension/README.md).
 - [Extension Profile Bridge](docs/02-architecture/extension-profile-bridge.md)
 - [Fundação para editais e concursos](docs/02-architecture/public-exams-foundation.md)
 - [Prompt Catalog](docs/04-ai/prompt-catalog.md)
+- [Catálogo de providers e modelos de IA](docs/02-architecture/ai-provider-model-catalog.md)
 - [Prompt Lattes Extractor](docs/04-ai/prompts/profile-lattes-extractor-v1.md)
 - [Prompt Public Exam Notice Extractor](docs/04-ai/prompts/public-exam-notice-extractor-v1.md)
 - [Career Memory e RAG local](docs/04-ai/career-memory-rag.md)
 - [Segurança e privacidade](docs/06-engineering/security-privacy.md)
 - [Frontend web](apps/web/README.md)
-- [Release notes](docs/releases/v1.9.3.md)
+- [Release notes](docs/releases/v1.9.4.md)
 
 ## Roadmap Curto
 

@@ -49,6 +49,8 @@ Cada prompt deve ser tratado como contrato de produto, não como texto improvisa
 | Profile Lattes Extractor v1 | `prompts/profile-lattes-extractor-v1.md` | Extrair evidências acadêmicas/Lattes como candidatos revisáveis para o Perfil Profissional Universal. |
 | Public Exam Notice Extractor v1 | `prompts/public-exam-notice-extractor-v1.md` | Estruturar editais e concursos a partir de texto colado como rascunho revisável. |
 
+Na v1.9.4, prompts estruturados podem rodar via Gemini ou OpenAI pelo backend local. O modelo vem do catálogo salvo em Configurações de IA, e falhas do provider devem cair para fallback local quando o fluxo tiver parser determinístico.
+
 ## Regras globais para todos os prompts
 
 Todos os prompts devem obedecer:

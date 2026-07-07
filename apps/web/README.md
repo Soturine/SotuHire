@@ -98,10 +98,16 @@ A seção **IA e Providers** em Configurações usa endpoints reais da API local
 ```txt
 GET /api/v1/settings/ai
 GET /api/v1/settings/ai/status
+GET /api/v1/settings/ai/providers
+GET /api/v1/settings/ai/models?provider=gemini
+GET /api/v1/settings/ai/models?provider=openai
+POST /api/v1/settings/ai/models/refresh
 POST /api/v1/settings/ai
 POST /api/v1/settings/ai/test
 DELETE /api/v1/settings/ai
 ```
+
+Na v1.9.4, a UI mostra presets **Local seguro**, **IA básica**, **IA completa** e **Personalizado**. Gemini e OpenAI usam catálogo de modelos, botão para obter chave oficial e secret salvo apenas no backend local.
 
 A chave digitada é enviada somente para o backend local e limpa do estado do componente após salvar. Ela não é persistida em `localStorage`, `sessionStorage` ou bundle público. A API nunca retorna a chave; retorna apenas provider, modelo, `configured`, `status`, toggles, warnings e `updated_at`.
 
@@ -157,7 +163,9 @@ A tela **Fontes e Captura** inclui importadores, Caixa de Entrada, Diretório de
 - exige confirmação de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-O painel **Extensão Local** consulta `/api/v1/extension/status`, `/api/v1/extension/captures` e `/api/v1/extension/context`. Ele mostra capturas salvas pela Local Companion API, permite enviar para Vaga/GitHub/Candidaturas e gera candidatos revisáveis para o Perfil.
+O painel **Extensão Local** consulta `/api/v1/extension/status`, `/api/v1/extension/captures` e `/api/v1/extension/context`. Ele mostra capturas salvas pela Local Companion API, permite enviar para Vaga/Editais/GitHub/Candidaturas e gera candidatos revisáveis para o Perfil.
+
+Capturas com `kind=public_exam` podem abrir `/public-exams?capture_id=...` e virar rascunho revisável. O frontend não expõe API key nem recebe Perfil completo da extensão.
 
 A extensão não acessa a API key do app, não coleta cookies, tokens, sessão, headers ou storage de terceiros e não automatiza candidatura.
 

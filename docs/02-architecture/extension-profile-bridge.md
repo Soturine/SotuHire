@@ -7,7 +7,7 @@ O objetivo é simples: uma captura ou projeto pode sugerir evidências candidata
 ## Fluxo
 
 ```text
-Extensão captura vaga/projeto/página visível
+Extensão captura vaga/projeto/edital/página visível
   -> Local Companion salva captura, memória, tracker ou projeto
   -> FastAPI lê /api/v1/extension/*
   -> Career Context Engine considera sinais locais
@@ -20,6 +20,7 @@ Extensão captura vaga/projeto/página visível
 
 ```txt
 GET  /api/v1/extension/context
+POST /api/v1/extension/import/public-exam
 POST /api/v1/extension/captures/{capture_id}/profile-candidates
 POST /api/v1/extension/captures/{capture_id}/add-to-profile
 POST /api/v1/extension/projects/{project_id}/profile-candidates
@@ -29,6 +30,8 @@ POST /api/v1/extension/projects/{project_id}/add-to-profile
 Os endpoints de `profile-candidates` apenas geram rascunhos locais. Eles retornam `ProfileItem` com `confirmed_by_user=false`, `source`, `source_ref`, `confidence` e evidência textual curta.
 
 Os endpoints de `add-to-profile` exigem confirmação explícita e salvam somente os itens selecionados. Ao salvar, o Perfil marca os itens como confirmados pela pessoa usuária.
+
+Capturas com `kind=public_exam` não viram vaga privada nem evidência profissional automaticamente. Elas podem ser importadas para Editais/Concursos como rascunho revisável.
 
 ## Fontes
 
@@ -48,6 +51,7 @@ A v1.9.2 adiciona o fluxo Lattes no Perfil, separado da extensão. Ainda assim, 
 ## Privacidade
 
 - A extensão não recebe API key do app.
+- A extensão recebe apenas resumo seguro de contexto, nunca Perfil completo, memória completa ou segredo de provider.
 - O frontend não persiste API key do provider.
 - A ponte não coleta cookies, tokens, sessão, headers ou storage de terceiros.
 - A ponte não automatiza candidatura.

@@ -125,7 +125,8 @@ data/secrets/ai-provider.local.json
 ```
 
 `data/` e os arquivos locais de segredo são ignorados pelo Git. O provider `local` não faz chamada
-externa, `gemini` usa a integração backend existente e `openai_future` permanece planejado.
+externa, `gemini` e `openai` usam integrações do backend local. O alias legado `openai_future` é
+normalizado para `openai`.
 
 ## Roteamento de provider v1.5
 
@@ -133,8 +134,9 @@ As análises usam `apps/api/services/ai_settings.py` para escolher o runtime:
 
 - `use_ai=false`, provider `local` ou toggle desligado: caminho local determinístico;
 - `provider=gemini`, chave configurada e toggle ligado: provider Gemini no backend;
-- falha de Gemini: fallback local com warning no envelope;
-- `openai_future`: planejado, sem chamada externa.
+- `provider=openai`, chave configurada e toggle ligado: provider OpenAI no backend;
+- falha de provider: fallback local com warning no envelope;
+- `openai_future`: alias legado normalizado para `openai`.
 
 Prompts usados por código:
 

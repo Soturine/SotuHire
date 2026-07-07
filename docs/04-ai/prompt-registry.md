@@ -122,6 +122,8 @@ O registry não deve depender de Gemini diretamente.
 
 Ele deve funcionar com qualquer provider compatível com texto e JSON estruturado.
 
+Na v1.9.4, o runtime selecionado pode ser Gemini ou OpenAI, sempre pelo backend local e pelo modelo salvo em Configurações de IA. Fluxos com fallback determinístico devem retornar `provider_used`, `requested_provider`, `analysis_mode` e warnings quando a IA externa falhar.
+
 ## Critérios de pronto
 
 - Todos os prompts carregados por ID.

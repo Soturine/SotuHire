@@ -134,7 +134,8 @@ Testa o provider selecionado.
 
 - `local`: retorna sucesso sem chamada externa.
 - `gemini`: usa chave recém-enviada ou chave local já salva.
-- `openai_future`: retorna status planejado.
+- `openai`: usa chave recém-enviada ou chave local já salva.
+- `openai_future`: alias legado normalizado para `openai`.
 
 Response `data`:
 

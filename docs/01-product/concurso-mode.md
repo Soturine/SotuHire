@@ -2,6 +2,8 @@
 
 O **Concurso Mode** deixou de ser apenas uma ideia documental na v1.9.3. O SotuHire agora tem uma fundação real para editais, concursos públicos, processos seletivos públicos, bolsas, residências, estágios públicos e chamadas institucionais.
 
+Na v1.9.4, essa fundação ganhou validação de IA real via Gemini/OpenAI configurados no backend local, fallback explícito e importação de capturas da extensão como `public_exam`.
+
 Essa fundação ainda não é um sistema completo de concursos. Ela existe para organizar texto colado de edital, separar dados críticos, comparar requisitos com o Perfil Profissional Universal e preparar próximos passos revisáveis.
 
 > O SotuHire ajuda a organizar e interpretar editais, mas o edital oficial sempre prevalece. Revise manualmente requisitos, datas, taxa, documentos, conteúdo programático e regras da banca.
@@ -20,6 +22,14 @@ Essa fundação ainda não é um sistema completo de concursos. Ela existe para 
 - checklist de requisitos/documentos;
 - `StudyPlanDraft` simples;
 - preparação de Radar/Tracker para tratar oportunidade pública sem misturar com vaga privada.
+
+## Reforços da v1.9.4
+
+- provider/modelo selecionado em Configurações de IA é usado no extrator de edital quando `use_ai=true`;
+- fallback local continua obrigatório quando Gemini/OpenAI falham;
+- extensão captura edital/concurso sem login, cookies, tokens, sessão, headers ou storage de terceiros;
+- site importa captura para `/public-exams` como rascunho revisável;
+- contexto seguro da extensão não entrega Perfil completo nem API key.
 
 ## Por que é um domínio separado
 

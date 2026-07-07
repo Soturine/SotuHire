@@ -1,6 +1,6 @@
 ﻿# Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.9.3 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.9.4 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,14 +8,31 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.9.3 |
-| Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional e intake persistente |
+| Versão atual considerada | v1.9.4 |
+| Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional, catálogo de modelos e intake persistente |
 | Próximo ciclo documental | contínuo |
 | Próximo ciclo técnico | v2.0 Assistant workflows with human approval ou evolução segura de PDF/HTML para editais |
 | Foco de produto | Copiloto de carreira multiárea com Perfil central, Radar local-first, trajetórias acadêmicas e editais revisáveis |
-| Foco técnico imediato | Robustez de editais, RAG local aplicado e workflows com aprovação explícita |
-| Grande lacuna atual | Upload direto de PDF/HTML do Lattes/editais, parsers por banca e matching adaptativo por domínio |
+| Foco técnico imediato | Robustez de providers, extensão, editais, RAG local aplicado e workflows com aprovação explícita |
+| Grande lacuna atual | Upload direto de PDF/HTML do Lattes/editais, parsers por banca, QA real com chaves locais e matching adaptativo por domínio |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
+
+## Estado atual - v1.9.4
+
+A v1.9.4 entrega **AI Providers, Model Catalog, Extension Bridge & End-to-End QA**:
+
+- simplifica Configurações de IA com presets Local seguro, IA básica, IA completa e Personalizado;
+- cria catálogo de modelos por provider, com lista builtin, cache local e refresh opcional quando houver chave configurada;
+- faz Gemini e OpenAI usarem o provider/modelo salvo no backend local;
+- adiciona OpenAI como provider real, mantendo compatibilidade segura com `openai_future`;
+- mantém segredos em backend local/env local, sem expor API key ao frontend, storage do navegador ou extensão;
+- reforça Editais/Concursos para usar Prompt Registry quando `use_ai=true` e cair para parser local quando provider falhar;
+- atualiza a extensão para capturar edital/concurso como `public_exam`, enviar ao Local Companion e importar no site como rascunho revisável;
+- adiciona contexto seguro da extensão, com resumo do Perfil Universal sem perfil inteiro, memória completa ou segredo;
+- documenta QA ponta a ponta, testes opt-in de IA real e release v1.9.4;
+- preserva a regra de não automatizar candidatura, inscrição, pagamento, boleto, documento, login, scraping autenticado ou CAPTCHA.
+
+OpenAI/Gemini são assistentes de estruturação, não fonte final de verdade. Perfil, Lattes, editais e extensão continuam baseados em revisão humana.
 
 ## Estado atual - v1.9.3
 
@@ -270,6 +287,7 @@ A evolução deve ser feita por camadas:
 | v1.9.1 | Release Integrity, README Overhaul & Context Unification | Produto/core/docs | Integridade de tag, README profissional, screenshots web e Career Context Engine. |
 | v1.9.2 | Lattes, Academic Profile & AI-Assisted Evidence Extraction | Produto/core/docs | Importação Lattes por texto, evidências acadêmicas revisáveis, Gemini opcional e fundação de editais. |
 | v1.9.3 | Public Exams & Edital Intelligence Foundation | Produto/core/docs | Fundação de editais por texto colado, comparação com Perfil Universal, checklist, plano inicial e tela web, sem inscrição automática. |
+| v1.9.4 | AI Providers, Model Catalog, Extension Bridge & End-to-End QA | Produto/integração/docs | Presets de IA, catálogo Gemini/OpenAI, OpenAI real no backend, extensão capturando editais e QA ponta a ponta. |
 | v2.0.0 | Assistant autônomo com aprovação manual | Produto/arquitetura | Autonomia local com aprovações explícitas e sem auto-apply. |
 
 ---

@@ -2,7 +2,7 @@
 
 O Career Context Engine é a camada local-first que monta um contexto único, compacto e revisável para os fluxos do SotuHire.
 
-Ele vive em `modules/context` e não substitui o Perfil Profissional Universal nem a memória local. A função dele é coordenar esses sinais para que Radar, Wishlist, Match, ATS, Tailor, Tracker, Fontes, GitHub/Portfólio, Lattes/acadêmico, Notificações e Dashboard consultem o mesmo contexto por trás.
+Ele vive em `modules/context` e não substitui o Perfil Profissional Universal nem a memória local. A função dele é coordenar esses sinais para que Radar, Wishlist, Match, ATS, Tailor, Tracker, Fontes, GitHub/Portfólio, Lattes/acadêmico, Editais/Concursos, Extensão, Notificações e Dashboard consultem o mesmo contexto por trás.
 
 ## Fontes de Contexto
 
@@ -84,6 +84,8 @@ Evidências são deduplicadas por título/conteúdo normalizado. Quando há dupl
 | Notificações | melhorar mensagem do Radar com sinais seguros do contexto |
 | GitHub/Portfólio | gerar candidatos de evidência revisáveis para o Perfil |
 | Editais/Concursos | comparar requisitos de edital com formação, títulos, registros, certificações, experiência, localização e evidências acadêmicas/Lattes confirmadas |
+
+Na v1.9.4, a extensão pode consultar apenas um resumo seguro desse contexto. Esse resumo indica se há Perfil disponível, fluxos habilitados e status de IA, mas não retorna o Perfil inteiro, memória completa ou segredo de provider.
 
 ## Public exams
 

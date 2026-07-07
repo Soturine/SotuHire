@@ -255,6 +255,6 @@ Novos módulos arquiteturais:
 - `modules/schemas/`: Pydantic e contratos de dados.
 - `modules/preferences/`: cálculo de Opportunity Fit.
 - `modules/resume_tailor/`: adaptação segura de currículo.
-- `modules/public_exams/`: modo concurso futuro, isolado.
+- `modules/public_exams/`: fundação real de editais/concursos, isolada de vaga privada.
 
 PyTorch e agentes avançados ficam como camada futura opcional, sem entrar na dependência padrão.

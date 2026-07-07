@@ -104,7 +104,7 @@ Warnings aparecem quando faltam datas, requisitos, salário/taxa, conteúdo prog
 
 ## IA opcional
 
-O prompt `public_exam_notice_extractor_v1` pode estruturar o edital com Gemini quando configurado no backend local.
+O prompt `public_exam_notice_extractor_v1` pode estruturar o edital com Gemini ou OpenAI quando configurado no backend local.
 
 Regras:
 
@@ -113,6 +113,10 @@ Regras:
 - a resposta sempre exige `needs_user_review=true`;
 - rascunho vazio ou inválido cai para parser local;
 - nenhum dado sensível ou chave de provider vai para o frontend.
+
+Na v1.9.4, o endpoint de importação também registra `requested_provider`, `provider_used` e `analysis_mode`. O provider usa o modelo salvo em Configurações de IA. Se a chamada externa falhar, o draft volta ao parser local e permanece com `needs_user_review=true`.
+
+Capturas da extensão com `kind=public_exam` podem abrir `/public-exams?capture_id=...` e virar rascunho revisável. A captura não é salva como vaga privada e não gera inscrição/candidatura automática.
 
 ## Perfil, Lattes e contexto
 

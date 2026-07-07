@@ -4,6 +4,37 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.9.4] - 2026-07-07
+
+### Adicionado
+
+- Presets de IA em Configurações: Local seguro, IA básica, IA completa e Personalizado.
+- Catálogo de modelos por provider com endpoints `/api/v1/settings/ai/providers`, `/models` e `/models/refresh`.
+- Provider OpenAI no backend local, com secret separado, modelo selecionado, teste de conexão mockável e fallback local.
+- Cache local de catálogo em `data/settings/ai-models-cache.json` e segredos locais ignorados por Git em `data/secrets/`.
+- Testes opt-in `external_ai` para Gemini/OpenAI reais via `SOTUHIRE_TEST_GEMINI_API_KEY` e `SOTUHIRE_TEST_OPENAI_API_KEY`.
+- Extensão com ação **Capturar edital / concurso**, tipo `public_exam`, endpoint local `/capture/public-exam` e contexto seguro `/capture/context-summary`.
+- Importação de captura da extensão para `/public-exams?capture_id=...` como rascunho revisável.
+- Documentação de catálogo de modelos, QA ponta a ponta e ponte segura da extensão.
+
+### Alterado
+
+- Gemini e OpenAI usam o modelo salvo no backend local nos fluxos estruturados.
+- `openai_future` é normalizado para `openai` para compatibilidade com configurações antigas.
+- Settings de IA deixam de exibir uma lista gigante por padrão e agrupam opções avançadas.
+- Editais/Concursos retornam `requested_provider`, `provider_used` e `analysis_mode` com fallback local quando provider falha.
+- Área de Fontes/Captura diferencia `public_exam` de vaga privada e permite importar como edital.
+- A extensão consulta apenas resumo seguro do Perfil Universal; não recebe perfil inteiro, memória completa ou chave de IA.
+- README, docs, MkDocs e roadmap atualizados para v1.9.4.
+
+### Segurança
+
+- API keys continuam restritas ao backend local/env local.
+- Sem API key no frontend, `localStorage`, `sessionStorage`, extensão, docs, fixtures ou release notes.
+- Sem inscrição automática, candidatura automática, pagamento, boleto ou envio automático de documentos.
+- Sem login em banca/órgão, crawler logado, captura de cookies/tokens/sessão/headers ou bypass de CAPTCHA.
+- Sem alteração no fluxo `/api/v1/sources/authenticated-browser/collect`.
+
 ## [1.9.3] - 2026-07-03
 
 ### Adicionado

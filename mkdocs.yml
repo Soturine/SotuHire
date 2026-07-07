@@ -79,6 +79,7 @@ nav:
       - Mapa de integração de módulos: 02-architecture/module-integration-map.md
       - Career Context Engine: 02-architecture/career-context-engine.md
       - Extension Profile Bridge: 02-architecture/extension-profile-bridge.md
+      - Catálogo de providers e modelos de IA: 02-architecture/ai-provider-model-catalog.md
       - Fundação para editais e concursos: 02-architecture/public-exams-foundation.md
       - Background jobs: 02-architecture/background-jobs.md
       - Parsers: 02-architecture/parsers.md
@@ -211,12 +212,15 @@ nav:
       - v1.9.1 Context Unification: 07-development/v1.9.1-release-integrity-readme-context-unification.md
       - v1.9.2 Lattes and Academic Profile: 07-development/v1.9.2-lattes-ai-universal-profile.md
       - v1.9.3 Public Exams and Edital Foundation: 07-development/v1.9.3-public-exams-edital-foundation.md
+      - v1.9.4 AI Providers Extension QA: 07-development/v1.9.4-ai-providers-extension-qa.md
+      - v1.9.4 End-to-End QA: 07-development/v1.9.4-end-to-end-qa.md
       - Release notes v1.8.1: releases/v1.8.1.md
       - Release notes v1.8.2: releases/v1.8.2.md
       - Release notes v1.9.0: releases/v1.9.0.md
       - Release notes v1.9.1: releases/v1.9.1.md
       - Release notes v1.9.2: releases/v1.9.2.md
       - Release notes v1.9.3: releases/v1.9.3.md
+      - Release notes v1.9.4: releases/v1.9.4.md
   - Frontend:
       - Overview: 08-frontend/README.md
       - Arquitetura frontend-ready: 08-frontend/frontend-architecture.md
