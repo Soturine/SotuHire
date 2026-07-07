@@ -52,6 +52,16 @@ const request = async (path, body) => {
 };
 
 const display = (payload) => {
+  if (payload.profile_summary || payload.enabled_flows) {
+    result.textContent = [
+      `SotuHire ${payload.app_version || ""}`.trim(),
+      payload.profile_available ? "Perfil: resumo seguro disponível" : "Perfil: sem resumo seguro",
+      `IA: ${payload.ai_provider_status || "local"}`,
+      `Fluxos: ${(payload.enabled_flows || []).join(", ")}`,
+      ...(payload.warnings || [])
+    ].filter(Boolean).join("\n");
+    return;
+  }
   if (payload.report) {
     const report = payload.report;
     result.textContent = `${payload.message || "Relatório concluído."}\nNota: ${report.overall_score}/100 · Grade ${report.grade}\n${report.summary}`;
@@ -108,6 +118,7 @@ const act = async (action) => {
   result.textContent = "Processando localmente...";
   try {
     if (action === "health") return display(await request("/health"));
+    if (action === "context-summary") return display(await request("/capture/context-summary"));
     if (action === "applications") {
       const payload = await extract("SOTUHIRE_APPLICATIONS");
       return display(await request("/capture/applications", payload));
@@ -159,6 +170,14 @@ const act = async (action) => {
     if (action === "copy") {
       await navigator.clipboard.writeText(capture.visible_text);
       return display({ message: "Texto visível copiado." });
+    }
+    if (action === "capture-public-exam") {
+      return display(await request("/capture/public-exam", {
+        ...capture,
+        kind: "public_exam",
+        job_title: "",
+        company: ""
+      }));
     }
     const paths = {
       capture: "/capture/job",

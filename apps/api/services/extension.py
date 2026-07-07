@@ -26,12 +26,16 @@ from apps.api.schemas.extension import (
     ExtensionContextResponse,
     ExtensionImportGithubResponse,
     ExtensionImportJobResponse,
+    ExtensionImportPublicExamResponse,
     ExtensionImportRequest,
     ExtensionImportTrackerResponse,
     ExtensionProfileCandidatesRequest,
     ExtensionProfileCandidatesResponse,
     ExtensionStatusResponse,
 )
+from apps.api.schemas.public_exams import PublicExamImportRequest
+from apps.api.services.ai_settings import get_ai_settings_status
+from apps.api.services.public_exams import public_exams_import
 
 
 def extension_status() -> ExtensionStatusResponse:
@@ -48,6 +52,10 @@ def extension_status() -> ExtensionStatusResponse:
             if records
             else "Local Companion disponivel; nenhuma captura local encontrada."
         ),
+        profile_available=bool(_safe_profile_summary()),
+        profile_summary=_safe_profile_summary(),
+        enabled_flows=["job", "public_exam", "github", "profile_evidence"],
+        ai_provider_status=_safe_ai_provider_status(),
     )
 
 
@@ -81,10 +89,18 @@ def extension_context() -> ExtensionContextResponse:
         query="capturas da extensao local companion perfil profissional",
         max_evidence=12,
     )
+    summary = context_brief(context)
     return ExtensionContextResponse(
-        context=context,
-        context_summary=context_brief(context),
-        message="Contexto local da extensao montado para revisao do Perfil.",
+        context_summary=summary,
+        message="Resumo seguro da extensao montado para revisao do Perfil.",
+        profile_available=bool(summary or context.profile_summary or context.evidence),
+        profile_summary=_safe_profile_summary(context.profile_summary or summary),
+        enabled_flows=["job", "public_exam", "github", "profile_evidence"],
+        ai_provider_status=_safe_ai_provider_status(),
+        warnings=[
+            *context.warnings,
+            "Resumo seguro: o perfil completo nao e enviado para a extensao.",
+        ],
     )
 
 
@@ -247,6 +263,29 @@ def extension_import_github(request: ExtensionImportRequest) -> ExtensionImportG
     )
 
 
+def extension_import_public_exam(
+    request: ExtensionImportRequest,
+) -> ExtensionImportPublicExamResponse:
+    """Import one capture as a review-only public exam draft."""
+    record = _capture(request.capture_id)
+    text = record.capture.description or record.capture.visible_text
+    if not text.strip():
+        raise HTTPException(status_code=422, detail="Captura sem texto visivel para edital.")
+    draft, _warnings = public_exams_import(
+        PublicExamImportRequest(
+            text=text,
+            source_url=record.capture.url,
+            source_name=record.capture.domain or _domain(record.capture.url),
+            use_ai=request.use_ai,
+        )
+    )
+    return ExtensionImportPublicExamResponse(
+        capture_id=record.id,
+        draft=draft,
+        message="Captura importada como rascunho de Edital/Concurso. Revise antes de salvar.",
+    )
+
+
 def _capture(capture_id: str):
     service = LocalCompanionService()
     record = service.capture_store.get(capture_id)
@@ -289,6 +328,8 @@ def _github_owner_repo(url: str) -> tuple[str, str]:
 
 
 def _capture_kind(record) -> str:
+    if record.capture.kind == "public_exam":
+        return "public_exam"
     url = record.capture.url
     if _github_owner_repo(url)[0]:
         return "github_repo"
@@ -317,6 +358,8 @@ def _capture_query(record) -> str:
 
 def _profile_candidates_from_capture(record) -> list[ProfileItem]:
     kind = _capture_kind(record)
+    if kind == "public_exam":
+        return []
     if kind == "github_repo":
         return _project_candidates_from_capture(record, source="github_capture")
     if kind in {"profile", "other"} and "portfolio" in normalize_text(_capture_query(record)):
@@ -568,6 +611,8 @@ def _project_record(project_id: str) -> ProjectAnalysisRecord | None:
 
 
 def _context_signal(record, candidates: list[ProfileItem]) -> str:
+    if _capture_kind(record) == "public_exam":
+        return "Edital/concurso capturado para importacao revisavel; nao altera o Perfil automaticamente."
     if not candidates:
         return "Sem candidatos de perfil detectados."
     kind = _capture_kind(record)
@@ -576,6 +621,26 @@ def _context_signal(record, candidates: list[ProfileItem]) -> str:
     if any(item.type == "target_role" for item in candidates):
         return "Vaga pode atualizar objetivos, preferencias ou gaps revisaveis."
     return "Captura pode contribuir com contexto apos revisao."
+
+
+def _safe_profile_summary(summary: str = "") -> str:
+    """Return a short non-sensitive profile summary for extension UI."""
+    cleaned = " ".join((summary or "").split())
+    if cleaned:
+        return cleaned[:240]
+    try:
+        profile = UniversalCareerProfileService().get_profile()
+    except Exception:
+        return ""
+    parts = [*profile.target_roles[:3], *profile.primary_domains[:3]]
+    return ", ".join(part for part in parts if part)[:240]
+
+
+def _safe_ai_provider_status() -> str:
+    settings = get_ai_settings_status()
+    if settings.provider == "local" or not settings.use_ai:
+        return "local"
+    return "configured" if settings.configured else "fallback"
 
 
 def _candidate_id(source_ref: str, item_type: str, title: str) -> str:

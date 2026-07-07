@@ -23,6 +23,7 @@ from modules.local_api.schemas import (
     CaptureActionRequest,
     CompanionAnalysisContext,
     CompanionCaptureRecord,
+    CompanionContextSummaryResponse,
     CompanionResponse,
     ProjectCompanionResponse,
     utc_now,
@@ -136,6 +137,30 @@ class LocalCompanionService:
     def health(self) -> CompanionResponse:
         return CompanionResponse(message="SotuHire Local Companion disponível.")
 
+    def context_summary(self) -> CompanionContextSummaryResponse:
+        """Return a short, non-sensitive context summary for the extension popup."""
+        context = self._load_context()
+        records = self.capture_store.list()
+        provider = (context.provider or "local").strip().lower()
+        public_exam_count = sum(1 for record in records if record.capture.kind == "public_exam")
+        profile_available = bool(context.resume_text.strip())
+        return CompanionContextSummaryResponse(
+            app_version=os.getenv("SOTUHIRE_APP_VERSION", "1.9.4"),
+            profile_available=profile_available,
+            profile_summary=(
+                "Resumo seguro disponivel no backend local."
+                if profile_available
+                else "Perfil local ainda sem resumo seguro ativo."
+            ),
+            enabled_flows=["job", "public_exam", "github", "profile_evidence"],
+            ai_provider_status="configured" if provider not in {"", "local"} else "local",
+            warnings=(
+                [f"{public_exam_count} captura(s) de edital/concurso aguardam revisao."]
+                if public_exam_count
+                else []
+            ),
+        )
+
     def save_active_context(self, context: CompanionAnalysisContext) -> Path:
         self.context_path.parent.mkdir(parents=True, exist_ok=True)
         temporary = self.context_path.with_suffix(".tmp")
@@ -217,6 +242,55 @@ class LocalCompanionService:
             tags=["browser_assisted_capture", clean.domain],
         )
         return CompanionResponse(message="Vaga capturada localmente.", capture_id=record.id)
+
+    def capture_public_exam(self, payload: BrowserCapturePayload) -> CompanionResponse:
+        """Save a visible edital/concurso page without treating it as a private job."""
+        clean = sanitize_capture(payload).model_copy(update={"kind": "public_exam"})
+        capture_id = opportunity_identity_hash(
+            clean.page_title or "edital-concurso",
+            "public_exam",
+            clean.url,
+        )
+        current = next(
+            (
+                record
+                for record in self.capture_store.list()
+                if record.capture.kind == "public_exam" and clean.url in record.source_urls
+            ),
+            None,
+        )
+        if current is not None:
+            capture_id = current.id
+        record = self.capture_store.save(
+            (
+                current
+                or CompanionCaptureRecord(
+                    id=capture_id,
+                    capture=clean,
+                    source_urls=[clean.url],
+                    source_domains=[source_domain(clean.url)],
+                )
+            ).model_copy(
+                update={
+                    "capture": clean,
+                    "source_urls": list(
+                        dict.fromkeys([*(current.source_urls if current else []), clean.url])
+                    ),
+                    "source_domains": list(
+                        dict.fromkeys(
+                            [
+                                *(current.source_domains if current else []),
+                                source_domain(clean.url),
+                            ]
+                        )
+                    ),
+                }
+            )
+        )
+        return CompanionResponse(
+            message="Edital/concurso capturado localmente para revisao.",
+            capture_id=record.id,
+        )
 
     def analyze_capture(self, request: CaptureActionRequest) -> CompanionResponse:
         record = self._resolve_record(request)
@@ -410,9 +484,15 @@ class LocalCompanionApp:
         try:
             if method == "GET" and path == "/health":
                 return 200, self.service.health().model_dump(mode="json")
+            if method == "GET" and path in {"/capture/status", "/capture/context-summary"}:
+                return 200, self.service.context_summary().model_dump(mode="json")
             payload = json.loads(body.decode("utf-8") or "{}")
             if method == "POST" and path == "/capture/job":
                 response = self.service.capture_job(BrowserCapturePayload.model_validate(payload))
+            elif method == "POST" and path == "/capture/public-exam":
+                response = self.service.capture_public_exam(
+                    BrowserCapturePayload.model_validate(payload)
+                )
             elif method == "POST" and path == "/capture/analyze":
                 response = self.service.analyze_capture(
                     CaptureActionRequest.model_validate(payload)

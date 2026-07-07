@@ -159,6 +159,50 @@ def test_extension_bridge_exposes_fake_github_capture_history(tmp_path: Path, mo
     assert capture["url"] == "https://github.com/example/fictitious-api-lab"
 
 
+def test_extension_bridge_imports_public_exam_capture_as_reviewable_draft(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    store = CompanionCaptureStore()
+    store.save(
+        CompanionCaptureRecord(
+            id="capture_public_exam",
+            capture=BrowserCapturePayload(
+                kind="public_exam",
+                page_title="Edital 01/2026",
+                url="https://banca.example/editais/01-2026",
+                domain="banca.example",
+                visible_text=(
+                    "Edital 01/2026\nCargo: Analista Administrativo\n"
+                    "Orgao: Prefeitura Exemplo\nInscricoes: 01/08/2026 a 20/08/2026\n"
+                    "Prova objetiva: 13/09/2026\nRequisitos: ensino medio completo."
+                ),
+                description=(
+                    "Edital 01/2026\nCargo: Analista Administrativo\n"
+                    "Orgao: Prefeitura Exemplo\nInscricoes: 01/08/2026 a 20/08/2026\n"
+                    "Prova objetiva: 13/09/2026\nRequisitos: ensino medio completo."
+                ),
+            ),
+        )
+    )
+    client = api_client()
+
+    captures = client.get("/api/v1/extension/captures").json()["data"]["captures"]
+    response = client.post(
+        "/api/v1/extension/import/public-exam",
+        json={"capture_id": "capture_public_exam", "use_ai": False},
+    )
+
+    assert captures[0]["kind"] == "public_exam"
+    assert captures[0]["profile_candidate_count"] == 0
+    assert response.status_code == 200
+    payload = response.json()["data"]
+    assert payload["capture_id"] == "capture_public_exam"
+    assert payload["draft"]["needs_user_review"] is True
+    assert payload["draft"]["notice"]["opportunity_type"] == "public_exam"
+    assert client.get("/api/v1/public-exams").json()["data"]["notices"] == []
+
+
 def test_extension_context_endpoint_uses_career_context_engine(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
     client = api_client()
@@ -167,8 +211,9 @@ def test_extension_context_endpoint_uses_career_context_engine(tmp_path: Path, m
 
     assert response.status_code == 200
     payload = response.json()["data"]
-    assert payload["context"]["purpose"] == "extension"
-    assert "Contexto" in payload["message"]
+    assert "context" not in payload
+    assert "Resumo" in payload["message"]
+    assert "public_exam" in payload["enabled_flows"]
 
 
 def test_extension_profile_candidates_do_not_save_automatically(

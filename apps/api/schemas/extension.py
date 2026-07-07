@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from modules.context import CareerContext
 from modules.portfolio.schemas import ProjectAnalysisReport
 from modules.profile.models import ProfileItem
 from modules.schemas.job_posting import JobPostingSchema
 from pydantic import BaseModel, ConfigDict, Field
+
+from apps.api.schemas.public_exams import PublicExamImportResponse
 
 
 class ExtensionStatusResponse(BaseModel):
@@ -21,6 +22,11 @@ class ExtensionStatusResponse(BaseModel):
     capture_count: int = 0
     last_capture_at: datetime | None = None
     message: str = ""
+    profile_available: bool = False
+    profile_summary: str = ""
+    enabled_flows: list[str] = Field(default_factory=list)
+    ai_provider_status: str = "local"
+    warnings: list[str] = Field(default_factory=list)
 
 
 class ExtensionCaptureItem(BaseModel):
@@ -111,14 +117,28 @@ class ExtensionImportGithubResponse(BaseModel):
     message: str
 
 
+class ExtensionImportPublicExamResponse(BaseModel):
+    """Public exam draft generated from a local extension capture."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    capture_id: str
+    draft: PublicExamImportResponse
+    message: str
+
+
 class ExtensionContextResponse(BaseModel):
     """Unified context visible to the extension bridge."""
 
     model_config = ConfigDict(extra="forbid")
 
-    context: CareerContext
     context_summary: str = ""
     message: str = ""
+    profile_available: bool = False
+    profile_summary: str = ""
+    enabled_flows: list[str] = Field(default_factory=list)
+    ai_provider_status: str = "local"
+    warnings: list[str] = Field(default_factory=list)
 
 
 class ExtensionProfileCandidatesRequest(BaseModel):

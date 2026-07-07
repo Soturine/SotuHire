@@ -21,6 +21,7 @@ class BrowserCapturePayload(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
+    kind: Literal["job", "public_exam", "github", "profile", "project", "other"] = "job"
     page_title: str = Field(default="", max_length=500)
     url: str = Field(max_length=2048)
     domain: str = Field(default="", max_length=255)
@@ -113,6 +114,20 @@ class CompanionResponse(BaseModel):
     provider: str = ""
     tracker_id: str = ""
     app_url: str = "http://127.0.0.1:8501"
+
+
+class CompanionContextSummaryResponse(BaseModel):
+    """Safe status/context summary for the browser extension popup."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    ok: bool = True
+    app_version: str = "1.9.4"
+    profile_available: bool = False
+    profile_summary: str = ""
+    enabled_flows: list[str] = Field(default_factory=list)
+    ai_provider_status: Literal["local", "configured", "fallback"] = "local"
+    warnings: list[str] = Field(default_factory=list)
 
 
 class ProjectCompanionResponse(BaseModel):

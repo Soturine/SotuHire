@@ -14,6 +14,7 @@ from apps.api.schemas.extension import (
     ExtensionContextResponse,
     ExtensionImportGithubResponse,
     ExtensionImportJobResponse,
+    ExtensionImportPublicExamResponse,
     ExtensionImportRequest,
     ExtensionImportTrackerResponse,
     ExtensionProfileCandidatesRequest,
@@ -27,6 +28,7 @@ from apps.api.services.extension import (
     extension_context,
     extension_import_github,
     extension_import_job,
+    extension_import_public_exam,
     extension_import_tracker,
     extension_patch_capture,
     extension_project_add_to_profile,
@@ -138,6 +140,17 @@ def local_extension_import_github(
 ) -> ApiEnvelope[ExtensionImportGithubResponse]:
     """Analyze one GitHub capture using existing local companion logic."""
     return ok(extension_import_github(payload), request_id=payload.request_id)
+
+
+@router.post(
+    "/import/public-exam",
+    response_model=ApiEnvelope[ExtensionImportPublicExamResponse],
+)
+def local_extension_import_public_exam(
+    payload: ExtensionImportRequest,
+) -> ApiEnvelope[ExtensionImportPublicExamResponse]:
+    """Import one local extension capture as a review-only edital draft."""
+    return ok(extension_import_public_exam(payload), request_id=payload.request_id)
 
 
 @router.post("/import/tracker", response_model=ApiEnvelope[ExtensionImportTrackerResponse])

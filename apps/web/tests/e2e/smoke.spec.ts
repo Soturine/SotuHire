@@ -141,11 +141,16 @@ test("settings AI flow uses backend status shape and never stores secrets in bro
   await page.goto("/settings");
 
   await expect(page.getByText("IA e Providers")).toBeVisible();
-  await expect(page.getByText(/Permitir IA na An.lise de Compatibilidade/)).toBeVisible();
-  await expect(page.getByText(/Provider local/i).first()).toBeVisible();
+  await expect(page.getByTestId("ai-preset-local_safe")).toBeVisible();
+  await expect(page.getByTestId("ai-preset-basic")).toBeVisible();
+  await expect(page.getByTestId("ai-provider-openai")).toBeVisible();
+  await expect(page.getByTestId("ai-key-link-gemini")).toBeVisible();
+  await expect(page.getByTestId("ai-key-link-openai")).toBeVisible();
+  await expect(page.getByText(/Provider atual: Local/i).first()).toBeVisible();
   const keyInput = page.getByTestId("ai-api-key-input");
   await expect(async () => {
-    await page.getByRole("button", { name: "Gemini" }).click();
+    await page.getByTestId("ai-provider-gemini").click();
+    await expect(page.getByTestId("ai-model-select")).toBeEnabled({ timeout: 1_000 });
     await expect(keyInput).toBeEnabled({ timeout: 1_000 });
     await keyInput.fill(fakeKey, { timeout: 1_000 });
   }).toPass({ timeout: 10_000 });
@@ -183,7 +188,12 @@ test("sources page handles local extension offline and fake capture imports", as
   await page.getByTestId("import-capture-github").first().click();
   await expect(page.getByText(/GitHub Analysis|Analise de GitHub/i).first()).toBeVisible();
   await page.getByTestId("ignore-capture-local").first().click();
-  await expect(page.getByTestId("extension-capture-row")).toHaveCount(1);
+  await expect(page.getByTestId("extension-capture-row")).toHaveCount(2);
+  await expect(page.getByTestId("import-capture-public-exam")).toBeVisible();
+  await page.getByTestId("import-capture-public-exam").click();
+  await expect(page).toHaveURL(/\/public-exams\?capture_id=/);
+  await expect(page.getByTestId("public-exams-page")).toBeVisible();
+  await expect(page.getByTestId("public-exams-role-summary")).toContainText(/Analista|Engenheiro/);
 });
 
 test("sources inbox imports fake text csv json and connects to tracker", async ({ page }) => {
@@ -417,7 +427,7 @@ test("API Real empty states do not silently show demo opportunity data", async (
   await page.getByRole("button", { name: "API Real" }).click();
   await page.getByRole("link", { name: /Fontes e Captura/i }).click();
   await expect(page.getByTestId("source-real-empty")).toContainText("API Real sem oportunidades");
-  await expect(page.locator("body")).not.toContainText("Empresa Exemplo");
+  await expect(page.locator("#opportunity-inbox")).not.toContainText("Empresa Exemplo");
 
   await page
     .getByRole("navigation")

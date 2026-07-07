@@ -1499,6 +1499,11 @@ function LocalExtensionPanel() {
                 onImportJob={() => importJob.mutate(capture.id)}
                 onImportTracker={() => importTracker.mutate(capture.id)}
                 onImportGithub={() => importGithub.mutate(capture.id)}
+                onImportPublicExam={() => {
+                  window.location.assign(
+                    `/public-exams?capture_id=${encodeURIComponent(capture.id)}`,
+                  );
+                }}
                 onProfileCandidates={() =>
                   profileCandidates.mutate({
                     captureId: capture.id,
@@ -1540,6 +1545,7 @@ function ExtensionCaptureRow({
   onImportJob,
   onImportTracker,
   onImportGithub,
+  onImportPublicExam,
   onProfileCandidates,
   onReview,
   onArchive,
@@ -1550,6 +1556,7 @@ function ExtensionCaptureRow({
   onImportJob: () => void;
   onImportTracker: () => void;
   onImportGithub: () => void;
+  onImportPublicExam: () => void;
   onProfileCandidates: () => void;
   onReview: () => void;
   onArchive: () => void;
@@ -1559,6 +1566,7 @@ function ExtensionCaptureRow({
   const origin = capture.source || capture.domain || capture.company || "Fonte local";
   const date = capture.captured_at || capture.updated_at;
   const isGithub = kind === "github_repo" || capture.url.includes("github.com/");
+  const isPublicExam = kind === "public_exam";
   return (
     <li
       data-testid="extension-capture-row"
@@ -1573,7 +1581,7 @@ function ExtensionCaptureRow({
           <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] text-muted-foreground">
             <span className="rounded-md bg-muted px-2 py-0.5">Origem: {origin}</span>
             <span className="rounded-md bg-muted px-2 py-0.5">
-              Tipo: {isGithub ? "GitHub/portfolio" : "Vaga"}
+              Tipo: {isPublicExam ? "Edital/Concurso" : isGithub ? "GitHub/portfolio" : "Vaga"}
             </span>
             <span className="rounded-md bg-muted px-2 py-0.5">
               Perfil: {capture.profile_candidate_count ?? 0} candidato(s)
@@ -1605,27 +1613,43 @@ function ExtensionCaptureRow({
           <button
             type="button"
             onClick={onProfileCandidates}
-            disabled={busy}
+            disabled={busy || isPublicExam}
             data-testid="view-extension-profile-candidates"
             className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent hover:bg-accent/15 disabled:opacity-50"
           >
             <CheckCircle2 className="h-3 w-3" />
-            {isGithub ? "Adicionar projeto ao Perfil" : "Ver evidencias para Perfil"}
+            {isPublicExam
+              ? "Perfil não alterado"
+              : isGithub
+                ? "Adicionar projeto ao Perfil"
+                : "Ver evidencias para Perfil"}
           </button>
           <button
             type="button"
             onClick={onImportJob}
-            disabled={busy}
+            disabled={busy || isPublicExam}
             data-testid="import-capture-job"
             className="inline-flex items-center gap-1 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted disabled:opacity-50"
           >
             <ArrowRight className="h-3 w-3" />
             Importar para Vaga
           </button>
+          {isPublicExam && (
+            <button
+              type="button"
+              onClick={onImportPublicExam}
+              disabled={busy}
+              data-testid="import-capture-public-exam"
+              className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent hover:bg-accent/15 disabled:opacity-50"
+            >
+              <ArrowRight className="h-3 w-3" />
+              Importar como Edital/Concurso
+            </button>
+          )}
           <button
             type="button"
             onClick={onImportTracker}
-            disabled={busy}
+            disabled={busy || isPublicExam}
             data-testid="import-capture-tracker"
             className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1 text-[11px] font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
           >

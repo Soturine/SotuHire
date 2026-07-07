@@ -85,11 +85,37 @@ function PublicExamsPage() {
   const [selectedRoleId, setSelectedRoleId] = useState("");
   const [analysis, setAnalysis] = useState<PublicExamAnalyzeResult | null>(null);
   const [studyPlan, setStudyPlan] = useState<PublicExamStudyPlanResult | null>(null);
+  const [loadedCaptureId, setLoadedCaptureId] = useState("");
 
   useEffect(() => {
     if (mode === "demo" && !text.trim()) setText(SAMPLE_NOTICE);
     if (mode === "real" && text === SAMPLE_NOTICE) setText("");
   }, [mode, text]);
+
+  useEffect(() => {
+    const captureId = new URLSearchParams(window.location.search).get("capture_id") || "";
+    if (!captureId || captureId === loadedCaptureId) return;
+    setLoadedCaptureId(captureId);
+    api
+      .extensionImportPublicExam(captureId, useAi)
+      .then((data) => {
+        const nextDraft = data.draft;
+        setDraft(nextDraft);
+        setSavedNotice(null);
+        setAnalysis(null);
+        setStudyPlan(null);
+        setText(nextDraft.notice.raw_text || text);
+        setSourceUrl(nextDraft.notice.source_url || sourceUrl);
+        setSourceName(nextDraft.notice.source_name || sourceName);
+        setSelectedRoleId(nextDraft.roles[0]?.role_id || nextDraft.notice.roles[0]?.role_id || "");
+        toast.success(data.message || "Captura importada como edital.");
+      })
+      .catch((error) => {
+        toast.error(
+          error instanceof Error ? error.message : "Não foi possível importar a captura.",
+        );
+      });
+  }, [api, loadedCaptureId, sourceName, sourceUrl, text, useAi]);
 
   const noticesQ = useQuery({
     queryKey: ["public-exams", mode, baseUrl],

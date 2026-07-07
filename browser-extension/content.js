@@ -30,6 +30,7 @@
     const visible = pageText();
     const title = firstText(["h1", "[role='heading'][aria-level='1']", "h2"]) || document.title;
     return {
+      kind: "job",
       page_title: document.title,
       url: window.location.href,
       domain: window.location.hostname,
@@ -66,6 +67,7 @@
         const rowLocation = text(row.querySelector("[class*='location'],[data-testid*='location']"));
         const url = anchor?.href || window.location.href;
         return {
+          kind: "job",
           page_title: title || document.title,
           url,
           domain: new URL(url).hostname,
