@@ -137,7 +137,7 @@ test("analysis demo buttons show results", async ({ page }) => {
 test("settings AI flow uses backend status shape and never stores secrets in browser storage", async ({
   page,
 }) => {
-  const fakeKey = "AIza-fake-playwright-secret";
+  const fakeKey = "test-playwright-provider-secret";
   await page.goto("/settings");
 
   await expect(page.getByText("IA e Providers")).toBeVisible();

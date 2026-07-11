@@ -5,7 +5,7 @@ from pathlib import Path
 
 from tests.api_test_helpers import api_client
 
-FAKE_KEY = "AIza-fake-local-test-key"
+FAKE_KEY = "test-provider-local-key"
 
 
 def test_ai_settings_default_status_is_safe(tmp_path: Path, monkeypatch) -> None:

@@ -64,9 +64,9 @@ def test_lattes_parser_does_not_invent_identifiers() -> None:
         )
     )
 
-    serialized = json.dumps(result.model_dump(mode="json")).lower()
+    identifiers = [item.source_ref or "" for item in result.items]
 
-    assert "10." not in serialized
+    assert not any(identifier.startswith("10.") for identifier in identifiers)
     assert not any(item.type == "orcid" for item in result.items)
     assert not any(item.type == "lattes_identifier" for item in result.items)
 

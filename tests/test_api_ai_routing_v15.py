@@ -12,7 +12,7 @@ from modules.portfolio.schemas import ProjectAnalysisPayload
 from modules.schemas.user_preferences import UserPreferences
 from tests.api_test_helpers import JOB_TEXT, RESUME_TEXT, api_client
 
-FAKE_KEY = "AIza-fake-v15-routing-key"
+FAKE_KEY = "test-gemini-routing-key"
 
 
 class FakeGeminiProvider:
