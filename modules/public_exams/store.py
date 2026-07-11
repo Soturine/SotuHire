@@ -7,6 +7,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from modules.core.entity_identity import merge_source_refs, public_exam_identity
 from modules.core.text_utils import normalize_text
 
 from .models import ExamNotice, utc_now
@@ -62,7 +63,57 @@ class PublicExamStore:
     def save_notice(self, notice: ExamNotice) -> ExamNotice:
         """Insert or replace one reviewed notice."""
         state = self.load_state()
-        saved = notice.model_copy(update={"status": "confirmed", "updated_at": utc_now()})
+        identity = _notice_identity(notice)
+        duplicate = next(
+            (
+                existing
+                for existing in state.notices
+                if existing.notice_id != notice.notice_id and _notice_identity(existing) == identity
+            ),
+            None,
+        )
+        if duplicate is not None:
+            saved = notice.model_copy(
+                update={
+                    "notice_id": duplicate.notice_id,
+                    "created_at": duplicate.created_at,
+                    "status": "confirmed",
+                    "updated_at": utc_now(),
+                    "identity_key": identity,
+                    "source_refs": merge_source_refs(
+                        duplicate.source_refs or [duplicate.source_url],
+                        notice.source_refs or [notice.source_url],
+                    ),
+                    "merged_notice_ids": merge_source_refs(
+                        duplicate.merged_notice_ids,
+                        [notice.notice_id],
+                    ),
+                    "deduplication_reason": (
+                        "Mesmo edital por URL normalizada, numero oficial ou conteudo."
+                    ),
+                    "warnings": list(
+                        dict.fromkeys(
+                            [
+                                *duplicate.warnings,
+                                *notice.warnings,
+                                "Edital duplicado consolidado com fontes preservadas.",
+                            ]
+                        )
+                    ),
+                }
+            )
+        else:
+            saved = notice.model_copy(
+                update={
+                    "status": "confirmed",
+                    "updated_at": utc_now(),
+                    "identity_key": identity,
+                    "source_refs": merge_source_refs(
+                        notice.source_refs,
+                        [notice.source_url],
+                    ),
+                }
+            )
         for index, existing in enumerate(state.notices):
             if existing.notice_id == saved.notice_id:
                 state.notices[index] = saved
@@ -111,3 +162,14 @@ class PublicExamStore:
             if needle in corpus:
                 matches.append(notice)
         return matches
+
+
+def _notice_identity(notice: ExamNotice) -> str:
+    return notice.identity_key or public_exam_identity(
+        source_url=notice.source_url,
+        notice_number=notice.notice_number,
+        organization=notice.organization,
+        exam_board=notice.exam_board,
+        title=notice.title,
+        raw_text=notice.raw_text,
+    )

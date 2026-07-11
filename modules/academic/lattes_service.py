@@ -12,7 +12,7 @@ from modules.academic.lattes_models import (
 from modules.academic.lattes_parser import parse_lattes_text
 from modules.ai.prompt_registry import PromptRegistry
 from modules.ai.providers import AIProvider
-from modules.core.text_utils import normalize_text
+from modules.core.entity_identity import profile_item_identity
 from modules.profile.models import ProfileItem, utc_now
 from modules.profile.service import UniversalCareerProfileService
 
@@ -144,7 +144,13 @@ def _candidate_for_lattes(item: ProfileItem, payload: LattesImportInput) -> Prof
 
 
 def _profile_key(item: ProfileItem) -> str:
-    return normalize_text(" ".join([item.type, item.title, item.source, item.source_ref or ""]))
+    return profile_item_identity(
+        item_type=item.type,
+        title=item.title,
+        source=item.source,
+        source_ref=item.source_ref or "",
+        evidence=item.evidence or item.description or "",
+    )
 
 
 def _dedupe_items(items: list[ProfileItem]) -> list[ProfileItem]:

@@ -19,6 +19,7 @@ def evidence_from_item(item: CareerMemoryItem, score: float | MemoryScore) -> Ca
         memory_id=item.id,
         title=item.title,
         source=item.source,
+        source_ref=item.source_id or "",
         kind=item.kind,
         excerpt=safe_excerpt(item.content),
         relevance_score=detail.final_score,

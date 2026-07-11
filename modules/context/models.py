@@ -37,6 +37,7 @@ class CareerContextEvidence(BaseModel):
     content: str = ""
     kind: str = "profile"
     source: str = ""
+    source_ref: str = ""
     confidence: Literal["low", "medium", "high"] = "medium"
     confirmed_by_user: bool = False
     sensitive: bool = False

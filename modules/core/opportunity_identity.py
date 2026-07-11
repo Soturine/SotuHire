@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import hashlib
-from urllib.parse import urlsplit, urlunsplit
+from urllib.parse import urlsplit
 
+from modules.core.entity_identity import normalize_entity_url
 from modules.core.text_utils import normalize_text
 
 TITLE_STOPWORDS = {
@@ -28,9 +29,7 @@ def normalize_opportunity_url(url: str) -> str:
     """Remove volatile URL parts while preserving a stable job path."""
     if not url.strip():
         return ""
-    parts = urlsplit(url.strip())
-    path = parts.path.rstrip("/") or "/"
-    return urlunsplit((parts.scheme.casefold(), parts.netloc.casefold(), path, "", ""))
+    return normalize_entity_url(url)
 
 
 def opportunity_identity(title: str, company: str = "", source_url: str = "") -> str:

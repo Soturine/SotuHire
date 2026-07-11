@@ -3,22 +3,14 @@
 from __future__ import annotations
 
 import hashlib
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
+from modules.core.entity_identity import normalize_entity_url
 from modules.scraping.schemas import ScrapedOpportunity
-
-TRACKING_PARAMS = {"fbclid", "gclid", "ref", "source", "utm_campaign", "utm_medium", "utm_source"}
 
 
 def normalize_url(url: str) -> str:
     """Remove fragments and common tracking parameters from a source URL."""
-    parts = urlsplit(url.strip())
-    query = urlencode(
-        sorted((key, value) for key, value in parse_qsl(parts.query) if key not in TRACKING_PARAMS)
-    )
-    return urlunsplit(
-        (parts.scheme.lower(), parts.netloc.lower(), parts.path.rstrip("/"), query, "")
-    )
+    return normalize_entity_url(url)
 
 
 def opportunity_identity(opportunity: ScrapedOpportunity) -> tuple[str, str, str]:

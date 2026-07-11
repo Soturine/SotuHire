@@ -87,6 +87,7 @@ def test_context_includes_academic_lattes_evidence(tmp_path: Path) -> None:
     assert any(item.kind == "journal_article" for item in context.evidence)
     assert any(item.kind == "research_project" for item in context.evidence)
     assert all(item.source == "curriculum_lattes" for item in context.evidence[:2])
+    assert any(item.source_ref == "10.1234/abc.def" for item in context.evidence)
 
 
 def test_context_includes_rag_evidence_when_query_matches(tmp_path: Path) -> None:

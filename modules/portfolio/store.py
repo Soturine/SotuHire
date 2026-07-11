@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from modules.core.opportunity_identity import normalize_opportunity_url
+from modules.core.entity_identity import project_identity
 from modules.portfolio.schemas import ProjectAnalysisRecord
 
 
@@ -28,9 +28,20 @@ class ProjectAnalysisStore:
 
     def save(self, record: ProjectAnalysisRecord) -> ProjectAnalysisRecord:
         records = self.list()
-        identity = normalize_opportunity_url(record.payload.url)
+        identity = project_identity(
+            url=record.payload.url,
+            owner=record.payload.owner,
+            repo=record.payload.repo,
+            title=record.payload.title,
+        )
         for index, current in enumerate(records):
-            if normalize_opportunity_url(current.payload.url) == identity:
+            current_identity = project_identity(
+                url=current.payload.url,
+                owner=current.payload.owner,
+                repo=current.payload.repo,
+                title=current.payload.title,
+            )
+            if current_identity == identity:
                 records[index] = record
                 break
         else:

@@ -59,8 +59,10 @@ def format_context_for_prompt(
     ]:
         status = "confirmado" if item.confirmed_by_user else "a confirmar"
         content = f" - {item.content}" if item.content else ""
+        source_ref = f"; ref={item.source_ref}" if item.source_ref else ""
         evidence_lines.append(
-            f"- {item.title}{content} [{item.kind}; {item.source}; {item.confidence}; {status}]"
+            f"- {item.title}{content} "
+            f"[{item.kind}; {item.source}{source_ref}; {item.confidence}; {status}]"
         )
     if evidence_lines:
         lines.append("Evidencias:")
@@ -88,6 +90,7 @@ def context_to_memory_evidence(
                 memory_id=str(item.metadata.get("memory_id") or f"context-{uuid4().hex}"),
                 title=item.title,
                 source=item.source or "career_context",
+                source_ref=item.source_ref,
                 kind=_memory_kind(item.kind),
                 excerpt=item.content or item.title,
                 relevance_score=max(0.01, item.score),
@@ -122,6 +125,7 @@ def profile_context_from_career_context(context: CareerContext) -> ProfileContex
             description=item.content or None,
             domain=str(item.metadata.get("domain") or "") or None,
             source=item.source,
+            source_ref=item.source_ref or None,
             evidence=item.content or item.title,
             confidence=item.confidence,
             confirmed_by_user=item.confirmed_by_user,
@@ -237,6 +241,7 @@ def profile_evidence_candidates_from_github_report(
                 content=bullet.bullet,
                 kind=academic_kind,
                 source=report.repository_identity.url or "github",
+                source_ref=report.repository_identity.url,
                 confidence="high" if bullet.confidence >= 0.75 else "medium",
                 confirmed_by_user=False,
                 score=bullet.confidence,
@@ -254,6 +259,7 @@ def profile_evidence_candidates_from_github_report(
                 content="Skill detectada em arquivos do repositorio; revisar antes de salvar.",
                 kind="technical_production" if academic_kind == "portfolio_academic" else "skill",
                 source=report.repository_identity.url or "github",
+                source_ref=report.repository_identity.url,
                 confidence="high" if skill.confidence >= 0.75 else "medium",
                 confirmed_by_user=False,
                 score=skill.confidence,
@@ -271,6 +277,7 @@ def profile_evidence_candidates_from_github_report(
                 content="Skill sugerida pelo GitHub Analyzer; adicionar ao perfil somente se for verdadeira.",
                 kind="skill",
                 source=report.repository_identity.url or "github",
+                source_ref=report.repository_identity.url,
                 confidence="medium",
                 confirmed_by_user=False,
                 score=0.62,

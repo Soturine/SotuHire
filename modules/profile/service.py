@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
+from modules.core.deduplication import duplicate_groups
+from modules.core.entity_identity import profile_item_identity
 from modules.core.text_utils import normalize_text
 from modules.profile.extraction import extract_profile_items_local
 from modules.profile.models import (
@@ -119,18 +121,17 @@ class UniversalCareerProfileService:
     def deduplicate(self) -> list[ProfileDeduplicationSuggestion]:
         """Return safe duplicate suggestions without deleting evidence."""
         profile = self.get_profile()
-        candidates: dict[tuple[str, str], list[ProfileItem]] = {}
-        for item in [*profile.items, *profile.constraints]:
-            key = (item.type, normalize_text(item.title))
-            candidates.setdefault(key, []).append(item)
         suggestions: list[ProfileDeduplicationSuggestion] = []
-        for (_, _), items in candidates.items():
-            if len(items) < 2:
-                continue
+        for items in duplicate_groups(
+            [*profile.items, *profile.constraints], _profile_item_identity
+        ):
             suggestions.append(
                 ProfileDeduplicationSuggestion(
                     item_ids=[item.item_id for item in items],
-                    reason="Mesmo tipo e titulo normalizado; revise antes de mesclar.",
+                    reason=(
+                        "Mesma referencia de origem ou conteudo normalizado; "
+                        "revise antes de mesclar."
+                    ),
                     confidence="high" if len({item.source for item in items}) > 1 else "medium",
                     proposed_title=items[0].title,
                     proposed_description=items[0].description,
@@ -170,3 +171,13 @@ def _unique(values: Iterable[str]) -> list[str]:
         }:
             unique.append(cleaned)
     return unique
+
+
+def _profile_item_identity(item: ProfileItem) -> str:
+    return profile_item_identity(
+        item_type=item.type,
+        title=item.title,
+        source=item.source,
+        source_ref=item.source_ref or "",
+        evidence=item.evidence or item.description or "",
+    )

@@ -127,6 +127,7 @@ class ExamNotice(BaseModel):
     title: str = Field(default="", max_length=300)
     raw_text: str = Field(default="", max_length=500_000)
     source_url: str = Field(default="", max_length=2048)
+    source_refs: list[str] = Field(default_factory=list, max_length=40)
     source_name: str = Field(default="", max_length=240)
     organization: str = Field(default="", max_length=240)
     exam_board: str = Field(default="", max_length=240)
@@ -142,6 +143,9 @@ class ExamNotice(BaseModel):
     general_requirements: list[ExamRequirement] = Field(default_factory=list)
     subjects: list[ExamSubject] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    identity_key: str = Field(default="", max_length=256)
+    merged_notice_ids: list[str] = Field(default_factory=list, max_length=40)
+    deduplication_reason: str = Field(default="", max_length=500)
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 

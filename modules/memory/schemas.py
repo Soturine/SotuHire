@@ -44,6 +44,8 @@ class CareerMemoryItem(BaseModel):
     content: str
     source: str
     source_id: str | None = None
+    source_refs: list[str] = Field(default_factory=list)
+    deduplication_reason: str = ""
     confidence: float = Field(default=1.0, ge=0.0, le=1.0)
     tags: list[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=utc_now)
@@ -58,6 +60,7 @@ class CareerEvidence(BaseModel):
     memory_id: str
     title: str
     source: str
+    source_ref: str = ""
     kind: MemoryKind | None = None
     excerpt: str
     relevance_score: float = Field(ge=0.0, le=1.0)

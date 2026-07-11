@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
+from modules.core.entity_identity import memory_item_identity, merge_source_refs
 from modules.memory.evidence_ranker import rank_evidence
 from modules.memory.schemas import CareerMemoryItem, CareerMemoryQuery, MemoryExport, utc_now
 
@@ -19,14 +20,35 @@ class MemoryStore:
     def add_memory_item(self, item: CareerMemoryItem) -> CareerMemoryItem:
         """Insert or replace an item with the same id."""
         items = self.list_memory_items()
+        identity = _memory_identity(item)
+        saved = item
         for index, current in enumerate(items):
-            if current.id == item.id:
-                items[index] = item.model_copy(update={"updated_at": utc_now()})
+            if current.id == item.id or _memory_identity(current) == identity:
+                duplicate = current.id != item.id
+                saved = item.model_copy(
+                    update={
+                        "id": current.id,
+                        "created_at": current.created_at,
+                        "updated_at": utc_now(),
+                        "source_refs": merge_source_refs(
+                            current.source_refs,
+                            [current.source_id or ""],
+                            item.source_refs,
+                            [item.source_id or ""],
+                        ),
+                        "deduplication_reason": (
+                            "Mesma origem ou evidencia normalizada; registro atualizado."
+                            if duplicate
+                            else item.deduplication_reason
+                        ),
+                    }
+                )
+                items[index] = saved
                 break
         else:
             items.append(item)
         self._write(items)
-        return next(current for current in items if current.id == item.id)
+        return saved
 
     def update_memory_item(self, item_id: str, **changes: object) -> CareerMemoryItem:
         """Update one existing memory item."""
@@ -128,3 +150,13 @@ class MemoryStore:
             encoding="utf-8",
         )
         temporary.replace(self.path)
+
+
+def _memory_identity(item: CareerMemoryItem) -> str:
+    return memory_item_identity(
+        kind=item.kind,
+        title=item.title,
+        source=item.source,
+        source_ref=item.source_id or "",
+        content=item.content,
+    )

@@ -315,6 +315,7 @@ def _context_item(item: ProfileItem) -> ProfileContextItem:
         area=item.area,
         domain=item.domain,
         source=item.source,
+        source_ref=item.source_ref,
         evidence=item.evidence,
         confidence=item.confidence,
         confirmed_by_user=item.confirmed_by_user,

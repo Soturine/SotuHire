@@ -178,6 +178,7 @@ def _evidence_from_profile_item(item: ProfileContextItem, bucket: str) -> Career
         content=item.description or item.evidence or "",
         kind=item.type or bucket,
         source=source,
+        source_ref=item.source_ref or "",
         confidence=item.confidence,
         confirmed_by_user=item.confirmed_by_user,
         sensitive=item.sensitive
@@ -198,12 +199,14 @@ def _evidence_from_memory(item: CareerEvidence) -> CareerContextEvidence:
         content=item.excerpt,
         kind=item.kind or "memory",
         source=item.source or "memory",
+        source_ref=item.source_ref,
         confidence=confidence,
         confirmed_by_user=False,
         sensitive=_is_sensitive(item.title, item.excerpt, item.source),
         score=item.relevance_score,
         metadata={
             "memory_id": item.memory_id,
+            "source_ref": item.source_ref,
             "selection_reason": item.selection_reason,
             "score_breakdown": item.score_breakdown,
         },
@@ -375,6 +378,8 @@ def _dedupe_evidence(items: Iterable[CareerContextEvidence]) -> list[CareerConte
 
 
 def _dedupe_key(item: CareerContextEvidence) -> str:
+    if item.source_ref:
+        return normalize_text(" ".join([item.kind, item.source_ref]))
     return normalize_text(" ".join([item.title, item.content[:180]]))
 
 
