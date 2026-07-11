@@ -23,6 +23,12 @@ import { APP_VERSION } from "@/lib/labels";
 import type { AiProvider, AiSettings, AiSettingsPreset, AiSettingsStatus } from "@/lib/api/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import {
+  DEMO_PERSONAS,
+  getActiveDemoPersona,
+  restoreDemoPersona,
+  setActiveDemoPersona,
+} from "@/mocks/personas";
 
 export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Configurações — SotuHire" }] }),
@@ -38,6 +44,7 @@ function SettingsPage() {
     retry: false,
   });
   const status = useApiStatus();
+  const [demoPersona, setDemoPersona] = useState(() => getActiveDemoPersona().id);
 
   return (
     <AppShell
@@ -104,7 +111,7 @@ function SettingsPage() {
           />
         </SectionCard>
 
-        <AiProvidersCardV194 />
+        <AiProvidersCard />
 
         <SectionCard title="Sobre">
           <div className="grid gap-3 text-sm">
@@ -114,6 +121,53 @@ function SettingsPage() {
             <Item k="Contrato da API" v="v1" />
           </div>
         </SectionCard>
+
+        {mode === "demo" && (
+          <SectionCard
+            className="lg:col-span-2"
+            title="Dados de demonstração multiárea"
+            description="Escolha uma persona fictícia coerente. Esta ação nunca altera dados da API Real."
+          >
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+              <label className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Persona ativa
+                <select
+                  value={demoPersona}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setDemoPersona(next);
+                    setActiveDemoPersona(next);
+                    window.location.reload();
+                  }}
+                  data-testid="demo-persona-select"
+                  className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground"
+                >
+                  {DEMO_PERSONAS.map((persona) => (
+                    <option key={persona.id} value={persona.id}>
+                      {persona.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <button
+                type="button"
+                data-testid="restore-demo-data"
+                onClick={() => {
+                  restoreDemoPersona();
+                  toast.success("Dados fictícios restaurados. Nenhum dado real foi apagado.");
+                  window.location.reload();
+                }}
+                className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
+              >
+                Restaurar dados de demonstração
+              </button>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">
+              Perfil, evidência, oportunidade, wishlist, Tracker, notificação e contexto usam a
+              mesma persona selecionada.
+            </p>
+          </SectionCard>
+        )}
       </div>
     </AppShell>
   );
@@ -245,7 +299,7 @@ type AiToggleState = {
   memory: boolean;
 };
 
-function AiProvidersCardV194() {
+function AiProvidersCard() {
   const { mode, baseUrl } = useApiMode();
   const api = useApi();
   const queryClient = useQueryClient();
@@ -759,343 +813,6 @@ function AiProvidersCardV194() {
               <li>GET /api/v1/settings/ai/providers</li>
               <li>GET /api/v1/settings/ai/models</li>
               <li>POST /api/v1/settings/ai/models/refresh</li>
-            </ul>
-          </details>
-        </div>
-      </div>
-    </SectionCard>
-  );
-}
-
-function AiProvidersCard() {
-  const { mode, baseUrl } = useApiMode();
-  const api = useApi();
-  const queryClient = useQueryClient();
-  const aiQueryKey = ["ai-settings", mode, baseUrl];
-  const [provider, setProvider] = useState<AiProvider>("local");
-  const [apiKey, setApiKey] = useState("");
-  const [model, setModel] = useState("gemini-2.5-flash");
-  const [showKey, setShowKey] = useState(false);
-  const [status, setStatus] = useState<AiUiStatus>("idle");
-  const [toggles, setToggles] = useState({
-    enabled: false,
-    resume: true,
-    job: true,
-    match: true,
-    ats: true,
-    tailor: true,
-    github: true,
-    sourceImport: true,
-    radar: true,
-    memory: false,
-  });
-
-  const settingsQ = useQuery({
-    queryKey: aiQueryKey,
-    queryFn: () => api.aiSettings(),
-    retry: false,
-  });
-
-  useEffect(() => {
-    if (!settingsQ.data) return;
-    const data = settingsQ.data;
-    setProvider(data.provider);
-    setModel(data.model || defaultModel(data.provider));
-    setStatus(statusFromSettings(data));
-    setToggles({
-      enabled: data.use_ai,
-      resume: data.allow_resume,
-      job: data.allow_job,
-      match: data.allow_match,
-      ats: data.allow_ats,
-      tailor: data.allow_tailor,
-      github: data.allow_github,
-      sourceImport: data.allow_source_import,
-      radar: data.allow_radar,
-      memory: data.allow_memory_context,
-    });
-  }, [settingsQ.data]);
-
-  const saveMutation = useMutation({
-    mutationFn: () =>
-      api.aiSettingsSave({
-        provider,
-        model: provider === "local" ? "local" : model,
-        api_key: provider === "gemini" && apiKey.trim() ? apiKey.trim() : undefined,
-        use_ai: toggles.enabled,
-        allow_resume: toggles.resume,
-        allow_job: toggles.job,
-        allow_match: toggles.match,
-        allow_ats: toggles.ats,
-        allow_tailor: toggles.tailor,
-        allow_github: toggles.github,
-        allow_source_import: toggles.sourceImport,
-        allow_radar: toggles.radar,
-        allow_memory_context: toggles.memory,
-      }),
-    onSuccess: (data) => {
-      setApiKey("");
-      setStatus(statusFromSettings(data));
-      queryClient.setQueryData(aiQueryKey, data);
-      toast.success("Configuração salva no backend local.");
-    },
-    onError: (error) => {
-      setStatus("error");
-      toast.error(
-        error instanceof Error ? error.message : "Não foi possível salvar a configuração.",
-      );
-    },
-  });
-
-  const testMutation = useMutation({
-    mutationFn: () =>
-      api.aiSettingsTest({
-        provider,
-        model: provider === "local" ? "local" : model,
-        api_key: provider === "gemini" && apiKey.trim() ? apiKey.trim() : undefined,
-      }),
-    onMutate: () => {
-      setStatus("testing");
-    },
-    onSuccess: (data) => {
-      setStatus(statusFromTest(data.status, data.success));
-      if (data.success) {
-        toast.success(data.message || "Provider configurado com sucesso.");
-      } else {
-        toast.warning(data.message || "Não foi possível testar o provider.");
-      }
-    },
-    onError: (error) => {
-      setStatus("error");
-      toast.error(error instanceof Error ? error.message : "Não foi possível testar o provider.");
-    },
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: () => api.aiSettingsDelete(),
-    onSuccess: (data) => {
-      setApiKey("");
-      setStatus(statusFromSettings(data));
-      queryClient.setQueryData(aiQueryKey, data);
-      toast.success("Chave removida do backend local.");
-    },
-    onError: (error) => {
-      setStatus("error");
-      toast.error(error instanceof Error ? error.message : "Não foi possível remover a chave.");
-    },
-  });
-
-  const providerAllowsKey = provider === "gemini" || provider === "openai";
-  const busy = saveMutation.isPending || testMutation.isPending || deleteMutation.isPending;
-
-  return (
-    <SectionCard
-      className="lg:col-span-2"
-      title={
-        <span className="flex items-center gap-2">
-          <Brain className="h-4 w-4 text-accent" /> IA e Providers
-        </span>
-      }
-      description="Configure visualmente. A API key vai apenas para o backend local — nunca é salva no frontend."
-    >
-      <div className="grid gap-5 lg:grid-cols-2">
-        <div className="space-y-4">
-          <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Provider
-            </label>
-            <div className="mt-1.5 grid grid-cols-3 gap-2">
-              {(["local", "gemini", "openai"] as AiProvider[]).map((p) => (
-                <button
-                  key={p}
-                  onClick={() => {
-                    setProvider(p);
-                    setModel(defaultModel(p));
-                  }}
-                  className={`rounded-md border px-3 py-2 text-xs font-medium capitalize transition-colors ${
-                    provider === p
-                      ? "border-accent/50 bg-accent/10 text-foreground"
-                      : "border-input bg-background hover:bg-muted"
-                  }`}
-                >
-                  {providerLabel(p)}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Chave de IA
-            </label>
-            <div className="mt-1.5 flex gap-2">
-              <div className="relative flex-1">
-                <input
-                  type={showKey ? "text" : "password"}
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  data-testid="ai-api-key-input"
-                  placeholder={
-                    providerAllowsKey
-                      ? "Cole a chave Gemini para salvar no backend"
-                      : "Não necessário"
-                  }
-                  disabled={!providerAllowsKey}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 pr-9 font-mono text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20 disabled:opacity-50"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowKey((v) => !v)}
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
-                  aria-label="Alternar visualização"
-                >
-                  {showKey ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                </button>
-              </div>
-            </div>
-            <p className="mt-1.5 text-[11px] text-muted-foreground">
-              Após salvar, a chave nunca é exibida novamente — apenas o status.
-            </p>
-          </div>
-
-          <div>
-            <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Modelo
-            </label>
-            <input
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              disabled={provider === "local"}
-              className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20 disabled:opacity-50"
-            />
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => testMutation.mutate()}
-              disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"
-            >
-              {testMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              Testar conexão
-            </button>
-            <button
-              onClick={() => saveMutation.mutate()}
-              disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-            >
-              {saveMutation.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-              Salvar no backend local
-            </button>
-            <button
-              onClick={() => deleteMutation.mutate()}
-              disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-3.5 w-3.5" /> Remover chave
-            </button>
-            <StatusPill status={status} />
-          </div>
-          {settingsQ.data?.updated_at && (
-            <p className="text-[11px] text-muted-foreground">
-              Atualizado em {new Date(settingsQ.data.updated_at).toLocaleString("pt-BR")}.
-            </p>
-          )}
-          <p className="rounded-md border border-border bg-muted/30 p-2 text-[11px] text-muted-foreground">
-            {aiStatusMessage(status, provider)}
-          </p>
-          {settingsQ.isError && (
-            <p className="rounded-md bg-muted/50 p-2 text-[11px] text-muted-foreground">
-              API offline ou sem resposta. A tela continua funcionando em modo Demo/mock.
-            </p>
-          )}
-          {settingsQ.data?.warnings?.map((warning) => (
-            <p key={warning} className="rounded-md bg-warning/10 p-2 text-[11px] text-warning">
-              {warning}
-            </p>
-          ))}
-        </div>
-
-        <div className="space-y-3">
-          <Toggle
-            label="Usar IA nas análises"
-            checked={toggles.enabled}
-            onChange={(v) => setToggles({ ...toggles, enabled: v })}
-          />
-          <Toggle
-            label="Permitir IA em Currículo"
-            checked={toggles.resume}
-            onChange={(v) => setToggles({ ...toggles, resume: v })}
-            disabled={!toggles.enabled}
-          />
-          <Toggle
-            label="Permitir IA em Vaga"
-            checked={toggles.job}
-            onChange={(v) => setToggles({ ...toggles, job: v })}
-            disabled={!toggles.enabled}
-          />
-          <Toggle
-            label="Permitir IA na Análise de Compatibilidade"
-            checked={toggles.match}
-            onChange={(v) => setToggles({ ...toggles, match: v })}
-            disabled={!toggles.enabled}
-          />
-          <Toggle
-            label="Permitir IA na Análise ATS"
-            checked={toggles.ats}
-            onChange={(v) => setToggles({ ...toggles, ats: v })}
-            disabled={!toggles.enabled}
-          />
-          <Toggle
-            label="Permitir IA no Ajuste de Currículo"
-            checked={toggles.tailor}
-            onChange={(v) => setToggles({ ...toggles, tailor: v })}
-            disabled={!toggles.enabled}
-          />
-          <Toggle
-            label="Permitir IA na Análise de GitHub"
-            checked={toggles.github}
-            onChange={(v) => setToggles({ ...toggles, github: v })}
-            disabled={!toggles.enabled}
-          />
-          <Toggle
-            label="Permitir IA na Caixa de Entrada e importações"
-            checked={toggles.sourceImport}
-            onChange={(v) => setToggles({ ...toggles, sourceImport: v })}
-            disabled={!toggles.enabled}
-          />
-          <Toggle
-            label="Permitir IA no Radar e Wishlist"
-            checked={toggles.radar}
-            onChange={(v) => setToggles({ ...toggles, radar: v })}
-            disabled={!toggles.enabled}
-          />
-          <Toggle
-            label="Enviar contexto relevante da memória local"
-            hint="Desligado por padrão"
-            checked={toggles.memory}
-            onChange={(v) => setToggles({ ...toggles, memory: v })}
-            disabled={!toggles.enabled}
-          />
-
-          <div className="mt-2 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs">
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
-            <p className="text-muted-foreground">
-              A chave de IA nunca é salva no frontend. Ela deve ser enviada somente para a API local
-              do SotuHire. O GitHub Pages não processa IA e não deve receber segredos.
-            </p>
-          </div>
-
-          <details className="rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-            <summary className="cursor-pointer font-medium text-foreground">
-              Endpoints ativos no backend local
-            </summary>
-            <ul className="mt-2 space-y-0.5 font-mono">
-              <li>GET /api/v1/settings/ai</li>
-              <li>POST /api/v1/settings/ai</li>
-              <li>POST /api/v1/settings/ai/test</li>
-              <li>DELETE /api/v1/settings/ai</li>
-              <li>GET /api/v1/settings/ai/status</li>
             </ul>
           </details>
         </div>

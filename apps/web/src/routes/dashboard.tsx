@@ -9,6 +9,10 @@ import {
   LineChart as LineChartIcon,
   Target,
   TrendingUp,
+  UserRound,
+  RadioTower,
+  ScrollText,
+  Inbox,
   Wand2,
   XCircle,
 } from "lucide-react";
@@ -44,9 +48,38 @@ function Dashboard() {
   const metricsQ = useQuery({ queryKey: ["metrics", mode], queryFn: () => api.trackerMetrics() });
   const jobsQ = useQuery({ queryKey: ["tracker-jobs", mode], queryFn: () => api.trackerJobs() });
   const reqsQ = useQuery({ queryKey: ["reqs", mode], queryFn: () => api.trackerRequirements() });
+  const profileQ = useQuery({ queryKey: ["profile", mode], queryFn: () => api.profile() });
+  const radarQ = useQuery({ queryKey: ["radar-stats", mode], queryFn: () => api.radarStats() });
+  const notificationsQ = useQuery({
+    queryKey: ["notifications", mode],
+    queryFn: () => api.notifications(),
+  });
+  const extensionQ = useQuery({
+    queryKey: ["extension-captures", mode],
+    queryFn: () => api.extensionCaptures(),
+  });
+  const examsQ = useQuery({
+    queryKey: ["public-exams", mode],
+    queryFn: () => api.publicExamList(),
+  });
 
   const recentJobs = (jobsQ.data?.jobs ?? []).slice(0, 5);
   const weekly = metricsQ.data?.weekly_applications ?? [];
+  const profile = profileQ.data?.profile;
+  const profileItems = [...(profile?.items ?? []), ...(profile?.constraints ?? [])];
+  const confirmedEvidence = profileItems.filter((item) => item.confirmed_by_user).length;
+  const profileSignals = [
+    profile?.headline,
+    profile?.summary,
+    profile?.primary_domains.length,
+    profile?.target_roles.length,
+    profile?.preferred_locations.length,
+    confirmedEvidence,
+  ].filter(Boolean).length;
+  const profileCompleteness = Math.round((profileSignals / 6) * 100);
+  const pendingCaptures = (extensionQ.data?.captures ?? []).filter(
+    (capture) => capture.status !== "tracked" && capture.status !== "archived",
+  ).length;
 
   return (
     <AppShell
@@ -142,6 +175,34 @@ function Dashboard() {
             value={metricsQ.data?.average_ats ?? "—"}
             icon={Target}
             hint="Últimas análises"
+          />
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <StatCard
+            label="Perfil completo"
+            value={profileQ.isLoading ? "—" : `${profileCompleteness}%`}
+            icon={UserRound}
+            hint={`${confirmedEvidence} evidência(s) confirmada(s)`}
+          />
+          <StatCard
+            label="Radar"
+            value={radarQ.data?.new_results ?? "—"}
+            icon={RadioTower}
+            tone="accent"
+            hint={`${radarQ.data?.unread_alerts ?? 0} alerta(s) não lido(s)`}
+          />
+          <StatCard
+            label="Editais acompanhados"
+            value={examsQ.data?.notices.length ?? "—"}
+            icon={ScrollText}
+            hint="Checklist e plano exigem revisão"
+          />
+          <StatCard
+            label="Itens para revisar"
+            value={pendingCaptures + (notificationsQ.data?.unread_count ?? 0)}
+            icon={Inbox}
+            hint={`${pendingCaptures} captura(s) · ${notificationsQ.data?.unread_count ?? 0} notificação(ões)`}
           />
         </div>
 

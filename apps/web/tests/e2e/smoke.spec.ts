@@ -168,6 +168,28 @@ test("settings AI flow uses backend status shape and never stores secrets in bro
   expect(storage.session).not.toContain(fakeKey);
 });
 
+test("demo personas stay coherent and can be restored without touching real data", async ({
+  page,
+}) => {
+  await page.goto("/settings");
+  const persona = page.getByTestId("demo-persona-select");
+  await expect(persona.locator("option")).toHaveCount(7);
+  await Promise.all([page.waitForNavigation(), persona.selectOption("nursing")]);
+
+  await page.goto("/profile");
+  await expect(page.getByLabel("Headline")).toHaveValue(
+    "Enfermeira assistencial com COREN confirmado",
+  );
+  await expect(page.getByText("COREN ativo — exemplo fictício")).toBeVisible();
+
+  await page.goto("/settings");
+  await Promise.all([page.waitForNavigation(), page.getByTestId("restore-demo-data").click()]);
+  await page.goto("/profile");
+  await expect(page.getByLabel("Headline")).toHaveValue(
+    "Estudante de engenharia com projetos acadêmicos",
+  );
+});
+
 test("sources page handles local extension offline and fake capture imports", async ({ page }) => {
   await page.goto("/settings");
   await page.getByRole("button", { name: "API Real" }).click();

@@ -57,9 +57,8 @@ export const SOURCE_CARDS: SourceCard[] = [
     title: "Importar CSV/JSON",
     description: "Importe listas de vagas exportadas manualmente.",
     cta: "Importar arquivo",
-    status: "demo",
+    status: "available",
     icon: FileSpreadsheet,
-    disabled: true,
   },
   {
     id: "authenticated-browser",
@@ -79,7 +78,6 @@ export const SOURCE_CARDS: SourceCard[] = [
     cta: "Ver extensão",
     status: "extension",
     icon: Puzzle,
-    disabled: true,
   },
   {
     id: "radar",

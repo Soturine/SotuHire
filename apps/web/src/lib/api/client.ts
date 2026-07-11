@@ -107,6 +107,7 @@ import {
   mockTailor,
 } from "@/mocks/data";
 import type { ApiMode } from "./mode";
+import { getActiveDemoPersona } from "@/mocks/personas";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -515,7 +516,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         baseUrl,
         "/tracker/jobs",
         undefined,
-        { jobs: mockJobs },
+        { jobs: mockPersonaJobs() },
         normalizeTrackerJobs,
       ),
 
@@ -548,7 +549,12 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         baseUrl,
         `/tracker/jobs/${id}`,
         { method: "PATCH", body: JSON.stringify(patch) },
-        { job: { ...(mockJobs.find((j) => j.id === id) ?? mockJobs[0]!), ...patch } },
+        {
+          job: {
+            ...(mockPersonaJobs().find((job) => job.id === id) ?? mockPersonaJobs()[0]!),
+            ...patch,
+          },
+        },
         normalizeTrackerJobEnvelope,
       ),
 
@@ -1800,31 +1806,32 @@ function mockWishlistDraft(freeText: string): WishlistDraftResult {
 
 function mockRadarWishlists(): RadarWishlistsResult {
   const now = new Date().toISOString();
+  const persona = getActiveDemoPersona();
   return {
     wishlists: [
       {
         id: "radar-wishlist-demo",
-        name: "Backend Python remoto",
-        target_titles: ["Desenvolvedor Backend", "Engenheiro de APIs"],
-        target_domains: ["tecnologia", "produto"],
-        target_seniority: ["pleno", "junior"],
-        required_skills: ["Python", "FastAPI", "SQL"],
-        desired_skills: ["Pytest", "Docker"],
-        excluded_terms: ["presencial integral"],
-        locations: ["Remoto", "Brasil"],
-        remote_preferences: ["remoto"],
-        work_model: "remote",
-        employment_type: "CLT",
+        name: persona.wishlist.name,
+        target_titles: persona.targetRoles,
+        target_domains: persona.domains,
+        target_seniority: persona.seniority,
+        required_skills: persona.wishlist.skills,
+        desired_skills: persona.evidence.flatMap((item) => item.skills).slice(0, 5),
+        excluded_terms: [],
+        locations: persona.locations,
+        remote_preferences: persona.workModels,
+        work_model: persona.workModels[0] || "",
+        employment_type: persona.contractTypes[0] || "",
         salary_currency: "BRL",
-        contract_types: ["CLT"],
-        industries: ["software"],
-        companies_include: ["Empresa Exemplo"],
-        companies_exclude: ["Empresa Bloqueada"],
+        contract_types: persona.contractTypes,
+        industries: persona.domains,
+        companies_include: [],
+        companies_exclude: [],
         source_types: ["public_feed", "manual_url"],
         min_match_score: 70,
         min_ats_score: 40,
         notify_on_new_matches: true,
-        notes: "Wishlist fictícia do modo Demo.",
+        notes: `${persona.context} Modo Demo: revise antes de salvar.`,
         created_at: now,
         updated_at: now,
         is_active: true,
@@ -1832,7 +1839,6 @@ function mockRadarWishlists(): RadarWishlistsResult {
     ],
   };
 }
-
 function mockRadarSources(): RadarSourcesResult {
   const now = new Date().toISOString();
   return {
@@ -2097,14 +2103,15 @@ function mockRadarSchedulerStatus(): RadarSchedulerStatus {
 
 function mockNotifications(): NotificationsResult {
   const now = new Date().toISOString();
+  const persona = getActiveDemoPersona();
   return {
     unread_count: 1,
     notifications: [
       {
         notification_id: "notification-demo-1",
         type: "radar_schedule",
-        title: "2 resultado(s) do Radar agendado",
-        message: "Radar diario - Backend remoto encontrou oportunidades ficticias para revisao.",
+        title: `${persona.label}: item para revisão`,
+        message: persona.notification,
         severity: "success",
         source: "radar",
         related_entity_type: "radar_schedule",
@@ -2112,12 +2119,11 @@ function mockNotifications(): NotificationsResult {
         created_at: now,
         read_at: null,
         dismissed_at: null,
-        metadata: { schedule_id: "schedule-demo", auto_apply: false },
+        metadata: { schedule_id: "schedule-demo", auto_apply: false, persona_id: persona.id },
       },
     ],
   };
 }
-
 function mockRadarAlerts(): RadarAlertsResult {
   const now = new Date().toISOString();
   return {
@@ -2154,56 +2160,79 @@ function mockRadarStats(): RadarStats {
 
 function mockProfileResult(): ProfileResult {
   const now = new Date().toISOString();
+  const persona = getActiveDemoPersona();
   return {
     profile: {
-      profile_id: "default",
-      display_name: "Perfil Demo",
-      headline: "Estudante de engenharia com projetos academicos",
-      summary: "Perfil ficticio para demonstrar como o SotuHire organiza evidencias de carreira.",
-      primary_domains: ["Engenharia", "Pesquisa e Laboratorio"],
-      secondary_domains: ["Dados"],
-      career_moments: ["estagio", "estudante"],
-      target_roles: ["Estagio em Engenharia", "Assistente Tecnico"],
-      target_seniority: ["estagio"],
-      preferred_locations: ["Sao Jose dos Campos", "Remoto"],
-      preferred_work_models: ["hibrido", "remoto"],
-      preferred_contract_types: ["estagio"],
+      profile_id: persona.id,
+      display_name: persona.label,
+      headline: persona.headline,
+      summary: persona.summary,
+      primary_domains: persona.domains,
+      secondary_domains: [],
+      career_moments: persona.careerMoments,
+      target_roles: persona.targetRoles,
+      target_seniority: persona.seniority,
+      preferred_locations: persona.locations,
+      preferred_work_models: persona.workModels,
+      preferred_contract_types: persona.contractTypes,
       constraints: [],
-      items: [
-        {
-          item_id: "profile-demo-item-1",
-          type: "higher_education",
-          title: "Engenharia em andamento",
-          description: "Graduação fictícia em andamento no período noturno.",
-          area: "Engenharia",
-          domain: "Engenharia",
-          institution: "Instituição Exemplo",
-          organization: null,
-          status: "em andamento",
-          start_date: null,
-          end_date: null,
-          tags: ["formação"],
-          skills: ["relatórios técnicos"],
-          evidence: "Texto fictício de currículo informado pelo usuário.",
-          source: "demo",
-          source_ref: null,
-          confidence: "high",
-          confirmed_by_user: true,
-          sensitive: false,
-          created_at: now,
-          updated_at: now,
-        },
-      ],
+      items: persona.evidence.map((evidence, index) => ({
+        item_id: `${persona.id}-evidence-${index + 1}`,
+        type: evidence.type,
+        title: evidence.title,
+        description: evidence.description,
+        area: persona.domains[0] || null,
+        domain: persona.domains[0] || null,
+        institution: null,
+        organization: null,
+        status: "confirmado na demo",
+        start_date: null,
+        end_date: null,
+        tags: ["demo", evidence.type],
+        skills: evidence.skills,
+        evidence: evidence.description,
+        source: evidence.source,
+        source_ref: evidence.sourceRef || null,
+        confidence: "high",
+        confirmed_by_user: true,
+        sensitive: false,
+        created_at: now,
+        updated_at: now,
+      })),
       source_summaries: [
-        { source: "demo", source_type: "demo", item_count: 1, last_imported_at: now },
+        {
+          source: "demo",
+          source_type: "demo",
+          item_count: persona.evidence.length,
+          last_imported_at: now,
+        },
       ],
       created_at: now,
       updated_at: now,
     },
-    message: "Modo Demo: perfil ficticio.",
+    message: `Modo Demo: ${persona.label}.`,
   };
 }
 
+function mockPersonaJobs(): TrackerJob[] {
+  const persona = getActiveDemoPersona();
+  return [
+    {
+      id: `job-${persona.id}`,
+      title: persona.opportunity.title,
+      company: persona.opportunity.organization,
+      source: persona.opportunity.source,
+      status: "good_fit",
+      match_score: 78,
+      ats_score: 72,
+      created_at: "2026-07-01",
+      updated_at: "2026-07-10",
+      requirements: persona.opportunity.requirements,
+      notes: persona.context,
+    },
+    ...mockJobs.slice(1),
+  ];
+}
 function mockExtensionProfileCandidates(captureId: string): ExtensionProfileCandidatesResult {
   const project = captureId.includes("2") || captureId.includes("github");
   const candidates = project
@@ -2997,7 +3026,7 @@ function normalizeHealth(value: unknown): Health {
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "1.8.1",
+    version: asString(raw.version) || "1.9.5",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),
