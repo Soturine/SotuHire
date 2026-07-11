@@ -23,12 +23,13 @@ GitHub. O modo conectado envia somente o conteúdo capturado para a API local do
 - modal com scores, stack, evidências e recomendações;
 - captura assistida de vagas em diferentes portais;
 - importação paginada com deduplicação;
-- análise local, Gemini standalone opcional ou Gemini configurado no SotuHire;
+- análise local independente ou IA configurada somente no backend local do SotuHire;
+- fila temporária e reenvio de capturas quando a Local Companion estiver offline;
 - envio para memória, perfil profissional e tracker local.
 
 ## Checklist de publicação
 
-- enviar `dist/sotuhire-extension-v0.9.0.zip`;
+- enviar `dist/sotuhire-extension-v0.9.1.zip`;
 - usar as imagens de `store/screenshots/`;
 - preencher a política de privacidade com `store/privacy-policy.md`;
 - informar que `activeTab`, `scripting`, `storage`, localhost e GitHub são usados;

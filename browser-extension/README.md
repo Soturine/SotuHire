@@ -2,7 +2,7 @@
 
 Extensão Manifest V3 para capturar a página atual, uma lista visível de candidaturas, um edital/concurso ou um projeto público e enviar os dados para a Local Companion API em `http://127.0.0.1:8765`.
 
-O app SotuHire v1.9.4 é compatível com a extensão v0.9.0. A extensão tem versionamento independente.
+O app SotuHire v1.9.5 é compatível com a extensão v0.9.1. A extensão tem versionamento independente.
 
 ## Instalação Local
 
@@ -52,6 +52,8 @@ A extensão usa permissões `activeTab` e heurísticas genéricas, então pode t
 
 O lote fica temporariamente no storage local da extensão e aceita até 500 registros por envio. A API e o tracker deduplicam por URL normalizada e por empresa + título semelhante.
 
+Se a Local Companion estiver offline, capturas e ações de envio ficam em uma fila temporária. O botão **Reenviar pendências offline** tenta sincronizar novamente; copiar texto e analisar projetos localmente continuam disponíveis sem o frontend React aberto.
+
 ## GitHub, Projetos e Portfólios
 
 Em uma página pública de perfil GitHub, repositório, projeto ou portfólio, a extensão extrai conteúdo visível, README, arquivos centrais, mensagens de commit, linguagens e topics.
@@ -60,7 +62,7 @@ Em `github.com`, a extensão injeta o botão **SotuHire AI** perto das ações d
 
 Modos principais:
 
-- **Analisar projeto no navegador**: relatório standalone local; se uma chave Gemini standalone for configurada, o Gemini aprimora o texto do relatório.
+- **Analisar projeto no navegador**: relatório standalone inteiramente local e sem chave de provider.
 - **Salvar projeto no SotuHire**: envia o payload à API local, gera relatório completo, salva memória/evidências e disponibiliza o projeto no SotuHire.
 - **Gerar evidência para Perfil**: envia o projeto ao SotuHire local para que o site gere candidatos revisáveis. Nada entra no Perfil sem confirmação do usuário.
 
@@ -70,9 +72,9 @@ Arquivos gerados, binários, imagens, locks grandes, `node_modules`, `dist`, `bu
 
 Se `SOTUHIRE_COMPANION_TOKEN` estiver configurado no SotuHire, informe o mesmo valor no campo **Token local opcional** do popup. Esse token protege apenas a API localhost; ele não é uma chave de provider de IA.
 
-A chave Gemini standalone opcional pode permanecer no popup como modo avançado/legado, mas ela é separada da IA configurada no app. A API key do app SotuHire não é lida, exposta ou armazenada pela extensão.
+Nenhuma chave Gemini/OpenAI é aceita ou armazenada pela extensão. Toda IA externa passa pelo backend local do SotuHire; o modo independente do navegador usa apenas a análise determinística local.
 
-Na v1.9.4, o fluxo recomendado é usar Gemini/OpenAI pelo backend local do SotuHire. A extensão envia texto visível para a Local Companion/API local e consulta apenas `context-summary` seguro, sem receber Perfil completo, memória completa ou API key.
+Na v1.9.5, a extensão envia texto visível para a Local Companion/API local e consulta apenas `context-summary` seguro, sem receber Perfil completo, memória completa ou API key.
 
 ## Privacidade
 
@@ -95,7 +97,7 @@ Na raiz do projeto:
 python scripts/package_extension.py
 ```
 
-O script valida Manifest V3, permissões, ícones, arquivos obrigatórios e segredos antes de gerar `dist/sotuhire-extension-v0.9.0.zip`. Documentos e assets da listagem ficam em `store/` e não entram no ZIP executável.
+O script valida Manifest V3, permissões, ícones, arquivos obrigatórios e segredos antes de gerar `dist/sotuhire-extension-v0.9.1.zip`. Documentos e assets da listagem ficam em `store/` e não entram no ZIP executável.
 
 ## Publicar
 

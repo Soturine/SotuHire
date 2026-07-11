@@ -1,11 +1,10 @@
 {
   "manifest_version": 3,
   "name": "SotuHire Assistive Browser Companion",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "Captura vagas, editais/concursos e projetos visíveis para o SotuHire local.",
   "permissions": ["activeTab", "scripting", "storage"],
   "host_permissions": ["http://127.0.0.1:8765/*", "https://github.com/*"],
-  "optional_host_permissions": ["https://generativelanguage.googleapis.com/*"],
   "content_scripts": [
     {
       "matches": ["https://github.com/*"],

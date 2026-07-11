@@ -2,31 +2,15 @@ const API = "http://127.0.0.1:8765";
 const result = document.querySelector("#result");
 const useAI = document.querySelector("#use-ai");
 const localToken = document.querySelector("#local-token");
-const standaloneGeminiKey = document.querySelector("#standalone-gemini-key");
-const standaloneGeminiModel = document.querySelector("#standalone-gemini-model");
 const deepProjectAnalysis = document.querySelector("#deep-project-analysis");
 
-chrome.storage.local.get([
-  "useAI",
-  "localToken",
-  "standaloneGeminiKey",
-  "standaloneGeminiModel",
-  "deepProjectAnalysis"
-], (saved) => {
+chrome.storage.local.get(["useAI", "localToken", "deepProjectAnalysis"], (saved) => {
   useAI.checked = Boolean(saved.useAI);
   localToken.value = saved.localToken || "";
-  standaloneGeminiKey.value = saved.standaloneGeminiKey || "";
-  standaloneGeminiModel.value = saved.standaloneGeminiModel || "gemini-2.5-flash";
   deepProjectAnalysis.checked = Boolean(saved.deepProjectAnalysis);
 });
 useAI.addEventListener("change", () => chrome.storage.local.set({ useAI: useAI.checked }));
 localToken.addEventListener("change", () => chrome.storage.local.set({ localToken: localToken.value }));
-standaloneGeminiKey.addEventListener("change", () => chrome.storage.local.set({
-  standaloneGeminiKey: standaloneGeminiKey.value
-}));
-standaloneGeminiModel.addEventListener("change", () => chrome.storage.local.set({
-  standaloneGeminiModel: standaloneGeminiModel.value
-}));
 deepProjectAnalysis.addEventListener("change", () => chrome.storage.local.set({
   deepProjectAnalysis: deepProjectAnalysis.checked
 }));
@@ -40,15 +24,25 @@ const extract = async (type = "SOTUHIRE_CAPTURE") => {
 };
 
 const request = async (path, body) => {
-  const response = await fetch(`${API}${path}`, {
-    method: body ? "POST" : "GET",
-    headers: {
-      "Content-Type": "application/json",
-      "X-SotuHire-Token": localToken.value
-    },
-    body: body ? JSON.stringify(body) : undefined
-  });
-  return response.json();
+  try {
+    const response = await fetch(`${API}${path}`, {
+      method: body ? "POST" : "GET",
+      headers: {
+        "Content-Type": "application/json",
+        "X-SotuHire-Token": localToken.value
+      },
+      body: body ? JSON.stringify(body) : undefined
+    });
+    const payload = await response.json();
+    if (!response.ok || payload.ok === false) {
+      throw new Error(payload.message || `HTTP ${response.status}`);
+    }
+    return payload;
+  } catch (error) {
+    throw new Error(
+      `Local Companion offline ou indisponível. Inicie o SotuHire local e tente novamente. ${error.message}`
+    );
+  }
 };
 
 const display = (payload) => {
@@ -73,34 +67,6 @@ const display = (payload) => {
   result.textContent = `${payload.message || "Concluído."}${scores}`;
 };
 
-const analyzeWithStandaloneGemini = async (project, localReport) => {
-  if (!standaloneGeminiKey.value) return localReport;
-  const granted = await chrome.permissions.request({
-    origins: ["https://generativelanguage.googleapis.com/*"]
-  });
-  if (!granted) throw new Error("Permissão do Gemini standalone não concedida.");
-  const prompt = [
-    "Avalie este projeto público sem inventar fatos. Responda em português com resumo,",
-    "pontos fortes, pontos fracos e prioridades.",
-    JSON.stringify({ project, local_report: localReport })
-  ].join("\n");
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(standaloneGeminiModel.value || "gemini-2.5-flash")}:generateContent`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-goog-api-key": standaloneGeminiKey.value
-      },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-    }
-  );
-  if (!response.ok) throw new Error(`Gemini standalone falhou: HTTP ${response.status}`);
-  const payload = await response.json();
-  localReport.gemini_summary = payload.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  return localReport;
-};
-
 const applicationIdentity = (item) => {
   let url = item.url;
   try {
@@ -114,14 +80,54 @@ const applicationIdentity = (item) => {
   return `${url}|${item.job_title.trim().toLowerCase()}|${item.company.trim().toLowerCase()}`;
 };
 
+const queuePendingAction = async (path, body, label) => {
+  const saved = await chrome.storage.local.get(["pendingCompanionActions"]);
+  const pending = saved.pendingCompanionActions || [];
+  const identity = `${path}|${body.capture_id || body.url || body.capture?.url || ""}`;
+  const filtered = pending.filter((item) => item.identity !== identity);
+  filtered.push({ identity, path, body, label, queuedAt: new Date().toISOString() });
+  await chrome.storage.local.set({ pendingCompanionActions: filtered });
+  return filtered.length;
+};
+
+const sendOrQueue = async (path, body, label) => {
+  try {
+    return await request(path, body);
+  } catch (error) {
+    const count = await queuePendingAction(path, body, label);
+    throw new Error(`${error.message} ${label} mantida localmente (${count} pendência(s)).`);
+  }
+};
+
+const retryPending = async () => {
+  const saved = await chrome.storage.local.get(["pendingCompanionActions"]);
+  const pending = saved.pendingCompanionActions || [];
+  if (!pending.length) return { message: "Não há pendências offline." };
+  const remaining = [];
+  let sent = 0;
+  for (const item of pending) {
+    try {
+      await request(item.path, item.body);
+      sent += 1;
+    } catch (_error) {
+      remaining.push(item);
+    }
+  }
+  await chrome.storage.local.set({ pendingCompanionActions: remaining });
+  return {
+    message: `${sent} pendência(s) enviada(s); ${remaining.length} ainda aguardam o Companion.`
+  };
+};
+
 const act = async (action) => {
   result.textContent = "Processando localmente...";
   try {
     if (action === "health") return display(await request("/health"));
     if (action === "context-summary") return display(await request("/capture/context-summary"));
+    if (action === "retry-pending") return display(await retryPending());
     if (action === "applications") {
       const payload = await extract("SOTUHIRE_APPLICATIONS");
-      return display(await request("/capture/applications", payload));
+      return display(await sendOrQueue("/capture/applications", payload, "Lote de candidaturas"));
     }
     if (action === "collect-page") {
       const payload = await extract("SOTUHIRE_APPLICATIONS");
@@ -149,11 +155,8 @@ const act = async (action) => {
     if (action.startsWith("project-")) {
       const { project } = await extract("SOTUHIRE_PROJECT");
       if (action === "project-standalone") {
-        const report = await analyzeWithStandaloneGemini(
-          project,
-          SotuHireProjectAnalyzer.analyze(project)
-        );
-        result.textContent = `${report.summary}\nStack: ${(report.stack || []).join(", ")}\n${report.gemini_summary || ""}`;
+        const report = SotuHireProjectAnalyzer.analyze(project);
+        result.textContent = `${report.summary}\nStack: ${(report.stack || []).join(", ")}`;
         return;
       }
       const paths = {
@@ -164,7 +167,7 @@ const act = async (action) => {
         "project-profile": "/capture/project"
       };
       project.provider_used = useAI.checked ? "gemini" : "local";
-      return display(await request(paths[action], project));
+      return display(await sendOrQueue(paths[action], project, "Projeto público"));
     }
     const { capture } = await extract();
     if (action === "copy") {
@@ -172,12 +175,12 @@ const act = async (action) => {
       return display({ message: "Texto visível copiado." });
     }
     if (action === "capture-public-exam") {
-      return display(await request("/capture/public-exam", {
+      return display(await sendOrQueue("/capture/public-exam", {
         ...capture,
         kind: "public_exam",
         job_title: "",
         company: ""
-      }));
+      }, "Captura de edital"));
     }
     const paths = {
       capture: "/capture/job",
@@ -185,9 +188,9 @@ const act = async (action) => {
       tracker: "/capture/tracker"
     };
     const body = action === "capture" ? capture : { capture, use_ai: useAI.checked };
-    display(await request(paths[action], body));
+    display(await sendOrQueue(paths[action], body, "Captura de vaga"));
   } catch (error) {
-    result.textContent = `Falha: ${error.message}`;
+    result.textContent = `Falha: ${error.message}\nVocê ainda pode copiar o texto ou acumular um lote offline.`;
   }
 };
 

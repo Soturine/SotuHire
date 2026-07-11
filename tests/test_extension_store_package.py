@@ -13,5 +13,5 @@ def test_extension_store_package_contains_only_valid_runtime_files(tmp_path):
     with ZipFile(output) as archive:
         assert set(archive.namelist()) == set(RUNTIME_FILES)
         packaged_manifest = json.loads(archive.read("manifest.json"))
-    assert packaged_manifest["version"] == "0.9.0"
+    assert packaged_manifest["version"] == "0.9.1"
     assert not any(name.startswith(("store/", "tests/")) for name in RUNTIME_FILES)

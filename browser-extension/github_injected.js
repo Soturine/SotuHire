@@ -15,8 +15,6 @@
   };
   const pageType = () => (isRepo() ? "github_repo" : "github_profile");
   const settings = async () => chrome.storage.local.get([
-    "standaloneGeminiKey",
-    "standaloneGeminiModel",
     "deepProjectAnalysis",
     "localToken",
     "useAI"
@@ -70,31 +68,8 @@
   };
 
   const standalone = async (project) => {
-    const saved = await settings();
     const report = globalThis.SotuHireProjectAnalyzer.analyze(project);
-    report.provider_used = saved.standaloneGeminiKey ? "gemini-standalone" : "local-browser";
-    if (!saved.standaloneGeminiKey) return report;
-    const granted = await chrome.permissions.request({
-      origins: ["https://generativelanguage.googleapis.com/*"]
-    });
-    if (!granted) throw new Error("Permissao do Gemini standalone nao concedida.");
-    const model = saved.standaloneGeminiModel || "gemini-2.5-flash";
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-goog-api-key": saved.standaloneGeminiKey
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Aprimore sem inventar fatos:\n${JSON.stringify({ project, report })}` }] }]
-        })
-      }
-    );
-    if (!response.ok) throw new Error(`Gemini standalone falhou: HTTP ${response.status}`);
-    const payload = await response.json();
-    report.gemini_summary = payload.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    report.provider_used = "local-browser";
     return report;
   };
 
@@ -147,7 +122,6 @@
         <div class="settings">
           <label><input type="checkbox" data-setting="deepProjectAnalysis"> Deep analysis</label>
           <label><input type="checkbox" data-setting="useAI"> Usar Gemini pelo SotuHire</label>
-          <input type="text" data-setting="standaloneGeminiModel" placeholder="Modelo Gemini">
           <span class="status">Verificando SotuHire local...</span>
         </div>
         <div class="report empty">Clique em analisar para gerar o relatorio publico.</div>
@@ -168,14 +142,10 @@
     settings().then((saved) => {
       query("[data-setting=deepProjectAnalysis]").checked = Boolean(saved.deepProjectAnalysis);
       query("[data-setting=useAI]").checked = Boolean(saved.useAI);
-      query("[data-setting=standaloneGeminiModel]").value =
-        saved.standaloneGeminiModel || "gemini-2.5-flash";
       localRequest("/health").then(() => {
         query(".status").textContent = "Connected SotuHire Mode recomendado";
       }).catch(() => {
-        query(".status").textContent = saved.standaloneGeminiKey
-          ? "Standalone Mode disponivel"
-          : "SotuHire offline · configure a chave Gemini no popup";
+        query(".status").textContent = "SotuHire offline · analise local disponivel";
       });
     });
     shadow.querySelectorAll("[data-setting]").forEach((input) => input.addEventListener("change", () => {
