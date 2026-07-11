@@ -215,6 +215,7 @@ function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult 
             mode={meta.analysis_mode}
             fallback={meta.fallback_used}
             model={meta.model}
+            trace={meta}
           />
         )}
       </SectionCard>

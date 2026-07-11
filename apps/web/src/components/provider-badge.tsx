@@ -1,5 +1,5 @@
 import { Cpu, KeyRound, Loader2, Sparkles, TriangleAlert, WifiOff } from "lucide-react";
-import type { AiUiState, AnalysisMode } from "@/lib/api/types";
+import type { AiUiState, AnalysisMeta, AnalysisMode } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 type EffectiveMode = AnalysisMode | AiUiState;
@@ -102,12 +102,14 @@ export function AnalysisStateNote({
   fallback,
   model,
   warnings,
+  trace,
 }: {
   provider?: string;
   mode?: AnalysisMode;
   fallback?: boolean;
   model?: string;
   warnings?: string[];
+  trace?: AnalysisMeta;
 }) {
   const warningText = (warnings ?? []).join(" ").toLowerCase();
   const state =
@@ -145,15 +147,61 @@ export function AnalysisStateNote({
                   : "Local: analise feita por regras internas.";
 
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
-      <ProviderBadge
-        provider={provider}
-        mode={mode}
-        fallback={fallback}
-        model={model}
-        state={state}
-      />
-      <span>{text}</span>
+    <div className="mt-4 rounded-lg border border-border bg-muted/30 p-3 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-2">
+        <ProviderBadge
+          provider={provider}
+          mode={mode}
+          fallback={fallback}
+          model={model}
+          state={state}
+        />
+        <span>{text}</span>
+      </div>
+      {trace?.prompt_id && (
+        <details className="mt-3 border-t border-border pt-2">
+          <summary className="cursor-pointer font-medium text-foreground">Rastreabilidade</summary>
+          <dl className="mt-2 grid gap-x-4 gap-y-1 sm:grid-cols-2">
+            <div>
+              <dt className="inline font-medium">Provider: </dt>
+              <dd className="inline">
+                {trace.provider_requested || trace.requested_provider || "local"} →{" "}
+                {trace.provider_used || "local"}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline font-medium">Modelo: </dt>
+              <dd className="inline">
+                {trace.model_requested || "local"} → {trace.model_used || trace.model || "local"}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline font-medium">Prompt: </dt>
+              <dd className="inline font-mono">
+                {trace.prompt_id}@{trace.prompt_version || "?"}
+              </dd>
+            </div>
+            <div>
+              <dt className="inline font-medium">Revisão: </dt>
+              <dd className="inline">
+                {trace.needs_user_review === false ? "opcional" : "necessária"}
+              </dd>
+            </div>
+          </dl>
+          {trace.fallback_reason && (
+            <p className="mt-2 text-warning">Fallback: {trace.fallback_reason}</p>
+          )}
+          {trace.evidence_used && trace.evidence_used.length > 0 && (
+            <div className="mt-2">
+              <span className="font-medium text-foreground">Contexto usado: </span>
+              {trace.evidence_used
+                .slice(0, 5)
+                .map((item) => `${item.title} (${item.confidence || "medium"})`)
+                .join(" · ")}
+            </div>
+          )}
+        </details>
+      )}
     </div>
   );
 }

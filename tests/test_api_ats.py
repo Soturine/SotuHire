@@ -49,6 +49,9 @@ def test_ats_uses_career_context_for_evidence_keywords(tmp_path, monkeypatch) ->
     payload = response.json()["data"]
     assert "Docker" in payload["context_evidence_keywords"]
     assert any("Docker" in insight for insight in payload["ai_insights"])
+    assert payload["prompt_id"] == "ats_analysis_v1"
+    assert payload["evidence_used"][0]["title"] == "Docker"
+    assert payload["evidence_used"][0]["confirmed_by_user"] is True
 
 
 def test_ats_separates_academic_evidence_from_unsupported_keywords(

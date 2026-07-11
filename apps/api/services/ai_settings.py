@@ -62,6 +62,7 @@ class AiRuntime:
     provider_name: str
     requested_provider: AiProvider
     model: str
+    model_requested: str
     use_ai: bool
     configured: bool
     allowed: bool
@@ -279,6 +280,7 @@ class AiSettingsStore:
                 provider_name="local",
                 requested_provider=requested_provider,
                 model="local",
+                model_requested=settings.model,
                 use_ai=settings.use_ai,
                 configured=settings.configured,
                 allowed=allowed,
@@ -297,6 +299,7 @@ class AiSettingsStore:
                 provider_name="local",
                 requested_provider=requested_provider,
                 model="local",
+                model_requested=settings.model,
                 use_ai=settings.use_ai,
                 configured=False,
                 allowed=allowed,
@@ -314,6 +317,7 @@ class AiSettingsStore:
             provider_name=provider.name,
             requested_provider=requested_provider,
             model=provider.model,
+            model_requested=settings.model,
             use_ai=settings.use_ai,
             configured=True,
             allowed=allowed,

@@ -107,6 +107,11 @@ def test_match_uses_backend_gemini_runtime_without_returning_key(
     assert response.status_code == 200
     payload = response.json()
     assert payload["data"]["provider_used"] == "gemini"
+    assert payload["data"]["provider_requested"] == "gemini"
+    assert payload["data"]["model_requested"] == "gemini-test-model"
+    assert payload["data"]["model_used"] == "gemini-test-model"
+    assert payload["data"]["prompt_id"] == "match_analysis_evidence_based_v1"
+    assert payload["data"]["prompt_version"] == "1.0.0"
     assert payload["data"]["analysis_mode"] == "ai"
     assert payload["data"]["fallback_used"] is False
     assert FAKE_KEY not in json.dumps(payload)
@@ -129,6 +134,10 @@ def test_match_falls_back_locally_when_gemini_fails(tmp_path: Path, monkeypatch)
     assert payload["data"]["provider_used"] == "local"
     assert payload["data"]["analysis_mode"] == "fallback"
     assert payload["data"]["fallback_used"] is True
+    assert payload["data"]["provider_requested"] == "gemini"
+    assert payload["data"]["model_requested"] == "gemini-test-model"
+    assert payload["data"]["model_used"] == "local"
+    assert payload["data"]["fallback_reason"]
     assert payload["warnings"]
 
 

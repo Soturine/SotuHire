@@ -166,7 +166,9 @@ function AtsPage() {
                 provider={r.provider_used}
                 mode={r.analysis_mode}
                 fallback={r.fallback_used}
+                model={r.model_used || r.model}
                 warnings={r.warnings}
+                trace={r}
               />
             </SectionCard>
 

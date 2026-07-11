@@ -43,7 +43,7 @@ from apps.api.schemas.analysis import (
     ResumeTailorRequest,
     ResumeTailorResponse,
 )
-from apps.api.services.ai_settings import get_ai_runtime
+from apps.api.services.ai_settings import AiRuntime, get_ai_runtime
 
 
 def extract_resume(request: ResumeExtractRequest) -> tuple[ResumeExtractResponse, list[str]]:
@@ -52,7 +52,6 @@ def extract_resume(request: ResumeExtractRequest) -> tuple[ResumeExtractResponse
     warnings = list(runtime.warnings)
     low_confidence: list[str] = []
     provider_used = runtime.provider_name
-    requested_provider = runtime.requested_provider
     fallback_used = runtime.fallback_used
 
     if runtime.use_ai and runtime.provider_name != "local":
@@ -63,7 +62,6 @@ def extract_resume(request: ResumeExtractRequest) -> tuple[ResumeExtractResponse
         )
         profile = result.local_profile
         provider_used = result.provider
-        requested_provider = result.requested_provider
         fallback_used = result.fallback_used
         low_confidence = result.low_confidence_fields
         if result.warning:
@@ -79,11 +77,15 @@ def extract_resume(request: ResumeExtractRequest) -> tuple[ResumeExtractResponse
         ResumeExtractResponse(
             profile=profile,
             confidence=_resume_confidence(profile),
-            provider_used=provider_used,
-            requested_provider=str(requested_provider),
-            analysis_mode=_analysis_mode(provider_used, fallback_used),
-            fallback_used=fallback_used,
             low_confidence_fields=low_confidence,
+            **_trace_metadata(
+                runtime=runtime,
+                provider_used=provider_used,
+                fallback_used=fallback_used,
+                prompt_id="resume_extraction_v1",
+                request_id=request.request_id,
+                warnings=warnings,
+            ),
         ),
         warnings,
     )
@@ -95,7 +97,6 @@ def extract_job(request: JobExtractRequest) -> tuple[JobExtractResponse, list[st
     warnings = list(runtime.warnings)
     low_confidence: list[str] = []
     provider_used = runtime.provider_name
-    requested_provider = runtime.requested_provider
     fallback_used = runtime.fallback_used
 
     if runtime.use_ai and runtime.provider_name != "local":
@@ -106,7 +107,6 @@ def extract_job(request: JobExtractRequest) -> tuple[JobExtractResponse, list[st
         )
         job = result.local_job
         provider_used = result.provider
-        requested_provider = result.requested_provider
         fallback_used = result.fallback_used
         low_confidence = result.low_confidence_fields
         if result.warning:
@@ -121,11 +121,16 @@ def extract_job(request: JobExtractRequest) -> tuple[JobExtractResponse, list[st
         JobExtractResponse(
             job=job,
             confidence=_job_confidence(job),
-            provider_used=provider_used,
-            requested_provider=str(requested_provider),
-            analysis_mode=_analysis_mode(provider_used, fallback_used),
-            fallback_used=fallback_used,
             low_confidence_fields=low_confidence,
+            **_trace_metadata(
+                runtime=runtime,
+                provider_used=provider_used,
+                fallback_used=fallback_used,
+                prompt_id="job_extraction_multi_domain_v1",
+                request_id=request.request_id,
+                source_refs=[request.source_url],
+                warnings=warnings,
+            ),
         ),
         warnings,
     )
@@ -177,16 +182,22 @@ def analyze_match(request: MatchAnalyzeRequest) -> tuple[MatchAnalyzeResponse, l
     return (
         MatchAnalyzeResponse(
             analysis=result.analysis,
-            provider_used=result.provider,
-            requested_provider=result.requested_provider,
-            analysis_mode=_analysis_mode(result.provider, result.fallback_used),
-            fallback_used=result.fallback_used,
             local_first=result.provider == "local",
             model=result.model,
             memory_shared_with_provider=result.memory_shared_with_provider,
             context_summary=context_brief(career_context),
             context_evidence_count=len(memory_evidence),
             context_warnings=career_context.warnings,
+            **_trace_metadata(
+                runtime=runtime,
+                provider_used=result.provider,
+                fallback_used=result.fallback_used,
+                prompt_id="match_analysis_evidence_based_v1",
+                request_id=request.request_id,
+                context=career_context,
+                warnings=warnings,
+                model_used=result.model if result.provider != "local" else "local",
+            ),
         ),
         warnings,
     )
@@ -276,10 +287,6 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
             present=review.present,
             missing_but_safe_to_add_if_true=review.missing_but_safe_to_add_if_true,
             missing_without_evidence=review.missing_without_evidence,
-            provider_used=provider_used,
-            requested_provider=str(runtime.requested_provider),
-            analysis_mode=_analysis_mode(provider_used, fallback_used),
-            fallback_used=fallback_used,
             ai_insights=ai_insights,
             warnings=warnings,
             context_summary=context_brief(career_context),
@@ -292,6 +299,15 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
                 for keyword in review.missing_but_safe_to_add_if_true
                 if keyword not in context_keywords
             ],
+            **_trace_metadata(
+                runtime=runtime,
+                provider_used=provider_used,
+                fallback_used=fallback_used,
+                prompt_id="ats_analysis_v1",
+                request_id=request.request_id,
+                context=career_context,
+                warnings=warnings,
+            ),
         ),
         warnings,
     )
@@ -359,13 +375,18 @@ def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, l
         ResumeTailorResponse(
             tailor=tailor,
             safe_to_export=tailor.is_safe_to_export(),
-            provider_used=provider_used,
-            requested_provider=str(runtime.requested_provider),
-            analysis_mode=_analysis_mode(provider_used, fallback_used),
-            fallback_used=fallback_used,
             ai_suggestions=ai_suggestions,
             context_summary=context_brief(career_context),
             context_evidence_count=len(career_context.evidence),
+            **_trace_metadata(
+                runtime=runtime,
+                provider_used=provider_used,
+                fallback_used=fallback_used,
+                prompt_id="resume_tailor_v1",
+                request_id=request.request_id,
+                context=career_context,
+                warnings=warnings,
+            ),
         ),
         warnings,
     )
@@ -376,11 +397,29 @@ def analyze_github_repo(
 ) -> tuple[GitHubRepoAnalyzeResponse, list[str]]:
     """Analyze a public GitHub repository through the existing analyzer."""
     runtime = get_ai_runtime("github")
+    career_context = _build_career_context(
+        CareerContextPurpose.GITHUB,
+        query=" ".join([request.repo_url, request.target_role]),
+    )
+    analysis_input = request.to_analysis_input()
+    if not analysis_input.candidate_profile:
+        safe_context = {
+            "summary": context_brief(career_context),
+            "goals": career_context.goals[:8],
+            "domains": career_context.domains[:8],
+            "evidence": [
+                item.model_dump(mode="json")
+                for item in career_context.evidence
+                if not item.sensitive and item.confirmed_by_user
+            ][:8],
+        }
+        if runtime.provider_name == "local" or runtime.allow_memory_context:
+            analysis_input = analysis_input.model_copy(update={"candidate_profile": safe_context})
     try:
         report = analyze_github_repository(
             request.repo_url,
             provider=runtime.provider if runtime.provider_name != "local" else None,
-            analysis_input=request.to_analysis_input(),
+            analysis_input=analysis_input,
             fallback_payload=request.fallback_payload,
         )
     except GitHubAnalyzerError as exc:
@@ -389,7 +428,7 @@ def analyze_github_repo(
     fallback_used = report.fallback_used or (
         runtime.provider_name != "local" and not provider_used.startswith("gemini")
     )
-    warnings = [*runtime.warnings]
+    warnings = [*runtime.warnings, *career_context.warnings]
     if report.fallback_used:
         warnings.append("Analise GitHub usou fallback local.")
     if fallback_used and runtime.provider_name != "local" and not report.fallback_used:
@@ -397,11 +436,17 @@ def analyze_github_repo(
     return (
         GitHubRepoAnalyzeResponse(
             report=report,
-            provider_used=provider_used,
-            requested_provider=str(runtime.requested_provider),
-            analysis_mode=_analysis_mode(provider_used, fallback_used),
-            fallback_used=fallback_used,
             profile_evidence_candidates=profile_evidence_candidates_from_github_report(report),
+            **_trace_metadata(
+                runtime=runtime,
+                provider_used=provider_used,
+                fallback_used=fallback_used,
+                prompt_id="github_repo_analysis_v2",
+                request_id=request.request_id,
+                context=career_context,
+                source_refs=[request.repo_url],
+                warnings=warnings,
+            ),
         ),
         warnings,
     )
@@ -551,3 +596,56 @@ def _safe_provider_warning(context: str, warning: str) -> str:
     if "Gemini" in warning:
         return f"{context}: Gemini indisponivel; usei fallback local."
     return f"{context}: provider opcional indisponivel; usei fallback local."
+
+
+def _trace_metadata(
+    *,
+    runtime: AiRuntime,
+    provider_used: str,
+    fallback_used: bool,
+    prompt_id: str,
+    request_id: str,
+    context: CareerContext | None = None,
+    source_refs: list[str] | None = None,
+    warnings: list[str] | None = None,
+    model_used: str = "",
+) -> dict[str, object]:
+    """Build one complete trace without exposing provider secrets or sensitive evidence."""
+    spec = default_prompt_registry().get(prompt_id)
+    evidence = [item for item in (context.evidence if context else []) if not item.sensitive]
+    refs = _unique(
+        [
+            *(source_refs or []),
+            *[item.source_ref for item in evidence if item.source_ref],
+        ]
+    )
+    fallback_reason = ""
+    if fallback_used:
+        fallback_reason = next(
+            (
+                warning
+                for warning in warnings or []
+                if any(
+                    term in normalize_text(warning) for term in ("falh", "indispon", "sem chave")
+                )
+            ),
+            "Provider solicitado indisponivel; analise local utilizada.",
+        )
+    requested = str(runtime.requested_provider)
+    effective_model = model_used or (runtime.model if provider_used != "local" else "local")
+    return {
+        "provider_requested": requested,
+        "requested_provider": requested,
+        "provider_used": provider_used,
+        "model_requested": runtime.model_requested,
+        "model_used": effective_model,
+        "prompt_id": spec.prompt_id,
+        "prompt_version": spec.version,
+        "analysis_mode": _analysis_mode(provider_used, fallback_used),
+        "fallback_used": fallback_used,
+        "fallback_reason": fallback_reason,
+        "request_id": request_id,
+        "source_refs": refs,
+        "evidence_used": evidence,
+        "needs_user_review": True,
+    }

@@ -145,6 +145,8 @@ function ResumePage() {
                 provider={mut.data?.provider_used}
                 mode={mut.data?.analysis_mode}
                 fallback={mut.data?.fallback_used}
+                model={mut.data?.model_used || mut.data?.model}
+                trace={mut.data}
               />
             </>
           )}

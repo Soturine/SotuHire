@@ -19,12 +19,35 @@ export interface Health {
 
 export type AnalysisMode = "local" | "ai" | "fallback";
 
+export interface TraceEvidence {
+  title: string;
+  content?: string;
+  kind?: string;
+  source?: string;
+  source_ref?: string;
+  confidence?: "low" | "medium" | "high";
+  confirmed_by_user?: boolean;
+  sensitive?: boolean;
+  score?: number;
+}
+
 export interface AnalysisMeta {
+  provider_requested?: string;
   provider_used?: string;
   requested_provider?: string;
   analysis_mode?: AnalysisMode;
   fallback_used?: boolean;
+  fallback_reason?: string;
+  model_requested?: string;
+  model_used?: string;
   model?: string;
+  prompt_id?: string;
+  prompt_version?: string;
+  generated_at?: string;
+  request_id?: string;
+  source_refs?: string[];
+  evidence_used?: TraceEvidence[];
+  needs_user_review?: boolean;
 }
 
 export type AiProvider = "local" | "gemini" | "openai" | "openai_future";

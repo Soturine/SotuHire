@@ -48,6 +48,8 @@ def test_resume_tailor_reports_career_context_usage(tmp_path, monkeypatch) -> No
     payload = response.json()["data"]
     assert payload["context_evidence_count"] >= 1
     assert "API FastAPI" in payload["context_summary"]
+    assert payload["prompt_id"] == "resume_tailor_v1"
+    assert any(item["title"] == "API FastAPI" for item in payload["evidence_used"])
 
 
 def test_resume_tailor_uses_academic_context_without_inventing_experience(

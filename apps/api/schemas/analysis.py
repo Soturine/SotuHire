@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Literal
 
 from modules.context import CareerContextEvidence
@@ -20,6 +21,29 @@ from modules.tracker.status import JobStatus
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class AiTraceMetadata(BaseModel):
+    """Flat, backwards-compatible trace metadata for one analysis execution."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    provider_requested: str = "local"
+    requested_provider: str = "local"
+    provider_used: str = "local"
+    model_requested: str = "local"
+    model_used: str = "local"
+    model: str = ""
+    prompt_id: str = ""
+    prompt_version: str = ""
+    analysis_mode: Literal["local", "ai", "fallback"] = "local"
+    fallback_used: bool = False
+    fallback_reason: str = ""
+    generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    request_id: str = ""
+    source_refs: list[str] = Field(default_factory=list)
+    evidence_used: list[CareerContextEvidence] = Field(default_factory=list)
+    needs_user_review: bool = True
+
+
 class ResumeExtractRequest(BaseModel):
     """Extract a structured resume profile from pasted text."""
 
@@ -31,17 +55,13 @@ class ResumeExtractRequest(BaseModel):
     include_raw_text: bool = False
 
 
-class ResumeExtractResponse(BaseModel):
+class ResumeExtractResponse(AiTraceMetadata):
     """Structured resume extraction response."""
 
     model_config = ConfigDict(extra="forbid")
 
     profile: ResumeProfileSchema
     confidence: float = Field(ge=0, le=1)
-    provider_used: str = "local"
-    requested_provider: str = "local"
-    analysis_mode: Literal["local", "ai", "fallback"] = "local"
-    fallback_used: bool = False
     low_confidence_fields: list[str] = Field(default_factory=list)
 
 
@@ -56,17 +76,13 @@ class JobExtractRequest(BaseModel):
     include_raw_text: bool = False
 
 
-class JobExtractResponse(BaseModel):
+class JobExtractResponse(AiTraceMetadata):
     """Structured job extraction response."""
 
     model_config = ConfigDict(extra="forbid")
 
     job: JobPostingSchema
     confidence: float = Field(ge=0, le=1)
-    provider_used: str = "local"
-    requested_provider: str = "local"
-    analysis_mode: Literal["local", "ai", "fallback"] = "local"
-    fallback_used: bool = False
     low_confidence_fields: list[str] = Field(default_factory=list)
 
 
@@ -85,18 +101,13 @@ class MatchAnalyzeRequest(BaseModel):
     request_id: str = Field(default="", max_length=120)
 
 
-class MatchAnalyzeResponse(BaseModel):
+class MatchAnalyzeResponse(AiTraceMetadata):
     """Match analysis plus small API metadata."""
 
     model_config = ConfigDict(extra="forbid")
 
     analysis: JobAnalysisSchema
-    provider_used: str = "local"
-    requested_provider: str = "local"
-    analysis_mode: Literal["local", "ai", "fallback"] = "local"
-    fallback_used: bool = False
     local_first: bool = True
-    model: str = ""
     memory_shared_with_provider: bool = False
     context_summary: str = ""
     context_evidence_count: int = 0
@@ -115,7 +126,7 @@ class AtsAnalyzeRequest(BaseModel):
     request_id: str = Field(default="", max_length=120)
 
 
-class AtsAnalyzeResponse(BaseModel):
+class AtsAnalyzeResponse(AiTraceMetadata):
     """ATS keyword review response."""
 
     model_config = ConfigDict(extra="forbid")
@@ -124,10 +135,6 @@ class AtsAnalyzeResponse(BaseModel):
     present: list[str] = Field(default_factory=list)
     missing_but_safe_to_add_if_true: list[str] = Field(default_factory=list)
     missing_without_evidence: list[str] = Field(default_factory=list)
-    provider_used: str = "local"
-    requested_provider: str = "local"
-    analysis_mode: Literal["local", "ai", "fallback"] = "local"
-    fallback_used: bool = False
     ai_insights: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     context_summary: str = ""
@@ -151,17 +158,13 @@ class ResumeTailorRequest(BaseModel):
     request_id: str = Field(default="", max_length=120)
 
 
-class ResumeTailorResponse(BaseModel):
+class ResumeTailorResponse(AiTraceMetadata):
     """Safe tailoring output wrapper."""
 
     model_config = ConfigDict(extra="forbid")
 
     tailor: ResumeTailorOutput
     safe_to_export: bool = False
-    provider_used: str = "local"
-    requested_provider: str = "local"
-    analysis_mode: Literal["local", "ai", "fallback"] = "local"
-    fallback_used: bool = False
     ai_suggestions: list[str] = Field(default_factory=list)
     context_summary: str = ""
     context_evidence_count: int = 0
@@ -200,16 +203,12 @@ class GitHubRepoAnalyzeRequest(BaseModel):
         )
 
 
-class GitHubRepoAnalyzeResponse(BaseModel):
+class GitHubRepoAnalyzeResponse(AiTraceMetadata):
     """GitHub analyzer response wrapper."""
 
     model_config = ConfigDict(extra="forbid")
 
     report: GitHubAnalyzerReport
-    provider_used: str = "local"
-    requested_provider: str = "local"
-    analysis_mode: Literal["local", "ai", "fallback"] = "local"
-    fallback_used: bool = False
     profile_evidence_candidates: list[CareerContextEvidence] = Field(default_factory=list)
 
 

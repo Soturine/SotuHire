@@ -3316,12 +3316,9 @@ function normalizeAuthenticatedBrowserCollect(value: unknown): AuthenticatedBrow
 function normalizeResumeExtract(value: unknown): ResumeExtractResult {
   const raw = asRecord(value);
   return {
+    ...normalizeAnalysisMeta(raw),
     profile: normalizeResumeProfile(raw.profile),
     confidence: asNumber(raw.confidence, 0),
-    provider_used: asString(raw.provider_used) || "local",
-    requested_provider: asString(raw.requested_provider) || "local",
-    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
-    fallback_used: asBoolean(raw.fallback_used, false),
     low_confidence_fields: stringList(raw.low_confidence_fields),
   };
 }
@@ -3363,12 +3360,9 @@ function normalizeResumeProfile(value: unknown): ResumeProfile {
 function normalizeJobExtract(value: unknown): JobExtractResult {
   const raw = asRecord(value);
   return {
+    ...normalizeAnalysisMeta(raw),
     job: normalizeJobPosting(raw.job),
     confidence: asNumber(raw.confidence, 0),
-    provider_used: asString(raw.provider_used) || "local",
-    requested_provider: asString(raw.requested_provider) || "local",
-    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
-    fallback_used: asBoolean(raw.fallback_used, false),
     low_confidence_fields: stringList(raw.low_confidence_fields),
   };
 }
@@ -3396,11 +3390,7 @@ function normalizeJobPosting(value: unknown): JobPosting {
 function normalizeMatchEnvelope(value: unknown): MatchAnalyzeResult {
   const raw = asRecord(value);
   return {
-    provider_used: asString(raw.provider_used) || "local",
-    requested_provider: asString(raw.requested_provider) || "local",
-    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
-    fallback_used: asBoolean(raw.fallback_used, false),
-    model: asString(raw.model),
+    ...normalizeAnalysisMeta(raw),
     local_first: asBoolean(raw.local_first, true),
     memory_shared_with_provider: asBoolean(raw.memory_shared_with_provider, false),
     analysis: normalizeMatch(raw.analysis),
@@ -3410,6 +3400,7 @@ function normalizeMatchEnvelope(value: unknown): MatchAnalyzeResult {
 function normalizeMatch(value: unknown): MatchAnalysis {
   const raw = asRecord(value);
   return {
+    ...normalizeAnalysisMeta(raw),
     analysis_version: "compatibility_v1",
     match_score: asNumber(raw.match_score, 0),
     confidence_score: asNumber(raw.confidence_score, 0),
@@ -3441,22 +3432,15 @@ function normalizeAts(value: unknown): AtsReview {
     missing_without_evidence: stringList(raw.missing_without_evidence),
     warnings: stringList(raw.warnings),
     ai_insights: stringList(raw.ai_insights),
-    provider_used: asString(raw.provider_used) || "local",
-    requested_provider: asString(raw.requested_provider) || "local",
-    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
-    fallback_used: asBoolean(raw.fallback_used, false),
   };
 }
 
 function normalizeTailorEnvelope(value: unknown): ResumeTailorResult {
   const raw = asRecord(value);
   return {
+    ...normalizeAnalysisMeta(raw),
     safe_to_export: asBoolean(raw.safe_to_export, false),
     tailor: normalizeTailor(raw.tailor),
-    provider_used: asString(raw.provider_used) || "local",
-    requested_provider: asString(raw.requested_provider) || "local",
-    analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
-    fallback_used: asBoolean(raw.fallback_used, false),
     ai_suggestions: stringList(raw.ai_suggestions),
   };
 }
@@ -3484,11 +3468,43 @@ function normalizeTailor(value: unknown): ResumeTailor {
 function normalizeGithubEnvelope(value: unknown): GithubAnalyzeResult {
   const raw = asRecord(value);
   return {
+    ...normalizeAnalysisMeta(raw),
     report: normalizeGithubReport(raw.report),
+  };
+}
+
+function normalizeAnalysisMeta(raw: JsonRecord): import("./types").AnalysisMeta {
+  return {
+    provider_requested:
+      asString(raw.provider_requested) || asString(raw.requested_provider) || "local",
+    requested_provider:
+      asString(raw.requested_provider) || asString(raw.provider_requested) || "local",
     provider_used: asString(raw.provider_used) || "local",
-    requested_provider: asString(raw.requested_provider) || "local",
+    model_requested: asString(raw.model_requested),
+    model_used: asString(raw.model_used),
+    model: asString(raw.model),
+    prompt_id: asString(raw.prompt_id),
+    prompt_version: asString(raw.prompt_version),
     analysis_mode: normalizeAnalysisMode(raw.analysis_mode),
     fallback_used: asBoolean(raw.fallback_used, false),
+    fallback_reason: asString(raw.fallback_reason),
+    generated_at: asString(raw.generated_at),
+    request_id: asString(raw.request_id),
+    source_refs: stringList(raw.source_refs),
+    evidence_used: objectList(raw.evidence_used).map((item) => ({
+      title: asString(item.title),
+      content: asString(item.content),
+      kind: asString(item.kind),
+      source: asString(item.source),
+      source_ref: asString(item.source_ref),
+      confidence: (["low", "medium", "high"].includes(asString(item.confidence))
+        ? asString(item.confidence)
+        : "medium") as "low" | "medium" | "high",
+      confirmed_by_user: asBoolean(item.confirmed_by_user, false),
+      sensitive: asBoolean(item.sensitive, false),
+      score: asNumber(item.score, 0),
+    })),
+    needs_user_review: asBoolean(raw.needs_user_review, true),
   };
 }
 
