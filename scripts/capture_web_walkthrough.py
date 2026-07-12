@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import sys
@@ -10,6 +11,7 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 from urllib.error import URLError
+from urllib.parse import urlparse
 from urllib.request import urlopen
 
 from PIL import Image
@@ -31,6 +33,45 @@ class Shot:
 
 WALKTHROUGH = [
     Shot("/dashboard", "Dashboard", "sotuhire-web-dashboard.png"),
+    Shot("/resume", "Currículo", "sotuhire-web-resume.png"),
+    Shot("/job", "Vaga", "sotuhire-web-job.png"),
+    Shot("/match", "Compatibilidade", "sotuhire-web-match.png"),
+    Shot("/ats", "ATS", "sotuhire-web-ats.png"),
+    Shot("/tailor", "Tailor", "sotuhire-web-tailor.png"),
+    Shot("/github", "GitHub/Portfólio", "sotuhire-web-github-portfolio.png"),
+    Shot("/radar", "Radar/Wishlist", "sotuhire-web-radar.png", "#radar-summary"),
+    Shot(
+        "/radar",
+        "Agendamentos",
+        "sotuhire-web-radar-schedules.png",
+        "#radar-schedules",
+    ),
+    Shot(
+        "/radar",
+        "Notificações",
+        "sotuhire-web-notifications.png",
+        "#radar-notifications",
+    ),
+    Shot("/public-exams", "Editais/Concursos", "sotuhire-web-public-exams.png"),
+    Shot(
+        "/public-exams",
+        "Editais/Concursos IA",
+        "sotuhire-web-public-exams-ai.png",
+    ),
+    Shot(
+        "/sources",
+        "Fontes/Captura",
+        "sotuhire-web-sources.png",
+        "#opportunity-inbox",
+    ),
+    Shot(
+        "/sources",
+        "Extensão Local",
+        "sotuhire-web-extension.png",
+        "#local-extension",
+    ),
+    Shot("/tracker", "Candidaturas/Tracker", "sotuhire-web-tracker.png"),
+    Shot("/intelligence", "Inteligência", "sotuhire-web-intelligence.png"),
     Shot("/profile", "Perfil", "sotuhire-web-profile.png"),
     Shot(
         "/profile",
@@ -38,34 +79,10 @@ WALKTHROUGH = [
         "sotuhire-web-profile-lattes.png",
         "[data-testid='profile-lattes-section']",
     ),
-    Shot("/resume", "Currículo"),
-    Shot("/job", "Vaga"),
-    Shot("/match", "Match", "sotuhire-web-match.png"),
-    Shot("/ats", "ATS"),
-    Shot("/tailor", "Tailor"),
-    Shot("/github", "GitHub/Portfólio"),
-    Shot("/sources", "Fontes e Captura", "sotuhire-web-sources.png", "#opportunity-inbox"),
-    Shot(
-        "/sources",
-        "Extensão Local e Perfil",
-        "sotuhire-web-extension-profile-candidates.png",
-        "#local-extension",
-    ),
-    Shot("/radar", "Radar"),
-    Shot("/radar", "Wishlist IA/local", selector="#radar-ai-wishlist"),
-    Shot("/radar", "Agendamentos", "sotuhire-web-radar-schedules.png", "#radar-schedules"),
-    Shot("/radar", "Notificações", "sotuhire-web-notifications.png", "#radar-notifications"),
-    Shot("/public-exams", "Editais/Concursos", "sotuhire-web-public-exams.png"),
-    Shot("/public-exams", "Editais/Concursos IA", "sotuhire-web-public-exams-ai.png"),
-    Shot("/tracker", "Kanban/Tracker", "sotuhire-web-tracker.png"),
-    Shot("/settings", "Configurações IA", "sotuhire-web-settings-ai-providers.png"),
-    Shot(
-        "/sources",
-        "Extensão Editais",
-        "sotuhire-web-extension-public-exams.png",
-        "#local-extension",
-    ),
+    Shot("/settings", "Configurações IA", "sotuhire-web-settings-ai.png"),
+    Shot("/privacy", "Privacidade", "sotuhire-web-privacy.png"),
 ]
+
 GIF_FILE = "sotuhire-web-product-walkthrough.gif"
 
 
@@ -77,17 +94,13 @@ def main() -> None:
 
     server = None
     if not args.no_server and not _is_up(args.url):
-        server = _start_dev_server()
+        server = _start_dev_server(args.url)
         _wait_until_up(args.url)
     try:
         capture(args.url)
     finally:
         if server is not None:
-            server.terminate()
-            try:
-                server.wait(timeout=8)
-            except subprocess.TimeoutExpired:
-                server.kill()
+            _stop_server(server)
 
 
 def capture(base_url: str) -> None:
@@ -128,11 +141,6 @@ def _prepare(page: Page, shot: Shot) -> None:
         page.locator("[data-testid='profile-lattes-extract']").click()
         page.locator("[data-testid='profile-lattes-candidates']").wait_for(timeout=5_000)
         page.wait_for_timeout(500)
-    if shot.file == "sotuhire-web-extension-profile-candidates.png":
-        button = page.locator("[data-testid='view-extension-profile-candidates']").first
-        button.click()
-        page.locator("[data-testid='extension-profile-candidates']").wait_for(timeout=5_000)
-        page.wait_for_timeout(500)
     if shot.file in {"sotuhire-web-public-exams.png", "sotuhire-web-public-exams-ai.png"}:
         page.locator("[data-testid='public-exams-analyze']").click()
         page.locator("[data-testid='public-exams-role-summary']").wait_for(timeout=5_000)
@@ -154,12 +162,15 @@ def _write_gif(frame_paths: list[Path], target: Path) -> None:
         frame.close()
 
 
-def _start_dev_server() -> subprocess.Popen:
+def _start_dev_server(url: str) -> subprocess.Popen:
     npm = shutil.which("npm.cmd") or shutil.which("npm")
     if npm is None:
         raise RuntimeError("npm was not found in PATH")
+    parsed = urlparse(url)
+    host = parsed.hostname or "127.0.0.1"
+    port = str(parsed.port or 5173)
     return subprocess.Popen(
-        [npm, "run", "dev", "--", "--host", "127.0.0.1", "--port", "5173"],
+        [npm, "run", "dev", "--", "--host", host, "--port", port],
         cwd=WEB_DIR,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
@@ -173,6 +184,23 @@ def _wait_until_up(url: str) -> None:
             return
         time.sleep(1)
     raise RuntimeError(f"Frontend did not start at {url}")
+
+
+def _stop_server(server: subprocess.Popen) -> None:
+    """Stop npm and the Vite child it launches, including on Windows."""
+    if os.name == "nt":
+        subprocess.run(
+            ["taskkill", "/PID", str(server.pid), "/T", "/F"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+        return
+    server.terminate()
+    try:
+        server.wait(timeout=8)
+    except subprocess.TimeoutExpired:
+        server.kill()
 
 
 def _is_up(url: str) -> bool:
