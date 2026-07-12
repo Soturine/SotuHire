@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r docs/requirements/requirements.txt
+          pip install -e ".[dev]"
 
       - name: Ruff check
         run: ruff check .
@@ -32,6 +32,11 @@ jobs:
 
       - name: Tests
         run: pytest -v
+
+      - name: Compile and typecheck Python
+        run: |
+          python -m compileall modules tests apps scripts
+          pyright
 
       - name: Package browser extension
         run: python scripts/package_extension.py

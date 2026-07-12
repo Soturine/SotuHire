@@ -1,6 +1,7 @@
 -r requirements.txt
 pre-commit>=3.7.0
 pytest-cov>=5.0.0
+pyright>=1.1.400
 mkdocs>=1.6.0
 mkdocs-material>=9.5.0
 playwright>=1.55.0
