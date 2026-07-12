@@ -52,6 +52,9 @@ export const Route = createFileRoute("/public-exams")({
 const OFFICIAL_WARNING =
   "O SotuHire ajuda a organizar e interpretar editais, mas o edital oficial sempre prevalece. Revise manualmente requisitos, datas, taxa, documentos, conteúdo programático e regras da banca.";
 
+const notifySuccess = (message: string) => window.setTimeout(() => toast.success(message), 0);
+const notifyError = (message: string) => window.setTimeout(() => toast.error(message), 0);
+
 const SAMPLE_NOTICE = `Edital nº 01/2026 - Concurso Público Prefeitura Exemplo
 Órgão: Prefeitura Municipal de Exemplo
 Banca organizadora: Instituto Exemplo
@@ -108,10 +111,10 @@ function PublicExamsPage() {
         setSourceUrl(nextDraft.notice.source_url || sourceUrl);
         setSourceName(nextDraft.notice.source_name || sourceName);
         setSelectedRoleId(nextDraft.roles[0]?.role_id || nextDraft.notice.roles[0]?.role_id || "");
-        toast.success(data.message || "Captura importada como edital.");
+        notifySuccess(data.message || "Captura importada como edital.");
       })
       .catch((error) => {
-        toast.error(
+        notifyError(
           error instanceof Error ? error.message : "Não foi possível importar a captura.",
         );
       });
@@ -137,10 +140,10 @@ function PublicExamsPage() {
       setAnalysis(null);
       setStudyPlan(null);
       setSelectedRoleId(data.roles[0]?.role_id || data.notice.roles[0]?.role_id || "");
-      toast.success("Rascunho de edital gerado. Revise antes de salvar.");
+      notifySuccess("Rascunho de edital gerado. Revise antes de salvar.");
     },
     onError: (error) =>
-      toast.error(error instanceof Error ? error.message : "Falha ao analisar edital."),
+      notifyError(error instanceof Error ? error.message : "Falha ao analisar edital."),
   });
 
   const confirmExam = useMutation({
@@ -148,10 +151,10 @@ function PublicExamsPage() {
     onSuccess: (data) => {
       setSavedNotice(data.notice);
       qc.invalidateQueries({ queryKey: ["public-exams"] });
-      toast.success(data.message || "Edital salvo localmente.");
+      notifySuccess(data.message || "Edital salvo localmente.");
     },
     onError: (error) =>
-      toast.error(error instanceof Error ? error.message : "Falha ao salvar edital."),
+      notifyError(error instanceof Error ? error.message : "Falha ao salvar edital."),
   });
 
   const analyzeExam = useMutation({
@@ -161,10 +164,10 @@ function PublicExamsPage() {
     },
     onSuccess: (data) => {
       setAnalysis(data);
-      toast.success("Comparação inicial com o Perfil concluída.");
+      notifySuccess("Comparação inicial com o Perfil concluída.");
     },
     onError: (error) =>
-      toast.error(error instanceof Error ? error.message : "Falha ao comparar com o Perfil."),
+      notifyError(error instanceof Error ? error.message : "Falha ao comparar com o Perfil."),
   });
 
   const generatePlan = useMutation({
@@ -177,10 +180,10 @@ function PublicExamsPage() {
     },
     onSuccess: (data) => {
       setStudyPlan(data);
-      toast.success("Plano de estudo inicial gerado.");
+      notifySuccess("Plano de estudo inicial gerado.");
     },
     onError: (error) =>
-      toast.error(error instanceof Error ? error.message : "Falha ao gerar plano de estudo."),
+      notifyError(error instanceof Error ? error.message : "Falha ao gerar plano de estudo."),
   });
 
   async function ensureSaved(): Promise<ExamNotice> {
