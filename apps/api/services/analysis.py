@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, TypedDict
 
 from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
@@ -14,6 +14,7 @@ from modules.ats.match_keywords import review_keywords_with_match
 from modules.context import (
     CareerContext,
     CareerContextEngine,
+    CareerContextEvidence,
     CareerContextPurpose,
     context_brief,
     context_to_memory_evidence,
@@ -44,6 +45,25 @@ from apps.api.schemas.analysis import (
     ResumeTailorResponse,
 )
 from apps.api.services.ai_settings import AiRuntime, get_ai_runtime
+
+
+class _TraceMetadataPayload(TypedDict):
+    """Keyword payload shared by the typed analysis response models."""
+
+    provider_requested: str
+    requested_provider: str
+    provider_used: str
+    model_requested: str
+    model_used: str
+    prompt_id: str
+    prompt_version: str
+    analysis_mode: Literal["local", "ai", "fallback"]
+    fallback_used: bool
+    fallback_reason: str
+    request_id: str
+    source_refs: list[str]
+    evidence_used: list[CareerContextEvidence]
+    needs_user_review: bool
 
 
 def extract_resume(request: ResumeExtractRequest) -> tuple[ResumeExtractResponse, list[str]]:
@@ -609,7 +629,7 @@ def _trace_metadata(
     source_refs: list[str] | None = None,
     warnings: list[str] | None = None,
     model_used: str = "",
-) -> dict[str, object]:
+) -> _TraceMetadataPayload:
     """Build one complete trace without exposing provider secrets or sensitive evidence."""
     spec = default_prompt_registry().get(prompt_id)
     evidence = [item for item in (context.evidence if context else []) if not item.sensitive]

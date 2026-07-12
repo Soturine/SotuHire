@@ -48,6 +48,23 @@ def test_profile_identity_deduplicates_same_source_ref_across_import_paths() -> 
     assert manual == lattes
 
 
+def test_profile_identity_keeps_provenance_out_of_semantic_fallback() -> None:
+    manual = profile_item_identity(
+        item_type="certification",
+        title="NR10",
+        source="manual",
+        evidence="Certificado informado pela pessoa usuaria.",
+    )
+    imported = profile_item_identity(
+        item_type="certification",
+        title="NR10",
+        source="certificate",
+        evidence="Mesmo certificado vindo de outra fonte.",
+    )
+
+    assert manual == imported
+
+
 def test_generic_deduplication_keeps_records_for_review() -> None:
     records = [
         {"id": "first", "key": "same"},

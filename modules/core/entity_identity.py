@@ -85,7 +85,9 @@ def profile_item_identity(
     reference = _canonical_reference(source_ref)
     if reference:
         return f"profile-ref:{normalize_text(item_type)}:{reference}"
-    return "profile:" + content_fingerprint(item_type, title, source, evidence[:500])
+    # Import path and evidence wording frequently differ for the same user-reviewed
+    # credential. Keep those fields as provenance, not as part of its identity.
+    return "profile:" + content_fingerprint(item_type, title)
 
 
 def memory_item_identity(
