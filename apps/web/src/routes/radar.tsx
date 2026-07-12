@@ -23,7 +23,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { StatCard } from "@/components/stat-card";

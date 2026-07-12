@@ -38,7 +38,7 @@ import type {
 } from "@/lib/api/types";
 import { SOURCE_CARDS, SOURCE_FLOW } from "@/mocks/sources";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 export const Route = createFileRoute("/sources")({
   head: () => ({

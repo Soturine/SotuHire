@@ -8,7 +8,7 @@ import { useApi } from "@/lib/api/hooks";
 import type { TrackerJob, TrackerStatus } from "@/lib/api/types";
 import { useApiMode } from "@/lib/api/mode";
 import { statusLabel } from "@/lib/labels";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/tracker")({

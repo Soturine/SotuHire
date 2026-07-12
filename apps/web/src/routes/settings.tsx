@@ -22,7 +22,7 @@ import { DEFAULT_API_URL, useApiMode } from "@/lib/api/mode";
 import { APP_VERSION } from "@/lib/labels";
 import type { AiProvider, AiSettings, AiSettingsPreset, AiSettingsStatus } from "@/lib/api/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import {
   DEMO_PERSONAS,
   getActiveDemoPersona,

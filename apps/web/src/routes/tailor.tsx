@@ -9,7 +9,7 @@ import { SectionCard } from "@/components/section-card";
 import { ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
 import { SAMPLE_EVIDENCE, SAMPLE_JOB } from "@/mocks/samples";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 export const Route = createFileRoute("/tailor")({
   head: () => ({ meta: [{ title: "Ajuste de Currículo — SotuHire" }] }),

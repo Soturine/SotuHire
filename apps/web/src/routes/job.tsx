@@ -7,7 +7,7 @@ import { AnalysisStateNote, ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 export const Route = createFileRoute("/job")({
   head: () => ({ meta: [{ title: "Vaga — SotuHire" }] }),

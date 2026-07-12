@@ -13,7 +13,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { EmptyState } from "@/components/states";

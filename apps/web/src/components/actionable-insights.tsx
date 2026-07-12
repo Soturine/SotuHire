@@ -1,6 +1,6 @@
 import { ArrowRight, CheckCircle2, Clipboard, Lightbulb, Save, ShieldAlert } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { SectionCard } from "@/components/section-card";
 import { cn } from "@/lib/utils";
 

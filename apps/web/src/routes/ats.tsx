@@ -18,7 +18,7 @@ import { ScoreRing } from "@/components/score-ring";
 import { ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
 import { SAMPLE_JOB, SAMPLE_RESUME } from "@/mocks/samples";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 export const Route = createFileRoute("/ats")({
   head: () => ({ meta: [{ title: "Análise ATS — SotuHire" }] }),

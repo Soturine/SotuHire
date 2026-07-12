@@ -20,7 +20,7 @@ import { ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
 import type { MatchAnalysis, MatchAnalyzeResult, MatchRequirement } from "@/lib/api/types";
 import { SAMPLE_JOB, SAMPLE_RESUME } from "@/mocks/samples";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 export const Route = createFileRoute("/match")({
   head: () => ({ meta: [{ title: "Análise de Compatibilidade — SotuHire" }] }),

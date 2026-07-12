@@ -17,7 +17,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 import { AppShell } from "@/components/app-shell";
 import { ProviderBadge } from "@/components/provider-badge";
 import { SectionCard } from "@/components/section-card";

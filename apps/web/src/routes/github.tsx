@@ -9,7 +9,7 @@ import { SectionCard } from "@/components/section-card";
 import { ScoreRing } from "@/components/score-ring";
 import { ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
-import { toast } from "sonner";
+import { toast } from "@/lib/notify";
 
 export const Route = createFileRoute("/github")({
   head: () => ({ meta: [{ title: "Análise de GitHub — SotuHire" }] }),
