@@ -84,10 +84,10 @@ def render_memory_page() -> None:
     with tabs[0]:
         st.markdown("**Tipos de memória**")
         if kinds:
-            st.dataframe(
-                [{"Tipo": kind, "Quantidade": count} for kind, count in kinds.most_common()],
-                hide_index=True,
-                use_container_width=True,
+            render_item_cards(
+                [f"{kind}\n{count} item(ns)" for kind, count in kinds.most_common()],
+                "Nenhum tipo de memória encontrado.",
+                visible_limit=12,
             )
         else:
             st.info("Nenhuma memória local encontrada ainda.")
