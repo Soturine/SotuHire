@@ -122,7 +122,7 @@ class CompanionContextSummaryResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     ok: bool = True
-    app_version: str = "1.9.4"
+    app_version: str = "1.9.5"
     profile_available: bool = False
     profile_summary: str = ""
     enabled_flows: list[str] = Field(default_factory=list)
