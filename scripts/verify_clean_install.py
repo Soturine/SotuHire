@@ -50,7 +50,13 @@ def main() -> None:
             venv = checkout / ".venv"
             _run([str(python), "-m", "venv", str(venv)], checkout)
             python = venv / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
-            _run([str(python), "-m", "pip", "install", "-e", ".[dev]"], checkout)
+            install_env = dict(os.environ)
+            install_env.pop("PIP_NO_BUILD_ISOLATION", None)
+            _run(
+                [str(python), "-m", "pip", "install", "-e", ".[dev]"],
+                checkout,
+                env=install_env,
+            )
 
         _run([str(python), "-m", "compileall", "modules", "tests", "apps", "scripts"], checkout)
         _run([str(python), "-m", "pytest", "-q"], checkout)
