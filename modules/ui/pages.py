@@ -871,38 +871,29 @@ def render_dashboard_step() -> None:
     if not metrics.latest:
         st.caption("O dashboard será preenchido quando você salvar análises.")
         return
-    st.dataframe(
+    render_item_cards(
         [
-            {
-                "Cargo": item.job_title,
-                "Empresa": item.company,
-                "Origem": collection_method_label(item.collection_method),
-                "Portais/fontes": ", ".join(item.source_domains),
-                "Status": item.status.value,
-                "Recomendação": item.analysis.recommendation,
-                "Modalidade": modality_label(item.modality),
-                "Senioridade": seniority_label(item.seniority),
-                "Match": item.analysis.match_score,
-                "ATS": item.analysis.ats_score,
-                "Fit": item.analysis.opportunity_fit_score,
-                "Risco": item.analysis.risk_score,
-                "Data": item.created_at.strftime("%d/%m/%Y %H:%M"),
-            }
+            (
+                f"{item.job_title} · {item.company}\n"
+                f"{collection_method_label(item.collection_method)} · "
+                f"{modality_label(item.modality)} · {seniority_label(item.seniority)}\n"
+                f"Match {item.analysis.match_score} · ATS {item.analysis.ats_score} · "
+                f"Fit {item.analysis.opportunity_fit_score} · Risco {item.analysis.risk_score}\n"
+                f"{item.analysis.recommendation} · {item.status.value} · "
+                f"{item.created_at:%d/%m/%Y %H:%M}"
+            )
             for item in metrics.latest
         ],
-        use_container_width=True,
-        hide_index=True,
+        "Nenhuma análise recente.",
+        visible_limit=8,
     )
     applied_requirements = rank_applied_requirements(records)
     st.markdown("**Requisitos mais recorrentes nas vagas candidatas**")
     if applied_requirements:
-        st.dataframe(
-            [
-                {"Requisito": requirement, "Vagas": count}
-                for requirement, count in applied_requirements
-            ],
-            hide_index=True,
-            use_container_width=True,
+        render_item_cards(
+            [f"{requirement}\n{count} vaga(s)" for requirement, count in applied_requirements],
+            "Nenhum requisito recorrente.",
+            visible_limit=10,
         )
     else:
         st.caption("Importe ou registre candidaturas para montar o ranking.")
