@@ -4,6 +4,32 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.9.5] - 2026-07-11
+
+### Adicionado
+
+- Identidade e deduplicação compartilhadas para Perfil, memória, oportunidades, projetos e editais.
+- Trace de IA com provider/modelo solicitado e usado, prompt/versionamento, fallback e evidências.
+- Sete personas multiárea coerentes e restauração segura da demo.
+- Dashboard agregado, verificação de checkout limpo, roteiro e case study.
+- Captura padronizada de screenshots/GIF do produto e extensão.
+
+### Alterado
+
+- Extensão atualizada para v0.9.1 com UI moderna, fila offline, análise independente local e providers Gemini/OpenAI próprios opcionais.
+- Catálogos Gemini/OpenAI consultados nas APIs oficiais, com cache e seleção de modelo aplicada à chamada real.
+- Enriquecimento público de perfis/repositórios GitHub com README, commits, estrutura, linguagens e atividade, sem autenticação.
+- `source_ref` percorre Perfil -> Career Context -> APIs/UI.
+- `pyproject.toml` passa a sustentar o comando documentado `pip install -e .[dev]`.
+- Settings remove implementação antiga não consumida; mocks e versões foram alinhados.
+
+### Segurança
+
+- Chaves próprias da extensão isoladas no service worker, em sessão por padrão e persistidas somente com consentimento; nunca em `chrome.sync` ou content script.
+- Chave configurada no app continua exclusivamente no backend local e nunca é devolvida à extensão.
+- Sem auto-apply, inscrição, pagamento, envio de documentos ou scraping autenticado novo.
+- Sem alteração no `authenticated-browser`.
+
 ## [1.9.4] - 2026-07-07
 
 ### Adicionado
