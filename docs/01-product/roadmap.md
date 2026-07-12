@@ -1,6 +1,6 @@
 ﻿# Roadmap do SotuHire
 
-Este roadmap descreve o estado atual do SotuHire a partir da v1.9.4 e os próximos ciclos técnicos.
+Este roadmap descreve o estado atual do SotuHire a partir da v1.9.5 e os próximos ciclos técnicos.
 
 O objetivo deste documento é ser uma referência prática para implementação, revisão e criação de prompts para Codex.
 
@@ -8,16 +8,29 @@ O objetivo deste documento é ser uma referência prática para implementação,
 
 | Item | Estado |
 |---|---|
-| Versão atual considerada | v1.9.4 |
+| Versão atual considerada | v1.9.5 |
 | Natureza da base atual | Produto local-first web-first funcional, com API, frontend, IA opcional, catálogo de modelos e intake persistente |
 | Próximo ciclo documental | contínuo |
 | Próximo ciclo técnico | v2.0 Assistant workflows with human approval ou evolução segura de PDF/HTML para editais |
 | Foco de produto | Copiloto de carreira multiárea com Perfil central, Radar local-first, trajetórias acadêmicas e editais revisáveis |
 | Foco técnico imediato | Robustez de providers, extensão, editais, RAG local aplicado e workflows com aprovação explícita |
-| Grande lacuna atual | Upload direto de PDF/HTML do Lattes/editais, parsers por banca, QA real com chaves locais e matching adaptativo por domínio |
+| Grande lacuna atual | Upload direto de PDF/HTML do Lattes/editais, parsers por banca, testes opt-in com chaves reais e matching adaptativo por domínio |
 | Risco principal | Persistir segredos ou mover regra crítica para o frontend visual |
 
-## Estado atual - v1.9.4
+## Estado atual - v1.9.5
+
+A v1.9.5 entrega **Product QA, Demo Polish & Portfolio Launch**:
+
+- audita integrações entre Perfil, Career Context, memória, Editais, Radar, Tracker, extensão e IA;
+- preserva `source_ref` no contexto e exibe evidências seguras nos resultados assistidos;
+- consolida identidade e deduplicação para URL, DOI, ORCID, GitHub, Perfil, memória, projetos e editais;
+- registra provider/modelo solicitado e usado, prompt/versionamento e fallback nos fluxos principais;
+- redesenha a extensão v0.9.1 com análise local, IA do SotuHire ou chave própria Gemini/OpenAI isolada, catálogo oficial e fila offline;
+- entrega sete personas multiárea coerentes, restauração segura da demo e Dashboard agregado;
+- atualiza assets reais, roteiro de demonstração, case study e verificação de instalação limpa;
+- preserva revisão humana, privacidade local-first e a proibição de auto-apply, inscrição e scraping autenticado novo.
+
+## Estado anterior - v1.9.4
 
 A v1.9.4 entrega **AI Providers, Model Catalog, Extension Bridge & End-to-End QA**:
 
@@ -288,6 +301,7 @@ A evolução deve ser feita por camadas:
 | v1.9.2 | Lattes, Academic Profile & AI-Assisted Evidence Extraction | Produto/core/docs | Importação Lattes por texto, evidências acadêmicas revisáveis, Gemini opcional e fundação de editais. |
 | v1.9.3 | Public Exams & Edital Intelligence Foundation | Produto/core/docs | Fundação de editais por texto colado, comparação com Perfil Universal, checklist, plano inicial e tela web, sem inscrição automática. |
 | v1.9.4 | AI Providers, Model Catalog, Extension Bridge & End-to-End QA | Produto/integração/docs | Presets de IA, catálogo Gemini/OpenAI, OpenAI real no backend, extensão capturando editais e QA ponta a ponta. |
+| v1.9.5 | Product QA, Demo Polish & Portfolio Launch | Produto/integração/docs | Linhagem e dedupe unificados, trace de IA, extensão v0.9.1 segura, demo multiárea, assets reais e clean install. |
 | v2.0.0 | Assistant autônomo com aprovação manual | Produto/arquitetura | Autonomia local com aprovações explícitas e sem auto-apply. |
 
 ---

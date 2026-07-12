@@ -14,9 +14,12 @@ def test_readme_references_current_web_screenshots_and_changelog():
         Path("docs/assets/screenshots/sotuhire-web-profile-lattes.png"),
         Path("docs/assets/screenshots/sotuhire-web-public-exams.png"),
         Path("docs/assets/screenshots/sotuhire-web-public-exams-ai.png"),
-        Path("docs/assets/screenshots/sotuhire-web-extension-profile-candidates.png"),
-        Path("docs/assets/screenshots/sotuhire-web-extension-public-exams.png"),
-        Path("docs/assets/screenshots/sotuhire-web-settings-ai-providers.png"),
+        Path("docs/assets/screenshots/sotuhire-web-settings-ai.png"),
+        Path("docs/assets/screenshots/extension/popup-main.png"),
+        Path("docs/assets/screenshots/extension/capture-public-exam.png"),
+        Path("docs/assets/screenshots/extension/companion-offline.png"),
+        Path("docs/assets/screenshots/extension/ai-provider-setup.png"),
+        Path("docs/assets/screenshots/extension/github-analysis-modal.png"),
     ]
 
     for screenshot in screenshots:
@@ -25,7 +28,7 @@ def test_readme_references_current_web_screenshots_and_changelog():
         assert 10_000 < screenshot.stat().st_size < 2_000_000
     assert readme.count("docs/assets/screenshots/") == len(screenshots)
     assert "[Changelog](CHANGELOG.md)" in readme
-    assert "release-v1.9.4" in readme
+    assert "release-v1.9.5" in readme
     assert "Frontend moderno v1.9.0" not in readme
     assert "API local v1.9.0" not in readme
     assert "Na v1.8.2" not in readme
@@ -46,7 +49,7 @@ def test_readme_references_current_web_screenshots_and_changelog():
         "docs/06-engineering/security-privacy.md",
         "docs/07-development/v1.9.2-lattes-ai-universal-profile.md",
         "docs/07-development/v1.9.3-public-exams-edital-foundation.md",
-        "docs/releases/v1.9.4.md",
+        "docs/releases/v1.9.5.md",
         "CHANGELOG.md",
         "browser-extension/README.md",
         "apps/web/README.md",

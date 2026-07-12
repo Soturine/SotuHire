@@ -58,33 +58,44 @@ Se a Local Companion estiver offline, capturas e ações de envio ficam em uma f
 
 Em uma página pública de perfil GitHub, repositório, projeto ou portfólio, a extensão extrai conteúdo visível, README, arquivos centrais, mensagens de commit, linguagens e topics.
 
-Em `github.com`, a extensão injeta o botão **SotuHire AI** perto das ações do repositório ou, como fallback, no cabeçalho visível. O modal oferece análise, cópia, exportação e envio para memória, evidências, Perfil e comparação com vaga.
+Em `github.com`, a extensão injeta o botão **SotuHire Insight** perto das ações do repositório ou, como fallback, no cabeçalho visível. O modal oferece análise, provider/modelo funcional, cópia, exportação e envio para memória, evidências, Perfil e comparação com vaga.
 
 Modos principais:
 
-- **Analisar projeto no navegador**: relatório standalone inteiramente local e sem chave de provider.
+- **Analisar projeto no navegador**: funciona localmente, com a IA configurada no SotuHire ou com Gemini/OpenAI próprios da extensão.
 - **Salvar projeto no SotuHire**: envia o payload à API local, gera relatório completo, salva memória/evidências e disponibiliza o projeto no SotuHire.
 - **Gerar evidência para Perfil**: envia o projeto ao SotuHire local para que o site gere candidatos revisáveis. Nada entra no Perfil sem confirmação do usuário.
 
 Arquivos gerados, binários, imagens, locks grandes, `node_modules`, `dist`, `build`, `.venv` e `__pycache__` não entram na amostragem inteligente.
 
-## IA e Token Local
+## IA, Catálogo de Modelos e Token Local
 
 Se `SOTUHIRE_COMPANION_TOKEN` estiver configurado no SotuHire, informe o mesmo valor no campo **Token local opcional** do popup. Esse token protege apenas a API localhost; ele não é uma chave de provider de IA.
 
-Nenhuma chave Gemini/OpenAI é aceita ou armazenada pela extensão. Toda IA externa passa pelo backend local do SotuHire; o modo independente do navegador usa apenas a análise determinística local.
+Modos disponíveis para GitHub/portfólio:
+
+- **IA configurada no SotuHire**: a chave continua exclusivamente no backend local;
+- **Gemini da extensão**: link oficial para obter a chave e catálogo consultado em `generativelanguage.googleapis.com`;
+- **OpenAI da extensão**: link oficial para obter a chave e catálogo consultado em `api.openai.com`;
+- **Local sem chave**: análise determinística e fallback sempre disponível.
+
+O modelo escolhido no popup ou no modal do GitHub é enviado na chamada real. O catálogo oficial é atualizado ao configurar a chave, periodicamente a cada seis horas e pelo botão **Atualizar catálogo**. Se a consulta falhar, o último cache ou a lista builtin segura permanece disponível com warning explícito.
+
+Segredos próprios são controlados pelo service worker `background.js`, não pelos content scripts. Por padrão a chave fica em `chrome.storage.session` e desaparece ao fechar o navegador. Ao marcar **Manter a chave neste perfil do navegador**, ela vai para um cofre IndexedDB privado do service worker. A extensão nunca usa `chrome.storage.sync`, nunca injeta a chave na página e nunca a envia ao SotuHire.
+
+Para aprofundar perfis e repositórios, o service worker consulta somente a API pública do GitHub, com `credentials: omit`, sem token e sem sessão. A coleta limitada cobre metadados públicos, repositórios, README, commits, linguagens, topics e árvore de arquivos. Rate limit ou falha de rede preservam a captura visível e o fallback local.
 
 Na v1.9.5, a extensão envia texto visível para a Local Companion/API local e consulta apenas `context-summary` seguro, sem receber Perfil completo, memória completa ou API key.
 
 ## Privacidade
 
-- usa somente `activeTab`, `scripting`, `storage`, localhost e o host restrito `github.com`;
+- usa `activeTab`, `scripting`, `storage` e hosts restritos a localhost, GitHub público, Gemini e OpenAI;
 - processa a página que a pessoa abriu manualmente;
 - não automatiza login;
 - não automatiza candidatura;
 - não burla CAPTCHA;
 - não coleta cookies, tokens, sessão, headers, `localStorage` ou `sessionStorage`;
-- não acessa a API key configurada no app;
+- não acessa a API key configurada no app; chaves próprias opcionais permanecem isoladas no service worker;
 - exige revisão humana antes de salvar evidências no Perfil.
 
 O fluxo `/api/v1/sources/authenticated-browser/*`, Chromium/CDP e `/authenticated-browser/collect` permanece separado e não é alterado pela extensão.

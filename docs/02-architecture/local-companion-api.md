@@ -53,9 +53,10 @@ uma única memória e uma lista com todas as URLs/domínios de origem.
 - nenhum log de conteúdo completo ou chave;
 - nenhum login, senha, cookie ou CAPTCHA tratado pela API.
 
-Para projetos, a API também nunca recebe a chave Gemini standalone da extensão. Quando solicitado,
-o aprimoramento Gemini conectado usa somente a configuração local do SotuHire e preserva os scores
-determinísticos.
+Para projetos, a API nunca recebe a chave própria Gemini/OpenAI da extensão. Quando o modo
+**IA do SotuHire** é escolhido, o aprimoramento conectado usa somente a configuração local do app.
+Nos modos próprios, o service worker chama o provider diretamente e envia ao Companion apenas o
+relatório/evidências já produzidos, sem o segredo. Scores críticos determinísticos são preservados.
 
 ## Iniciar
 

@@ -2,10 +2,11 @@
 
 Leve vagas, candidaturas e evidências técnicas para o copiloto de carreira local-first SotuHire.
 
-Em repositórios públicos do GitHub, o botão **SotuHire AI** abre um relatório visual com nota,
+Em perfis e repositórios públicos do GitHub, o botão **SotuHire Insight** abre um relatório visual com nota,
 grade, stack, qualidade do README, commits, arquitetura, prontidão para recrutadores e evidências
-úteis para currículo. O relatório pode funcionar localmente no navegador, usar Gemini com uma
-chave opcional da pessoa usuária ou ser salvo pelo SotuHire local.
+úteis para currículo. O relatório pode funcionar localmente no navegador, usar a IA configurada
+no SotuHire ou usar uma chave opcional Gemini/OpenAI isolada no service worker. O catálogo oficial
+é atualizável e o modelo selecionado é aplicado de verdade à análise.
 
 O popup também captura vagas abertas manualmente, envia para análise ou tracker e importa páginas
 visíveis de candidaturas sem duplicar registros já conhecidos.

@@ -17,7 +17,10 @@
 - arquivos centrais são priorizados e artefatos grandes/gerados são ignorados;
 - commits e README são analisados;
 - modos standalone e conectado permanecem separados;
-- chave Gemini standalone não entra no payload conectado.
+- chaves Gemini/OpenAI ficam fora do content script e do payload conectado;
+- storage de sessão é o padrão e persistência local exige consentimento;
+- catálogo oficial e modelo selecionado são exercitados no harness do service worker;
+- falha do provider preserva fallback local e trace explícito;
 - botão injetado cobre repositório, `tree`, `blob` e perfil público;
 - modal contém score, estados e ações obrigatórias;
 - pacote da Chrome Web Store contém somente runtime e não contém segredos.
@@ -41,6 +44,7 @@ Valide a sintaxe sem executar rede:
 
 ```bash
 node --check browser-extension/popup.js
+node --check browser-extension/background.js
 node --check browser-extension/content.js
 node --check browser-extension/project_analysis.js
 node --check browser-extension/github_injected.js

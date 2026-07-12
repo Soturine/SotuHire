@@ -16,7 +16,8 @@ sites usam as mesmas ações e o mesmo pipeline local.
 - enviar a vaga ao tracker;
 - capturar candidaturas visíveis;
 - acumular páginas revisadas pela pessoa em um lote;
-- pedir ao SotuHire local que use o provider configurado.
+- pedir ao SotuHire local que use o provider configurado;
+- analisar GitHub/portfólio localmente ou com Gemini/OpenAI próprios após consentimento.
 
 ## Regras de identidade
 
@@ -30,7 +31,8 @@ sites usam as mesmas ações e o mesmo pipeline local.
 
 - a extensão não faz login e não guarda senha;
 - a extensão não burla CAPTCHA ou checkpoint;
-- a extensão não recebe chave Gemini;
+- a extensão não recebe a chave do app; chave própria Gemini/OpenAI fica isolada no service worker;
+- a chave usa sessão por padrão, nunca `chrome.sync`, e persistência exige consentimento explícito;
 - o lote máximo aceito pela API contém 500 itens;
 - captura e envio continuam ações explícitas no popup.
 
