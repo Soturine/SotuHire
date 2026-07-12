@@ -43,7 +43,7 @@ def main() -> None:
                 check=True,
             )
         with tarfile.open(archive) as package:
-            package.extractall(checkout)
+            package.extractall(checkout, filter="data")
 
         python = Path(sys.executable)
         if args.install:

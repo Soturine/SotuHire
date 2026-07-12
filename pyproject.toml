@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=70", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "sotuhire"
 version = "1.9.5"
@@ -79,3 +83,6 @@ architecture = "modular"
 privacy_mode = "local-first"
 auto_apply = false
 review_required = true
+
+[tool.setuptools.packages.find]
+include = ["apps*", "modules*"]
