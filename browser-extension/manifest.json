@@ -4,7 +4,17 @@
   "version": "0.9.1",
   "description": "Captura vagas, editais/concursos e projetos visíveis para o SotuHire local.",
   "permissions": ["activeTab", "scripting", "storage"],
-  "host_permissions": ["http://127.0.0.1:8765/*", "https://github.com/*"],
+  "host_permissions": [
+    "http://127.0.0.1:8765/*",
+    "http://127.0.0.1:8787/*",
+    "https://github.com/*",
+    "https://api.github.com/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": ["https://github.com/*"],

@@ -1,57 +1,257 @@
 <!doctype html>
 <html lang="pt-BR">
   <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>SotuHire</title>
-    <link rel="stylesheet" href="styles.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>SotuHire Companion</title>
+    <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header>
-      <div>
+    <header class="topbar">
+      <div class="brand-mark" aria-hidden="true">S</div>
+      <div class="brand-copy">
         <strong>SotuHire</strong>
-        <span>Browser Companion</span>
+        <span>GitHub & Career Companion</span>
       </div>
-      <span class="badge">v0.9.1</span>
+      <span class="version">v0.9.1</span>
     </header>
-    <label class="option">
-      <input id="use-ai" type="checkbox">
-      Usar IA configurada no SotuHire
-    </label>
-    <small>A chave permanece no SotuHire local e nunca é salva na extensão.</small>
-    <label class="option">
-      Token local opcional
-      <input id="local-token" type="password" autocomplete="off">
-    </label>
-    <details>
-      <summary>Análise local de projetos</summary>
-      <label class="option">
-        <input id="deep-project-analysis" type="checkbox">
-        Deep analysis de projetos
-      </label>
-      <small>Funciona no navegador sem chave. Para IA, use apenas o backend local do SotuHire.</small>
-    </details>
-    <div class="actions">
-      <button data-action="capture">Salvar vaga atual</button>
-      <button data-action="capture-public-exam">Capturar edital / concurso</button>
-      <button data-action="analyze" class="primary">Analisar vaga atual</button>
-      <button data-action="tracker">Enviar para tracker</button>
-      <button data-action="applications">Importar candidaturas visíveis</button>
-      <button data-action="collect-page">Adicionar página ao lote</button>
-      <button data-action="send-batch">Enviar lote acumulado</button>
-      <button data-action="retry-pending">Reenviar pendências offline</button>
-      <button data-action="copy">Copiar texto extraído</button>
-      <button data-action="health">Testar conexão com SotuHire</button>
-      <button data-action="context-summary">Status/contexto seguro</button>
-      <button data-action="project-standalone" class="primary">Analisar projeto no navegador</button>
-      <button data-action="project-connected">Salvar projeto no SotuHire</button>
-      <button data-action="project-evidence">Gerar evidência para Perfil</button>
-      <button data-action="project-compare">Comparar projeto com vaga atual</button>
-      <button data-action="project-memory">Enviar projeto para memória</button>
-      <button data-action="project-profile">Salvar projeto no SotuHire</button>
-    </div>
-    <section id="result" aria-live="polite">Pronto para capturar a página atual.</section>
-    <a href="http://127.0.0.1:8501" target="_blank" rel="noreferrer">Abrir SotuHire</a>
+
+    <section class="status-strip" aria-label="Status do Companion">
+      <span class="status-dot" id="companion-dot"></span>
+      <div>
+        <strong id="companion-status">Verificando SotuHire…</strong>
+        <small id="provider-status">Análise local disponível</small>
+      </div>
+      <button
+        class="icon-button"
+        data-action="health"
+        title="Atualizar status"
+        aria-label="Atualizar status"
+      >
+        ↻
+      </button>
+    </section>
+
+    <main>
+      <section class="hero-card">
+        <span class="eyebrow">Página atual</span>
+        <h1 id="page-title">Capturar e analisar</h1>
+        <p>
+          Transforme sinais públicos em evidências revisáveis, sem auto-apply.
+        </p>
+        <div class="hero-actions">
+          <button data-action="project-standalone" class="primary">
+            ✦ Analisar GitHub/portfólio
+          </button>
+          <button data-action="capture" class="secondary">Salvar vaga</button>
+        </div>
+      </section>
+
+      <nav class="tabs" aria-label="Áreas da extensão">
+        <button
+          class="tab active"
+          data-tab="capture-panel"
+          aria-selected="true"
+        >
+          Capturar
+        </button>
+        <button class="tab" data-tab="projects-panel" aria-selected="false">
+          Projetos
+        </button>
+        <button class="tab" data-tab="ai-panel" aria-selected="false">
+          IA
+        </button>
+      </nav>
+
+      <section id="capture-panel" class="tab-panel active">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Fluxo assistido</span>
+            <h2>Captura rápida</h2>
+          </div>
+          <span class="privacy-chip">Revisão humana</span>
+        </div>
+        <div class="action-grid">
+          <button data-action="analyze">
+            <span>◎</span><strong>Analisar vaga</strong
+            ><small>Match e ATS</small>
+          </button>
+          <button data-action="capture-public-exam">
+            <span>▤</span><strong>Capturar edital</strong
+            ><small>Revisar no app</small>
+          </button>
+          <button data-action="tracker">
+            <span>▥</span><strong>Enviar ao tracker</strong
+            ><small>Manter origem</small>
+          </button>
+          <button data-action="copy">
+            <span>□</span><strong>Copiar texto</strong
+            ><small>Somente visível</small>
+          </button>
+        </div>
+        <details class="compact-details">
+          <summary>Lotes e modo offline</summary>
+          <div class="stack-actions">
+            <button data-action="applications">
+              Importar candidaturas visíveis
+            </button>
+            <button data-action="collect-page">Adicionar página ao lote</button>
+            <button data-action="send-batch">Enviar lote acumulado</button>
+            <button data-action="retry-pending">
+              Reenviar pendências offline
+            </button>
+          </div>
+        </details>
+      </section>
+
+      <section id="projects-panel" class="tab-panel" hidden>
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">GitHub & portfólio</span>
+            <h2>Evidências de projeto</h2>
+          </div>
+          <span class="privacy-chip">Dados públicos</span>
+        </div>
+        <div class="feature-card">
+          <strong>Análise avançada</strong>
+          <p>
+            README, commits, estrutura, stack, atividade, riscos e prontidão
+            para recrutadores.
+          </p>
+          <label class="switch-row">
+            <span
+              ><strong>Deep analysis</strong
+              ><small>Mais arquivos e commits públicos</small></span
+            >
+            <input id="deep-project-analysis" type="checkbox" role="switch" />
+          </label>
+        </div>
+        <div class="stack-actions">
+          <button data-action="project-standalone" class="primary">
+            ✦ Analisar projeto no navegador
+          </button>
+          <button data-action="project-connected">
+            Salvar análise no SotuHire
+          </button>
+          <button data-action="project-evidence">
+            Gerar candidato para o Perfil
+          </button>
+          <button data-action="project-compare">
+            Comparar projeto com vaga atual
+          </button>
+          <button data-action="project-memory">
+            Enviar evidência para memória
+          </button>
+          <button data-action="project-profile">
+            Salvar projeto no SotuHire
+          </button>
+        </div>
+      </section>
+
+      <section id="ai-panel" class="tab-panel" hidden>
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Provider real</span>
+            <h2>Inteligência artificial</h2>
+          </div>
+          <span id="key-state" class="privacy-chip">Sem chave própria</span>
+        </div>
+        <div class="field-group">
+          <label for="ai-provider">Modo de análise</label>
+          <select id="ai-provider">
+            <option value="sotuhire">IA configurada no SotuHire</option>
+            <option value="gemini">Google Gemini — chave própria</option>
+            <option value="openai">OpenAI — chave própria</option>
+            <option value="local">Análise local — sem chave</option>
+          </select>
+          <small id="provider-help"
+            >A chave permanece no backend local do SotuHire.</small
+          >
+        </div>
+        <div id="external-key-settings" class="provider-settings" hidden>
+          <div class="field-group">
+            <div class="label-row">
+              <label for="ai-api-key">Chave do provider</label>
+              <a
+                id="provider-key-link"
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                >Obter chave oficial ↗</a
+              >
+            </div>
+            <div class="secret-row">
+              <input
+                id="ai-api-key"
+                type="password"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="Cole sua chave aqui"
+              />
+              <button
+                id="toggle-secret"
+                class="icon-button"
+                type="button"
+                aria-label="Mostrar ou ocultar chave"
+              >
+                ◉
+              </button>
+            </div>
+            <label class="remember-row"
+              ><input id="remember-key" type="checkbox" /> Manter a chave neste
+              perfil do navegador</label
+            >
+            <small
+              >Desmarcado: a chave dura só até o navegador fechar. Marcado:
+              cofre privado local. Nunca usamos chrome.sync.</small
+            >
+          </div>
+          <div class="key-actions">
+            <button data-action="save-key" class="primary">
+              Salvar e validar
+            </button>
+            <button data-action="remove-key" class="danger">
+              Remover chave
+            </button>
+          </div>
+        </div>
+        <div class="field-group">
+          <div class="label-row">
+            <label for="ai-model">Modelo usado na análise</label>
+            <button data-action="refresh-models" class="text-button">
+              Atualizar catálogo ↻
+            </button>
+          </div>
+          <select id="ai-model"></select>
+          <small id="catalog-status">Carregando modelos…</small>
+        </div>
+        <details class="compact-details">
+          <summary>Conexão local avançada</summary>
+          <div class="field-group">
+            <label for="local-token">Token opcional do Local Companion</label>
+            <input id="local-token" type="password" autocomplete="off" />
+          </div>
+          <button data-action="context-summary">
+            Ver contexto seguro recebido
+          </button>
+        </details>
+      </section>
+
+      <section id="result" class="result-card" aria-live="polite">
+        <span class="result-icon">✓</span>
+        <div>
+          <strong>Pronto para começar</strong>
+          <p>Abra uma vaga, edital, perfil ou repositório público.</p>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <a href="http://127.0.0.1:8501" target="_blank" rel="noreferrer"
+        >Abrir SotuHire ↗</a
+      >
+      <span>Local-first · evidence-first</span>
+    </footer>
     <script src="project_analysis.js"></script>
     <script src="popup.js"></script>
   </body>

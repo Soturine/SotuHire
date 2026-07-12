@@ -13,6 +13,7 @@ EXTENSION_DIR = ROOT / "browser-extension"
 DIST_DIR = ROOT / "dist"
 RUNTIME_FILES = (
     "manifest.json",
+    "background.js",
     "popup.html",
     "popup.js",
     "content.js",
@@ -24,7 +25,14 @@ RUNTIME_FILES = (
     "assets/icon128.png",
 )
 ALLOWED_PERMISSIONS = {"activeTab", "scripting", "storage"}
-ALLOWED_HOSTS = {"http://127.0.0.1:8765/*", "https://github.com/*"}
+ALLOWED_HOSTS = {
+    "http://127.0.0.1:8765/*",
+    "http://127.0.0.1:8787/*",
+    "https://github.com/*",
+    "https://api.github.com/*",
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.openai.com/*",
+}
 SECRET_PATTERNS = (
     re.compile(r"AIza[0-9A-Za-z_-]{30,}"),
     re.compile(r"gh[oprsu]_[0-9A-Za-z]{30,}"),

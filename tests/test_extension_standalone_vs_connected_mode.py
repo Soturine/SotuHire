@@ -15,10 +15,13 @@ def test_extension_exposes_standalone_and_connected_project_modes():
     popup = Path("browser-extension/popup.js").read_text(encoding="utf-8")
     html = Path("browser-extension/popup.html").read_text(encoding="utf-8")
 
-    assert "SotuHireProjectAnalyzer.analyze" in popup
+    assert "SOTUHIRE_AI_ANALYZE" in popup
     assert "/capture/repo-analysis" in popup
     assert "Analisar projeto no navegador" in html
     assert "Salvar projeto no SotuHire" in html
+    assert 'project.provider_used = "local"' in popup
+    assert 'use_ai: aiProvider.value === "sotuhire"' in popup
+    assert '? "gemini" : "local"' not in popup
 
 
 def test_connected_project_analysis_saves_memory(tmp_path):

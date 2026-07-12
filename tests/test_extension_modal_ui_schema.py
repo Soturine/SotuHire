@@ -8,14 +8,16 @@ def test_injected_modal_has_full_report_and_action_schema():
         "backdrop-filter:blur",
         "overall_score",
         "Grade",
-        "Modelo:",
+        'data-setting="aiProvider"',
+        'data-setting="aiModel"',
         "README",
         "Commits",
         "Arquitetura",
         "Pontos fortes",
-        "Pontos fracos e inconsistencias",
-        "Recomendacoes por prioridade",
-        "Evidencias para curriculo",
+        "Pontos fracos",
+        "Inconsistências",
+        "Recomendações por prioridade",
+        "Evidências para currículo",
         "Salvar no SotuHire",
         "Usar como evidencia em vaga",
         "Enviar para memoria",
@@ -24,6 +26,7 @@ def test_injected_modal_has_full_report_and_action_schema():
         "Exportar relatorio",
         "Copiar resumo",
         "Deep analysis",
+        "Rastreabilidade",
     ):
         assert expected in script
 

@@ -145,7 +145,7 @@ class LocalCompanionService:
         public_exam_count = sum(1 for record in records if record.capture.kind == "public_exam")
         profile_available = bool(context.resume_text.strip())
         return CompanionContextSummaryResponse(
-            app_version=os.getenv("SOTUHIRE_APP_VERSION", "1.9.4"),
+            app_version=os.getenv("SOTUHIRE_APP_VERSION", "1.9.5"),
             profile_available=profile_available,
             profile_summary=(
                 "Resumo seguro disponivel no backend local."
@@ -410,7 +410,10 @@ class LocalCompanionService:
     ) -> ProjectCompanionResponse:
         """Analyze and optionally persist a public GitHub/project/portfolio capture."""
         report = self._analyze_project_or_repository(payload)
-        if payload.provider_used == "gemini":
+        extension_report = payload.analysis_result.get("extension_ai_report")
+        if isinstance(extension_report, dict):
+            report = _merge_extension_ai_report(report, extension_report)
+        elif payload.analysis_result.get("use_ai") is True:
             report = enhance_project_report(payload, report)
         self.project_store.save(ProjectAnalysisRecord(payload=payload, report=report))
         if save_to_memory:
@@ -521,6 +524,44 @@ class LocalCompanionApp:
             return 422, {"ok": False, "message": str(exc)}
         except KeyError as exc:
             return 404, {"ok": False, "message": str(exc)}
+
+
+def _merge_extension_ai_report(
+    local: ProjectAnalysisReport,
+    external: dict[str, object],
+) -> ProjectAnalysisReport:
+    """Keep deterministic scores while consuming reviewed qualitative extension output."""
+    provider = str(external.get("provider_used", "")).strip().lower()
+    if provider not in {"gemini", "openai", "local-browser", "local"}:
+        provider = "local"
+
+    def strings(key: str) -> list[str]:
+        value = external.get(key, [])
+        if not isinstance(value, list):
+            return []
+        return [
+            sanitize_text(item, limit=2_000)
+            for item in value[:20]
+            if isinstance(item, str) and item.strip()
+        ]
+
+    updates: dict[str, object] = {"provider_used": provider}
+    summary = external.get("summary")
+    if isinstance(summary, str) and summary.strip():
+        updates["summary"] = sanitize_text(summary, limit=5_000)
+    for key in (
+        "strengths",
+        "weaknesses",
+        "priority_recommendations",
+        "resume_highlights",
+    ):
+        values = strings(key)
+        if values:
+            updates[key] = values
+    stack = strings("stack")
+    if stack:
+        updates["stack"] = list(dict.fromkeys([*local.stack, *stack]))[:30]
+    return local.model_copy(update=updates)
 
 
 def _summary_int(summary: dict[str, object], key: str) -> int:

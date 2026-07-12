@@ -1,12 +1,16 @@
 from pathlib import Path
 
 
-def test_standalone_mode_is_local_only_and_has_deep_limit():
+def test_standalone_mode_has_local_fallback_providers_and_deep_limit():
     injected = Path("browser-extension/github_injected.js").read_text(encoding="utf-8")
     analyzer = Path("browser-extension/project_analysis.js").read_text(encoding="utf-8")
+    background = Path("browser-extension/background.js").read_text(encoding="utf-8")
 
-    assert "SotuHireProjectAnalyzer.analyze(project)" in injected
-    assert 'report.provider_used = "local-browser"' in injected
+    assert "SOTUHIRE_AI_ANALYZE" in injected
+    assert "SotuHireProjectAnalyzer.analyze(enriched)" in background
+    assert 'provider_used: "local-browser"' in background
+    assert "analyzeWithGemini" in background
+    assert "analyzeWithOpenAi" in background
     assert "standaloneGeminiKey" not in injected
     assert "chrome.permissions.request" not in injected
     assert "deep ? 200 : 80" in injected
