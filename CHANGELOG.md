@@ -21,6 +21,7 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 - Enriquecimento público de perfis/repositórios GitHub com README, commits, estrutura, linguagens e atividade, sem autenticação.
 - `source_ref` percorre Perfil -> Career Context -> APIs/UI.
 - `pyproject.toml` passa a sustentar o comando documentado `pip install -e .[dev]`.
+- Build PEP 517, verificador imune a `PIP_NO_BUILD_ISOLATION` externo e EOL LF portável.
 - Settings remove implementação antiga não consumida; mocks e versões foram alinhados.
 
 ### Segurança
