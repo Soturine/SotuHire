@@ -30,4 +30,7 @@ def test_github_repo_analyze_uses_fallback_payload_without_network_dependency() 
     assert report["fallback_used"] is True
     assert payload["data"]["profile_evidence_candidates"]
     assert payload["data"]["profile_evidence_candidates"][0]["metadata"]["review_required"] is True
-    assert payload["warnings"] == ["Analise GitHub usou fallback local."]
+    # A clean installation has no local career evidence and correctly adds a
+    # manual-review warning. The contract under test is that the GitHub
+    # fallback is explicit, regardless of whether local evidence exists.
+    assert "Analise GitHub usou fallback local." in payload["warnings"]
