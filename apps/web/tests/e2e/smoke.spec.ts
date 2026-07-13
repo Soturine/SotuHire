@@ -175,6 +175,7 @@ test("demo personas stay coherent and can be restored without touching real data
   const persona = page.getByTestId("demo-persona-select");
   await expect(persona.locator("option")).toHaveCount(7);
   await Promise.all([page.waitForNavigation(), persona.selectOption("nursing")]);
+  await expect(page.getByRole("heading", { name: /Configura..es/ }).first()).toBeVisible();
 
   await page.goto("/profile");
   await expect(page.getByLabel("Headline")).toHaveValue(
@@ -184,6 +185,7 @@ test("demo personas stay coherent and can be restored without touching real data
 
   await page.goto("/settings");
   await Promise.all([page.waitForNavigation(), page.getByTestId("restore-demo-data").click()]);
+  await expect(page.getByRole("heading", { name: /Configura..es/ }).first()).toBeVisible();
   await page.goto("/profile");
   await expect(page.getByLabel("Headline")).toHaveValue(
     "Estudante de engenharia com projetos acadêmicos",
