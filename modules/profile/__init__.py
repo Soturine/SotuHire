@@ -2,6 +2,7 @@
 
 from .career_profile import CareerProfileStore
 from .context import ProfileContext, ProfileContextItem
+from .json_resume import json_resume_to_profile, profile_to_json_resume
 from .models import ProfileItem, UniversalCareerProfile
 from .orchestrator import ProfileContextOrchestrator
 from .profile_actions import edit_career_profile, export_career_profile, profile_analysis_defaults
@@ -26,6 +27,8 @@ __all__ = [
     "edit_career_profile",
     "export_career_profile",
     "infer_preferences",
+    "json_resume_to_profile",
     "profile_analysis_defaults",
     "profile_completeness_score",
+    "profile_to_json_resume",
 ]

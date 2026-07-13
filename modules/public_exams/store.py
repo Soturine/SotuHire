@@ -4,13 +4,15 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from modules.core.entity_identity import merge_source_refs, public_exam_identity
 from modules.core.text_utils import normalize_text
+from modules.storage.snapshots import PublicExamSnapshot, SnapshotStore
 
-from .models import ExamNotice, utc_now
+from .models import ExamNotice, ExamRequirement, ExamRole, ExamSubject, utc_now
 
 
 class PublicExamState(BaseModel):
@@ -91,6 +93,14 @@ class PublicExamStore:
                     "deduplication_reason": (
                         "Mesmo edital por URL normalizada, numero oficial ou conteudo."
                     ),
+                    "roles": _merge_roles(duplicate.roles, notice.roles),
+                    "general_requirements": _merge_requirements(
+                        duplicate.general_requirements,
+                        notice.general_requirements,
+                    ),
+                    "subjects": _merge_subjects(duplicate.subjects, notice.subjects),
+                    "documents": merge_source_refs(duplicate.documents, notice.documents),
+                    "locations": merge_source_refs(duplicate.locations, notice.locations),
                     "warnings": list(
                         dict.fromkeys(
                             [
@@ -121,7 +131,39 @@ class PublicExamStore:
         else:
             state.notices.append(saved)
         self.save_state(state)
+        self._snapshot_notice(saved)
         return saved
+
+    def _snapshot_notice(self, notice: ExamNotice) -> None:
+        """Keep the exact reviewed edital and each role as immutable history."""
+        data_root = (
+            self.path.parent.parent if self.path.parent.name == "public_exams" else self.path.parent
+        )
+        snapshots = SnapshotStore(data_root / "sotuhire.db")
+        timeline: list[dict[str, Any] | str] = [notice.timeline.model_dump(mode="json")]
+        snapshots.create_public_exam(
+            PublicExamSnapshot(
+                notice_id=notice.notice_id,
+                raw_text=notice.raw_text,
+                structured_notice=notice.model_dump(mode="json"),
+                requirements=[item.description for item in notice.general_requirements],
+                timeline=timeline,
+            )
+        )
+        for role in notice.roles:
+            snapshots.create_public_exam(
+                PublicExamSnapshot(
+                    notice_id=notice.notice_id,
+                    role_id=role.role_id,
+                    raw_text=notice.raw_text,
+                    structured_notice={
+                        "notice": notice.model_dump(mode="json"),
+                        "role": role.model_dump(mode="json"),
+                    },
+                    requirements=[item.description for item in role.requirements],
+                    timeline=timeline,
+                )
+            )
 
     def delete_notice(self, notice_id: str) -> bool:
         """Delete one notice; return whether anything changed."""
@@ -173,3 +215,52 @@ def _notice_identity(notice: ExamNotice) -> str:
         title=notice.title,
         raw_text=notice.raw_text,
     )
+
+
+def _merge_roles(current: list[ExamRole], incoming: list[ExamRole]) -> list[ExamRole]:
+    merged = list(current)
+    keys = {
+        normalize_text(f"{role.title} {role.area} {role.level}"): index
+        for index, role in enumerate(merged)
+    }
+    for role in incoming:
+        key = normalize_text(f"{role.title} {role.area} {role.level}")
+        index = keys.get(key)
+        if index is None:
+            keys[key] = len(merged)
+            merged.append(role)
+            continue
+        existing = merged[index]
+        merged[index] = role.model_copy(
+            update={
+                "role_id": existing.role_id,
+                "requirements": _merge_requirements(existing.requirements, role.requirements),
+                "subjects": _merge_subjects(existing.subjects, role.subjects),
+                "stages": merge_source_refs(existing.stages, role.stages),
+            }
+        )
+    return merged
+
+
+def _merge_requirements(
+    current: list[ExamRequirement], incoming: list[ExamRequirement]
+) -> list[ExamRequirement]:
+    merged = list(current)
+    seen = {normalize_text(item.description) for item in merged if item.description}
+    for item in incoming:
+        key = normalize_text(item.description)
+        if key and key not in seen:
+            seen.add(key)
+            merged.append(item)
+    return merged
+
+
+def _merge_subjects(current: list[ExamSubject], incoming: list[ExamSubject]) -> list[ExamSubject]:
+    merged = list(current)
+    seen = {normalize_text(item.name) for item in merged if item.name}
+    for item in incoming:
+        key = normalize_text(item.name)
+        if key and key not in seen:
+            seen.add(key)
+            merged.append(item)
+    return merged

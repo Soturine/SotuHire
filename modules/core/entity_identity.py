@@ -84,7 +84,13 @@ def profile_item_identity(
     """Prefer durable references for a profile item, then use semantic content."""
     reference = _canonical_reference(source_ref)
     if reference:
-        return f"profile-ref:{normalize_text(item_type)}:{reference}"
+        if reference.startswith(("doi:", "orcid:")):
+            return f"profile-ref:{normalize_text(item_type)}:{reference}"
+        # A GitHub repository, Lattes profile, import file or generic page is often
+        # a container for several distinct facts. Include the item title so two
+        # skills/publications from the same source are not collapsed automatically.
+        title_key = content_fingerprint(title)[:20]
+        return f"profile-ref:{normalize_text(item_type)}:{reference}:{title_key}"
     # Import path and evidence wording frequently differ for the same user-reviewed
     # credential. Keep those fields as provenance, not as part of its identity.
     return "profile:" + content_fingerprint(item_type, title)
@@ -110,11 +116,11 @@ def public_exam_identity(
     raw_text: str = "",
 ) -> str:
     """Build a stable edital identity from URL, official number or content."""
+    if notice_number and organization:
+        return "public-exam-number:" + content_fingerprint(notice_number, organization, exam_board)
     url = normalize_entity_url(source_url)
     if url:
         return f"public-exam-url:{url}"
-    if notice_number and organization:
-        return "public-exam-number:" + content_fingerprint(notice_number, organization, exam_board)
     return "public-exam-content:" + content_fingerprint(title, organization, raw_text[:2_000])
 
 

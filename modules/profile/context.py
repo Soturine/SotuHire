@@ -46,4 +46,5 @@ class ProfileContext(BaseModel):
     locations: list[str] = Field(default_factory=list)
     preferences: list[str] = Field(default_factory=list)
     constraints: list[str] = Field(default_factory=list)
+    constraint_items: list[ProfileContextItem] = Field(default_factory=list)
     application_history_signals: list[str] = Field(default_factory=list)

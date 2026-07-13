@@ -16,6 +16,8 @@ class CareerEvidence(BaseModel):
     confidence: float = Field(ge=0, le=1)
     can_use_in_resume: bool = True
     last_verified_at: str | None = None
+    source_ref: str | None = None
+    profile_item_id: str | None = None
 
 
 class JSONResume(BaseModel):

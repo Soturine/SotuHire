@@ -65,6 +65,32 @@ def test_profile_identity_keeps_provenance_out_of_semantic_fallback() -> None:
     assert manual == imported
 
 
+def test_profile_identity_keeps_distinct_facts_from_same_container_source() -> None:
+    python = profile_item_identity(
+        item_type="skill",
+        title="Python",
+        source_ref="https://github.com/example/portfolio",
+    )
+    testing = profile_item_identity(
+        item_type="skill",
+        title="Testes automatizados",
+        source_ref="https://github.com/example/portfolio",
+    )
+    first_publication = profile_item_identity(
+        item_type="publication",
+        title="Artigo A",
+        source_ref="lattes:123456789",
+    )
+    second_publication = profile_item_identity(
+        item_type="publication",
+        title="Artigo B",
+        source_ref="lattes:123456789",
+    )
+
+    assert python != testing
+    assert first_publication != second_publication
+
+
 def test_generic_deduplication_keeps_records_for_review() -> None:
     records = [
         {"id": "first", "key": "same"},
@@ -144,6 +170,23 @@ def test_public_exam_identity_uses_number_and_organization_without_url() -> None
     )
     second = public_exam_identity(
         notice_number="01/2026", organization="Orgao Exemplo", exam_board="Banca A"
+    )
+
+    assert first == second
+
+
+def test_public_exam_identity_matches_official_number_across_portals() -> None:
+    first = public_exam_identity(
+        source_url="https://portal-a.example/edital/1",
+        notice_number="01/2026",
+        organization="Orgao Exemplo",
+        exam_board="Banca A",
+    )
+    second = public_exam_identity(
+        source_url="https://portal-b.example/documentos/abc",
+        notice_number="01/2026",
+        organization="Orgao Exemplo",
+        exam_board="Banca A",
     )
 
     assert first == second

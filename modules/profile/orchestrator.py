@@ -218,6 +218,7 @@ def _context_from_universal_profile(
             *[item.title for item in preference_items],
         ],
         constraints=[item.title for item in profile.constraints],
+        constraint_items=[_context_item(item) for item in profile.constraints],
         application_history_signals=[
             *[f"Objetivo: {role}" for role in profile.target_roles],
             *[f"Objetivo revisado: {item.title}" for item in target_role_items],
@@ -267,6 +268,9 @@ def _context_from_legacy_profile(profile: CareerProfile, *, purpose: str) -> Pro
             *profile.recommended_sectors,
         ],
         constraints=list(profile.recurring_gaps),
+        constraint_items=[
+            _item("constraint", item, source="career_profile") for item in profile.recurring_gaps
+        ],
         application_history_signals=[
             *[f"Forca local: {item}" for item in profile.strengths],
             *[f"Lacuna recorrente: {item}" for item in profile.recurring_gaps],

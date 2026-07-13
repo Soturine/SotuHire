@@ -9,7 +9,13 @@ from modules.memory.feedback_calibration import NOT_USEFUL_TAG, USEFUL_TAG
 from modules.memory.memory_retriever import MemoryRetriever
 from modules.memory.memory_store import MemoryStore
 from modules.memory.memory_summarizer import memory_markdown_summary
-from modules.memory.schemas import CareerFeedback, CareerMemoryItem, EvidenceFeedback, MemoryKind
+from modules.memory.schemas import (
+    CareerFeedback,
+    CareerMemoryItem,
+    EvidenceFeedback,
+    MemoryKind,
+    utc_now,
+)
 from modules.portfolio.schemas import ProjectAnalysisReport
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
@@ -227,13 +233,15 @@ class CareerMemory:
         company: str = "",
     ) -> CareerMemoryItem:
         """Persist one tracker status transition."""
+        event_ref = f"{record_id}:stage:{status}:{utc_now().isoformat()}"
         return self.store.add_memory_item(
             CareerMemoryItem(
                 kind="tracker_event",
                 title=f"Análise: {job_title or 'Vaga'}{f' · {company}' if company else ''}",
                 content=f"Status do tracker: {status}.",
                 source="tracker",
-                source_id=record_id,
+                source_id=event_ref,
+                source_refs=[record_id],
                 tags=[status],
             )
         )

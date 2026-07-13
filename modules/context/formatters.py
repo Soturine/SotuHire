@@ -20,6 +20,7 @@ def format_context_for_prompt(
     context: CareerContext,
     *,
     include_sensitive: bool = False,
+    confirmed_only: bool = False,
     max_evidence: int = 8,
     max_chars: int = 3_000,
 ) -> str:
@@ -54,9 +55,10 @@ def format_context_for_prompt(
         if values:
             lines.append(f"{label}: {', '.join(values[:8])}")
     evidence_lines = []
-    for item in _visible_evidence(context.evidence, include_sensitive=include_sensitive)[
-        :max_evidence
-    ]:
+    visible = _visible_evidence(context.evidence, include_sensitive=include_sensitive)
+    if confirmed_only:
+        visible = [item for item in visible if item.confirmed_by_user]
+    for item in visible[:max_evidence]:
         status = "confirmado" if item.confirmed_by_user else "a confirmar"
         content = f" - {item.content}" if item.content else ""
         source_ref = f"; ref={item.source_ref}" if item.source_ref else ""
@@ -94,6 +96,8 @@ def context_to_memory_evidence(
                 kind=_memory_kind(item.kind),
                 excerpt=item.content or item.title,
                 relevance_score=max(0.01, item.score),
+                confidence=item.confidence,
+                confirmed_by_user=item.confirmed_by_user,
                 selection_reason=f"Career Context Engine: {context.purpose.value}",
             )
         )

@@ -64,6 +64,8 @@ class CareerEvidence(BaseModel):
     kind: MemoryKind | None = None
     excerpt: str
     relevance_score: float = Field(ge=0.0, le=1.0)
+    confidence: Literal["low", "medium", "high"] = "medium"
+    confirmed_by_user: bool = False
     selection_reason: str = ""
     score_breakdown: dict[str, float] = Field(default_factory=dict)
 

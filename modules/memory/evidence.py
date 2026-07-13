@@ -19,10 +19,16 @@ def evidence_from_item(item: CareerMemoryItem, score: float | MemoryScore) -> Ca
         memory_id=item.id,
         title=item.title,
         source=item.source,
-        source_ref=item.source_id or "",
+        source_ref=next((ref for ref in item.source_refs if ref), item.source_id or ""),
         kind=item.kind,
         excerpt=safe_excerpt(item.content),
         relevance_score=detail.final_score,
+        confidence="high"
+        if item.confidence >= 0.8
+        else "medium"
+        if item.confidence >= 0.5
+        else "low",
+        confirmed_by_user=False,
         selection_reason=". ".join(detail.reasons),
         score_breakdown=detail.components,
     )

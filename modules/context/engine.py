@@ -157,17 +157,23 @@ def _profile_evidence(context: ProfileContext) -> list[CareerContextEvidence]:
         ("language", context.languages),
     ]:
         evidence.extend(_evidence_from_profile_item(item, bucket) for item in items)
-    evidence.extend(
-        CareerContextEvidence(
-            title=constraint,
-            kind="constraint",
-            source="profile",
-            confidence="high",
-            confirmed_by_user=True,
-            score=0.92,
+    if context.constraint_items:
+        evidence.extend(
+            _evidence_from_profile_item(item, "constraint") for item in context.constraint_items
         )
-        for constraint in context.constraints
-    )
+    else:
+        evidence.extend(
+            CareerContextEvidence(
+                title=constraint,
+                kind="constraint",
+                source="profile",
+                confidence="medium",
+                confirmed_by_user=False,
+                sensitive=_is_sensitive(constraint),
+                score=0.68,
+            )
+            for constraint in context.constraints
+        )
     return evidence
 
 

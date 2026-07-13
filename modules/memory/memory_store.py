@@ -157,6 +157,6 @@ def _memory_identity(item: CareerMemoryItem) -> str:
         kind=item.kind,
         title=item.title,
         source=item.source,
-        source_ref=item.source_id or "",
+        source_ref=next((ref for ref in item.source_refs if ref), item.source_id or ""),
         content=item.content,
     )

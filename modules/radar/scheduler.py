@@ -167,7 +167,11 @@ class ScheduledRadarService:
         try:
             if schedule.use_profile_context:
                 context = _career_context_for_schedule(schedule)
-                profile_text = format_context_for_prompt(context, include_sensitive=False)
+                profile_text = format_context_for_prompt(
+                    context,
+                    include_sensitive=False,
+                    confirmed_only=True,
+                )
                 context_summary = context_brief(context)
                 if profile_text:
                     warnings.append("Career Context Engine aplicado localmente ao Radar agendado.")
