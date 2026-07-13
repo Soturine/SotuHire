@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from apps.api.config import ApiSettings
 from apps.api.routes import (
     analysis,
+    data,
     extension,
     health,
     notifications,
@@ -40,6 +41,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
         allow_headers=["Content-Type", "Authorization"],
     )
     app.include_router(health.router)
+    app.include_router(data.router)
     app.include_router(analysis.router)
     app.include_router(tracker.router)
     app.include_router(settings_routes.router)

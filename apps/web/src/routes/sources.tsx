@@ -1277,6 +1277,11 @@ function LocalExtensionPanel() {
     queryFn: () => api.extensionStatus(),
     retry: false,
   });
+  const handshakeQ = useQuery({
+    queryKey: ["extension-handshake", mode, baseUrl],
+    queryFn: () => api.extensionHandshake("0.9.2"),
+    retry: false,
+  });
   const capturesQ = useQuery({
     queryKey: ["extension-captures", mode, baseUrl],
     queryFn: () => api.extensionCaptures(),
@@ -1383,7 +1388,8 @@ function LocalExtensionPanel() {
     () => allCaptures.filter((capture) => !ignoredIds.includes(capture.id)),
     [allCaptures, ignoredIds],
   );
-  const companionOffline = statusQ.isError || statusQ.data?.available === false;
+  const companionOffline =
+    statusQ.isError || statusQ.data?.available === false || handshakeQ.data?.compatible === false;
   const busy =
     importJob.isPending ||
     importTracker.isPending ||
@@ -1438,7 +1444,30 @@ function LocalExtensionPanel() {
               value={lastSync ? new Date(lastSync).toLocaleString("pt-BR") : "Sem capturas"}
             />
             <InfoTile label="Visíveis" value={String(captures.length)} />
+            <InfoTile
+              label="Compatibilidade"
+              value={
+                handshakeQ.isError
+                  ? "Handshake indisponível"
+                  : handshakeQ.data?.compatible
+                    ? "Compatível"
+                    : "Verificando"
+              }
+            />
+            <InfoTile
+              label="Versões"
+              value={
+                handshakeQ.data
+                  ? `Ext ${handshakeQ.data.extension_version} · Companion ${handshakeQ.data.companion_version}`
+                  : "—"
+              }
+            />
           </div>
+          {handshakeQ.data?.warnings.map((warning) => (
+            <p key={warning} className="mt-2 text-xs text-warning">
+              {warning}
+            </p>
+          ))}
         </div>
 
         {companionOffline && (
@@ -1586,6 +1615,11 @@ function ExtensionCaptureRow({
             <span className="rounded-md bg-muted px-2 py-0.5">
               Perfil: {capture.profile_candidate_count ?? 0} candidato(s)
             </span>
+            {capture.snapshot_id && (
+              <span className="rounded-md bg-success/10 px-2 py-0.5 text-success">
+                Snapshot preservado
+              </span>
+            )}
             {date && (
               <span className="rounded-md bg-muted px-2 py-0.5">
                 Data: {new Date(date).toLocaleString("pt-BR")}

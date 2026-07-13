@@ -27,6 +27,11 @@ class ExtensionStatusResponse(BaseModel):
     enabled_flows: list[str] = Field(default_factory=list)
     ai_provider_status: str = "local"
     warnings: list[str] = Field(default_factory=list)
+    extension_version: str = "0.9.2"
+    companion_version: str = "1.9.6"
+    api_version: str = "v1"
+    compatible: bool = True
+    capabilities: list[str] = Field(default_factory=list)
 
 
 class ExtensionCaptureItem(BaseModel):
@@ -47,6 +52,33 @@ class ExtensionCaptureItem(BaseModel):
     context_signal: str = ""
     captured_at: datetime | None = None
     updated_at: datetime | None = None
+    snapshot_id: str = ""
+    content_hash: str = ""
+
+
+class ExtensionHandshakeRequest(BaseModel):
+    """Version sent by the browser extension during capability negotiation."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    extension_version: str = Field(default="0.9.2", max_length=40)
+
+
+class ExtensionHandshakeResponse(BaseModel):
+    """Versioned capabilities supported by the local FastAPI bridge."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    extension_version: str
+    companion_version: str
+    api_version: str
+    app_version: str
+    capabilities: list[str] = Field(default_factory=list)
+    compatible: bool
+    warnings: list[str] = Field(default_factory=list)
+    min_supported_extension_version: str
+    max_tested_extension_version: str
+    min_supported_companion_version: str
 
 
 class ExtensionCapturesResponse(BaseModel):

@@ -75,6 +75,11 @@ class TrackerService:
                 source_url=request.source_url,
                 collection_method=request.collection_method,
                 requirements=request.requirements,
+                job_text=request.job_text,
+                resume_text=request.resume_text,
+                profile_id=request.profile_id,
+                resume_variant_id=request.resume_variant_id,
+                source_capture_id=request.source_capture_id,
             )
             if saved.status != request.status:
                 saved = self.tracker.change_status(saved.id, request.status)

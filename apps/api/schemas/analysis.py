@@ -233,6 +233,11 @@ class TrackerJobCreateRequest(BaseModel):
     )
     collection_method: CollectionMethod = "manual_url"
     notes: str = Field(default="", max_length=10_000)
+    job_text: str = Field(default="", max_length=200_000)
+    resume_text: str = Field(default="", max_length=200_000)
+    profile_id: str = Field(default="default", max_length=120)
+    resume_variant_id: str = Field(default="master", max_length=120)
+    source_capture_id: str = Field(default="", max_length=120)
     privacy_acknowledged: bool = True
     request_id: str = Field(default="", max_length=120)
 

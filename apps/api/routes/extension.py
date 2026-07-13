@@ -12,6 +12,8 @@ from apps.api.schemas.extension import (
     ExtensionCapturePatchResponse,
     ExtensionCapturesResponse,
     ExtensionContextResponse,
+    ExtensionHandshakeRequest,
+    ExtensionHandshakeResponse,
     ExtensionImportGithubResponse,
     ExtensionImportJobResponse,
     ExtensionImportPublicExamResponse,
@@ -26,6 +28,7 @@ from apps.api.services.extension import (
     extension_capture_profile_candidates,
     extension_captures,
     extension_context,
+    extension_handshake,
     extension_import_github,
     extension_import_job,
     extension_import_public_exam,
@@ -37,6 +40,14 @@ from apps.api.services.extension import (
 )
 
 router = APIRouter(prefix="/api/v1/extension", tags=["extension"])
+
+
+@router.post("/handshake", response_model=ApiEnvelope[ExtensionHandshakeResponse])
+def local_extension_handshake(
+    payload: ExtensionHandshakeRequest,
+) -> ApiEnvelope[ExtensionHandshakeResponse]:
+    """Negotiate versions and capabilities with the browser extension."""
+    return ok(extension_handshake(payload))
 
 
 @router.get("/status", response_model=ApiEnvelope[ExtensionStatusResponse])

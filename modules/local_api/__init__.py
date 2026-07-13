@@ -10,6 +10,8 @@ from .schemas import (
     CompanionAnalysisContext,
     CompanionCaptureRecord,
     CompanionContextSummaryResponse,
+    CompanionHandshakeRequest,
+    CompanionHandshakeResponse,
     CompanionResponse,
     ProjectCompanionResponse,
 )
@@ -22,6 +24,8 @@ __all__ = [
     "CaptureActionRequest",
     "CompanionAnalysisContext",
     "CompanionContextSummaryResponse",
+    "CompanionHandshakeRequest",
+    "CompanionHandshakeResponse",
     "CompanionCaptureRecord",
     "CompanionCaptureStore",
     "CompanionResponse",

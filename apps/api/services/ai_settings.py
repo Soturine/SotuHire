@@ -43,6 +43,10 @@ AiFeature = Literal[
     "source_import",
     "radar",
     "public_exams",
+    "profile",
+    "lattes",
+    "extension",
+    "notifications",
 ]
 
 
@@ -612,6 +616,14 @@ def _feature_allowed(settings: AiSettingsResponse, feature: AiFeature) -> bool:
         return settings.allow_source_import
     if feature == "radar":
         return settings.allow_radar
+    if feature == "profile":
+        return settings.allow_profile
+    if feature == "lattes":
+        return settings.allow_lattes
+    if feature == "extension":
+        return settings.allow_extension
+    if feature == "notifications":
+        return settings.allow_notifications
     return True
 
 

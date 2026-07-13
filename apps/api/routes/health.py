@@ -37,6 +37,7 @@ def health(request: Request) -> ApiEnvelope[HealthResponse]:
                 "scheduled_radar",
                 "local_notifications",
                 "public_exams_foundation",
+                "data_reliability",
             ],
             cors_allowed_origins=settings.allowed_origins,
         )

@@ -17,6 +17,54 @@ export interface Health {
   capabilities: string[];
 }
 
+export interface DataHealthIssue {
+  code: string;
+  severity: "info" | "warning" | "error";
+  message: string;
+  store: string;
+  record_id: string;
+}
+
+export interface DataHealth {
+  checked_at: string;
+  healthy: boolean;
+  database_present: boolean;
+  schema_version: number;
+  counts: Record<string, number>;
+  issues: DataHealthIssue[];
+}
+
+export interface DataArchive {
+  archive_name: string;
+  kind: "backup" | "export";
+  app_version: string;
+  schema_version: number;
+  created_at: string;
+  size: number;
+  files_count: number;
+  download_url: string;
+}
+
+export interface DataArchivesResult {
+  archives: DataArchive[];
+}
+
+export interface DataRestorePayload {
+  archive_name: string;
+  apply?: boolean;
+  confirmation?: string;
+}
+
+export interface DataRestoreResult {
+  archive_name: string;
+  dry_run: boolean;
+  files_validated: number;
+  files_restored: number;
+  pre_restore_backup_name: string;
+  warnings: string[];
+  message: string;
+}
+
 export type AnalysisMode = "local" | "ai" | "fallback";
 
 export interface TraceEvidence {
@@ -48,6 +96,7 @@ export interface AnalysisMeta {
   source_refs?: string[];
   evidence_used?: TraceEvidence[];
   needs_user_review?: boolean;
+  warnings?: string[];
 }
 
 export type AiProvider = "local" | "gemini" | "openai" | "openai_future";
@@ -545,6 +594,7 @@ export interface GithubReport {
 
 export interface GithubAnalyzeResult extends AnalysisMeta {
   report: GithubReport;
+  profile_evidence_candidates?: TraceEvidence[];
 }
 
 export type TrackerStatus =
@@ -572,6 +622,33 @@ export interface TrackerJob {
   updated_at?: string;
   notes?: string;
   requirements?: string[];
+  job_snapshot_id?: string;
+  resume_snapshot_id?: string;
+  tailored_resume_snapshot_id?: string;
+  match_analysis_snapshot_id?: string;
+  ats_analysis_snapshot_id?: string;
+  source_capture_id?: string;
+  applied_at?: string;
+  stage_history?: Array<Record<string, unknown>>;
+  contact_history?: Array<Record<string, unknown>>;
+  interview_notes?: string;
+  follow_up_at?: string;
+  outcome?: string;
+  outcome_reason?: string;
+}
+
+export interface TrackerJobContext {
+  context_summary: string;
+  fit_reason: string;
+  next_action_hint: string;
+  aligned_with_profile?: boolean | null;
+  recurring_gaps: string[];
+}
+
+export interface TrackerJobsResult {
+  jobs: TrackerJob[];
+  context_summary: string;
+  job_contexts: Record<string, TrackerJobContext>;
 }
 
 export interface TrackerMetrics {
@@ -646,6 +723,24 @@ export interface ExtensionStatus {
   enabled_flows?: string[];
   ai_provider_status?: string;
   warnings?: string[];
+  extension_version?: string;
+  companion_version?: string;
+  api_version?: string;
+  compatible?: boolean;
+  capabilities?: string[];
+}
+
+export interface ExtensionHandshake {
+  extension_version: string;
+  companion_version: string;
+  api_version: string;
+  app_version: string;
+  capabilities: string[];
+  compatible: boolean;
+  warnings: string[];
+  min_supported_extension_version: string;
+  max_tested_extension_version: string;
+  min_supported_companion_version: string;
 }
 
 export interface ExtensionCapture {
@@ -662,6 +757,8 @@ export interface ExtensionCapture {
   context_signal?: string;
   captured_at?: string;
   updated_at?: string;
+  snapshot_id?: string;
+  content_hash?: string;
 }
 
 export interface ExtensionCapturesResult {

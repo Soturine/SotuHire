@@ -11,6 +11,16 @@ from fastapi import HTTPException
 from modules.context import CareerContextEngine, CareerContextPurpose, context_brief
 from modules.core.text_utils import normalize_text
 from modules.local_api import CaptureActionRequest, LocalCompanionService
+from modules.local_api.compatibility import (
+    API_VERSION,
+    APP_VERSION,
+    COMPANION_VERSION,
+    EXTENSION_CAPABILITIES,
+    MAX_TESTED_EXTENSION_VERSION,
+    MIN_SUPPORTED_COMPANION_VERSION,
+    MIN_SUPPORTED_EXTENSION_VERSION,
+    compatible_extension,
+)
 from modules.parsers.job_description_parser import parse_job_description
 from modules.portfolio import ProjectAnalysisStore
 from modules.portfolio.schemas import ProjectAnalysisPayload, ProjectAnalysisRecord
@@ -24,6 +34,8 @@ from apps.api.schemas.extension import (
     ExtensionCapturePatchResponse,
     ExtensionCapturesResponse,
     ExtensionContextResponse,
+    ExtensionHandshakeRequest,
+    ExtensionHandshakeResponse,
     ExtensionImportGithubResponse,
     ExtensionImportJobResponse,
     ExtensionImportPublicExamResponse,
@@ -56,6 +68,27 @@ def extension_status() -> ExtensionStatusResponse:
         profile_summary=_safe_profile_summary(),
         enabled_flows=["job", "public_exam", "github", "profile_evidence"],
         ai_provider_status=_safe_ai_provider_status(),
+        extension_version=MAX_TESTED_EXTENSION_VERSION,
+        companion_version=COMPANION_VERSION,
+        api_version=API_VERSION,
+        capabilities=list(EXTENSION_CAPABILITIES),
+    )
+
+
+def extension_handshake(request: ExtensionHandshakeRequest) -> ExtensionHandshakeResponse:
+    """Return explicit extension/API compatibility without sharing profile data."""
+    compatible, warnings = compatible_extension(request.extension_version)
+    return ExtensionHandshakeResponse(
+        extension_version=request.extension_version,
+        companion_version=COMPANION_VERSION,
+        api_version=API_VERSION,
+        app_version=APP_VERSION,
+        capabilities=list(EXTENSION_CAPABILITIES),
+        compatible=compatible,
+        warnings=warnings,
+        min_supported_extension_version=MIN_SUPPORTED_EXTENSION_VERSION,
+        max_tested_extension_version=MAX_TESTED_EXTENSION_VERSION,
+        min_supported_companion_version=MIN_SUPPORTED_COMPANION_VERSION,
     )
 
 
@@ -310,6 +343,8 @@ def _capture_item(record) -> ExtensionCaptureItem:
         context_signal=_context_signal(record, candidates),
         captured_at=record.capture.captured_at,
         updated_at=record.updated_at,
+        snapshot_id=record.snapshot_id,
+        content_hash=record.content_hash,
     )
 
 

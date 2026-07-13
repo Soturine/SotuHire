@@ -219,7 +219,11 @@ def radar_run(request: RadarRunRequest) -> tuple[RadarRunResponse, list[str]]:
         CareerContextPurpose.RADAR,
         query=" ".join([request.resume_text, " ".join(request.keywords)]),
     )
-    context_text = format_context_for_prompt(career_context, include_sensitive=False)
+    context_text = format_context_for_prompt(
+        career_context,
+        include_sensitive=False,
+        confirmed_only=True,
+    )
     resume_text = "\n\n".join(part for part in [request.resume_text.strip(), context_text] if part)
     try:
         run, results, alerts, warnings = JobRadarService().run(

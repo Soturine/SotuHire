@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
-import type { TrackerJob, TrackerStatus } from "@/lib/api/types";
+import type { TrackerJob, TrackerJobsResult, TrackerStatus } from "@/lib/api/types";
 import { useApiMode } from "@/lib/api/mode";
 import { statusLabel } from "@/lib/labels";
 import { toast } from "@/lib/notify";
@@ -60,8 +60,10 @@ function TrackerPage() {
       api.trackerUpdate(id, { status }),
     onMutate: async ({ id, status }) => {
       await qc.cancelQueries({ queryKey: jobsKey });
-      const previous = qc.getQueryData<{ jobs: TrackerJob[] }>(jobsKey);
-      qc.setQueryData<{ jobs: TrackerJob[] }>(jobsKey, (current) => ({
+      const previous = qc.getQueryData<TrackerJobsResult>(jobsKey);
+      qc.setQueryData<TrackerJobsResult>(jobsKey, (current) => ({
+        context_summary: current?.context_summary ?? "",
+        job_contexts: current?.job_contexts ?? {},
         jobs: (current?.jobs ?? []).map((job) =>
           job.id === id
             ? { ...job, status, updated_at: new Date().toISOString().slice(0, 10) }
@@ -71,7 +73,9 @@ function TrackerPage() {
       return { previous };
     },
     onSuccess: (data) => {
-      qc.setQueryData<{ jobs: TrackerJob[] }>(jobsKey, (current) => ({
+      qc.setQueryData<TrackerJobsResult>(jobsKey, (current) => ({
+        context_summary: current?.context_summary ?? "",
+        job_contexts: current?.job_contexts ?? {},
         jobs: (current?.jobs ?? []).map((job) => (job.id === data.job.id ? data.job : job)),
       }));
       toast.success(`Candidatura movida para ${statusLabel(data.job.status)}.`);
@@ -86,7 +90,9 @@ function TrackerPage() {
     mutationFn: (input: { title: string; company: string; source?: string; notes?: string }) =>
       api.trackerCreate({ ...input, status: "found" }),
     onSuccess: (data) => {
-      qc.setQueryData<{ jobs: TrackerJob[] }>(jobsKey, (current) => ({
+      qc.setQueryData<TrackerJobsResult>(jobsKey, (current) => ({
+        context_summary: current?.context_summary ?? "",
+        job_contexts: current?.job_contexts ?? {},
         jobs: [data.job, ...(current?.jobs ?? []).filter((job) => job.id !== data.job.id)],
       }));
       toast.success("Candidatura adicionada");
@@ -187,6 +193,12 @@ function TrackerPage() {
         />
       ) : (
         <div className="space-y-6">
+          {jobsQ.data?.context_summary && (
+            <div className="rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">Contexto profissional:</span>{" "}
+              {jobsQ.data.context_summary}
+            </div>
+          )}
           {/* Toolbar */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[220px]">
@@ -369,6 +381,11 @@ function JobCard({
         {job.ats_score !== undefined && (
           <span className="inline-flex items-center gap-1 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium text-accent tabular-nums">
             <span className="opacity-70">ATS</span> {job.ats_score}
+          </span>
+        )}
+        {job.job_snapshot_id && (
+          <span className="inline-flex items-center rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">
+            anúncio preservado
           </span>
         )}
         {job.source && (

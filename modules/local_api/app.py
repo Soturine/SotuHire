@@ -10,6 +10,12 @@ from typing import cast
 from pydantic import ValidationError
 
 from modules.ai.structured_analysis import analyze_structured, get_provider
+from modules.context import (
+    CareerContextEngine,
+    CareerContextPurpose,
+    context_brief,
+    format_context_for_prompt,
+)
 from modules.core.opportunity_identity import (
     opportunity_identity_hash,
     same_opportunity,
@@ -17,6 +23,7 @@ from modules.core.opportunity_identity import (
 )
 from modules.github_analyzer import analyze_github_repository, project_report_from_github_analysis
 from modules.github_analyzer.exceptions import GitHubAnalyzerError
+from modules.local_api.compatibility import APP_VERSION, compatible_extension
 from modules.local_api.schemas import (
     ApplicationBatchPayload,
     BrowserCapturePayload,
@@ -24,6 +31,8 @@ from modules.local_api.schemas import (
     CompanionAnalysisContext,
     CompanionCaptureRecord,
     CompanionContextSummaryResponse,
+    CompanionHandshakeRequest,
+    CompanionHandshakeResponse,
     CompanionResponse,
     ProjectCompanionResponse,
     utc_now,
@@ -48,6 +57,14 @@ from modules.portfolio import (
 from modules.schemas.job_analysis import JobAnalysisSchema, Recommendation
 from modules.schemas.user_preferences import UserPreferences
 from modules.scraping.connectors.manual_url import opportunity_from_text
+from modules.storage import (
+    AnalysisSnapshot,
+    JobSnapshot,
+    PublicExamSnapshot,
+    ResumeSnapshot,
+    SnapshotStore,
+)
+from modules.storage.local_store import LocalStore
 from modules.tracker.job_tracker import JobTracker
 
 
@@ -62,8 +79,43 @@ def sanitize_capture(payload: BrowserCapturePayload) -> BrowserCapturePayload:
             "company": sanitize_text(payload.company, limit=500),
             "location": sanitize_text(payload.location, limit=500),
             "description": sanitize_text(payload.description, limit=100_000),
+            "extraction_strategy": sanitize_text(payload.extraction_strategy, limit=80),
+            "structured_data": _safe_structured_data(payload.structured_data),
         }
     )
+
+
+def _safe_structured_data(payload: dict[str, object]) -> dict[str, object]:
+    """Keep only bounded public JobPosting fields from page JSON-LD."""
+    allowed = {
+        "@context",
+        "@type",
+        "title",
+        "description",
+        "datePosted",
+        "validThrough",
+        "employmentType",
+        "hiringOrganization",
+        "jobLocation",
+        "jobLocationType",
+        "applicantLocationRequirements",
+        "baseSalary",
+        "identifier",
+        "url",
+    }
+    result: dict[str, object] = {}
+    for key, value in payload.items():
+        if key not in allowed:
+            continue
+        if isinstance(value, str):
+            result[key] = sanitize_text(value, limit=20_000)
+        elif isinstance(value, (bool, int, float)) or value is None:
+            result[key] = value
+        elif isinstance(value, (dict, list)):
+            encoded = json.dumps(value, ensure_ascii=False, default=str)
+            if len(encoded) <= 30_000:
+                result[key] = value
+    return result
 
 
 class CompanionCaptureStore:
@@ -124,40 +176,68 @@ class LocalCompanionService:
         opportunity_store: OpportunityStore | None = None,
         memory: CareerMemory | None = None,
         tracker: JobTracker | None = None,
-        context_path: str | Path = "data/companion/active-context.json",
+        context_path: str | Path | None = None,
         project_store: ProjectAnalysisStore | None = None,
     ) -> None:
+        base = Path(os.getenv("SOTUHIRE_DATA_DIR", "data"))
         self.capture_store = capture_store or CompanionCaptureStore()
-        self.opportunity_store = opportunity_store or OpportunityStore()
+        self.opportunity_store = opportunity_store or OpportunityStore(
+            base / "sotuhire-opportunities.json"
+        )
         self.memory = memory or CareerMemory()
-        self.tracker = tracker or JobTracker()
-        self.context_path = Path(context_path)
-        self.project_store = project_store or ProjectAnalysisStore()
+        self.tracker = tracker or JobTracker(LocalStore(base / "sotuhire-history.json"))
+        self.context_path = (
+            Path(context_path)
+            if context_path is not None
+            else base / "companion" / "active-context.json"
+        )
+        self.project_store = project_store or ProjectAnalysisStore(
+            base / "portfolio" / "project-analyses.jsonl"
+        )
+        self.snapshots = SnapshotStore(base / "sotuhire.db")
 
     def health(self) -> CompanionResponse:
         return CompanionResponse(message="SotuHire Local Companion disponível.")
 
+    def handshake(self, request: CompanionHandshakeRequest) -> CompanionHandshakeResponse:
+        """Negotiate extension/companion capabilities without exchanging secrets."""
+        compatible, warnings = compatible_extension(request.extension_version)
+        return CompanionHandshakeResponse(
+            extension_version=request.extension_version,
+            compatible=compatible,
+            warnings=warnings,
+        )
+
     def context_summary(self) -> CompanionContextSummaryResponse:
         """Return a short, non-sensitive context summary for the extension popup."""
         context = self._load_context()
+        career_context = CareerContextEngine().build(
+            CareerContextPurpose.EXTENSION,
+            query="extensão local companion",
+            max_evidence=8,
+        )
         records = self.capture_store.list()
         provider = (context.provider or "local").strip().lower()
         public_exam_count = sum(1 for record in records if record.capture.kind == "public_exam")
-        profile_available = bool(context.resume_text.strip())
+        safe_summary = context_brief(career_context)
+        profile_available = bool(context.resume_text.strip() or safe_summary)
         return CompanionContextSummaryResponse(
-            app_version=os.getenv("SOTUHIRE_APP_VERSION", "1.9.5"),
+            app_version=os.getenv("SOTUHIRE_APP_VERSION", APP_VERSION),
             profile_available=profile_available,
             profile_summary=(
-                "Resumo seguro disponivel no backend local."
+                safe_summary or "Resumo seguro disponível no backend local."
                 if profile_available
                 else "Perfil local ainda sem resumo seguro ativo."
             ),
             enabled_flows=["job", "public_exam", "github", "profile_evidence"],
             ai_provider_status="configured" if provider not in {"", "local"} else "local",
             warnings=(
-                [f"{public_exam_count} captura(s) de edital/concurso aguardam revisao."]
+                [
+                    *career_context.warnings,
+                    f"{public_exam_count} captura(s) de edital/concurso aguardam revisão.",
+                ]
                 if public_exam_count
-                else []
+                else career_context.warnings
             ),
         )
 
@@ -192,6 +272,24 @@ class LocalCompanionService:
         )
         if current is not None:
             capture_id = current.id
+        text = clean.description or clean.visible_text
+        snapshot = self.snapshots.create_job(
+            JobSnapshot(
+                opportunity_id=capture_id,
+                title=clean.job_title or clean.page_title,
+                organization=clean.company,
+                location=clean.location,
+                description=text,
+                source_url=clean.url,
+                source_refs=list(
+                    dict.fromkeys([*(current.source_urls if current else []), clean.url])
+                ),
+                source_kind=clean.collection_method,
+                raw_text=text,
+                structured_data=clean.model_dump(mode="json"),
+                captured_at=clean.captured_at,
+            )
+        )
         record = self.capture_store.save(
             (
                 current
@@ -215,10 +313,16 @@ class LocalCompanionService:
                             ]
                         )
                     ),
+                    "snapshot_id": snapshot.snapshot_id,
+                    "snapshot_history": list(
+                        dict.fromkeys(
+                            [*(current.snapshot_history if current else []), snapshot.snapshot_id]
+                        )
+                    ),
+                    "content_hash": snapshot.content_hash,
                 }
             )
         )
-        text = clean.description or clean.visible_text
         opportunity = opportunity_from_text(
             text,
             source="Extensão assistiva SotuHire",
@@ -241,7 +345,11 @@ class LocalCompanionService:
             details=text,
             tags=["browser_assisted_capture", clean.domain],
         )
-        return CompanionResponse(message="Vaga capturada localmente.", capture_id=record.id)
+        return CompanionResponse(
+            message="Vaga capturada localmente.",
+            capture_id=record.id,
+            snapshot_id=snapshot.snapshot_id,
+        )
 
     def capture_public_exam(self, payload: BrowserCapturePayload) -> CompanionResponse:
         """Save a visible edital/concurso page without treating it as a private job."""
@@ -261,6 +369,15 @@ class LocalCompanionService:
         )
         if current is not None:
             capture_id = current.id
+        text = clean.description or clean.visible_text
+        snapshot = self.snapshots.create_public_exam(
+            PublicExamSnapshot(
+                notice_id=capture_id,
+                raw_text=text,
+                structured_notice=clean.model_dump(mode="json"),
+                captured_at=clean.captured_at,
+            )
+        )
         record = self.capture_store.save(
             (
                 current
@@ -284,21 +401,40 @@ class LocalCompanionService:
                             ]
                         )
                     ),
+                    "snapshot_id": snapshot.snapshot_id,
+                    "snapshot_history": list(
+                        dict.fromkeys(
+                            [*(current.snapshot_history if current else []), snapshot.snapshot_id]
+                        )
+                    ),
+                    "content_hash": snapshot.content_hash,
                 }
             )
         )
         return CompanionResponse(
             message="Edital/concurso capturado localmente para revisao.",
             capture_id=record.id,
+            snapshot_id=snapshot.snapshot_id,
         )
 
     def analyze_capture(self, request: CaptureActionRequest) -> CompanionResponse:
         record = self._resolve_record(request)
         context = self._load_context()
+        career_context = CareerContextEngine().build(
+            CareerContextPurpose.EXTENSION,
+            query=record.capture.description or record.capture.visible_text,
+            max_evidence=8,
+        )
+        safe_profile_text = format_context_for_prompt(
+            career_context,
+            include_sensitive=False,
+            confirmed_only=True,
+        )
+        resume_text = context.resume_text or safe_profile_text
         job_text = record.capture.description or record.capture.visible_text
         evidence = self.memory.retriever.retrieve(job_text, top_k=6)
         result = analyze_structured(
-            context.resume_text,
+            resume_text,
             job_text,
             UserPreferences.model_validate(context.preferences),
             provider=get_provider(context.provider if request.use_ai else "local"),
@@ -316,9 +452,43 @@ class LocalCompanionService:
             "ats_score": result.analysis.ats_score,
             "recommendation": result.analysis.recommendation,
             "provider": result.provider,
+            "fallback_used": result.fallback_used,
         }
+        resume_snapshot_id = ""
+        if resume_text.strip():
+            resume_snapshot_id = self.snapshots.create_resume(
+                ResumeSnapshot(
+                    profile_id="default",
+                    resume_variant_id="extension-context",
+                    title="Contexto usado pela extensão",
+                    content=resume_text,
+                )
+            ).snapshot_id
+        analysis_snapshot = self.snapshots.create_analysis(
+            AnalysisSnapshot(
+                analysis_type="extension_match",
+                job_snapshot_id=record.snapshot_id,
+                resume_snapshot_id=resume_snapshot_id,
+                provider_requested=context.provider if request.use_ai else "local",
+                provider_used=result.provider,
+                model_requested=getattr(result, "model", "local"),
+                model_used=getattr(result, "model", "local"),
+                prompt_id="match_analysis_evidence_based_v1",
+                prompt_version="1.0.0",
+                fallback_used=result.fallback_used,
+                result=result.analysis.model_dump(mode="json"),
+                evidence_used=[item.model_dump(mode="json") for item in evidence],
+                source_refs=record.source_urls,
+            )
+        )
         self.capture_store.save(
-            record.model_copy(update={"status": "analyzed", "analysis_summary": summary})
+            record.model_copy(
+                update={
+                    "status": "analyzed",
+                    "analysis_summary": summary,
+                    "analysis_snapshot_id": analysis_snapshot.snapshot_id,
+                }
+            )
         )
         return CompanionResponse(
             message="Vaga analisada localmente.",
@@ -327,6 +497,7 @@ class LocalCompanionService:
             ats_score=result.analysis.ats_score,
             recommendation=result.analysis.recommendation,
             provider=result.provider,
+            snapshot_id=record.snapshot_id,
         )
 
     def track_capture(self, request: CaptureActionRequest) -> CompanionResponse:
@@ -355,6 +526,14 @@ class LocalCompanionService:
             requirements=parse_job_description(
                 record.capture.description or record.capture.visible_text
             ).required_skills,
+            job_text=record.capture.description or record.capture.visible_text,
+            resume_text=self._load_context().resume_text,
+            source_capture_id=record.id,
+            trace={
+                "provider_requested": str(summary.get("provider", "local")),
+                "provider_used": str(summary.get("provider", "local")),
+                "fallback_used": bool(summary.get("fallback_used", False)),
+            },
         )
         self.capture_store.save(
             record.model_copy(update={"status": "tracked", "tracker_id": tracked.id})
@@ -367,6 +546,7 @@ class LocalCompanionService:
             recommendation=analysis.recommendation,
             provider=str(summary.get("provider", "local")),
             tracker_id=tracked.id,
+            snapshot_id=record.snapshot_id,
         )
 
     def import_applications(self, payload: ApplicationBatchPayload) -> CompanionResponse:
@@ -490,7 +670,9 @@ class LocalCompanionApp:
             if method == "GET" and path in {"/capture/status", "/capture/context-summary"}:
                 return 200, self.service.context_summary().model_dump(mode="json")
             payload = json.loads(body.decode("utf-8") or "{}")
-            if method == "POST" and path == "/capture/job":
+            if method == "POST" and path == "/handshake":
+                response = self.service.handshake(CompanionHandshakeRequest.model_validate(payload))
+            elif method == "POST" and path == "/capture/job":
                 response = self.service.capture_job(BrowserCapturePayload.model_validate(payload))
             elif method == "POST" and path == "/capture/public-exam":
                 response = self.service.capture_public_exam(

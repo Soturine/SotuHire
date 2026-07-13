@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+from contextlib import suppress
 from typing import Literal, TypedDict
 
 from fastapi import HTTPException
@@ -21,6 +23,7 @@ from modules.context import (
     format_context_for_prompt,
     profile_evidence_candidates_from_github_report,
 )
+from modules.core.entity_identity import content_fingerprint
 from modules.core.text_utils import normalize_text
 from modules.github_analyzer.analyzer_service import analyze_github_repository
 from modules.github_analyzer.exceptions import GitHubAnalyzerError
@@ -29,6 +32,7 @@ from modules.parsers.resume_parser import parse_resume_text
 from modules.resume_tailor.tailor_rules import build_safe_tailor_output
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
+from modules.storage.ai_runs import AiRun, AiRunStore
 
 from apps.api.schemas.analysis import (
     AtsAnalyzeRequest,
@@ -99,6 +103,7 @@ def extract_resume(request: ResumeExtractRequest) -> tuple[ResumeExtractResponse
             confidence=_resume_confidence(profile),
             low_confidence_fields=low_confidence,
             **_trace_metadata(
+                feature="resume",
                 runtime=runtime,
                 provider_used=provider_used,
                 fallback_used=fallback_used,
@@ -143,6 +148,7 @@ def extract_job(request: JobExtractRequest) -> tuple[JobExtractResponse, list[st
             confidence=_job_confidence(job),
             low_confidence_fields=low_confidence,
             **_trace_metadata(
+                feature="job",
                 runtime=runtime,
                 provider_used=provider_used,
                 fallback_used=fallback_used,
@@ -209,6 +215,7 @@ def analyze_match(request: MatchAnalyzeRequest) -> tuple[MatchAnalyzeResponse, l
             context_evidence_count=len(memory_evidence),
             context_warnings=career_context.warnings,
             **_trace_metadata(
+                feature="match",
                 runtime=runtime,
                 provider_used=result.provider,
                 fallback_used=result.fallback_used,
@@ -267,7 +274,11 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
         try:
             spec = default_prompt_registry().get("ats_analysis_v1")
             external_context = (
-                format_context_for_prompt(career_context, include_sensitive=False)
+                format_context_for_prompt(
+                    career_context,
+                    include_sensitive=False,
+                    confirmed_only=True,
+                )
                 if runtime.allow_memory_context
                 else ""
             )
@@ -299,7 +310,7 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
         except Exception:
             provider_used = "local"
             fallback_used = True
-            warnings.append("Gemini falhou na Analise ATS; mantive a revisao local.")
+            warnings.append("Provider de IA falhou na análise ATS; mantive a revisão local.")
 
     return (
         AtsAnalyzeResponse(
@@ -320,6 +331,7 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
                 if keyword not in context_keywords
             ],
             **_trace_metadata(
+                feature="ats",
                 runtime=runtime,
                 provider_used=provider_used,
                 fallback_used=fallback_used,
@@ -340,7 +352,11 @@ def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, l
         CareerContextPurpose.TAILOR,
         query=" ".join([request.target_role, request.job_text, request.evidence_text]),
     )
-    context_text = format_context_for_prompt(career_context, include_sensitive=False)
+    context_text = format_context_for_prompt(
+        career_context,
+        include_sensitive=False,
+        confirmed_only=True,
+    )
     local_evidence_text = _append_profile_context(request.evidence_text, context_text)
     provider_evidence_text = (
         local_evidence_text
@@ -389,7 +405,9 @@ def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, l
         except Exception:
             provider_used = "local"
             fallback_used = True
-            warnings.append("Gemini falhou no Ajuste de Curriculo; mantive sugestoes locais.")
+            warnings.append(
+                "Provider de IA falhou no ajuste de currículo; mantive sugestões locais."
+            )
 
     return (
         ResumeTailorResponse(
@@ -399,6 +417,7 @@ def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, l
             context_summary=context_brief(career_context),
             context_evidence_count=len(career_context.evidence),
             **_trace_metadata(
+                feature="tailor",
                 runtime=runtime,
                 provider_used=provider_used,
                 fallback_used=fallback_used,
@@ -446,18 +465,19 @@ def analyze_github_repo(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     provider_used = report.provider_used
     fallback_used = report.fallback_used or (
-        runtime.provider_name != "local" and not provider_used.startswith("gemini")
+        runtime.provider_name != "local" and not provider_used.startswith(runtime.provider_name)
     )
     warnings = [*runtime.warnings, *career_context.warnings]
     if report.fallback_used:
         warnings.append("Analise GitHub usou fallback local.")
     if fallback_used and runtime.provider_name != "local" and not report.fallback_used:
-        warnings.append("Gemini nao retornou analise GitHub estruturada; usei analise local.")
+        warnings.append("Provider não retornou análise GitHub estruturada; usei análise local.")
     return (
         GitHubRepoAnalyzeResponse(
             report=report,
             profile_evidence_candidates=profile_evidence_candidates_from_github_report(report),
             **_trace_metadata(
+                feature="github",
                 runtime=runtime,
                 provider_used=provider_used,
                 fallback_used=fallback_used,
@@ -578,7 +598,7 @@ def _context_keywords_for_ats(
                 *[
                     f"{item.title} {item.content}"
                     for item in context.evidence
-                    if not item.sensitive
+                    if not item.sensitive and item.confirmed_by_user
                 ],
             ]
         )
@@ -613,13 +633,13 @@ def _analysis_mode(provider_used: str, fallback_used: bool) -> Literal["local", 
 
 
 def _safe_provider_warning(context: str, warning: str) -> str:
-    if "Gemini" in warning:
-        return f"{context}: Gemini indisponivel; usei fallback local."
-    return f"{context}: provider opcional indisponivel; usei fallback local."
+    _ = warning
+    return f"{context}: provider opcional indisponível; usei fallback local."
 
 
 def _trace_metadata(
     *,
+    feature: str,
     runtime: AiRuntime,
     provider_used: str,
     fallback_used: bool,
@@ -653,7 +673,7 @@ def _trace_metadata(
         )
     requested = str(runtime.requested_provider)
     effective_model = model_used or (runtime.model if provider_used != "local" else "local")
-    return {
+    trace: _TraceMetadataPayload = {
         "provider_requested": requested,
         "requested_provider": requested,
         "provider_used": provider_used,
@@ -669,3 +689,31 @@ def _trace_metadata(
         "evidence_used": evidence,
         "needs_user_review": True,
     }
+    if not (os.getenv("PYTEST_CURRENT_TEST") and not os.getenv("SOTUHIRE_DATA_DIR")):
+        with suppress(OSError, ValueError):
+            AiRunStore().save(
+                AiRun(
+                    feature=feature,
+                    provider_requested=requested,
+                    provider_used=provider_used,
+                    model_requested=runtime.model_requested,
+                    model_used=effective_model,
+                    prompt_id=spec.prompt_id,
+                    prompt_version=spec.version,
+                    analysis_mode=trace["analysis_mode"],
+                    fallback_used=fallback_used,
+                    fallback_reason=fallback_reason,
+                    schema_valid=True,
+                    input_hash=content_fingerprint(
+                        request_id,
+                        " ".join(refs),
+                        context.purpose.value if context else prompt_id,
+                    ),
+                    context_sources=_unique([item.source for item in evidence]),
+                    source_refs=refs,
+                    evidence_used=[item.model_dump(mode="json") for item in evidence],
+                    warnings=list(warnings or []),
+                    needs_user_review=True,
+                )
+            )
+    return trace

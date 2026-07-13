@@ -11,6 +11,16 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from modules.core.collection_method import CollectionMethod
 from modules.portfolio.schemas import ProjectAnalysisReport
 
+from .compatibility import (
+    API_VERSION,
+    APP_VERSION,
+    COMPANION_VERSION,
+    EXTENSION_CAPABILITIES,
+    MAX_TESTED_EXTENSION_VERSION,
+    MIN_SUPPORTED_COMPANION_VERSION,
+    MIN_SUPPORTED_EXTENSION_VERSION,
+)
+
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
@@ -30,6 +40,8 @@ class BrowserCapturePayload(BaseModel):
     company: str = Field(default="", max_length=500)
     location: str = Field(default="", max_length=500)
     description: str = Field(default="", max_length=100_000)
+    extraction_strategy: str = Field(default="visible_text", max_length=80)
+    structured_data: dict[str, object] = Field(default_factory=dict)
     captured_at: datetime = Field(default_factory=utc_now)
     collection_method: CollectionMethod = "browser_assisted_capture"
 
@@ -67,6 +79,10 @@ class CompanionCaptureRecord(BaseModel):
     status: Literal["captured", "analyzed", "tracked"] = "captured"
     analysis_summary: dict[str, object] = Field(default_factory=dict)
     tracker_id: str = ""
+    snapshot_id: str = ""
+    snapshot_history: list[str] = Field(default_factory=list)
+    analysis_snapshot_id: str = ""
+    content_hash: str = ""
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 
@@ -113,7 +129,8 @@ class CompanionResponse(BaseModel):
     recommendation: str = ""
     provider: str = ""
     tracker_id: str = ""
-    app_url: str = "http://127.0.0.1:8501"
+    snapshot_id: str = ""
+    app_url: str = "http://127.0.0.1:5173"
 
 
 class CompanionContextSummaryResponse(BaseModel):
@@ -122,7 +139,7 @@ class CompanionContextSummaryResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     ok: bool = True
-    app_version: str = "1.9.5"
+    app_version: str = APP_VERSION
     profile_available: bool = False
     profile_summary: str = ""
     enabled_flows: list[str] = Field(default_factory=list)
@@ -139,4 +156,29 @@ class ProjectCompanionResponse(BaseModel):
     message: str
     report: ProjectAnalysisReport
     saved_to_memory: bool = False
-    app_url: str = "http://127.0.0.1:8501"
+    app_url: str = "http://127.0.0.1:5173"
+
+
+class CompanionHandshakeRequest(BaseModel):
+    """Version advertised by the installed browser extension."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    extension_version: str = Field(default=MAX_TESTED_EXTENSION_VERSION, max_length=40)
+
+
+class CompanionHandshakeResponse(BaseModel):
+    """Safe compatibility result shared by Companion, API and popup."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    extension_version: str
+    companion_version: str = COMPANION_VERSION
+    api_version: str = API_VERSION
+    app_version: str = APP_VERSION
+    capabilities: list[str] = Field(default_factory=lambda: list(EXTENSION_CAPABILITIES))
+    compatible: bool = True
+    warnings: list[str] = Field(default_factory=list)
+    min_supported_extension_version: str = MIN_SUPPORTED_EXTENSION_VERSION
+    max_tested_extension_version: str = MAX_TESTED_EXTENSION_VERSION
+    min_supported_companion_version: str = MIN_SUPPORTED_COMPANION_VERSION

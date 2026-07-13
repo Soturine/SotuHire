@@ -87,7 +87,7 @@ def profile_import_text(
     if not request.use_ai:
         return ProfileImportTextResponse.model_validate(local.model_dump()), local.warnings
 
-    runtime = get_ai_runtime("resume")
+    runtime = get_ai_runtime("profile")
     warnings = list(runtime.warnings)
     if not runtime.use_ai or runtime.provider_name == "local":
         fallback = service.import_text_local(
@@ -162,7 +162,7 @@ def profile_import_lattes(
         local = service.draft_local(payload)
         return ProfileLattesImportResponse.model_validate(local.model_dump()), local.warnings
 
-    runtime = get_ai_runtime("resume")
+    runtime = get_ai_runtime("lattes")
     warnings = list(runtime.warnings)
     if not runtime.use_ai or runtime.provider_name == "local":
         fallback = service.draft_local(

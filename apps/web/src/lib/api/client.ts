@@ -11,10 +11,16 @@ import type {
   AtsReview,
   AuthenticatedBrowserCollectResult,
   AuthenticatedBrowserStatus,
+  DataArchive,
+  DataArchivesResult,
+  DataHealth,
+  DataRestorePayload,
+  DataRestoreResult,
   ExtensionCapturesResult,
   ExtensionCapturePatchResult,
   ExtensionAddToProfileResult,
   ExtensionContextResult,
+  ExtensionHandshake,
   ExtensionImportGithubResult,
   ExtensionImportJobResult,
   ExtensionImportPublicExamResult,
@@ -87,6 +93,7 @@ import type {
   SourceStats,
   TrackerFunnel,
   TrackerJob,
+  TrackerJobsResult,
   TrackerMetrics,
   TrackerRequirements,
   TrackerSources,
@@ -149,12 +156,66 @@ async function call<T>(
   if (!json.ok || json.data === undefined) {
     throw new Error(json.error?.message ?? "Resposta invalida da API.");
   }
-  return normalize(json.data);
+  return normalize(withEnvelopeMetadata(json.data, json));
+}
+
+function withEnvelopeMetadata(value: unknown, envelope: ApiEnvelope<unknown>): unknown {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+  const raw = value as JsonRecord;
+  const warnings = Array.from(new Set([...stringList(raw.warnings), ...(envelope.warnings ?? [])]));
+  return {
+    ...raw,
+    warnings,
+    request_id: asString(raw.request_id) || envelope.request_id || "",
+  };
 }
 
 export function makeApi(mode: ApiMode, baseUrl: string) {
   return {
     health: () => call<Health>(mode, baseUrl, "/health", undefined, mockHealth, normalizeHealth),
+
+    dataHealth: () =>
+      call<DataHealth>(
+        mode,
+        baseUrl,
+        "/data/health",
+        undefined,
+        mockDataHealth(),
+        normalizeDataHealth,
+      ),
+
+    dataArchives: () =>
+      call<DataArchivesResult>(
+        mode,
+        baseUrl,
+        "/data/backups",
+        undefined,
+        { archives: [mockDataArchive("backup"), mockDataArchive("export")] },
+        normalizeDataArchives,
+      ),
+
+    dataCreateArchive: (kind: DataArchive["kind"]) =>
+      call<DataArchive>(
+        mode,
+        baseUrl,
+        "/data/backups",
+        { method: "POST", body: JSON.stringify({ kind }) },
+        mockDataArchive(kind),
+        normalizeDataArchive,
+      ),
+
+    dataRestore: (payload: DataRestorePayload) =>
+      call<DataRestoreResult>(
+        mode,
+        baseUrl,
+        "/data/restore",
+        { method: "POST", body: JSON.stringify(payload) },
+        mockDataRestore(payload),
+        normalizeDataRestore,
+      ),
+
+    dataArchiveDownloadUrl: (archiveName: string) =>
+      `${baseUrl.replace(/\/+$/, "")}/data/backups/${encodeURIComponent(archiveName)}`,
 
     profile: () =>
       call<ProfileResult>(
@@ -511,12 +572,12 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
       ),
 
     trackerJobs: () =>
-      call<{ jobs: TrackerJob[] }>(
+      call<TrackerJobsResult>(
         mode,
         baseUrl,
         "/tracker/jobs",
         undefined,
-        { jobs: mockPersonaJobs() },
+        { jobs: mockPersonaJobs(), context_summary: "", job_contexts: {} },
         normalizeTrackerJobs,
       ),
 
@@ -678,8 +739,34 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           profile_summary: "Resumo seguro demo do Perfil Universal.",
           enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
           ai_provider_status: "local",
+          extension_version: "0.9.2",
+          companion_version: "1.9.6",
+          api_version: "v1",
+          compatible: true,
+          capabilities: ["capture.snapshot", "queue.retry", "jobposting.jsonld"],
         },
         normalizeExtensionStatus,
+      ),
+
+    extensionHandshake: (extension_version = "0.9.2") =>
+      call<ExtensionHandshake>(
+        mode,
+        baseUrl,
+        "/extension/handshake",
+        { method: "POST", body: JSON.stringify({ extension_version }) },
+        {
+          extension_version,
+          companion_version: "1.9.6",
+          api_version: "v1",
+          app_version: "1.9.6",
+          capabilities: ["capture.snapshot", "queue.retry", "jobposting.jsonld"],
+          compatible: true,
+          warnings: [],
+          min_supported_extension_version: "0.9.1",
+          max_tested_extension_version: "0.9.2",
+          min_supported_companion_version: "1.9.5",
+        },
+        normalizeExtensionHandshake,
       ),
 
     extensionCaptures: () =>
@@ -2799,6 +2886,22 @@ function normalizePublicExamAnalyzeResult(value: unknown): PublicExamAnalyzeResu
   };
 }
 
+function normalizeExtensionHandshake(value: unknown): ExtensionHandshake {
+  const raw = asRecord(value);
+  return {
+    extension_version: asString(raw.extension_version),
+    companion_version: asString(raw.companion_version),
+    api_version: asString(raw.api_version),
+    app_version: asString(raw.app_version),
+    capabilities: stringList(raw.capabilities),
+    compatible: asBoolean(raw.compatible, false),
+    warnings: stringList(raw.warnings),
+    min_supported_extension_version: asString(raw.min_supported_extension_version),
+    max_tested_extension_version: asString(raw.max_tested_extension_version),
+    min_supported_companion_version: asString(raw.min_supported_companion_version),
+  };
+}
+
 function normalizePublicExamStudyPlanResult(value: unknown): PublicExamStudyPlanResult {
   const raw = asRecord(value);
   return {
@@ -3026,10 +3129,102 @@ function normalizeHealth(value: unknown): Health {
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "1.9.5",
+    version: asString(raw.version) || "1.9.6",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),
+  };
+}
+
+function normalizeDataHealth(value: unknown): DataHealth {
+  const raw = asRecord(value);
+  return {
+    checked_at: asString(raw.checked_at),
+    healthy: asBoolean(raw.healthy, false),
+    database_present: asBoolean(raw.database_present, false),
+    schema_version: asNumber(raw.schema_version, 0),
+    counts: numberRecord(raw.counts),
+    issues: objectList(raw.issues).map((issue) => ({
+      code: asString(issue.code),
+      severity: normalizeDataHealthSeverity(issue.severity),
+      message: asString(issue.message),
+      store: asString(issue.store),
+      record_id: asString(issue.record_id),
+    })),
+  };
+}
+
+function normalizeDataHealthSeverity(value: unknown): DataHealth["issues"][number]["severity"] {
+  return value === "error" || value === "warning" || value === "info" ? value : "info";
+}
+
+function normalizeDataArchives(value: unknown): DataArchivesResult {
+  return { archives: objectList(asRecord(value).archives).map(normalizeDataArchive) };
+}
+
+function normalizeDataArchive(value: unknown): DataArchive {
+  const raw = asRecord(value);
+  return {
+    archive_name: asString(raw.archive_name),
+    kind: raw.kind === "export" ? "export" : "backup",
+    app_version: asString(raw.app_version),
+    schema_version: asNumber(raw.schema_version, 0),
+    created_at: asString(raw.created_at),
+    size: asNumber(raw.size, 0),
+    files_count: asNumber(raw.files_count, 0),
+    download_url: asString(raw.download_url),
+  };
+}
+
+function normalizeDataRestore(value: unknown): DataRestoreResult {
+  const raw = asRecord(value);
+  return {
+    archive_name: asString(raw.archive_name),
+    dry_run: asBoolean(raw.dry_run, true),
+    files_validated: asNumber(raw.files_validated, 0),
+    files_restored: asNumber(raw.files_restored, 0),
+    pre_restore_backup_name: asString(raw.pre_restore_backup_name),
+    warnings: stringList(raw.warnings),
+    message: asString(raw.message),
+  };
+}
+
+function mockDataArchive(kind: DataArchive["kind"]): DataArchive {
+  return {
+    archive_name: `sotuhire-data-${kind}-${kind === "export" ? "demo" : "demo-120000"}.zip`,
+    kind,
+    app_version: "demo",
+    schema_version: 3,
+    created_at: new Date().toISOString(),
+    size: 18432,
+    files_count: 4,
+    download_url: "",
+  };
+}
+
+function mockDataHealth(): DataHealth {
+  return {
+    checked_at: new Date().toISOString(),
+    healthy: true,
+    database_present: true,
+    schema_version: 3,
+    counts: { "sqlite:profiles": 1, "sqlite:applications": 3, "sqlite:job_snapshots": 3 },
+    issues: [],
+  };
+}
+
+function mockDataRestore(payload: DataRestorePayload): DataRestoreResult {
+  const applied = payload.apply === true && payload.confirmation === "RESTAURAR";
+  return {
+    archive_name: payload.archive_name,
+    dry_run: !applied,
+    files_validated: 4,
+    files_restored: applied ? 4 : 0,
+    pre_restore_backup_name: applied ? "sotuhire-data-backup-before-restore-demo.zip" : "",
+    warnings: [],
+    message: applied
+      ? "Restauração de demonstração concluída."
+      : "Backup validado. Nenhum dado foi alterado.",
   };
 }
 
@@ -3455,6 +3650,7 @@ function normalizeMatch(value: unknown): MatchAnalysis {
 function normalizeAts(value: unknown): AtsReview {
   const raw = asRecord(value);
   return {
+    ...normalizeAnalysisMeta(raw),
     ats_score: asNumber(raw.ats_score, 0),
     present: stringList(raw.present),
     missing_but_safe_to_add_if_true: stringList(raw.missing_but_safe_to_add_if_true),
@@ -3499,6 +3695,9 @@ function normalizeGithubEnvelope(value: unknown): GithubAnalyzeResult {
   return {
     ...normalizeAnalysisMeta(raw),
     report: normalizeGithubReport(raw.report),
+    profile_evidence_candidates: objectList(raw.profile_evidence_candidates).map(
+      normalizeTraceEvidence,
+    ),
   };
 }
 
@@ -3534,6 +3733,24 @@ function normalizeAnalysisMeta(raw: JsonRecord): import("./types").AnalysisMeta 
       score: asNumber(item.score, 0),
     })),
     needs_user_review: asBoolean(raw.needs_user_review, true),
+    warnings: stringList(raw.warnings),
+  };
+}
+
+function normalizeTraceEvidence(value: unknown): import("./types").TraceEvidence {
+  const item = asRecord(value);
+  return {
+    title: asString(item.title),
+    content: asString(item.content),
+    kind: asString(item.kind),
+    source: asString(item.source),
+    source_ref: asString(item.source_ref),
+    confidence: (["low", "medium", "high"].includes(asString(item.confidence))
+      ? asString(item.confidence)
+      : "medium") as "low" | "medium" | "high",
+    confirmed_by_user: asBoolean(item.confirmed_by_user, false),
+    sensitive: asBoolean(item.sensitive, false),
+    score: asNumber(item.score, 0),
   };
 }
 
@@ -3589,6 +3806,11 @@ function normalizeExtensionStatus(value: unknown): ExtensionStatus {
     enabled_flows: stringList(raw.enabled_flows),
     ai_provider_status: asString(raw.ai_provider_status) || "local",
     warnings: stringList(raw.warnings),
+    extension_version: asString(raw.extension_version),
+    companion_version: asString(raw.companion_version),
+    api_version: asString(raw.api_version),
+    compatible: asBoolean(raw.compatible, true),
+    capabilities: stringList(raw.capabilities),
   };
 }
 
@@ -3609,6 +3831,8 @@ function normalizeExtensionCaptures(value: unknown): ExtensionCapturesResult {
       context_signal: asString(item.context_signal),
       captured_at: asString(item.captured_at),
       updated_at: asString(item.updated_at),
+      snapshot_id: asString(item.snapshot_id),
+      content_hash: asString(item.content_hash),
     })),
   };
 }
@@ -4399,8 +4623,31 @@ function normalizeCaptureStatus(value: unknown): SourceImportsResult["items"][nu
     : "new";
 }
 
-function normalizeTrackerJobs(value: unknown): { jobs: TrackerJob[] } {
-  return { jobs: arrayFrom(asRecord(value).jobs).map(normalizeTrackerJob) };
+function normalizeTrackerJobs(value: unknown): TrackerJobsResult {
+  const raw = asRecord(value);
+  const contexts = asRecord(raw.job_contexts);
+  return {
+    jobs: arrayFrom(raw.jobs).map(normalizeTrackerJob),
+    context_summary: asString(raw.context_summary),
+    job_contexts: Object.fromEntries(
+      Object.entries(contexts).map(([id, value]) => {
+        const context = asRecord(value);
+        return [
+          id,
+          {
+            context_summary: asString(context.context_summary),
+            fit_reason: asString(context.fit_reason),
+            next_action_hint: asString(context.next_action_hint),
+            aligned_with_profile:
+              typeof context.aligned_with_profile === "boolean"
+                ? context.aligned_with_profile
+                : null,
+            recurring_gaps: stringList(context.recurring_gaps),
+          },
+        ];
+      }),
+    ),
+  };
 }
 
 function normalizeTrackerJobEnvelope(value: unknown): { job: TrackerJob } {
@@ -4424,6 +4671,19 @@ function normalizeTrackerJob(value: unknown): TrackerJob {
     requirements: stringList(raw.requirements).length
       ? stringList(raw.requirements)
       : stringList(analysis.missing_keywords),
+    job_snapshot_id: asString(raw.job_snapshot_id),
+    resume_snapshot_id: asString(raw.resume_snapshot_id),
+    tailored_resume_snapshot_id: asString(raw.tailored_resume_snapshot_id),
+    match_analysis_snapshot_id: asString(raw.match_analysis_snapshot_id),
+    ats_analysis_snapshot_id: asString(raw.ats_analysis_snapshot_id),
+    source_capture_id: asString(raw.source_capture_id),
+    applied_at: asString(raw.applied_at),
+    stage_history: objectList(raw.stage_history),
+    contact_history: objectList(raw.contact_history),
+    interview_notes: asString(raw.interview_notes),
+    follow_up_at: asString(raw.follow_up_at),
+    outcome: asString(raw.outcome),
+    outcome_reason: asString(raw.outcome_reason),
   };
 }
 
