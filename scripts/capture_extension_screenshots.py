@@ -23,6 +23,12 @@ CHROME_STUB = r"""
     company: "Empresa Exemplo",
     location: "Remoto",
     description: "Python, SQL, relatórios e comunicação.",
+    extraction_strategy: "schema_org_jobposting",
+    structured_data: {
+      "@type": "JobPosting",
+      title: "Analista de Dados",
+      hiringOrganization: { name: "Empresa Exemplo" }
+    },
     captured_at: "2026-07-11T12:00:00Z",
     collection_method: "browser_assisted_capture"
   };
@@ -54,6 +60,7 @@ CHROME_STUB = r"""
       get: async () => ({}), set: async () => {}, remove: async () => {}
     }},
     runtime: {
+      getManifest: () => ({ version: "0.9.2" }),
       sendMessage: async (message) => {
         if (message.type === "SOTUHIRE_AI_STATUS") return {
           ok: true,
@@ -71,8 +78,11 @@ CHROME_STUB = r"""
             : message.provider === "openai"
               ? ["gpt-4.1-mini", "gpt-4.1"]
               : [message.provider === "local" ? "local-browser" : "configurado-no-sotuhire"],
-          source: "official",
-          refreshedAt: "2026-07-11T12:00:00Z"
+          source: ["gemini", "openai"].includes(message.provider) ? "builtin" : "local",
+          refreshedAt: "",
+          warning: ["gemini", "openai"].includes(message.provider)
+            ? "Configure uma chave própria para consultar o catálogo oficial."
+            : ""
         };
         if (message.type === "SOTUHIRE_AI_ANALYZE") return {
           ok: true,
@@ -108,17 +118,40 @@ CHROME_STUB = r"""
     const path = String(url);
     let payload = { ok: true, message: "Ação concluída no Companion local." };
     if (path.endsWith("/health")) payload = { ok: true, message: "SotuHire Local Companion conectado." };
+    if (path.endsWith("/handshake")) payload = {
+      extension_version: "0.9.2",
+      companion_version: "1.9.6",
+      api_version: "v1",
+      app_version: "1.9.6",
+      capabilities: [
+        "capture.job", "capture.public_exam", "capture.github", "capture.snapshot",
+        "queue.retry", "queue.export_import", "jobposting.jsonld", "ai.own_key"
+      ],
+      compatible: true,
+      warnings: [],
+      min_supported_extension_version: "0.9.1",
+      max_tested_extension_version: "0.9.2",
+      min_supported_companion_version: "1.9.5"
+    };
     if (path.includes("context-summary")) payload = {
       ok: true,
-      app_version: "1.9.5",
+      app_version: "1.9.6",
       profile_available: true,
       profile_summary: "Resumo seguro disponível no backend local.",
       enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
       ai_provider_status: "local",
       warnings: ["Nenhum dado sensível foi enviado."]
     };
-    if (path.includes("public-exam")) payload = { ok: true, message: "Edital fictício capturado para revisão." };
-    if (path.includes("/capture/job")) payload = { ok: true, message: "Vaga fictícia capturada localmente." };
+    if (path.includes("public-exam")) payload = {
+      ok: true,
+      message: "Edital fictício capturado para revisão.",
+      snapshot_id: "public-exam-snapshot-demo"
+    };
+    if (path.includes("/capture/job")) payload = {
+      ok: true,
+      message: "Vaga fictícia capturada localmente com snapshot imutável.",
+      snapshot_id: "job-snapshot-demo"
+    };
     return { ok: true, status: 200, json: async () => payload };
   };
   Object.defineProperty(navigator, "clipboard", { value: { writeText: async () => {} } });
@@ -152,12 +185,25 @@ def main() -> None:
         page.locator("button[data-action='refresh-models']").click()
         page.wait_for_timeout(250)
         _shot(page, "ai-provider-setup.png")
+        _shot(page, "ai-provider-gemini.png")
+        page.locator("#ai-provider").select_option("openai")
+        page.wait_for_timeout(250)
+        page.locator("button[data-action='refresh-models']").click()
+        page.wait_for_timeout(250)
+        _shot(page, "ai-provider-openai.png")
         page.locator("#ai-provider").select_option("sotuhire")
         page.locator("#ai-panel details").evaluate("element => element.open = true")
         _action(page, "context-summary", "safe-context.png")
+        page.locator("button[data-action='compatibility']:visible").click()
+        page.wait_for_timeout(250)
+        _shot(page, "compatibility-diagnostic.png")
         _tab(page, "capture-panel")
         page.evaluate("globalThis.__companionOffline = true")
         _action(page, "capture", "companion-offline.png")
+        page.locator("#capture-panel details").evaluate("element => element.open = true")
+        page.locator("button[data-action='retry-pending']:visible").click()
+        page.wait_for_timeout(250)
+        _shot(page, "queue-offline.png")
         _capture_github_modal(browser)
         browser.close()
 

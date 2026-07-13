@@ -80,7 +80,12 @@ WALKTHROUGH = [
         "[data-testid='profile-lattes-section']",
     ),
     Shot("/settings", "Configurações IA", "sotuhire-web-settings-ai.png"),
-    Shot("/privacy", "Privacidade", "sotuhire-web-privacy.png"),
+    Shot(
+        "/privacy",
+        "Backup/Restore/Data Health",
+        "sotuhire-web-privacy.png",
+        "#data-reliability",
+    ),
 ]
 
 GIF_FILE = "sotuhire-web-product-walkthrough.gif"
@@ -142,6 +147,8 @@ def _prepare(page: Page, shot: Shot) -> None:
         page.locator("[data-testid='profile-lattes-candidates']").wait_for(timeout=5_000)
         page.wait_for_timeout(500)
     if shot.file in {"sotuhire-web-public-exams.png", "sotuhire-web-public-exams-ai.png"}:
+        if shot.file == "sotuhire-web-public-exams-ai.png":
+            page.get_by_role("checkbox", name="Usar IA/Gemini se configurada").check()
         page.locator("[data-testid='public-exams-analyze']").click()
         page.locator("[data-testid='public-exams-role-summary']").wait_for(timeout=5_000)
         page.wait_for_timeout(500)

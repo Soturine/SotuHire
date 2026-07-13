@@ -13,10 +13,10 @@ def test_release_versions_are_aligned_and_extension_is_independent():
     manifest = json.loads(_read("browser-extension/manifest.json"))
     web_package = json.loads(_read("apps/web/package.json"))
 
-    assert manifest["version"] == "0.9.1"
-    assert web_package["version"] == "1.9.5"
-    assert 'version = "1.9.5"' in _read("pyproject.toml")
-    assert 'API_VERSION = "1.9.5"' in _read("apps/api/config.py")
+    assert manifest["version"] == "0.9.2"
+    assert web_package["version"] == "1.9.6"
+    assert 'version = "1.9.6"' in _read("pyproject.toml")
+    assert 'API_VERSION = "1.9.6"' in _read("apps/api/config.py")
     assert "https://generativelanguage.googleapis.com/*" in manifest.get("host_permissions", [])
     assert "https://api.openai.com/*" in manifest.get("host_permissions", [])
 
@@ -53,7 +53,7 @@ def test_demo_has_seven_coherent_personas_and_safe_restore():
     assert 'mode === "demo"' in settings
 
 
-def test_v195_docs_and_real_walkthrough_assets_are_present():
+def test_release_docs_and_real_walkthrough_assets_are_present():
     required_docs = [
         "docs/02-architecture/v1.9.5-integration-audit-matrix.md",
         "docs/02-architecture/data-lineage-and-deduplication.md",
@@ -63,6 +63,16 @@ def test_v195_docs_and_real_walkthrough_assets_are_present():
         "docs/09-portfolio/demo-script.md",
         "docs/09-portfolio/portfolio-case-study.md",
         "docs/releases/v1.9.5.md",
+        "docs/00-audit/v1.9.6-data-and-integration-audit.md",
+        "docs/02-architecture/storage-repository-architecture.md",
+        "docs/02-architecture/sqlite-schema-and-migrations.md",
+        "docs/02-architecture/application-snapshots.md",
+        "docs/02-architecture/backup-restore-and-data-health.md",
+        "docs/04-ai/ai-evaluation-plan.md",
+        "docs/09-testing/golden-datasets.md",
+        "docs/07-development/v1.9.6-data-reliability-migrations-backups.md",
+        "docs/07-development/v1.9.6-clean-migration-checklist.md",
+        "docs/releases/v1.9.6.md",
     ]
     for relative_path in required_docs:
         assert (ROOT / relative_path).stat().st_size > 300
@@ -73,13 +83,23 @@ def test_v195_docs_and_real_walkthrough_assets_are_present():
     for filename in set(web_assets):
         assert (ROOT / "docs/assets/screenshots" / filename).stat().st_size > 10_000
 
-    extension_assets = re.findall(
-        r'_action\(page, "[^"]+", "([^"]+\.png)"\)',
-        _read("scripts/capture_extension_screenshots.py"),
-    )
-    extension_assets.extend(
-        ["popup-main.png", "ai-provider-setup.png", "github-analysis-modal.png"]
-    )
-    assert len(set(extension_assets)) == 10
-    for filename in set(extension_assets):
+    extension_assets = {
+        "popup-main.png",
+        "status-connected.png",
+        "capture-job.png",
+        "capture-public-exam.png",
+        "capture-github.png",
+        "applications-batch.png",
+        "ai-provider-setup.png",
+        "ai-provider-gemini.png",
+        "ai-provider-openai.png",
+        "safe-context.png",
+        "compatibility-diagnostic.png",
+        "companion-offline.png",
+        "queue-offline.png",
+        "github-analysis-modal.png",
+    }
+    capture_extension = _read("scripts/capture_extension_screenshots.py")
+    assert all(filename in capture_extension for filename in extension_assets)
+    for filename in extension_assets:
         assert (ROOT / "docs/assets/screenshots/extension" / filename).stat().st_size > 10_000
