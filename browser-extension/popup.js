@@ -12,6 +12,9 @@ const providerHelp = document.querySelector("#provider-help");
 const providerStatus = document.querySelector("#provider-status");
 const catalogStatus = document.querySelector("#catalog-status");
 const keyState = document.querySelector("#key-state");
+const compatibilityStatus = document.querySelector("#compatibility-status");
+const queueImportFile = document.querySelector("#queue-import-file");
+const queueRuntime = globalThis.SotuHireQueue;
 let providerConfiguration = {};
 
 initialize().catch((error) => showError(error.message));
@@ -32,6 +35,7 @@ async function initialize() {
   await refreshAiStatus();
   await loadModels(false, saved.aiModels?.[aiProvider.value]);
   await checkCompanion();
+  await retryPending(false);
 }
 
 document.querySelectorAll(".tab").forEach((tab) => {
@@ -121,8 +125,29 @@ const request = async (path, body) => {
 async function checkCompanion() {
   try {
     const payload = await request("/health");
-    setCompanionState(true, payload.message || "SotuHire conectado");
-    return payload;
+    let handshake;
+    try {
+      handshake = await request("/handshake", {
+        extension_version: chrome.runtime.getManifest().version,
+      });
+    } catch (error) {
+      compatibilityStatus.textContent =
+        "Companion antigo: atualize para habilitar o handshake.";
+      setCompanionState(true, payload.message || "SotuHire conectado");
+      return { ...payload, warnings: [error.message] };
+    }
+    compatibilityStatus.textContent = [
+      `Extensão ${handshake.extension_version}`,
+      `Companion ${handshake.companion_version}`,
+      `API ${handshake.api_version}`,
+      handshake.compatible ? "compatível" : "incompatível",
+      ...(handshake.warnings || []),
+    ].join(" · ");
+    setCompanionState(
+      handshake.compatible,
+      handshake.compatible ? "SotuHire conectado e compatível" : "Atualização necessária",
+    );
+    return { ...payload, ...handshake };
   } catch (error) {
     setCompanionState(false, "SotuHire offline · modo independente ativo");
     return { ok: false, message: error.message };
@@ -287,17 +312,9 @@ const applicationIdentity = (item) => {
 const queuePendingAction = async (path, body, label) => {
   const saved = await chrome.storage.local.get(["pendingCompanionActions"]);
   const pending = saved.pendingCompanionActions || [];
-  const identity = `${path}|${body.capture_id || body.url || body.capture?.url || ""}`;
-  const filtered = pending.filter((item) => item.identity !== identity);
-  filtered.push({
-    identity,
-    path,
-    body,
-    label,
-    queuedAt: new Date().toISOString(),
-  });
-  await chrome.storage.local.set({ pendingCompanionActions: filtered });
-  return filtered.length;
+  const updated = queueRuntime.upsert(pending, { path, body, label });
+  await chrome.storage.local.set({ pendingCompanionActions: updated });
+  return updated.length;
 };
 
 const sendOrQueue = async (path, body, label) => {
@@ -311,25 +328,48 @@ const sendOrQueue = async (path, body, label) => {
   }
 };
 
-const retryPending = async () => {
+const retryPending = async (force = true) => {
   const saved = await chrome.storage.local.get(["pendingCompanionActions"]);
   const pending = saved.pendingCompanionActions || [];
   if (!pending.length) return { message: "Não há pendências offline." };
-  const remaining = [];
-  let sent = 0;
-  for (const item of pending) {
-    try {
-      await request(item.path, item.body);
-      sent += 1;
-    } catch (_error) {
-      remaining.push(item);
-    }
-  }
+  const { remaining, sent } = await queueRuntime.retry(pending, request, { force });
   await chrome.storage.local.set({ pendingCompanionActions: remaining });
   return {
     message: `${sent} pendência(s) enviada(s); ${remaining.length} ainda aguardam o Companion.`,
   };
 };
+
+const exportPendingQueue = async () => {
+  const saved = await chrome.storage.local.get(["pendingCompanionActions"]);
+  const payload = queueRuntime.exportPayload(saved.pendingCompanionActions || []);
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "sotuhire-extension-queue.json";
+  link.click();
+  URL.revokeObjectURL(link.href);
+  return { message: `${payload.items.length} pendência(s) exportada(s), sem chaves.` };
+};
+
+const importPendingQueue = async (file) => {
+  const payload = JSON.parse(await file.text());
+  const saved = await chrome.storage.local.get(["pendingCompanionActions"]);
+  const items = queueRuntime.importPayload(payload, saved.pendingCompanionActions || []);
+  await chrome.storage.local.set({ pendingCompanionActions: items });
+  return { message: `${items.length} pendência(s) disponíveis após a importação.` };
+};
+
+queueImportFile.addEventListener("change", async () => {
+  const file = queueImportFile.files?.[0];
+  if (!file) return;
+  try {
+    display(await importPendingQueue(file));
+  } catch (error) {
+    showError(error.message);
+  } finally {
+    queueImportFile.value = "";
+  }
+});
 
 async function analyzeCurrentProject() {
   const { project } = await extract("SOTUHIRE_PROJECT");
@@ -356,6 +396,7 @@ const act = async (action) => {
   showResult("Processando…", "Coletando somente os dados necessários.", "…");
   try {
     if (action === "health") return display(await checkCompanion());
+    if (action === "compatibility") return display(await checkCompanion());
     if (action === "context-summary")
       return display(await request("/capture/context-summary"));
     if (action === "refresh-models") {
@@ -392,6 +433,8 @@ const act = async (action) => {
       });
     }
     if (action === "retry-pending") return display(await retryPending());
+    if (action === "export-queue") return display(await exportPendingQueue());
+    if (action === "import-queue") return queueImportFile.click();
     if (action === "applications") {
       const payload = await extract("SOTUHIRE_APPLICATIONS");
       return display(

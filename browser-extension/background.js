@@ -382,6 +382,7 @@ async function analyzeProject(project, options) {
 }
 
 async function analyzeWithSotuHire(project, localReport, trace) {
+  let apiFallbackReason = "";
   if (project.page_type === "github_repo" && project.url) {
     try {
       const appResponse = await fetch(`${APP_API}/github/repo/analyze`, {
@@ -420,8 +421,9 @@ async function analyzeWithSotuHire(project, localReport, trace) {
           },
         };
       }
-    } catch (_error) {
-      // The legacy Companion remains the safe fallback when the web API is not running.
+      apiFallbackReason = "API local não retornou um relatório compatível.";
+    } catch (error) {
+      apiFallbackReason = `API local indisponível: ${safeError(error)}`;
     }
   }
   const saved = await chrome.storage.local.get(["localToken"]);
@@ -447,11 +449,13 @@ async function analyzeWithSotuHire(project, localReport, trace) {
       provider_used: report.provider_used || "local",
       model_used: report.model_used || "configurado-no-sotuhire",
       analysis_mode:
-        report.provider_used && !report.provider_used.startsWith("local")
+        apiFallbackReason
+          ? "fallback"
+          : report.provider_used && !report.provider_used.startsWith("local")
           ? "ai"
           : "local",
-      fallback_used: Boolean(report.fallback_used),
-      fallback_reason: report.fallback_reason || "",
+      fallback_used: Boolean(report.fallback_used || apiFallbackReason),
+      fallback_reason: report.fallback_reason || apiFallbackReason,
     },
   };
 }
@@ -847,6 +851,9 @@ function modelSort(left, right) {
 
 function safeError(error) {
   return String(error?.message || error || "Falha desconhecida.")
-    .replace(/AIza[0-9A-Za-z_-]+|sk-[A-Za-z0-9_-]+/g, "[secret]")
+    .replace(
+      /AIza[0-9A-Za-z_-]+|AQ\.[0-9A-Za-z_-]+|sk-[A-Za-z0-9_-]+/g,
+      "[secret]",
+    )
     .slice(0, 500);
 }

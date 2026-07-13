@@ -26,9 +26,87 @@
       ".job-details-jobs-unified-top-card__primary-description-container",
       "[class*='location']"
     ]).slice(0, 500);
+  const stripHtml = (value) => {
+    const node = document.createElement("div");
+    node.innerHTML = String(value || "");
+    return text(node);
+  };
+  const jobPostingFromValue = (value) => {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        const found = jobPostingFromValue(item);
+        if (found) return found;
+      }
+      return null;
+    }
+    if (!value || typeof value !== "object") return null;
+    const types = Array.isArray(value["@type"])
+      ? value["@type"]
+      : [value["@type"]];
+    if (
+      types.some(
+        (type) =>
+          String(type).toLowerCase().split(/[\/#]/).pop() === "jobposting",
+      )
+    ) {
+      return value;
+    }
+    for (const nested of Object.values(value)) {
+      const found = jobPostingFromValue(nested);
+      if (found) return found;
+    }
+    return null;
+  };
+  const structuredJobPosting = () => {
+    for (const script of document.querySelectorAll("script[type='application/ld+json']")) {
+      try {
+        const found = jobPostingFromValue(JSON.parse(script.textContent || "null"));
+        if (found) return found;
+      } catch (_error) {
+        // Invalid JSON-LD is ignored; semantic and visible-text fallbacks remain available.
+      }
+    }
+    return null;
+  };
+  const structuredCompany = (posting) => {
+    const organization = posting?.hiringOrganization;
+    return typeof organization === "string"
+      ? organization
+      : String(organization?.name || "");
+  };
+  const structuredLocation = (posting) => {
+    const locations = Array.isArray(posting?.jobLocation)
+      ? posting.jobLocation
+      : [posting?.jobLocation];
+    const values = locations
+      .map((item) => item?.address || item)
+      .filter(Boolean)
+      .map((address) => {
+        if (typeof address === "string") return address;
+        const country =
+          typeof address.addressCountry === "string"
+            ? address.addressCountry
+            : address.addressCountry?.name;
+        return [
+          address.addressLocality,
+          address.addressRegion,
+          country,
+        ]
+          .filter(Boolean)
+          .join(", ");
+      })
+      .filter(Boolean);
+    if (values.length) return values.join(" · ");
+    return String(posting?.jobLocationType || "");
+  };
   const capture = () => {
     const visible = pageText();
-    const title = firstText(["h1", "[role='heading'][aria-level='1']", "h2"]) || document.title;
+    const posting = structuredJobPosting();
+    const structuredDescription = stripHtml(posting?.description || "");
+    const title =
+      String(posting?.title || posting?.name || "").trim() ||
+      firstText(["h1", "[role='heading'][aria-level='1']", "h2"]) ||
+      document.title;
     return {
       kind: "job",
       page_title: document.title,
@@ -36,9 +114,11 @@
       domain: window.location.hostname,
       visible_text: visible,
       job_title: title.slice(0, 500),
-      company: company(),
-      location: jobLocation(),
-      description: visible.slice(0, 100000),
+      company: structuredCompany(posting).slice(0, 500) || company(),
+      location: structuredLocation(posting).slice(0, 500) || jobLocation(),
+      description: (structuredDescription || visible).slice(0, 100000),
+      extraction_strategy: posting ? "schema_org_jobposting" : "semantic_visible_text",
+      structured_data: posting || {},
       captured_at: new Date().toISOString(),
       collection_method: "browser_assisted_capture"
     };

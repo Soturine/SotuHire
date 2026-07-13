@@ -16,6 +16,7 @@ RUNTIME_FILES = (
     "background.js",
     "popup.html",
     "popup.js",
+    "queue_runtime.js",
     "content.js",
     "github_injected.js",
     "project_analysis.js",
@@ -34,7 +35,9 @@ ALLOWED_HOSTS = {
     "https://api.openai.com/*",
 }
 SECRET_PATTERNS = (
-    re.compile(r"AIza[0-9A-Za-z_-]{30,}"),
+    re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
+    re.compile(r"AQ\.[0-9A-Za-z_-]{20,}"),
+    re.compile(r"sk-(?:proj-)?[0-9A-Za-z_-]{20,}"),
     re.compile(r"gh[oprsu]_[0-9A-Za-z]{30,}"),
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
 )
