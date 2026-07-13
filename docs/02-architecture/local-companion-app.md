@@ -1,62 +1,81 @@
-# Local Companion App e extensão assistiva
+# Local Companion e extensão assistiva
 
-A arquitetura de extensão assistiva permite que o usuário navegue normalmente em portais de vagas e envie a vaga aberta para o SotuHire local. Essa abordagem reduz o incentivo a scraping agressivo e mantém a revisão humana no centro.
+A arquitetura permite que a pessoa navegue normalmente, escolha uma página e envie somente os
+sinais necessários ao SotuHire local. Isso evita scraping agressivo e mantém revisão humana,
+proveniência e snapshots no centro.
 
-## Inspiração
-
-O benchmark `LA_Jobs_AI_CLAUDE` mostra um fluxo útil: extensão Chrome captura dados da vaga e envia para uma API local. O SotuHire deve aproveitar o conceito, mas com botões próprios e guardrails.
-
-## Fluxo recomendado
+## Fluxo
 
 ```mermaid
-flowchart TD
-    A[Usuário abre vaga] --> B[Extensão SotuHire]
-    B --> C[Botão: Salvar vaga]
-    B --> D[Botão: Analisar com meu currículo]
-    B --> E[Botão: Enviar para tracker]
-    C --> F[API local FastAPI/Streamlit helper]
-    D --> F
-    E --> F
-    F --> G[Normalização da vaga]
-    G --> H[Tracker]
-    H --> I[Análise com IA]
-    I --> J[Dashboard]
+flowchart LR
+    A[Pessoa abre a página] --> B[Extensão]
+    B --> C[JSON-LD ou conteúdo visível]
+    C --> D{Companion disponível?}
+    D -- sim --> E[Validação e dedupe]
+    E --> F[Snapshot imutável]
+    F --> G[Análise, Tracker ou revisão]
+    G --> H[Perfil Universal após confirmação]
+    D -- não --> I[Fila offline]
+    I --> D
 ```
 
-## O que a extensão pode coletar
+## Responsabilidades
 
-Com ação explícita do usuário:
+### Extensão
 
-- título da vaga;
-- empresa;
-- descrição visível;
-- URL;
-- localização;
-- modalidade quando visível;
-- fonte;
-- data de coleta.
+- extrair a aba atual após clique;
+- priorizar `schema.org/JobPosting` para vagas;
+- analisar GitHub/portfólio em modo independente;
+- isolar chaves próprias no service worker;
+- negociar compatibilidade por handshake;
+- manter fila com dedupe, retry, backoff e export/import sanitizado.
 
-## O que a extensão não deve fazer
+### Local Companion
 
-- clicar em aplicar automaticamente;
-- enviar mensagem automática;
-- raspar perfis em massa;
-- monitorar toda navegação sem consentimento;
-- tentar burlar login, captcha ou bloqueios.
+- aceitar apenas localhost;
+- validar limites e sanitizar payloads;
+- criar snapshots de vaga, edital, currículo e análise;
+- usar contexto seguro e evidências confirmadas;
+- enviar ao Tracker preservando o anúncio;
+- expor provider/modelo/fallback sem devolver segredo.
 
-## Links úteis
+### FastAPI e site
 
-- [Chrome Extension Storage API](https://developer.chrome.com/docs/extensions/reference/api/storage)
-- [Chrome Extensions docs](https://developer.chrome.com/docs/extensions)
+- listar e revisar capturas;
+- importar vaga, edital, GitHub ou Tracker;
+- mostrar compatibilidade e warnings;
+- gerar candidatos revisáveis para o Perfil;
+- manter backup/restore sem copiar storage do navegador.
 
-## Implementação futura
+## Dados coletáveis
 
-O MVP não precisa de extensão. O primeiro passo pode ser uma caixa de texto onde o usuário cola a vaga. A extensão entra depois, quando o backend local estiver estável.
+Com ação explícita:
 
-## Implementação entregue na v0.9.0
+- título, empresa, localização e descrição;
+- URL, domínio, fonte e data;
+- JSON-LD de uma vaga pública;
+- texto visível da página;
+- README, commits, linguagens, topics e estrutura pública do GitHub;
+- candidaturas já realizadas visíveis em páginas abertas manualmente.
 
-A extensão e a API local foram implementadas com Manifest V3, permissões mínimas, bind em
-`127.0.0.1:8765`, token opcional e deduplicação multiportal. O fluxo suporta captura da vaga atual,
-listas paginadas de candidaturas e preservação de todas as fontes do mesmo cartão.
+## Fora de escopo
 
-Detalhes: [Local Companion API](local-companion-api.md).
+- auto-apply, inscrição ou mensagem automática;
+- login, CAPTCHA ou captura de credenciais;
+- cookie, token, sessão, header autenticado ou storage de terceiros;
+- monitoramento contínuo da navegação;
+- crawling autenticado disfarçado de captura assistida;
+- decisão crítica baseada somente em IA.
+
+## Segurança de IA
+
+A chave do SotuHire fica no backend. Uma chave própria Gemini/OpenAI usa sessão por padrão e
+IndexedDB apenas com consentimento; ela nunca usa `chrome.storage.sync` nem entra no payload
+conectado. O provider escolhido recebe conteúdo somente quando a pessoa inicia a análise.
+
+## Documentos relacionados
+
+- [Local Companion API](local-companion-api.md)
+- [Extension Profile Bridge](extension-profile-bridge.md)
+- [Regras de captura](../03-business-rules/browser-assisted-capture-rules.md)
+- `browser-extension/README.md`

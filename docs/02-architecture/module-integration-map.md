@@ -1,7 +1,11 @@
 # Mapa de integração de módulos
 
-Este mapa registra como a v1.9.4 conecta `apps/web`, FastAPI e `modules/` sem mover regra de
-negócio para o frontend.
+Estado atual da `main`, validado em 12 de julho de 2026. O commit inicial da auditoria foi
+`309f9662f1da410349d85fefdcacff8778cea51e`; a referência verificável por capacidade está na
+[matriz de integração atual](integration-capability-matrix.md).
+
+Este mapa registra como `apps/web`, FastAPI, Local Companion, extensão e `modules/` se conectam
+sem mover regra de negócio para o frontend.
 
 ```text
 apps/web (React/Vite)
@@ -26,6 +30,7 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Tailor | `/tailor` | `POST /api/v1/resume/tailor` | `tailor_resume` | `modules/resume_tailor` | Real |
 | GitHub | `/github` | `POST /api/v1/github/repo/analyze` | `analyze_github_repo` | `modules/github_analyzer`, `modules/portfolio` | Real |
 | Tracker | `/tracker` | `GET/POST/PATCH /api/v1/tracker/jobs` | `apps.api.services.tracker` | `modules/tracker`, `modules/storage` | Real |
+| Dados e privacidade | `/privacy` | `/api/v1/data/health`, `/backups`, `/restore` | `apps.api.services.data` | `modules/storage` | Real |
 | Intelligence | `/intelligence` | `/api/v1/tracker/metrics`, `/requirements`, `/funnel`, `/sources` | tracker service | `modules/tracker` | Real |
 | IA e Providers | `/settings` | `/api/v1/settings/ai*` | `apps.api.services.ai_settings` | `modules/ai/providers`, `modules/ai/model_catalog.py` | Real v1.9.4 |
 | Caixa de Entrada de Oportunidades | `/sources` | `/api/v1/sources/imports*`, `/captures*`, `/dedupe`, `/stats`, `/export`, `/directory` | `apps.api.services.sources` | `modules/sources`, `modules/parsers`, `modules/tracker` | Real |

@@ -68,6 +68,13 @@ imagem atual para permanecer intuitivo; as demais ficam na documentação da ver
 O complemento GitHub/Portfólio adiciona cinco capturas: análise no popup, relatório de repositório,
 GitHub Profile Score, análise de commits e evidência de projeto.
 
+## Screenshots atuais da extensão
+
+`scripts/capture_extension_screenshots.py` usa somente dados fictícios e stubs locais. O conjunto
+atual cobre popup, Companion conectada/offline, vaga, edital, GitHub, lote, fila offline,
+configuração Gemini/OpenAI sem chave, contexto seguro, diagnóstico de compatibilidade e modal de
+análise. O script não consulta provider externo nem inclui storage real do navegador.
+
 ## Screenshots da v1.1.0
 
 A v1.1.0 separa duas famílias de captura:

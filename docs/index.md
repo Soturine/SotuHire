@@ -1,125 +1,62 @@
 # SotuHire
 
-<section class="sotu-hero">
-  <div class="sotu-hero__content">
-    <p class="sotu-kicker">Local-first career intelligence platform</p>
-    <h1>Compare currículo, vaga e evidências antes de aplicar.</h1>
-    <p class="sotu-lead">
-      SotuHire combina Match Engine 2.0, ATS review, Resume Tailor seguro, GitHub Analyzer,
-      tracker e Application Intelligence para transformar candidatura em decisão informada.
-    </p>
-    <div class="sotu-actions">
-      <a class="sotu-button sotu-button--primary" href="07-development/setup/">Rodar localmente</a>
-      <a class="sotu-button" href="08-frontend/static-demo/">Ver demo estática</a>
-      <a class="sotu-button" href="08-frontend/lovable-handoff/">Handoff frontend</a>
-    </div>
-  </div>
-  <div class="sotu-hero__panel" aria-label="Resumo fictício de análise">
-    <div class="sotu-score-row">
-      <div>
-        <span class="sotu-label">Match Score</span>
-        <strong data-sotu-count="78">78</strong>
-      </div>
-      <div>
-        <span class="sotu-label">Confidence</span>
-        <strong>0.66</strong>
-      </div>
-      <div>
-        <span class="sotu-label">ATS</span>
-        <strong data-sotu-count="74">74</strong>
-      </div>
-    </div>
-    <div class="sotu-mini-list">
-      <span>Python evidenciado no currículo e GitHub</span>
-      <span>Docker ausente: adicionar somente se for verdadeiro</span>
-      <span>Cloud sem evidência: tratar como gap real</span>
-    </div>
-  </div>
-</section>
+SotuHire é um assistente de carreira local-first, multiárea e baseado em evidências. Ele conecta Perfil Profissional Universal, currículo, vagas, Match, ATS, Tailor, Lattes, Editais, Radar, Tracker, GitHub/portfólio e uma extensão assistiva sem automatizar candidaturas ou decisões críticas.
 
-!!! info "GitHub Pages é estático"
-    Este site apresenta documentação, visão de produto e demos estáticas. Ele não roda Python,
-    Streamlit, IA, Local Companion API ou backend. O app completo continua local.
+## Comece aqui
 
-## O produto em quatro passos
+| Interesse | Documento recomendado |
+| --- | --- |
+| Entender o produto | [Visão](01-product/vision.md) e [estratégia multiárea](01-product/multi-domain-product-strategy.md) |
+| Instalar e executar | [README do repositório](https://github.com/Soturine/SotuHire#readme) |
+| Ver como os módulos se conectam | [Mapa de módulos](02-architecture/module-integration-map.md) |
+| Conferir capacidades reais | [Matriz verificável](02-architecture/integration-capability-matrix.md) |
+| Entender dados locais | [Repository architecture](02-architecture/storage-repository-architecture.md) |
+| Ver a demonstração | [Roteiro](09-portfolio/demo-script.md) e [case study](09-portfolio/portfolio-case-study.md) |
 
-<div class="sotu-flow">
-  <div><strong>1. Currículo</strong><span>Extrai perfil, skills, experiências e evidências.</span></div>
-  <div><strong>2. Vaga</strong><span>Estrutura requisitos, domínio, senioridade e riscos.</span></div>
-  <div><strong>3. Match</strong><span>Calcula score, confidence, gaps e ações seguras.</span></div>
-  <div><strong>4. Tracker</strong><span>Acompanha candidaturas e padrões recorrentes.</span></div>
-</div>
+## Produto
 
-## Features principais
+O Perfil Universal reúne fatos confirmados e candidatos revisáveis com origem, confiança e sensibilidade. O Career Context seleciona apenas o necessário para cada finalidade. Análises preservam warnings, provider/modelo efetivos e evidências; quando seguem ao Tracker, podem ser ligadas a snapshots imutáveis.
 
-<div class="sotu-grid">
-  <article>
-    <h3>Match Engine 2.0</h3>
-    <p>Matching por requisitos, evidências, senioridade, domínio, gaps críticos, confidence e risco.</p>
-    <a href="07-development/v0.12.0-match-engine-2/">Ler detalhes</a>
-  </article>
-  <article>
-    <h3>ATS + Resume Tailor</h3>
-    <p>Keywords separadas entre presentes, seguras se verdadeiras e ausentes sem evidência.</p>
-    <a href="03-business-rules/resume-tailor-rules/">Ver regras</a>
-  </article>
-  <article>
-    <h3>GitHub Analyzer 2.0</h3>
-    <p>Repositórios públicos viram evidências técnicas para portfolio, match e memória local.</p>
-    <a href="07-development/v0.11.0-github-analyzer-2/">Explorar</a>
-  </article>
-  <article>
-    <h3>Application Intelligence</h3>
-    <p>Direção para métricas de Kanban, requisitos recorrentes, gaps, fontes e funil.</p>
-    <a href="08-frontend/application-intelligence/">Ver contrato</a>
-  </article>
-  <article>
-    <h3>Frontend-ready</h3>
-    <p>Contratos, mocks e screen map para Lovable, React, Vite, Next.js ou outro stack moderno.</p>
-    <a href="08-frontend/">Abrir handoff</a>
-  </article>
-  <article>
-    <h3>Local-first</h3>
-    <p>O fluxo principal roda localmente; IA externa é opcional e controlada pela pessoa usuária.</p>
-    <a href="01-product/github-pages-site/">Pages vs app local</a>
-  </article>
-</div>
+O frontend possui modo Demo e modo API Real. A extensão pode capturar vagas, editais e projetos, operar com Local Companion sem o React aberto e usar análise local, IA do SotuHire ou chave própria opcional isolada no service worker.
 
-## Como rodar localmente
+## Dados e persistência
 
-```bash
-git clone https://github.com/Soturine/SotuHire.git
-cd SotuHire
-python -m venv .venv
-pip install -r docs/requirements/requirements.txt
-.\start-sotuhire.ps1
-```
+SQLite local adiciona transações, foreign keys, migrações e vínculos entre entidades. JSON/JSONL antigos continuam preservados durante a transição. Backup e export excluem secrets conhecidos; restore valida checksum, formato, schema, integridade SQLite e exige confirmação quando acionado pelo frontend.
 
-Para recursos opcionais de IA:
+- [SQLite e migrações](02-architecture/sqlite-schema-and-migrations.md)
+- [Snapshots](02-architecture/application-snapshots.md)
+- [Backup, restore e health](02-architecture/backup-restore-and-data-health.md)
+- [Linhagem e dedupe](02-architecture/data-lineage-and-deduplication.md)
+- [Auditoria atual](00-audit/v1.9.6-data-and-integration-audit.md)
 
-```bash
-pip install -r docs/requirements/requirements-ai.txt
-```
+## IA responsável
 
-## Frontend moderno local
+Gemini e OpenAI são opcionais. O caminho local continua disponível e o fallback é explícito. Itens não confirmados não devem virar fatos seguros em ATS, Tailor, Radar ou edital.
 
-<section class="sotu-band">
-  <div>
-    <h2>Lovable pode redesenhar tudo. O core continua mandando na lógica.</h2>
-    <p>
-      A v1.8.0 usa `apps/web` como experiencia principal local, com Radar de Vagas, RSS publico,
-      Caixa de Entrada, Kanban, IA opcional e FastAPI. O visual pode mudar livremente, mas matching, scoring, ATS,
-      Tailor, GitHub Analyzer, validacoes fortes e regras anti-invencao continuam no backend/core.
-    </p>
-    <a class="sotu-button sotu-button--primary" href="08-frontend/api-contract/">Ver API contract</a>
-  </div>
-</section>
+- [Orquestração e confiança](04-ai/ai-orchestration-and-confidence.md)
+- [Catálogo de providers/modelos](02-architecture/ai-provider-model-catalog.md)
+- [Prompt Catalog](04-ai/prompt-catalog.md)
+- [Plano de avaliação](04-ai/ai-evaluation-plan.md)
+- [Golden datasets](09-testing/golden-datasets.md)
 
-## Links úteis
+## Extensão e fontes
 
-- [Índice documental](documentation-index.md)
-- [Roadmap](01-product/roadmap.md)
-- [Demo estática v1.1](08-frontend/static-demo.md)
-- [GitHub Pages vs app local](01-product/github-pages-site.md)
-- [Prompt catalog](04-ai/prompt-catalog.md)
-- [Release notes](https://github.com/Soturine/SotuHire/releases)
+- [Local Companion API](02-architecture/local-companion-api.md)
+- [Bridge com o Perfil](02-architecture/extension-profile-bridge.md)
+- [Regras de captura](03-business-rules/browser-assisted-capture-rules.md)
+- [Fontes públicas](05-data-sources/job-sources.md)
+- [GitHub/portfólio](05-data-sources/github-portfolio-analyzer.md)
+- [Testes da extensão](09-testing/browser-extension-testing.md)
+
+## Engenharia
+
+- [QA e testes](06-engineering/qa-testing.md)
+- [CI/CD](06-engineering/ci-cd.md)
+- [Segurança e privacidade](06-engineering/security-privacy.md)
+- [Índice documental completo](documentation-index.md)
+
+## Limites
+
+O SotuHire não implementa auto-apply, inscrição automática, pagamento, boleto, envio automático de documento, bypass de CAPTCHA, captura de cookies/tokens/sessão ou decisão crítica final somente por IA.
+
+Consulte o [roadmap](01-product/roadmap.md) para prioridades, riscos e critérios de entrada na v2.0.

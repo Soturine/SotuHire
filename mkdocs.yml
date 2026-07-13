@@ -4,6 +4,8 @@ site_url: https://soturine.github.io/SotuHire/
 repo_url: https://github.com/Soturine/SotuHire
 repo_name: Soturine/SotuHire
 exclude_docs: /README.md
+hooks:
+  - docs/hooks/environment.py
 
 theme:
   name: material
@@ -46,6 +48,7 @@ nav:
   - Início: index.md
   - Documentação: documentation-index.md
   - Auditoria:
+      - Dados e integração v1.9.6: 00-audit/v1.9.6-data-and-integration-audit.md
       - Auditoria de documentação: 00-audit/documentation-audit.md
       - Relatório local: 00-audit/local-build-report.md
       - Atualização expandida: 00-audit/expanded-update-summary.md
@@ -55,13 +58,14 @@ nav:
       - Atualização pós-v0.9.0: 00-audit/v0.9-roadmap-docs-update-summary.md
   - Produto:
       - Visão: 01-product/vision.md
-      - Visual preview v1.7: 01-product/visual-preview.md
+      - Galeria de telas: 01-product/visual-preview.md
       - Demo v1.0: 01-product/v1-demo.md
       - GitHub Pages vs app local: 01-product/github-pages-site.md
       - Estratégia multiárea: 01-product/multi-domain-product-strategy.md
       - MVP: 01-product/mvp-scope.md
       - Roadmap: 01-product/roadmap.md
       - Histórico do roadmap: 01-product/roadmap-history.md
+      - Arquivo do roadmap até v1.9.5: 01-product/roadmap-archive-through-v1.9.5.md
       - Histórias de usuário: 01-product/user-stories.md
       - Rotina inteligente de busca: 01-product/job-search-routine.md
       - Resume Tailor: 01-product/resume-tailor.md
@@ -77,20 +81,26 @@ nav:
       - Local Companion API: 02-architecture/local-companion-api.md
       - Frontend API Layer: 02-architecture/frontend-api-layer.md
       - Mapa de integração de módulos: 02-architecture/module-integration-map.md
+      - Matriz verificável de capacidades: 02-architecture/integration-capability-matrix.md
       - Career Context Engine: 02-architecture/career-context-engine.md
       - Extension Profile Bridge: 02-architecture/extension-profile-bridge.md
       - Catálogo de providers e modelos de IA: 02-architecture/ai-provider-model-catalog.md
       - Auditoria de integração v1.9.5: 02-architecture/v1.9.5-integration-audit-matrix.md
-      - Linhagem e deduplicação: 02-architecture/data-lineage-and-deduplication.md
       - Fundação para editais e concursos: 02-architecture/public-exams-foundation.md
       - Background jobs: 02-architecture/background-jobs.md
       - Parsers: 02-architecture/parsers.md
       - Semântica do parser: 02-architecture/parser-semantics.md
       - Fluxo automático: 02-architecture/auto-flow.md
-      - Storage e histórico: 02-architecture/storage-and-history.md
       - Pipeline de coleta de oportunidades: 02-architecture/opportunity-collection-pipeline.md
       - Modo rápido vs avançado: 02-architecture/quick-vs-advanced-mode.md
       - Career Memory Store: 02-architecture/career-memory-store.md
+  - Dados e persistência:
+      - Repository architecture: 02-architecture/storage-repository-architecture.md
+      - Schema SQLite e migrações: 02-architecture/sqlite-schema-and-migrations.md
+      - Snapshots de candidatura: 02-architecture/application-snapshots.md
+      - Backup, restore e data health: 02-architecture/backup-restore-and-data-health.md
+      - Linhagem e deduplicação: 02-architecture/data-lineage-and-deduplication.md
+      - Storage e histórico legado: 02-architecture/storage-and-history.md
   - Regras de negócio:
       - ATS rules: 03-business-rules/ats-rules.md
       - Matching rules: 03-business-rules/matching-rules.md
@@ -128,6 +138,7 @@ nav:
           - Profile Lattes Extractor v1: 04-ai/prompts/profile-lattes-extractor-v1.md
           - Public Exam Notice Extractor v1: 04-ai/prompts/public-exam-notice-extractor-v1.md
       - Evaluation: 04-ai/evaluation.md
+      - Plano de avaliação: 04-ai/ai-evaluation-plan.md
       - RAG memory: 04-ai/rag-memory-architecture.md
       - Career Memory e RAG local: 04-ai/career-memory-rag.md
       - Calibração de evidências: 04-ai/evidence-calibration.md
@@ -164,6 +175,7 @@ nav:
       - Security Privacy: 06-engineering/security-privacy.md
       - Avoid overengineering: 06-engineering/avoid-overengineering.md
   - Testes:
+      - Golden datasets: 09-testing/golden-datasets.md
       - Fixtures realistas: 09-testing/realistic-fixtures.md
       - Testes de regressão: 09-testing/regression-testing.md
       - Testes de screenshots: 09-testing/screenshot-testing.md
@@ -219,6 +231,8 @@ nav:
       - v1.9.5 Product QA e Portfolio: 07-development/v1.9.5-product-qa-demo-portfolio.md
       - v1.9.5 Clean Install: 07-development/v1.9.5-clean-install-checklist.md
       - v1.9.5 Teste manual: 07-development/v1.9.5-manual-acceptance-test.md
+      - v1.9.6 Data Reliability: 07-development/v1.9.6-data-reliability-migrations-backups.md
+      - v1.9.6 Migração limpa: 07-development/v1.9.6-clean-migration-checklist.md
       - Release notes v1.8.1: releases/v1.8.1.md
       - Release notes v1.8.2: releases/v1.8.2.md
       - Release notes v1.9.0: releases/v1.9.0.md
@@ -227,6 +241,7 @@ nav:
       - Release notes v1.9.3: releases/v1.9.3.md
       - Release notes v1.9.4: releases/v1.9.4.md
       - Release notes v1.9.5: releases/v1.9.5.md
+      - Release notes v1.9.6: releases/v1.9.6.md
   - Portfólio:
       - Roteiro de demonstração: 09-portfolio/demo-script.md
       - Case study: 09-portfolio/portfolio-case-study.md

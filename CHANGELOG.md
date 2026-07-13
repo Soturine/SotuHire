@@ -4,6 +4,47 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.9.6] - 2026-07-12
+
+### Adicionado
+
+- Repository abstraction para JSON, JSONL e SQLite, com migrações locais versionadas.
+- Migração dry-run/apply/verify com backup prévio, importação transacional, dedupe conservador e arquivos legados preservados.
+- Backup, export, restore checksummed e data health, disponíveis também no painel de Privacidade.
+- Snapshots imutáveis de vaga, currículo, análise e edital, ligados às candidaturas do Tracker.
+- `AiRunStore` com provider/modelo/prompt/fallback/evidências sem armazenamento de segredos.
+- Manifesto de capacidades, matriz de integração e catálogo de prompts gerados/verificados.
+- Fundação de ingestão PDF/DOCX/HTML/TXT/JSON e interoperabilidade revisável com JSON Resume.
+- Handshake de extensão/Companion/API, fila com retry/backoff/limite/export/import e prioridade para JSON-LD `JobPosting`.
+- Testes de repositories, migração, snapshots, restore, health, extensão e integração de dados.
+
+### Alterado
+
+- Tracker passa a preservar stage history e vínculos com vaga, currículo e análises usados.
+- Identidade de Perfil, memória, vaga, edital e GitHub preserva referências sem colapsar fatos distintos do mesmo container.
+- Career Context mantém confiança, confirmação, sensibilidade e `source_ref`; ATS/Tailor/Radar não promovem item não confirmado a fato seguro.
+- Permissões de IA de Perfil, Lattes, Extensão e Notificações passam a ser aplicadas pelo runtime.
+- Frontend preserva warnings, request ID, trace, candidatos GitHub e contexto do Tracker.
+- README, roadmap, índices, arquitetura de dados e documentação da extensão foram reorganizados como referências atuais.
+- Versões do app, API e frontend alinhadas; extensão atualizada de forma independente por conter mudanças funcionais.
+
+### Corrigido
+
+- Fallback OpenAI no GitHub não é mais marcado como fallback Gemini.
+- Health check de SQLite é realmente read-only, inclusive em banco pré-schema ou corrompido.
+- Restore valida formato, versão, checksum, schema, integridade e foreign keys do SQLite antes de gravar.
+- Manifesto de backup registra schema real e versão máxima suportada.
+- Timelines legadas de edital são normalizadas para o contrato de snapshot.
+- FKs de snapshots usam restrição de exclusão coerente com imutabilidade.
+- Scripts de dados funcionam quando executados diretamente fora da raiz do repositório.
+
+### Segurança
+
+- Chaves expostas não foram usadas; testes externos continuam opt-in e skipped sem chave temporária nova.
+- Backup/export excluem secrets por caminho, nome e padrões de conteúdo; pacote da extensão amplia o secret scan.
+- Sem auto-apply, inscrição, pagamento, envio de documentos ou scraping autenticado novo.
+- Sem alteração no fluxo `authenticated-browser`.
+
 ## [1.9.5] - 2026-07-11
 
 ### Adicionado

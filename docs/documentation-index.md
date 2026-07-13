@@ -1,89 +1,102 @@
-# Índice documental
+# Índice da documentação
 
-Esta é a versão navegável do índice documental do SotuHire no GitHub Pages.
-
-O arquivo `docs/README.md` também continua existindo no repositório como índice documental,
-mas o MkDocs usa `docs/index.md` como home pública do site.
+Use este índice para localizar a documentação atual. Documentos de versões anteriores continuam disponíveis em **Histórico de desenvolvimento** e **Releases**, sem substituir as referências correntes.
 
 ## Comece aqui
 
-- [Home pública](index.md)
-- [Visual preview v1.8](01-product/visual-preview.md)
+- [Página inicial da documentação](index.md)
+- [README do repositório no GitHub](https://github.com/Soturine/SotuHire#readme)
 - [Visão do produto](01-product/vision.md)
 - [Roadmap atual](01-product/roadmap.md)
-- [Setup local](07-development/setup.md)
-- [Comandos de desenvolvimento](07-development/commands.md)
-- [GitHub Pages vs app local](01-product/github-pages-site.md)
-- [Frontend API Layer](02-architecture/frontend-api-layer.md)
-- [Importadores e fontes publicas](05-data-sources/public-source-importers.md)
-- [Radar de Vagas e feeds publicos](05-data-sources/job-radar-public-feeds.md)
-- [v1.7.0 Public Sources and Importers](07-development/v1.7.0-public-sources-importers-capture-history.md)
-- [v1.7.1 Intake Polish and Source Discovery](07-development/v1.7.1-intake-polish-source-discovery.md)
-- [v1.8.0 Job Radar](07-development/v1.8.0-job-radar-public-feeds-wishlist-alerts.md)
-- [v1.8.1 AI Wishlist and Radar Stability](07-development/v1.8.1-ai-wishlist-radar-stability-profile-context.md)
-- [v1.8.2 Universal Career Profile](07-development/v1.8.2-universal-career-profile.md)
-- [v1.9.0 Scheduled Radar and Notifications](07-development/v1.9.0-scheduled-radar-notifications.md)
-- [v1.9.1 Release Integrity and Context Unification](07-development/v1.9.1-release-integrity-readme-context-unification.md)
-- [v1.9.2 Lattes and Academic Profile](07-development/v1.9.2-lattes-ai-universal-profile.md)
-- [v1.9.3 Public Exams and Edital Foundation](07-development/v1.9.3-public-exams-edital-foundation.md)
-- [v1.9.4 AI Providers Extension QA](07-development/v1.9.4-ai-providers-extension-qa.md)
-- [v1.9.4 End-to-End QA](07-development/v1.9.4-end-to-end-qa.md)
-- [v1.9.5 Product QA e Portfolio](07-development/v1.9.5-product-qa-demo-portfolio.md)
-- [Auditoria de integração v1.9.5](02-architecture/v1.9.5-integration-audit-matrix.md)
-- [Linhagem e deduplicação](02-architecture/data-lineage-and-deduplication.md)
-- [Roteiro de demo](09-portfolio/demo-script.md)
+- [Roteiro de demonstração](09-portfolio/demo-script.md)
 - [Case study](09-portfolio/portfolio-case-study.md)
-- [Career Context Engine](02-architecture/career-context-engine.md)
-- [Extension Profile Bridge](02-architecture/extension-profile-bridge.md)
-- [Catálogo de providers e modelos de IA](02-architecture/ai-provider-model-catalog.md)
-- [Fundação para Editais e Concursos](02-architecture/public-exams-foundation.md)
-
-## Frontend-ready
-
-- [Overview frontend](08-frontend/README.md)
-- [Arquitetura frontend-ready](08-frontend/frontend-architecture.md)
-- [Lovable handoff](08-frontend/lovable-handoff.md)
-- [Demo estática v1.1](08-frontend/static-demo.md)
-- [Mapa de telas](08-frontend/screen-map.md)
-- [API contract](08-frontend/api-contract.md)
-- [Mock data contract](08-frontend/mock-data-contract.md)
-- [Frontend rules](08-frontend/frontend-rules.md)
-- [Application Intelligence](08-frontend/application-intelligence.md)
 
 ## Produto
 
-- [Demo v1.0](01-product/v1-demo.md)
 - [Estratégia multiárea](01-product/multi-domain-product-strategy.md)
-- [MVP](01-product/mvp-scope.md)
-- [Histórias de usuário](01-product/user-stories.md)
-- [Resume Tailor](01-product/resume-tailor.md)
-- [Opportunity Fit Score](01-product/user-preferences-opportunity-fit.md)
-- [Regras do Radar de Vagas](03-business-rules/job-radar-rules.md)
-- [Concurso Mode](01-product/concurso-mode.md)
+- [Histórias de usuário e casos de uso](01-product/user-stories.md)
+- [Escopo do MVP](01-product/mvp-scope.md)
+- [GitHub Pages](01-product/github-pages-site.md)
+- [Arquivo histórico do roadmap](01-product/roadmap-archive-through-v1.9.5.md)
 
-## Arquitetura e regras
+## Arquitetura
 
-- [Arquitetura](02-architecture/overview.md)
-- [Data flow](02-architecture/data-flow.md)
-- [Local Companion API](02-architecture/local-companion-api.md)
-- [Frontend API Layer](02-architecture/frontend-api-layer.md)
+- [Visão geral](02-architecture/overview.md)
+- [Mapa de integração de módulos](02-architecture/module-integration-map.md)
+- [Matriz verificável de capacidades](02-architecture/integration-capability-matrix.md)
+- [Fluxo de dados](02-architecture/data-flow.md)
 - [Career Context Engine](02-architecture/career-context-engine.md)
-- [Extension Profile Bridge](02-architecture/extension-profile-bridge.md)
-- [Matching rules](03-business-rules/matching-rules.md)
-- [ATS rules](03-business-rules/ats-rules.md)
-- [Resume Tailor rules](03-business-rules/resume-tailor-rules.md)
-- [Regras multiárea](03-business-rules/multi-domain-career-rules.md)
-- [Privacidade da memória](03-business-rules/memory-privacy-rules.md)
+- [Linhagem e deduplicação](02-architecture/data-lineage-and-deduplication.md)
+- [Frontend e API](02-architecture/frontend-api-layer.md)
+- [Local Companion API](02-architecture/local-companion-api.md)
+- [Extensão e Perfil Universal](02-architecture/extension-profile-bridge.md)
+- [Fundação de editais](02-architecture/public-exams-foundation.md)
 
-## IA e desenvolvimento
+## Dados e persistência
 
+- [Repository architecture](02-architecture/storage-repository-architecture.md)
+- [Schema SQLite e migrações](02-architecture/sqlite-schema-and-migrations.md)
+- [Snapshots de candidatura](02-architecture/application-snapshots.md)
+- [Backup, restore e data health](02-architecture/backup-restore-and-data-health.md)
+- [Storage e histórico](02-architecture/storage-and-history.md)
+- [Auditoria de dados e integração](00-audit/v1.9.6-data-and-integration-audit.md)
+- [Checklist de migração limpa](07-development/v1.9.6-clean-migration-checklist.md)
+
+## IA
+
+- [Orquestração, confiança e fallback](04-ai/ai-orchestration-and-confidence.md)
+- [Catálogo de providers e modelos](02-architecture/ai-provider-model-catalog.md)
+- [Prompt Registry](04-ai/prompt-registry.md)
 - [Prompt Catalog](04-ai/prompt-catalog.md)
-- [Catálogo de providers e modelos de IA](02-architecture/ai-provider-model-catalog.md)
-- [Prompts individuais](04-ai/prompts/README.md)
-- [Prompt Lattes Extractor v1](04-ai/prompts/profile-lattes-extractor-v1.md)
-- [Prompt Public Exam Notice Extractor v1](04-ai/prompts/public-exam-notice-extractor-v1.md)
-- [QA Testing](06-engineering/qa-testing.md)
+- [RAG e memória de carreira](04-ai/career-memory-rag.md)
+- [Avaliação](04-ai/evaluation.md)
+- [Plano de avaliação](04-ai/ai-evaluation-plan.md)
+- [Golden datasets](09-testing/golden-datasets.md)
+
+## Fontes
+
+- [Visão geral](05-data-sources/job-sources.md)
+- [Conectores de fontes](05-data-sources/source-connectors.md)
+- [Fontes públicas e importadores](05-data-sources/public-source-importers.md)
+- [RSS e captura manual por URL](05-data-sources/rss-and-manual-url-connectors.md)
+- [Estratégia de scraping público](05-data-sources/scraping-strategy.md)
+- [GitHub e portfólio](05-data-sources/github-portfolio-analyzer.md)
+
+## Extensão
+
+- [Local Companion App](02-architecture/local-companion-app.md)
+- [Regras de captura assistida](03-business-rules/browser-assisted-capture-rules.md)
+- [Captura pela extensão](07-development/browser-extension-assisted-capture.md)
+- [Publicação na Web Store](07-development/chrome-web-store-extension.md)
+- [Análise GitHub/portfólio](07-development/extension-github-portfolio-analysis.md)
+- [Testes da extensão](09-testing/browser-extension-testing.md)
+- [README da extensão no GitHub](https://github.com/Soturine/SotuHire/tree/main/browser-extension)
+
+## Testes e engenharia
+
+- [QA e testes](06-engineering/qa-testing.md)
 - [CI/CD](06-engineering/ci-cd.md)
-- [Security Privacy](06-engineering/security-privacy.md)
-- [v1.0.0 Stable Release](07-development/v1.0.0-stable-release.md)
-- [v1.2.0 API Layer](07-development/v1.2.0-api-layer.md)
+- [Segurança e privacidade](06-engineering/security-privacy.md)
+- [Ruff](06-engineering/ruff.md)
+- [Testes de regressão](09-testing/regression-testing.md)
+- [Testes de screenshot](09-testing/screenshot-testing.md)
+- [Golden datasets](09-testing/golden-datasets.md)
+
+## Portfólio
+
+- [Roteiro de demonstração](09-portfolio/demo-script.md)
+- [Case study](09-portfolio/portfolio-case-study.md)
+- [Galeria atual](01-product/visual-preview.md)
+
+## Histórico de desenvolvimento
+
+- [CHANGELOG no GitHub](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md)
+- [Histórico do roadmap](01-product/roadmap-history.md)
+- [Arquivo do roadmap até a release anterior](01-product/roadmap-archive-through-v1.9.5.md)
+- [Data reliability, migrações e backups](07-development/v1.9.6-data-reliability-migrations-backups.md)
+- [Setup e desenvolvimento](07-development/setup.md)
+
+## Releases
+
+- [Release atual](releases/v1.9.6.md)
+- [Releases anteriores no GitHub](https://github.com/Soturine/SotuHire/tree/main/docs/releases)

@@ -68,6 +68,51 @@ Evite:
 Texto completo do currículo: ...
 ```
 
+## Extensão e Local Companion
+
+A extensão assistiva usa permissões mínimas (`activeTab`, `scripting` e `storage`) e hosts
+restritos a localhost, GitHub público e aos providers opcionais. Ela processa a página que a pessoa
+abriu e somente após uma ação explícita.
+
+Regras para segredos da extensão:
+
+- a chave configurada no SotuHire permanece no backend local e nunca chega ao navegador;
+- uma chave própria Gemini/OpenAI fica em `chrome.storage.session` por padrão;
+- persistência exige consentimento e usa IndexedDB acessível pelo service worker;
+- IndexedDB não deve ser descrito como criptografia adicional;
+- nenhuma chave usa `chrome.storage.sync`, content script, página aberta ou payload conectado;
+- o botão **Remover chave** limpa sessão, IndexedDB e resíduos do formato antigo;
+- fila offline, exportação, screenshots, logs e ZIP não podem incluir chaves ou tokens;
+- o token opcional do Companion é separado da chave de IA e também não pode ser exportado.
+
+O handshake troca apenas versões, capabilities e warnings. O contexto enviado à extensão é um
+resumo curto com evidências confirmadas; Perfil completo, memória completa, cookies, tokens,
+headers autenticados e storage de terceiros ficam fora da ponte.
+
+A extensão não faz login, auto-apply, inscrição, pagamento, envio de documentos, bypass de CAPTCHA
+ou scraping em massa. O fluxo `authenticated-browser` é separado e não compartilha sessão com a
+extensão assistiva.
+
+## Backup, restore e exportação
+
+O backup de dados do SotuHire pode incluir banco SQLite, stores locais necessários, configurações
+não secretas, manifesto e checksums. Ele exclui por desenho:
+
+- diretórios e arquivos de segredos;
+- chaves de provider e tokens;
+- cookies e dados de sessão;
+- `chrome.storage` e IndexedDB da extensão;
+- fila do navegador, exceto quando a própria pessoa gera seu export sanitizado separado.
+
+Antes de restaurar, o app valida manifesto, checksums e versão do schema e cria um backup preventivo
+do destino. O restore não deve sobrescrever ou importar estado do navegador. A fila offline possui
+export/import próprio, remove campos nomeados como credencial, redige valores com formato de chave
+Gemini/OpenAI e recalcula identidades ao importar.
+
+Snapshots de vaga, currículo, análise e edital preservam o conteúdo usado em cada decisão. Eles não
+devem conter segredos, e sua imutabilidade não substitui os controles de acesso e remoção dos dados
+locais.
+
 ## Retenção
 
 No MVP, o mais seguro é não salvar currículo automaticamente. Se salvar no futuro:

@@ -2,182 +2,98 @@
 
 ## Objetivo
 
-QA no SotuHire não é burocracia. É o que mostra que o projeto não é só “um prompt com Streamlit”.
+QA verifica contratos de negócio, confiabilidade de dados, integração entre módulos e segurança. A suíte padrão é determinística: usa fixtures, mocks e servidores locais, sem depender de provider de IA ou site externo.
 
-O foco inicial deve ser testar:
+## Camadas
 
-- regras determinísticas;
-- schemas;
-- parsers;
-- normalizadores;
-- tratamento de entradas;
-- deduplicação;
-- conectores com fixtures locais.
+| Camada | Ferramentas | Exemplos |
+| --- | --- | --- |
+| Unitária Python | pytest | identidade, parser, score, dedupe, schemas |
+| Integração Python | pytest + TestClient | API, Perfil/Contexto, Tracker, Radar, extensão |
+| Persistência | sqlite3 + diretórios temporários | migração, FK, snapshots, backup, restore, health |
+| Runtime da extensão | Node harness + pytest | fila, retry, JSON-LD, fallback e segredo |
+| Frontend unit/component | Vitest, React Testing Library, MSW | mappers, estados e cliente de dados |
+| Frontend E2E | Playwright | Demo/API mock, painel de dados, responsividade |
+| Documentação | MkDocs strict + geradores | links, nav, capabilities e prompts |
 
-## Ferramentas
+## Persistência e migração
 
-- `pytest` para testes;
-- `ruff` para lint e format;
-- `pydantic` para validar schemas;
-- mocks para chamadas de IA;
-- fixtures para currículos, vagas e HTML;
-- GitHub Actions para CI.
+Testar obrigatoriamente:
 
-## Pirâmide de testes
+- dry-run não cria DB, backup ou temporário no diretório de dados;
+- apply cria backup e preserva JSON/JSONL;
+- importação é transacional e idempotente;
+- IDs não duplicados são preservados;
+- dedupe usa somente identidade forte ou conteúdo exato;
+- corrupção é rejeitada explicitamente;
+- schema metadata e migration history concordam;
+- foreign keys e integrity check passam;
+- health não altera banco pré-schema;
+- restore valida checksum, versão, schema e SQLite antes de gravar.
 
-### Unitários
+## Snapshots e Tracker
 
-Testam funções puras.
+- snapshot é content-addressed e imutável por trigger;
+- conteúdo alterado gera novo hash/snapshot;
+- entidade referenciada não pode ser apagada enquanto houver snapshot;
+- Tracker mantém JobSnapshot, ResumeSnapshot e AnalysisSnapshot quando disponíveis;
+- modo rápido continua aceitando cargo, empresa, URL e status;
+- eventos de etapa são append-only e não são sobrescritos pela memória.
 
-Exemplos:
+## Perfil, contexto e IA
 
-- detectar vaga sênior;
-- classificar recomendação;
-- normalizar modalidade;
-- calcular risco;
-- deduplicar vagas.
+- `confirmed_by_user`, confidence, sensitive e `source_ref` chegam ao Career Context;
+- ATS/Tailor/Radar não promovem evidência não confirmada a fato seguro;
+- provider/modelo/prompt/fallback são registrados;
+- resultado de OpenAI não é rotulado como Gemini/fallback;
+- AiRun rejeita material com aparência de segredo;
+- testes externos são `external_ai`, opt-in e skipped sem variável temporária nova.
 
-### Integração local
+## Extensão
 
-Testam módulos juntos, mas sem internet.
+- handshake atual, antigo e incompatível;
+- dedupe por URL canônica;
+- retry/backoff/limite/estado;
+- export/import sanitizado;
+- JSON-LD `JobPosting` aninhado ou em `@graph`;
+- fallback explícito;
+- pacote sem segredo e com todos os arquivos do manifesto.
 
-Exemplos:
-
-- parser de currículo com fixture;
-- parser de HTML salvo;
-- normalizador de vaga;
-- schema Pydantic.
-
-### Manuais
-
-Testam o fluxo real no Streamlit.
-
-Exemplos:
-
-- upload PDF;
-- colar vaga;
-- analisar;
-- salvar resultado.
-
-### E2E futuro
-
-Somente quando houver UI mais estável ou extensão.
-
-Pode usar Playwright, mas não é necessário no MVP inicial.
-
-## Testes que não devem depender de API real
-
-Evite chamar Gemini/OpenAI em testes automáticos.
-
-Motivos:
-
-- custo;
-- lentidão;
-- instabilidade;
-- necessidade de internet;
-- necessidade de API key;
-- output variável.
-
-Use resposta fake.
-
-## Testes de IA
-
-Teste:
-
-- se o prompt foi montado com campos esperados;
-- se o JSON fake valida no schema;
-- se resposta inválida gera fallback;
-- se score fora de faixa é rejeitado.
-
-## Testes de scraping
-
-Não bater em sites reais no CI.
-
-Use fixtures:
-
-```text
-tests/fixtures/sources/
-├── company_page_sample.html
-├── greenhouse_sample.html
-├── lever_sample.html
-└── hidden_post_sample.txt
-```
-
-Testes:
-
-- extrai título;
-- extrai empresa;
-- extrai local;
-- extrai descrição;
-- não quebra com campo ausente;
-- ignora vaga inválida;
-- normaliza senioridade;
-- gera hash de deduplicação.
-
-## Exemplos de testes
-
-### Senioridade
-
-```python
-def test_detects_senior_position():
-    text = "Vaga para Desenvolvedor Senior com 5+ anos de experiência"
-    assert is_senior_position(text) is True
-```
-
-### Recomendação
-
-```python
-def test_recommendation_for_high_score():
-    assert classify_recommendation(match_score=85, risk_score=10) == "Aplicar"
-```
-
-### Gatilhos de baixa aderência
-
-```python
-def test_low_match_when_many_disqualifying_terms():
-    text = "Tech Lead, 7+ anos, AWS avançado obrigatório"
-    flags = detect_disqualifying_terms(text)
-    assert len(flags) >= 3
-```
-
-### Schema da IA
-
-```python
-def test_match_analysis_schema_validates_score():
-    data = {
-        "match_score": 82,
-        "ats_score": 75,
-        "risk_score": 15,
-        "recommendation": "Aplicar",
-        "strengths": [],
-        "gaps": [],
-        "missing_keywords": [],
-        "recruiter_message": "Olá..."
-    }
-
-    analysis = MatchAnalysis.model_validate(data)
-
-    assert analysis.match_score == 82
-```
-
-## Critério mínimo para PR
-
-Antes de abrir PR:
+## Comandos
 
 ```bash
 ruff check .
-ruff format . --check
+ruff format --check .
 pytest
+pytest --cov=modules --cov=apps/api --cov-report=term-missing
+pyright
+python -m compileall modules tests apps scripts
+python scripts/validate_capabilities.py
+python scripts/generate_integration_matrix.py --check
+python scripts/generate_prompt_catalog.py --check
+python scripts/migrate_local_data.py --dry-run
+python scripts/check_data_health.py
+python scripts/verify_clean_install.py
+python scripts/package_extension.py
+mkdocs build --strict
 ```
 
-## Critério de qualidade do MVP
+Frontend:
 
-O MVP é aceitável quando:
+```bash
+cd apps/web
+npm ci
+npm run test:unit
+npm run lint
+npm run typecheck
+npm run build
+npm run test:e2e
+```
 
-- app roda localmente;
-- parser de PDF tem erro tratado;
-- schema da IA é validado;
-- regras principais têm teste;
-- Ruff passa;
-- README explica como rodar;
-- não há dados reais versionados.
+## Cobertura
+
+A cobertura é medida, não presumida. O baseline local desta entrega é **86%**: 16.105 statements e 2.315 não cobertos, medidos com Python 3.12. O CI publica `coverage.json` como artefato e não impõe threshold arbitrário nesta primeira medição. A política seguinte deve impedir regressão e manter a evolução dos módulos críticos.
+
+## Critério de fechamento
+
+Uma release só pode declarar um comando verde quando ele foi executado. Skips e limitações devem aparecer nas release notes. Nenhum teste pode imprimir, salvar ou anexar chaves, cookies, tokens, dados pessoais ou storage da extensão.

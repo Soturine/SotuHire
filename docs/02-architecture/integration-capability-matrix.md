@@ -2,7 +2,7 @@
 
 Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o OpenAPI real, as rotas TanStack e os arquivos de testes e documentação.
 
-**Commit-base da última verificação:** `309f9662f1da410349d85fefdcacff8778cea51e`
+**Commit-base da última verificação:** `8cd82f026a762752fd042ce3f39c8f1d1885ba32`
 
 ## Resumo
 
@@ -46,7 +46,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/02-architecture/parsers.md`<br>`docs/04-ai/prompts/resume-extraction-v1.md` |
 | `status` | `complete` |
 | `gaps` | A extração isolada não persiste automaticamente uma variante de currículo. |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Leitura de vaga (`job_extraction`)
 
@@ -68,7 +68,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/02-architecture/parsers.md`<br>`docs/04-ai/prompts/job-extraction-multi-domain-v1.md` |
 | `status` | `complete` |
 | `gaps` | nenhuma registrada |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Compatibilidade (`match`)
 
@@ -90,7 +90,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/03-business-rules/matching-rules.md`<br>`docs/04-ai/prompts/match-analysis-evidence-based-v1.md` |
 | `status` | `complete` |
 | `gaps` | nenhuma registrada |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Análise ATS (`ats`)
 
@@ -112,7 +112,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/03-business-rules/ats-rules.md`<br>`docs/04-ai/prompts/ats-analysis-v1.md` |
 | `status` | `complete` |
 | `gaps` | nenhuma registrada |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Adaptação segura de currículo (`resume_tailor`)
 
@@ -134,7 +134,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/03-business-rules/resume-tailor-rules.md`<br>`docs/04-ai/prompts/resume-tailor-v1.md` |
 | `status` | `complete` |
 | `gaps` | Exportação avançada de variantes permanece no roadmap de Resume Studio. |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Perfil Profissional Universal (`universal_profile`)
 
@@ -156,7 +156,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/02-architecture/career-context-engine.md`<br>`docs/02-architecture/data-lineage-and-deduplication.md` |
 | `status` | `complete` |
 | `gaps` | Alguns módulos legados ainda mantêm stores próprios e são tratados pela migração gradual. |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Editais e concursos (`public_exams`)
 
@@ -178,7 +178,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/03-business-rules/public-exam-rules.md`<br>`docs/02-architecture/public-exams-foundation.md` |
 | `status` | `complete` |
 | `gaps` | nenhuma registrada |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Radar, wishlist e agendamentos (`radar`)
 
@@ -200,7 +200,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/03-business-rules/job-radar-rules.md`<br>`docs/02-architecture/background-jobs.md` |
 | `status` | `complete` |
 | `gaps` | Conectores oficiais adicionais permanecem fora desta capacidade atual. |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Tracker e histórico de candidaturas (`tracker`)
 
@@ -222,7 +222,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/07-development/job-tracker-kanban.md`<br>`docs/02-architecture/storage-and-history.md` |
 | `status` | `complete` |
 | `gaps` | Registros legados sem texto original permanecem sem snapshot inventado. |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### GitHub e portfólio (`github_portfolio`)
 
@@ -244,7 +244,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/05-data-sources/github-portfolio-analyzer.md`<br>`docs/04-ai/prompts/github-repo-analysis-v2.md` |
 | `status` | `partial` |
 | `gaps` | Análise agregada do perfil GitHub ainda não possui prompt consumido pelo runtime principal.; O relatório de projeto legado ainda não possui snapshot imutável dedicado. |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Fontes e captura assistida (`sources_capture`)
 
@@ -266,7 +266,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/05-data-sources/public-source-importers.md`<br>`docs/02-architecture/opportunity-collection-pipeline.md` |
 | `status` | `complete` |
 | `gaps` | nenhuma registrada |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Extensão e Local Companion (`extension_bridge`)
 
@@ -288,7 +288,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/02-architecture/local-companion-api.md`<br>`docs/02-architecture/extension-profile-bridge.md` |
 | `status` | `complete` |
 | `gaps` | Compatibilidade depende de manter manifesto, extensão e companion versionados em conjunto. |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Configuração de IA (`ai_settings`)
 
@@ -310,7 +310,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/02-architecture/ai-provider-model-catalog.md`<br>`docs/04-ai/provider-strategy.md` |
 | `status` | `complete` |
 | `gaps` | nenhuma registrada |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Notificações locais (`notifications`)
 
@@ -332,7 +332,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/02-architecture/background-jobs.md`<br>`docs/07-development/alerts-roadmap.md` |
 | `status` | `complete` |
 | `gaps` | Não existe rota exclusiva; o resumo é exibido no Dashboard e no Radar. |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ### Persistência, migração, backup e saúde dos dados (`data_reliability`)
 
@@ -354,7 +354,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `docs` | `docs/02-architecture/storage-and-history.md`<br>`docs/02-architecture/data-lineage-and-deduplication.md` |
 | `status` | `complete` |
 | `gaps` | nenhuma registrada |
-| `last_verified_commit` | `309f9662f1da410349d85fefdcacff8778cea51e` |
+| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
 
 ## Como validar
 

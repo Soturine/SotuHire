@@ -1,64 +1,98 @@
-﻿# Extension Profile Bridge
+# Extension Profile Bridge
 
-A Extension Profile Bridge conecta capturas da extensão assistiva, Local Companion API, Career Context Engine e Perfil Profissional Universal.
-
-O objetivo é simples: uma captura ou projeto pode sugerir evidências candidatas, mas nada entra no Perfil sem revisão e confirmação da pessoa usuária.
+A Extension Profile Bridge conecta a extensão assistiva, Local Companion API, Career Context Engine
+e Perfil Profissional Universal. Uma captura pode sugerir evidências, mas nada entra no Perfil sem
+revisão e confirmação explícitas.
 
 ## Fluxo
 
 ```text
-Extensão captura vaga/projeto/edital/página visível
-  -> Local Companion salva captura, memória, tracker ou projeto
-  -> FastAPI lê /api/v1/extension/*
-  -> Career Context Engine considera sinais locais
-  -> Site mostra candidatos revisáveis
-  -> Usuário confirma itens selecionados
-  -> Perfil Universal salva itens confirmados
+Pessoa abre vaga, edital, GitHub ou portfólio
+  -> extensão extrai JSON-LD/sinais públicos/texto visível
+  -> Local Companion valida, deduplica e cria snapshot
+  -> FastAPI lista a captura no site
+  -> Career Context seleciona somente evidências necessárias
+  -> site mostra ProfileItems candidatos
+  -> pessoa confirma os itens desejados
+  -> Perfil Universal persiste itens confirmados com proveniência
 ```
 
-## Endpoints
+## Endpoints do site
 
 ```txt
-GET  /api/v1/extension/context
-POST /api/v1/extension/import/public-exam
-POST /api/v1/extension/captures/{capture_id}/profile-candidates
-POST /api/v1/extension/captures/{capture_id}/add-to-profile
-POST /api/v1/extension/projects/{project_id}/profile-candidates
-POST /api/v1/extension/projects/{project_id}/add-to-profile
+POST  /api/v1/extension/handshake
+GET   /api/v1/extension/status
+GET   /api/v1/extension/captures
+GET   /api/v1/extension/context
+PATCH /api/v1/extension/captures/{capture_id}
+POST  /api/v1/extension/import/job
+POST  /api/v1/extension/import/github
+POST  /api/v1/extension/import/public-exam
+POST  /api/v1/extension/import/tracker
+POST  /api/v1/extension/captures/{capture_id}/profile-candidates
+POST  /api/v1/extension/captures/{capture_id}/add-to-profile
+POST  /api/v1/extension/projects/{project_id}/profile-candidates
+POST  /api/v1/extension/projects/{project_id}/add-to-profile
 ```
 
-Os endpoints de `profile-candidates` apenas geram rascunhos locais. Eles retornam `ProfileItem` com `confirmed_by_user=false`, `source`, `source_ref`, `confidence` e evidência textual curta.
+`profile-candidates` gera rascunhos locais com `confirmed_by_user=false`, `source`, `source_ref`,
+`confidence` e evidência curta. `add-to-profile` recebe apenas os candidatos selecionados e os salva
+como confirmados pela pessoa usuária.
 
-Os endpoints de `add-to-profile` exigem confirmação explícita e salvam somente os itens selecionados. Ao salvar, o Perfil marca os itens como confirmados pela pessoa usuária.
+O handshake não transporta conteúdo de carreira. Ele informa versões, capabilities,
+compatibilidade e warnings para impedir que frontend, Companion e extensão pareçam integrados
+quando seus contratos divergem.
 
-Capturas com `kind=public_exam` não viram vaga privada nem evidência profissional automaticamente. Elas podem ser importadas para Editais/Concursos como rascunho revisável.
+## Capturas, snapshots e proveniência
 
-## Fontes
+Capturas conectadas preservam:
 
-As fontes permitidas para candidatos são:
+- `capture_id` e URL de origem;
+- `collection_method=browser_assisted_capture`;
+- `extraction_strategy`, inclusive `schema_org_jobposting` quando disponível;
+- `content_hash`, `snapshot_id` e histórico de snapshots;
+- `source` e `source_ref` até Perfil, análise ou Tracker.
+
+Vagas geram `JobSnapshot`; editais geram `PublicExamSnapshot`; análises podem ligar
+`ResumeSnapshot` e `AnalysisSnapshot`. Alterar o status ou importar a captura não modifica o
+snapshot original.
+
+## Fontes e revisão
+
+As fontes aceitas para candidatos incluem:
 
 - `extension_capture`;
 - `github_capture`;
 - `portfolio_capture`;
 - `browser_assisted_capture`.
 
-Uma vaga capturada não vira habilidade profissional automaticamente. Ela gera sinais como objetivo, preferência ou keyword/gap a revisar. Projetos GitHub/portfólio podem gerar item de projeto, skill, produção técnica ou evidência acadêmica candidata, sempre com revisão humana.
+Uma vaga não prova uma habilidade profissional. Ela pode sugerir objetivo, preferência, keyword ou
+gap. Projetos GitHub/portfólio podem sugerir projeto, skill, produção técnica ou evidência
+acadêmica, sempre com revisão humana.
 
-## Relação com Lattes/Acadêmico
+Capturas `public_exam` não viram vaga privada, candidatura ou inscrição. Elas entram em
+Editais/Concursos como rascunho revisável.
 
-A v1.9.2 adiciona o fluxo Lattes no Perfil, separado da extensão. Ainda assim, o Career Context Engine passa a enxergar evidências acadêmicas confirmadas e candidatos acadêmicos vindos de GitHub/Portfólio ou extensão quando forem explicitamente revisados.
+## Career Context
+
+A extensão recebe somente um resumo para o propósito `extension`, com evidências confirmadas,
+warnings e referências de origem. Perfil completo, memória completa e dados sensíveis não são
+copiados para o popup.
+
+Evidências acadêmicas ou Lattes já confirmadas podem participar do contexto seguro. Candidatos
+acadêmicos vindos da extensão só entram em outros fluxos depois da confirmação.
 
 ## Privacidade
 
-- A extensão não recebe API key do app.
-- A extensão recebe apenas resumo seguro de contexto, nunca Perfil completo, memória completa ou segredo de provider.
-- O frontend não persiste API key do provider.
-- A ponte não coleta cookies, tokens, sessão, headers ou storage de terceiros.
-- A ponte não automatiza candidatura.
-- Capturas e projetos são locais e revisáveis.
-- O fluxo `/api/v1/sources/authenticated-browser/*` não faz parte desta ponte e permanece separado.
+- a extensão não recebe a chave configurada no app;
+- uma chave própria fica isolada no service worker e nunca entra na ponte;
+- content scripts não recebem segredo, token local ou Perfil completo;
+- fila e exportação removem campos nomeados como credencial e redigem valores com formato de chave;
+- nenhum cookie, token, sessão, header autenticado ou storage de terceiros é coletado;
+- nenhuma candidatura, inscrição ou mensagem é automatizada;
+- authenticated-browser permanece um fluxo separado.
 
-## Arquivos Principais
+## Arquivos principais
 
 ```txt
 apps/api/routes/extension.py
@@ -68,6 +102,8 @@ apps/web/src/routes/sources.tsx
 modules/context
 modules/local_api
 modules/profile
-browser-extension/README.md
+modules/storage/snapshots.py
+browser-extension/
 tests/test_api_extension_bridge.py
+tests/test_extension_reliability_runtime.py
 ```

@@ -57,7 +57,8 @@ Essas chaves não devem ser commitadas, logadas, exibidas em screenshot, fixture
 
 - No app, sem API key no frontend, `localStorage` ou `sessionStorage`; a chave fica no backend.
 - Na extensão, chaves próprias opcionais ficam isoladas no service worker, em `chrome.storage.session`
-  por padrão ou cofre IndexedDB privado após consentimento, nunca em `chrome.storage.sync`.
+  por padrão ou IndexedDB local após consentimento; isso não implica criptografia adicional e nunca
+  usa `chrome.storage.sync`.
 - Sem chave em README, docs, fixtures, logs ou screenshots.
 - Sem decisão crítica final apenas por IA.
 - Sem auto-apply, inscrição automática, pagamento, boleto, envio de documento, login, scraping autenticado ou CAPTCHA bypass.

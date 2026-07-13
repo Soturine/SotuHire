@@ -1,79 +1,89 @@
-# Extension GitHub e Portfolio Full Analyzer
+# Análise de GitHub e portfólio pela extensão
 
-O analisador de projetos da v0.9.0 funciona com páginas públicas de perfil GitHub, repositório,
-projeto e portfólio. Ele não lê cookies, tokens, localStorage, sessionStorage, headers autenticados
-ou GitHub token.
+O analisador trabalha com perfis, repositórios, projetos e portfólios públicos. Ele não lê cookie,
+token, sessão, `localStorage`, `sessionStorage`, header autenticado ou conteúdo privado oculto.
 
-## Dois modos
+## Modos
 
-### Standalone Extension Analysis
+### Independente
 
-A extensão extrai sinais da aba atual e calcula um relatório determinístico no navegador. Uma chave
-Gemini standalone pode ser configurada opcionalmente para aprimorar o texto. Essa chave:
+A extensão extrai sinais públicos e calcula um relatório determinístico no navegador. Opcionalmente,
+a pessoa pode escolher Gemini ou OpenAI e uma chave própria.
 
-- fica somente em `chrome.storage.local`;
-- usa uma permissão de host opcional para a chamada Gemini;
-- nunca entra no payload enviado ao SotuHire;
-- pode ser removida diretamente no popup.
+- a chave usa `chrome.storage.session` por padrão;
+- persistência em IndexedDB exige consentimento explícito;
+- IndexedDB não implica criptografia adicional;
+- o modelo escolhido é enviado à chamada real;
+- catálogo oficial, cache e lista builtin têm origem/warning visíveis;
+- chave e token nunca entram no payload do SotuHire;
+- falha externa preserva relatório local e motivo do fallback.
 
-### Connected SotuHire Analysis
+### Conectado ao SotuHire
 
-A extensão envia os dados públicos para a Local Companion API. O SotuHire:
+A extensão envia sinais públicos à API local. O SotuHire:
 
 1. valida o payload;
-2. prioriza arquivos centrais;
-3. analisa README, arquitetura e commits;
-4. calcula os scores;
-5. opcionalmente aprimora o texto com Gemini local;
-6. salva relatório e evidências na Career Memory.
+2. consulta apenas contexto seguro necessário;
+3. prioriza arquivos centrais;
+4. analisa README, arquitetura e commits;
+5. registra provider, modelo, prompt e fallback;
+6. cria snapshots e salva relatório/evidências;
+7. oferece candidatos revisáveis para o Perfil.
 
-## Botão injetado e modal
+A chave configurada no app permanece no backend local.
 
-Em repositórios, árvores, arquivos e perfis públicos do GitHub, o content script restrito a
-`https://github.com/*` injeta um botão **SotuHire AI**. A inserção tenta primeiro a barra de ações
-e usa o cabeçalho como fallback. Um `MutationObserver` reaplica a integração após navegação SPA.
+## Botão e modal
 
-O modal isolado da página mostra score, grade, provider, stack, qualidade do README, commits,
-arquitetura, profundidade técnica, manutenção, prontidão para recrutadores, pontos fortes, gaps,
-recomendações e evidências para currículo. Também permite copiar, exportar e salvar no SotuHire.
+Em repositórios, árvores, arquivos e perfis públicos, o script restrito a `github.com` injeta o
+botão **SotuHire Insight**. A inserção usa ações do repositório e cabeçalho como fallback; um
+`MutationObserver` reaplica o botão após navegação SPA.
 
-O modo **Deep analysis** aumenta os limites de sinais visíveis amostrados. Ele não desbloqueia
-conteúdo privado e não lê dados ocultos.
+O modal mostra score, grade, provider/modelo, stack, README, commits, arquitetura, profundidade,
+manutenção, prontidão para recrutadores, pontos fortes, gaps, recomendações e evidências seguras.
+Também permite copiar, exportar ou enviar a análise ao SotuHire.
+
+O modo **Deep analysis** aumenta a amostra de sinais públicos, sem desbloquear conteúdo privado.
 
 ## Amostragem
 
 Prioridade alta:
 
 - `README.md`, `package.json`, `pyproject.toml`, `requirements.txt`;
-- `Dockerfile`, `docker-compose.yml`, `.github/workflows/*`;
-- `src/*`, `app/*`, `modules/*`, `tests/*`, `docs/*`.
+- `Dockerfile`, compose e workflows;
+- `src/`, `app/`, `modules/`, `tests/` e `docs/`.
 
 Ignorados:
 
-- `node_modules`, `dist`, `build`, `.venv`, `__pycache__`;
-- imagens, binários, arquivos compactados e locks;
-- arquivos acima do limite local de amostragem.
+- `node_modules`, `dist`, `build`, `.venv` e `__pycache__`;
+- imagens, binários, compactados e locks;
+- arquivos acima do limite local.
 
-## Scores
+A extensão pode enriquecer a amostra pela API pública do GitHub, sem token e com
+`credentials: omit`. Rate limit ou falha preserva os sinais visíveis.
 
-- GitHub Profile Score;
-- Repository Quality Score;
-- Portfolio Score;
-- Project Quality Score;
-- Recruiter Readiness Score;
-- Documentation Score;
-- Commit Quality Score;
-- Architecture Signal Score;
-- Technical Depth Score;
-- ATS/Job Evidence Score.
+## Rastreabilidade
 
-## Memória e vagas
+O relatório informa:
 
-Projetos salvos geram memórias separadas para o relatório principal, evidências, commits e README.
-Essas memórias entram no mesmo ranking calibrado usado na análise de vagas, Resume Tailor, Search
-Intelligence, Hidden Jobs Radar e perfil profissional.
+```txt
+provider_requested
+provider_used
+model_requested
+model_used
+prompt_id
+prompt_version
+analysis_mode
+fallback_used
+fallback_reason
+source_refs
+evidence_used
+needs_user_review
+```
 
-## Endpoints
+Scores determinísticos críticos não são substituídos cegamente pelo texto do provider. Evidências
+para currículo continuam sugestões e não devem inventar experiência, impacto ou domínio técnico.
+
+## Integração
 
 ```text
 POST /capture/github-profile
@@ -84,100 +94,15 @@ POST /capture/repo-analysis
 POST /capture/commit-analysis
 ```
 
-## Chrome Web Store
+No site, projetos salvos podem gerar candidatos com `source_ref`, comparar evidências com uma vaga
+e participar do Career Context depois de revisão/confirmação.
 
-Execute `python scripts/package_extension.py` para validar e gerar
-`dist/sotuhire-extension-v0.9.0.zip`. O guia de publicação e os textos da loja ficam em
-[`browser-extension/store/`](https://github.com/Soturine/SotuHire/tree/main/browser-extension/store).
+## Validação
 
-# Atualização: extensão como ponte para o GitHub Analyzer 2.0
-
-A extensão da v0.9.0 já entrega valor, mas a próxima evolução deve evitar concentrar análise pesada no content script.
-
-A regra passa a ser:
-
-```text
-Extensão captura e aciona. Backend/site analisa profundamente.
+```bash
+pytest -q tests/test_extension_ai_provider_runtime.py
+pytest -q tests/test_extension_reliability_runtime.py
+node --check browser-extension/background.js
+node --check browser-extension/github_injected.js
+python scripts/package_extension.py
 ```
-
-## Por que não colocar tudo na extensão
-
-Análise profunda de repositório exige:
-
-- GitHub API;
-- árvore completa;
-- leitura raw de arquivos;
-- sampler;
-- grafo de dependências;
-- prompt grande;
-- validação Pydantic;
-- comparação com currículo;
-- comparação com vaga;
-- integração com Career Memory;
-- tracker;
-- histórico.
-
-Isso pertence melhor ao backend/site do SotuHire.
-
-## Fluxo recomendado
-
-```text
-GitHub tab -> extensão extrai owner/repo -> Local Companion API -> GitHub Analyzer 2.0 -> relatório -> modal/site -> memória
-```
-
-## Payload mínimo da extensão
-
-```json
-{
-  "url": "https://github.com/owner/repo",
-  "owner": "owner",
-  "repo": "repo",
-  "page_type": "github_repo",
-  "visible_title": "string | null",
-  "visible_description": "string | null",
-  "mode": "quick | deep"
-}
-```
-
-## TypeScript
-
-O fato de uma referência ser feita em TypeScript não muda a arquitetura do SotuHire.
-
-TypeScript é recomendado para a extensão porque melhora:
-
-- tipos de payload;
-- organização;
-- build;
-- contratos;
-- manutenção;
-- testes de UI/content script.
-
-Mas o ganho principal virá de mover a análise profunda para o backend Python.
-
-## Standalone vs connected
-
-### Standalone
-
-Deve continuar existindo como fallback:
-
-- sem backend;
-- análise rápida;
-- DOM visível;
-- heurística local;
-- IA opcional para refinar texto.
-
-### Connected
-
-Deve ser o modo recomendado:
-
-- backend local;
-- GitHub API;
-- prompt estruturado;
-- validação;
-- memória;
-- tracker;
-- relatório completo.
-
-## Próxima implementação
-
-Ver [v0.11.0 GitHub Analyzer 2.0](v0.11.0-github-analyzer-2.md).

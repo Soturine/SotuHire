@@ -46,6 +46,7 @@ cd apps/web
 npm run build
 npm run lint
 npm run typecheck
+npm run test:unit
 npm run test:e2e
 npm run test:e2e:cross-browser
 ```
@@ -73,6 +74,31 @@ O padrão do app é `http://127.0.0.1:8787/api/v1`.
 
 O frontend não calcula score real, não move regra de negócio para o cliente e não salva segredos. A URL e o modo selecionados ficam apenas no estado da sessão aberta do app.
 
+## Dados, Backup e Restauração
+
+A rota `/privacy` reúne o painel de confiabilidade dos dados. No modo API Real, ela permite:
+
+- executar o data health read-only;
+- revisar versão do schema, contagens, warnings e erros;
+- criar backup ou export portátil com manifesto/checksums;
+- listar e baixar arquivos mantidos pela API local;
+- validar um restore sem alterar dados;
+- aplicar o restore somente após digitar `RESTAURAR` e confirmar o diálogo final.
+
+Endpoints usados:
+
+```txt
+GET  /api/v1/data/health
+GET  /api/v1/data/backups
+POST /api/v1/data/backups
+GET  /api/v1/data/backups/{archive_name}
+POST /api/v1/data/restore
+```
+
+A API cria e restaura apenas arquivos do diretório local gerenciado `data/backups`; o navegador não recebe caminhos absolutos. Antes de sobrescrever dados, o backend cria um backup de segurança. Arquivos de backup/export excluem categorias secretas, chaves detectadas em stores textuais, cookies, tokens e storage da extensão.
+
+O modo Demo simula esses estados para demonstração visual: ele não cria, baixa ou restaura arquivos. A documentação operacional está em [Backup, restauração e data health](../../docs/02-architecture/backup-restore-and-data-health.md).
+
 ## Telas
 
 - Home/Dashboard
@@ -89,7 +115,7 @@ O frontend não calcula score real, não move regra de negócio para o cliente e
 - Inteligência de Candidaturas
 - Fontes e Captura
 - Configurações
-- Privacidade
+- Privacidade, Data Health, Backup e Restauração
 
 ## IA e Providers
 
@@ -201,6 +227,7 @@ Desktop: 1440x1000
 
 ```powershell
 cd apps/web
+npm run test:unit
 npm run test:e2e
 ```
 
@@ -219,6 +246,8 @@ docs/assets/screenshots/
 - Sem login ou scraping autenticado do Lattes.
 - Sem inscrição automática em concursos ou editais.
 - Sem API keys em `localStorage`, `sessionStorage` ou bundle público.
+- Restore HTTP em dry-run por padrão e aplicação com confirmação explícita.
+- Caminhos absolutos do diretório de dados não são enviados ao frontend.
 - GitHub Pages continua estático/demo-oriented.
 - Backend/core continuam responsáveis por regras, score e validações.
 - Streamlit permanece disponível como modo legado/dev/local debug.

@@ -1,86 +1,86 @@
-# Prompt Catalog
+# Catálogo de prompts
 
-Este documento é o índice dos prompts oficiais planejados para o SotuHire.
+Este catálogo é gerado do `PromptRegistry` real. Ele diferencia contratos consumidos pelo produto de contratos apenas registrados e valida schema, consumidores, providers, fallback, testes e documentação.
 
-Os prompts completos ficam em `docs/04-ai/prompts/`.
+A IA interpreta e sugere; schemas e regras determinísticas validam a resposta. Nenhum prompt autoriza inventar formação, experiência, publicação, registro ou resultado.
 
-O objetivo deste catálogo é evitar prompts soltos, curtos ou genéricos demais. Cada prompt precisa ter uma função clara, contrato de entrada, contrato de saída, regras anti-invenção, critérios de confiança e relação explícita com os módulos que o Codex deverá implementar nas próximas versões.
+## Fonte de verdade
+
+- `modules/ai/prompt_loader.py` define os `PromptSpec` oficiais;
+- o schema Pydantic de cada spec é o contrato de saída executável;
+- consumidores são encontrados em chamadas Python reais, não em comentários;
+- testes e documentos são localizados por referência exata ao `prompt_id`;
+- este arquivo não contém chaves, payloads pessoais nem respostas de providers.
+
+Um arquivo em `docs/04-ai/prompts/` que não aparece na tabela pode documentar uma ideia ou capacidade futura, mas não representa um contrato registrado no runtime.
 
 ## Decisão de arquitetura
 
-O SotuHire não deve usar um prompt único para currículo, vaga, ATS, matching, GitHub e carreira.
+O produto usa prompts separados por tarefa, versionados e com schemas próprios. Não existe um prompt genérico autorizado a decidir todo o fluxo de carreira.
 
-O produto deve usar uma camada de prompts versionados, separados por tarefa, com schemas próprios e validação posterior no código.
-
-A regra é:
-
-```txt
-IA interpreta, extrai, classifica, explica e sugere.
-Código valida, calcula score, aplica regras, persiste dados e bloqueia exageros.
+```text
+entrada estruturada + evidências rastreáveis
+→ PromptSpec versionado
+→ Gemini ou OpenAI (opcional)
+→ validação Pydantic/JsonGuard
+→ fallback determinístico explícito
+→ revisão humana
 ```
 
-Isso mantém o produto mais testável, menos frágil e mais seguro para uso com currículos, vagas e evidências profissionais.
+## Regras globais
 
-## Regra principal
+Todos os prompts consumidos pelo produto devem:
 
-Não usar prompt genérico para tudo.
-
-Cada função do produto deve ter prompt próprio, saída estruturada e schema validável.
-
-Cada prompt deve ser tratado como contrato de produto, não como texto improvisado dentro de uma função Python.
-
-## Prompts oficiais planejados
-
-| Prompt | Arquivo | Função |
-|---|---|---|
-| Resume Extraction v1 | `prompts/resume-extraction-v1.md` | Extrair currículo bruto para perfil estruturado. |
-| Job Extraction Multi-Domain v1 | `prompts/job-extraction-multi-domain-v1.md` | Extrair vaga de qualquer área para requisitos estruturados. |
-| Domain Classification v1 | `prompts/domain-classification-v1.md` | Classificar domínio profissional e categorias. |
-| Match Analysis Evidence-Based v1 | `prompts/match-analysis-evidence-based-v1.md` | Comparar perfil e vaga por evidências. |
-| ATS Analysis v1 | `prompts/ats-analysis-v1.md` | Avaliar currículo para ATS e clareza. |
-| Resume Tailor v1 | `prompts/resume-tailor-v1.md` | Sugerir adaptação segura do currículo. |
-| GitHub Repo Analysis v2 | `prompts/github-repo-analysis-v2.md` | Avaliar repositório como evidência técnica e profissional. |
-| GitHub Profile Analysis v1 | `prompts/github-profile-analysis-v1.md` | Avaliar perfil GitHub agregado. |
-| Portfolio Gap Analysis v1 | `prompts/portfolio-gap-analysis-v1.md` | Identificar lacunas de portfólio. |
-| Hidden Job Detection v1 | `prompts/hidden-job-detection-v1.md` | Detectar oportunidade em texto informal. |
-| Career Advice v1 | `prompts/career-advice-v1.md` | Gerar plano de evolução profissional. |
-| Job Wishlist Builder v1 | Registry programático | Transformar texto livre em rascunho de wishlist revisável para o Radar. |
-| Profile Items Extractor v1 | Registry programático | Extrair itens universais de perfil a partir de texto colado, sem confirmar automaticamente. |
-| Profile Lattes Extractor v1 | `prompts/profile-lattes-extractor-v1.md` | Extrair evidências acadêmicas/Lattes como candidatos revisáveis para o Perfil Profissional Universal. |
-| Public Exam Notice Extractor v1 | `prompts/public-exam-notice-extractor-v1.md` | Estruturar editais e concursos a partir de texto colado como rascunho revisável. |
-
-Na v1.9.4, prompts estruturados podem rodar via Gemini ou OpenAI pelo backend local. O modelo vem do catálogo salvo em Configurações de IA, e falhas do provider devem cair para fallback local quando o fluxo tiver parser determinístico.
-
-## Regras globais para todos os prompts
-
-Todos os prompts devem obedecer:
-
-- retornar JSON válido;
-- não usar Markdown na resposta do modelo;
-- não usar bloco de código na resposta do modelo;
-- não inventar fatos;
-- não inventar experiência profissional;
-- não inventar empresa, salário, curso, certificação, registro profissional ou resultado;
-- usar `null` ou array vazio quando não houver evidência;
-- retornar `confidence` por campo importante;
-- diferenciar informação ausente de informação não analisada;
-- marcar necessidade de revisão humana quando necessário;
-- não gerar afirmações profissionais sem evidência;
-- preservar a diferença entre sugestão e fato comprovado;
-- preservar a diferença entre competência comprovada e competência inferida;
-- preservar a diferença entre requisito obrigatório, desejável e opcional;
+- retornar dados compatíveis com o schema registrado;
+- não inventar experiência, formação, certificação, publicação ou registro profissional;
+- diferenciar fato confirmado, inferência e sugestão;
+- preservar `source_ref` e evidências quando o fluxo as fornece;
+- indicar ausência de informação em vez de preencher lacunas;
+- reduzir confiança quando houver ambiguidade ou conflito;
+- manter warnings e necessidade de revisão humana;
+- respeitar a diferença entre requisito obrigatório, desejável e opcional;
 - não transformar projeto pessoal em experiência corporativa;
 - não transformar curso livre em graduação;
-- não transformar conhecimento citado em certificação;
-- não afirmar registro profissional se ele não estiver no currículo;
-- não sugerir mentira curricular;
-- quando houver dúvida, reduzir confidence.
+- não afirmar que uma pessoa possui skill só porque a vaga a exige;
+- não tomar decisão crítica final nem executar candidatura;
+- omitir contexto sensível de providers externos sem consentimento explícito;
+- registrar provider/modelo solicitado e usado quando a execução é rastreada;
+- tornar fallback visível em metadata e warnings.
 
-## Campos mínimos de entrada
+## Registro verificável
 
-Sempre que possível, os prompts devem receber contexto estruturado em vez de texto solto.
+| prompt_id | version | status | schema | consumers | providers | fallback | tests | docs |
+|---|---|---|---|---|---|---|---|---|
+| `ats_analysis_v1` | `1.0.0` | implementado | `modules.ai.schemas.analysis_insights.AtsAiReviewOutput` | `modules/tracker/job_tracker.py`<br>`apps/api/services/analysis.py` | gemini, openai | Revisão local de palavras-chave | `tests/test_api_ai_routing_v15.py`<br>`tests/test_api_ats.py`<br>`tests/test_prompt_registry.py` | `docs/04-ai/ai-orchestration-and-confidence.md`<br>`docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompting.md`<br>`docs/04-ai/prompts/ats-analysis-v1.md` |
+| `career_advice_v1` | `1.0.0` | registrado sem consumidor | `modules.ai.schemas.analysis_insights.SafeAiInsightOutput` | — | gemini, openai | Sem consumidor ativo; fallback não executado | `tests/test_prompt_registry.py` | `docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompts/career-advice-v1.md` |
+| `domain_classification_v1` | `1.0.0` | implementado sem fluxo integrado | `modules.ai.schemas.domain_classification.DomainClassificationOutput` | `modules/ai/domain_classification_service.py` | gemini, openai | Classificador determinístico de domínio | `tests/test_prompt_registry.py` | `docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompts/domain-classification-v1.md` |
+| `github_repo_analysis_v2` | `2.0.0` | implementado | `modules.github_analyzer.schemas.GitHubRepoAnalysisOutput` | `modules/github_analyzer/analyzer_service.py`<br>`apps/api/services/analysis.py` | gemini, openai | Analisador heurístico do repositório | `tests/test_github_analyzer_service.py`<br>`tests/test_prompt_registry.py` | `docs/04-ai/ai-orchestration-and-confidence.md`<br>`docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompting.md`<br>`docs/04-ai/prompts/github-repo-analysis-v2.md` |
+| `job_extraction_multi_domain_v1` | `1.0.0` | implementado | `modules.ai.schemas.job_extraction.JobExtractionOutput` | `modules/ai/structured_job_extractor.py`<br>`apps/api/services/analysis.py` | gemini, openai | Parser local de vaga | `tests/test_prompt_registry.py`<br>`tests/test_structured_job_extractor.py` | `docs/04-ai/ai-orchestration-and-confidence.md`<br>`docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompting.md`<br>`docs/04-ai/prompts/job-extraction-multi-domain-v1.md` |
+| `job_radar_match_explanation_v1` | `1.0.0` | implementado | `modules.ai.schemas.analysis_insights.RadarMatchExplanationOutput` | `apps/api/services/radar.py` | gemini, openai | Explicação determinística de aderência | `tests/test_api_radar.py`<br>`tests/test_prompt_registry.py` | `docs/04-ai/prompt-registry.md` |
+| `job_wishlist_builder_v1` | `1.0.0` | implementado | `modules.ai.schemas.analysis_insights.WishlistDraftOutput` | `apps/api/services/radar.py` | gemini, openai | Parser local de wishlist | `tests/test_api_radar_wishlist_draft.py`<br>`tests/test_prompt_registry.py` | `docs/04-ai/prompt-registry.md` |
+| `match_analysis_evidence_based_v1` | `1.0.0` | implementado | `modules.schemas.job_analysis.JobAnalysisSchema` | `modules/ai/structured_analysis.py`<br>`modules/local_api/app.py`<br>`modules/tracker/job_tracker.py`<br>`apps/api/services/analysis.py` | gemini, openai | Match Engine determinístico | `tests/test_ai_run_store.py`<br>`tests/test_api_ai_routing_v15.py`<br>`tests/test_prompt_registry.py` | `docs/04-ai/ai-orchestration-and-confidence.md`<br>`docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompting.md`<br>`docs/04-ai/prompts/match-analysis-evidence-based-v1.md` |
+| `profile_items_extractor_v1` | `1.0.0` | implementado | `modules.profile.models.ProfileImportDraft` | `apps/api/services/profile.py` | gemini, openai | Extrator local de itens de perfil | `tests/test_api_profile.py`<br>`tests/test_prompt_registry.py` | `docs/04-ai/prompt-registry.md` |
+| `profile_lattes_extractor_v1` | `1.0.0` | implementado | `modules.academic.lattes_models.LattesImportResult` | `modules/academic/lattes_service.py` | gemini, openai | Parser local de Lattes | `tests/test_academic_lattes.py`<br>`tests/test_prompt_registry.py` | `docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompts/profile-lattes-extractor-v1.md` |
+| `public_exam_notice_extractor_v1` | `1.0.0` | implementado | `modules.public_exams.models.PublicExamImportResult` | `modules/public_exams/service.py` | gemini, openai | Parser local de edital | `tests/test_prompt_registry.py`<br>`tests/test_public_exams.py` | `docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompts/public-exam-notice-extractor-v1.md` |
+| `resume_extraction_v1` | `1.0.0` | implementado | `modules.ai.schemas.resume_extraction.ResumeExtractionOutput` | `modules/ai/structured_resume_extractor.py`<br>`apps/api/services/analysis.py` | gemini, openai | Parser local de currículo | `tests/test_prompt_registry.py`<br>`tests/test_structured_resume_extractor.py` | `docs/04-ai/ai-orchestration-and-confidence.md`<br>`docs/04-ai/prompt-architecture.md`<br>`docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompting.md`<br>`docs/04-ai/prompts/resume-extraction-v1.md` |
+| `resume_tailor_v1` | `1.0.0` | implementado | `modules.ai.schemas.analysis_insights.ResumeTailorAiOutput` | `apps/api/services/analysis.py` | gemini, openai | Regras locais de adaptação segura | `tests/test_api_ai_routing_v15.py`<br>`tests/test_api_tailor.py`<br>`tests/test_prompt_registry.py` | `docs/04-ai/ai-orchestration-and-confidence.md`<br>`docs/04-ai/prompt-registry.md`<br>`docs/04-ai/prompting.md`<br>`docs/04-ai/prompts/resume-tailor-v1.md` |
+| `source_import_enrichment_v1` | `1.0.0` | implementado | `modules.ai.schemas.analysis_insights.SourceImportEnrichmentOutput` | `apps/api/services/sources.py` | gemini, openai | Normalização determinística da importação | `tests/test_api_source_imports.py`<br>`tests/test_prompt_registry.py` | `docs/04-ai/prompt-registry.md` |
 
-Campos comuns:
+## Como interpretar o status
+
+- `implementado`: existe ao menos uma chamada executável que referencia o prompt;
+- `implementado sem fluxo integrado`: há serviço executável, mas nenhuma rota/feature o invoca;
+- `registrado sem consumidor`: o contrato está no registry, mas nenhum fluxo o chama;
+- a presença no registry não prova que todas as telas usam o resultado;
+- a coluna `tests` mostra referências existentes, não uma garantia automática de cobertura total.
+
+## Contratos sem consumidor
+
+- `career_advice_v1` está registrado, mas não é chamado por nenhum módulo ou serviço.
+
+## Envelope de entrada recomendado
+
+Nem todos os prompts usam todos os campos, mas integrações novas devem preferir contexto estruturado e mínimo em vez de concatenar dados indiscriminadamente.
 
 ```json
 {
@@ -93,170 +93,120 @@ Campos comuns:
   "job_post": "object | null",
   "resume_text": "string | null",
   "job_text": "string | null",
-  "portfolio_evidence": "object | null",
-  "github_evidence": "object | null",
-  "memory_context": "object | null",
+  "career_context": "object | null",
+  "source_refs": [],
   "constraints": "object | null"
 }
 ```
 
-Nem todo prompt usa todos esses campos, mas o padrão ajuda o Codex a implementar um `PromptRegistry` consistente.
+O contexto enviado deve ser limitado ao propósito da análise. O Perfil Universal completo não deve ser anexado a toda chamada por padrão.
 
-## Campos mínimos de saída
+## Envelope de saída recomendado
 
-Sempre que possível, a saída deve conter:
+O schema específico é soberano. Quando fizer sentido para o fluxo, ele deve expor também os sinais de auditoria abaixo:
 
 ```json
 {
-  "prompt_id": "string",
-  "prompt_version": "string",
   "result": {},
   "confidence": 0.0,
   "needs_human_review": true,
   "warnings": [],
-  "evidence": [],
+  "evidence_used": [],
+  "source_refs": [],
   "missing_information": [],
-  "model_notes": []
+  "unsupported_claims": []
 }
 ```
 
-Os prompts específicos podem expandir esse formato com schemas próprios.
+Campos ausentes não devem ser confundidos com campos não analisados. Uma resposta válida no JSON, mas incompatível com as evidências, ainda deve ser rejeitada ou marcada para revisão.
 
-## Status documental e técnico
+## Metadados de execução
 
-| Prompt | Status documental | Status código | Marco |
-|---|---|---|---|
-| Resume Extraction | implementado | implementado | v0.10.0 |
-| Job Extraction | implementado | implementado | v0.10.0 |
-| Domain Classification | implementado | implementado | v0.10.0 |
-| Job Wishlist Builder | parcial | implementado | v1.8.1 |
-| Profile Items Extractor | parcial | implementado | v1.8.2 |
-| Profile Lattes Extractor | implementado | implementado | v1.9.2 |
-| Public Exam Notice Extractor | implementado | implementado | v1.9.3 |
-| Match Analysis | revisado | engine determinística implementada; IA opcional futura | v0.12.0 |
-| ATS Analysis | revisado | heurística existente com integração de evidências do Match Engine 2.0 | v1.0.0 |
-| Resume Tailor | revisado | fallback seguro com integração de evidências do Match Engine 2.0 | v1.0.0 |
-| GitHub Repo Analysis | implementado | implementado | v0.11.0 |
-| GitHub Profile Analysis | revisado | fallback heurístico existente | v0.11.0 |
-| Portfolio Gap Analysis | revisado | planejamento/futuro | v0.11.0 |
-| Hidden Job Detection | planejado | não implementado | pós-v0.10.0 |
-| Career Advice | revisado | recomendações seguras; automação profunda pós-v1 | pós-v1 |
+Fluxos rastreados devem manter, quando disponíveis:
 
-## Como o Codex deve usar estes documentos
+- `run_id`, `feature`, `prompt_id` e `prompt_version`;
+- `provider_requested`, `provider_used`, `model_requested` e `model_used`;
+- `analysis_mode`, `fallback_used` e `fallback_reason`;
+- `schema_valid`, `latency_ms`, `token_usage` e `estimated_cost`;
+- `input_hash`, `context_sources`, `source_refs` e `evidence_used`;
+- `warnings`, `needs_user_review` e `created_at`.
 
-O Codex deve ler primeiro:
+Segredos, cabeçalhos de autenticação e conteúdo sensível não pertencem ao trace.
 
-1. `docs/04-ai/prompt-architecture.md`;
-2. `docs/04-ai/prompt-registry.md`;
-3. este catálogo;
-4. o arquivo específico do prompt a implementar;
-5. o roadmap da versão alvo.
+## Política de fallback
 
-A implementação não deve colocar prompts grandes diretamente no meio de funções de análise.
+O fallback é uma decisão de produto, não apenas tratamento de exceção:
 
-A implementação deve criar uma camada de registro, validação e versionamento.
+1. preserve a entrada original e o resultado determinístico local;
+2. tente o provider somente quando o recurso e a permissão estiverem ativos;
+3. valide a saída estruturada antes de mesclar qualquer campo;
+4. ao falhar, use o resultado local sem ocultar `fallback_used`;
+5. informe um motivo seguro, sem incluir chave, payload integral ou traceback sensível;
+6. mantenha a decisão final sob revisão da pessoa usuária.
 
-## Sequência recomendada de implementação
+Quando não existe fallback seguro, o fluxo deve retornar indisponibilidade clara em vez de fabricar uma resposta aparentemente completa.
 
-1. Criar tipos base de prompt.
-2. Criar `PromptSpec`.
-3. Criar `PromptRegistry`.
-4. Criar `JsonGuard`.
-5. Criar schemas Pydantic por prompt.
-6. Implementar prompt de extração de currículo.
-7. Implementar prompt de extração de vaga.
-8. Implementar prompt de classificação de domínio.
-9. Adicionar testes com provider fake.
-10. Só depois conectar ao provider real.
+## Providers e fallback
 
-## Como lidar com heurística existente
+Os mesmos `PromptSpec` estruturados podem ser executados pelos adapters Gemini e OpenAI. O provider local não consome esses prompts: ele representa o caminho determinístico indicado na coluna `fallback`. Falhas externas devem aparecer nos metadados da análise e nunca ser silenciosas.
 
-As heurísticas atuais não devem ser apagadas na primeira implementação.
+## Multiárea e linguagem
 
-Elas devem virar fallback e mecanismo de comparação.
+Os contratos devem funcionar para tecnologia, engenharias, saúde, direito, educação, pesquisa, artes, design, administração, turismo, cursos técnicos e transição de carreira. Exemplos e schemas não podem pressupor que todo portfólio é software ou que toda evidência profissional vem de emprego formal.
 
-Fluxo ideal:
+## Quando não usar IA
 
-```txt
-heurística local -> extração inicial rápida
-IA estruturada -> extração semântica profunda
-merger -> escolhe campos, confidence e revisão humana
-código -> valida e persiste
+Não é necessário chamar um provider para:
+
+- CRUD, mudança de estágio ou cálculo de métricas do Tracker;
+- validação de checksum, backup, restore ou migração de schema;
+- deduplicação por identificador forte, DOI, ORCID ou URL canônica;
+- aplicação de regras de segurança e bloqueios anti-invenção;
+- operações que já possuem resultado determinístico suficiente;
+- qualquer ação automática de candidatura ou inscrição, que está fora de escopo.
+
+A IA também não deve ser usada para confirmar sozinha um ProfileItem, declarar que um requisito regulatório foi atendido ou substituir leitura oficial de edital.
+
+## Revisão humana
+
+A interface deve solicitar revisão quando houver baixa confiança, evidência conflitante, claim sem source_ref, dado sensível, requisito regulado, mudança material no currículo ou fallback. Aceite e rejeição humana são sinais de avaliação; não são autorização para aprender ou publicar dados pessoais fora do ambiente local.
+
+## Avaliação associada
+
+Prompts consumidos devem ser avaliados com fixtures multiárea e, quando aplicável:
+
+- validade de schema e acurácia de extração de campos;
+- precisão/recall de evidências;
+- taxa de claims sem suporte e alucinação;
+- calibração de confiança e taxa de fallback;
+- latência, tokens, custo estimado e concordância entre providers;
+- aceitação/rejeição humana e precisão de deduplicação.
+
+Testes externos são opt-in. O CI padrão usa fakes/mocks e não depende de chaves reais.
+
+## Regras de manutenção
+
+- altere o `PromptSpec` e seu schema de saída de forma versionada;
+- mantenha ao menos um teste com provider fake para prompts consumidos;
+- preserve evidências, warnings e necessidade de revisão humana;
+- não registre chaves, payloads sensíveis ou conteúdo pessoal neste catálogo;
+- regenere e confira este arquivo após incluir ou remover prompts.
+
+Um prompt só deve ser tratado como pronto quando possui objetivo claro, versão, schema, consumidor, fallback explícito, teste e documentação coerente. Alterações incompatíveis exigem nova versão do contrato.
+
+### Checklist de alteração
+
+1. confirme se a mudança altera apenas texto ou também o contrato;
+2. atualize versão e schema quando houver incompatibilidade;
+3. ajuste consumidores e fixtures com provider fake;
+4. valide o caminho de fallback e os warnings;
+5. verifique que evidências/source_refs continuam preservados;
+6. gere novamente este catálogo e execute `--check`;
+7. registre mudanças de produto no CHANGELOG, não neste catálogo atemporal.
+
+## Validação
+
+```bash
+python scripts/generate_prompt_catalog.py
+python scripts/generate_prompt_catalog.py --check
 ```
-
-## Critérios de pronto para prompts
-
-Um prompt só é considerado pronto quando:
-
-- tem arquivo próprio em `docs/04-ai/prompts/`;
-- tem `PROMPT_ID`;
-- tem `PROMPT_VERSION`;
-- tem objetivo claro;
-- tem quando usar;
-- tem quando não usar;
-- tem input contract;
-- tem output schema;
-- tem regras anti-invenção;
-- tem regras de confidence;
-- tem failure modes;
-- tem relação com módulos de código;
-- tem pelo menos uma fixture planejada;
-- tem teste planejado com provider fake.
-
-## Relação com roadmap
-
-Os prompts não são todos implementados de uma vez.
-
-A ordem segue os marcos:
-
-- v0.10.0: currículo, vaga e domínio;
-- v0.11.0: GitHub, perfil GitHub e portfólio;
-- v0.12.0: Match Engine 2.0 determinístico e revisão dos prompts de matching, ATS, tailor e carreira;
-- v1.0: integração profunda, consolidação, exemplos multiárea e demos.
-
-## Relação com multiárea
-
-Todos os prompts devem evitar viés exclusivo para tecnologia.
-
-Eles precisam funcionar para:
-
-- tecnologia;
-- cybersecurity;
-- engenharia biomédica;
-- engenharia civil;
-- outras engenharias;
-- enfermagem;
-- psicologia;
-- pedagogia;
-- arquitetura;
-- design de interiores;
-- administração;
-- marketing;
-- financeiro;
-- cursos técnicos;
-- saúde;
-- educação;
-- humanas;
-- exatas;
-- indústria;
-- áreas generalistas.
-
-## Como revisar alterações futuras
-
-Quando um prompt mudar, revisar:
-
-- se o schema mudou;
-- se os testes precisam mudar;
-- se a versão do prompt precisa subir;
-- se outputs antigos continuam compatíveis;
-- se o changelog precisa citar a mudança;
-- se a documentação da versão alvo continua coerente.
-
-## Como usar este catálogo
-
-- Para visão geral, leia este arquivo.
-- Para arquitetura, leia `prompt-architecture.md`.
-- Para registro e versionamento, leia `prompt-registry.md`.
-- Para implementar, use os arquivos individuais em `prompts/`.
-- Para saber prioridade, leia `docs/01-product/roadmap.md`.
-- Para entender o produto, leia `docs/01-product/vision.md`.

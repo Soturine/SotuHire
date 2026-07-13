@@ -2,7 +2,7 @@
   "schema_version": 1,
   "manifest_id": "sotuhire-capabilities",
   "description": "Inventário verificável das capacidades principais expostas pela API e pelo frontend local do SotuHire.",
-  "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e",
+  "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32",
   "capabilities": [
     {
       "capability_id": "resume_extraction",
@@ -27,7 +27,7 @@
       "docs": ["docs/02-architecture/parsers.md", "docs/04-ai/prompts/resume-extraction-v1.md"],
       "status": "complete",
       "gaps": ["A extração isolada não persiste automaticamente uma variante de currículo."],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "job_extraction",
@@ -52,7 +52,7 @@
       "docs": ["docs/02-architecture/parsers.md", "docs/04-ai/prompts/job-extraction-multi-domain-v1.md"],
       "status": "complete",
       "gaps": [],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "match",
@@ -77,7 +77,7 @@
       "docs": ["docs/03-business-rules/matching-rules.md", "docs/04-ai/prompts/match-analysis-evidence-based-v1.md"],
       "status": "complete",
       "gaps": [],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "ats",
@@ -102,7 +102,7 @@
       "docs": ["docs/03-business-rules/ats-rules.md", "docs/04-ai/prompts/ats-analysis-v1.md"],
       "status": "complete",
       "gaps": [],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "resume_tailor",
@@ -127,7 +127,7 @@
       "docs": ["docs/03-business-rules/resume-tailor-rules.md", "docs/04-ai/prompts/resume-tailor-v1.md"],
       "status": "complete",
       "gaps": ["Exportação avançada de variantes permanece no roadmap de Resume Studio."],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "universal_profile",
@@ -160,7 +160,7 @@
       "docs": ["docs/02-architecture/career-context-engine.md", "docs/02-architecture/data-lineage-and-deduplication.md"],
       "status": "complete",
       "gaps": ["Alguns módulos legados ainda mantêm stores próprios e são tratados pela migração gradual."],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "public_exams",
@@ -191,7 +191,7 @@
       "docs": ["docs/03-business-rules/public-exam-rules.md", "docs/02-architecture/public-exams-foundation.md"],
       "status": "complete",
       "gaps": [],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "radar",
@@ -224,7 +224,7 @@
       "docs": ["docs/03-business-rules/job-radar-rules.md", "docs/02-architecture/background-jobs.md"],
       "status": "complete",
       "gaps": ["Conectores oficiais adicionais permanecem fora desta capacidade atual."],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "tracker",
@@ -255,7 +255,7 @@
       "docs": ["docs/07-development/job-tracker-kanban.md", "docs/02-architecture/storage-and-history.md"],
       "status": "complete",
       "gaps": ["Registros legados sem texto original permanecem sem snapshot inventado."],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "github_portfolio",
@@ -280,7 +280,7 @@
       "docs": ["docs/05-data-sources/github-portfolio-analyzer.md", "docs/04-ai/prompts/github-repo-analysis-v2.md"],
       "status": "partial",
       "gaps": ["Análise agregada do perfil GitHub ainda não possui prompt consumido pelo runtime principal.", "O relatório de projeto legado ainda não possui snapshot imutável dedicado."],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "sources_capture",
@@ -312,7 +312,7 @@
       "docs": ["docs/05-data-sources/public-source-importers.md", "docs/02-architecture/opportunity-collection-pipeline.md"],
       "status": "complete",
       "gaps": [],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "extension_bridge",
@@ -345,7 +345,7 @@
       "docs": ["docs/02-architecture/local-companion-api.md", "docs/02-architecture/extension-profile-bridge.md"],
       "status": "complete",
       "gaps": ["Compatibilidade depende de manter manifesto, extensão e companion versionados em conjunto."],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "ai_settings",
@@ -378,7 +378,7 @@
       "docs": ["docs/02-architecture/ai-provider-model-catalog.md", "docs/04-ai/provider-strategy.md"],
       "status": "complete",
       "gaps": [],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "notifications",
@@ -408,7 +408,7 @@
       "docs": ["docs/02-architecture/background-jobs.md", "docs/07-development/alerts-roadmap.md"],
       "status": "complete",
       "gaps": ["Não existe rota exclusiva; o resumo é exibido no Dashboard e no Radar."],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     },
     {
       "capability_id": "data_reliability",
@@ -439,7 +439,7 @@
       "docs": ["docs/02-architecture/storage-and-history.md", "docs/02-architecture/data-lineage-and-deduplication.md"],
       "status": "complete",
       "gaps": [],
-      "last_verified_commit": "309f9662f1da410349d85fefdcacff8778cea51e"
+      "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
     }
   ]
 }

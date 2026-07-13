@@ -182,19 +182,21 @@ flowchart LR
 Gemini recebe somente o resumo relevante quando a flag explícita estiver habilitada. Sem essa
 autorização, a memória continua disponível apenas para o fluxo local.
 
-## Fluxo com Browser Companion na v0.9.0
+## Fluxo atual com Browser Companion
 
 ```mermaid
 flowchart LR
-    A[LinkedIn, Gupy, Indeed, InfoJobs, Nube ou outro portal] --> B[Extensão assistiva]
-    B --> C[Local Companion API]
-    C --> D[Identidade multiportal]
-    D --> E[Captura e oportunidade únicas]
-    E --> F[Análise com memória e preferências]
-    F --> G[Tracker com todas as fontes]
-    G --> H[Dashboard e ranking de requisitos]
-    G --> I[Career Memory]
+    A[Página aberta] --> B[Extensão assistiva]
+    B --> C[JSON-LD ou conteúdo visível]
+    C --> D{Companion online?}
+    D -- não --> E[Fila offline com retry]
+    E --> D
+    D -- sim --> F[Identidade e dedupe]
+    F --> G[Snapshot imutável]
+    G --> H[Análise ou Tracker]
+    H --> I[Perfil após revisão]
 ```
 
-A identidade usa URL normalizada e fallback por empresa+título semelhante. Isso evita duplicar a
-mesma vaga quando um agregador encaminha a candidatura para o ATS da empresa.
+A identidade usa URL normalizada, referências fortes e hash de conteúdo. A captura preserva todas
+as fontes; merges incertos continuam sugestões. Handshake e warnings evitam integração silenciosa
+entre versões incompatíveis.
