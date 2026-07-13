@@ -75,7 +75,10 @@ jobs:
         run: |
           python scripts/migrate_local_data.py --dry-run
           python scripts/check_data_health.py
-          python scripts/verify_clean_install.py
+          # The dedicated frontend job installs Chromium and runs E2E. Keep
+          # this archive validation browser-independent to avoid duplicating
+          # a large browser install in the Python quality job.
+          python scripts/verify_clean_install.py --skip-e2e
 
       - name: Measure coverage baseline
         run: pytest --cov=modules --cov=apps/api --cov-report=term-missing --cov-report=json:coverage.json
