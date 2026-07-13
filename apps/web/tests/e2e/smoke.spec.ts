@@ -575,6 +575,10 @@ test("public UI does not contain common mojibake sequences", async ({ page }) =>
 
   for (const screen of coreScreens) {
     await page.goto(screen.path);
+    // Wait for the lazy route to finish rendering before starting the next
+    // navigation. WebKit can otherwise let a pending SPA transition from the
+    // previous screen interrupt the following page.goto call.
+    await expect(page.getByRole("heading", { name: screen.heading }).first()).toBeVisible();
     const bodyText = await page.locator("body").innerText();
     expect(bodyText, `${screen.path} should render valid UTF-8 copy`).not.toMatch(mojibakePattern);
   }

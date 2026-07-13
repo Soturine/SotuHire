@@ -6,10 +6,18 @@ on:
   pull_request:
     branches: [main]
 
-jobs:
-  quality:
-    runs-on: ubuntu-latest
+permissions:
+  contents: read
 
+jobs:
+  python-tests:
+    name: Python ${{ matrix.python-version }} · ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -17,7 +25,29 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Tests with mocks and local fixtures
+        run: pytest -q
+
+  python-quality:
+    name: Python quality, coverage and contracts
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
 
       - name: Install dependencies
         run: |
@@ -28,18 +58,48 @@ jobs:
         run: ruff check .
 
       - name: Ruff format check
-        run: ruff format . --check
+        run: ruff format --check .
 
-      - name: Tests
-        run: pytest -v
-
-      - name: Compile and typecheck Python
+      - name: Compile and typecheck
         run: |
           python -m compileall modules tests apps scripts
           pyright
 
-      - name: Package browser extension
-        run: python scripts/package_extension.py
+      - name: Verify capability, integration and prompt catalogs
+        run: |
+          python scripts/validate_capabilities.py
+          python scripts/generate_integration_matrix.py --check
+          python scripts/generate_prompt_catalog.py --check
+
+      - name: Verify read-only migration and data health commands
+        run: |
+          python scripts/migrate_local_data.py --dry-run
+          python scripts/check_data_health.py
+          python scripts/verify_clean_install.py
+
+      - name: Measure coverage baseline
+        run: pytest --cov=modules --cov=apps/api --cov-report=term-missing --cov-report=json:coverage.json
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-coverage
+          path: coverage.json
+
+      - name: Secret pattern scan
+        shell: bash
+        run: |
+          if git grep -n -I -E '(AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9_-]{20,}|sk-proj-[A-Za-z0-9_-]{20,})' -- .; then
+            echo 'Potential credential found in tracked files.'
+            exit 1
+          fi
+
+  frontend:
+    name: Frontend unit, build and E2E
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -52,22 +112,47 @@ jobs:
         working-directory: apps/web
         run: npm ci
 
-      - name: Frontend lint
+      - name: Unit and component tests
         working-directory: apps/web
-        run: npm run lint
+        run: npm run test:unit
 
-      - name: Frontend typecheck
+      - name: Lint, typecheck and build
         working-directory: apps/web
-        run: npm run typecheck
+        run: |
+          npm run lint
+          npm run typecheck
+          npm run build
 
-      - name: Frontend build
-        working-directory: apps/web
-        run: npm run build
-
-      - name: Install Chromium for smoke E2E
+      - name: Install Chromium
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
-      - name: Frontend smoke E2E
+      - name: Browser smoke and data reliability E2E
         working-directory: apps/web
-        run: npx playwright test tests/e2e/smoke.spec.ts --project=chromium
+        run: npx playwright test tests/e2e/smoke.spec.ts tests/e2e/data-reliability.spec.ts --project=chromium
+
+      - name: npm audit report
+        continue-on-error: true
+        working-directory: apps/web
+        run: npm audit --audit-level=high
+
+  extension:
+    name: Browser extension package
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Package and scan extension
+        run: python scripts/package_extension.py
+
+      - name: Upload extension artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: sotuhire-extension
+          path: dist/sotuhire-extension-*.zip
