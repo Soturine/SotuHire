@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from typing import Any
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -40,3 +41,16 @@ class StoredAnalysis(BaseModel):
     tailor: ResumeTailorOutput | None = None
     notes: str = ""
     privacy_acknowledged: bool = False
+    job_snapshot_id: str = ""
+    resume_snapshot_id: str = ""
+    tailored_resume_snapshot_id: str = ""
+    match_analysis_snapshot_id: str = ""
+    ats_analysis_snapshot_id: str = ""
+    source_capture_id: str = ""
+    applied_at: datetime | None = None
+    stage_history: list[dict[str, Any]] = Field(default_factory=list)
+    contact_history: list[dict[str, Any]] = Field(default_factory=list)
+    interview_notes: str = ""
+    follow_up_at: datetime | None = None
+    outcome: str = ""
+    outcome_reason: str = ""
