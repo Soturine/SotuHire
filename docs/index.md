@@ -27,7 +27,7 @@ SQLite local adiciona transações, foreign keys, migrações e vínculos entre 
 - [Snapshots](02-architecture/application-snapshots.md)
 - [Backup, restore e health](02-architecture/backup-restore-and-data-health.md)
 - [Linhagem e dedupe](02-architecture/data-lineage-and-deduplication.md)
-- [Auditoria atual](00-audit/v1.9.6-data-and-integration-audit.md)
+- [Auditoria atual da IA](00-audit/v1.9.7-ai-system-audit.md)
 
 ## IA responsável
 
@@ -38,6 +38,8 @@ Gemini e OpenAI são opcionais. O caminho local continua disponível e o fallbac
 - [Prompt Catalog](04-ai/prompt-catalog.md)
 - [Plano de avaliação](04-ai/ai-evaluation-plan.md)
 - [Golden datasets](09-testing/golden-datasets.md)
+- [Arquitetura de avaliação](04-ai/ai-evaluation-architecture.md)
+- [Feedback humano e outcomes](04-ai/human-feedback.md)
 
 ## Extensão e fontes
 

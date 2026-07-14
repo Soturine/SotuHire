@@ -25,7 +25,7 @@ O script valida:
 - exclusão de testes, documentação e materiais da listagem.
 
 O nome segue `dist/sotuhire-extension-v{manifest_version}.zip`. A versão atual do manifesto gera
-`dist/sotuhire-extension-v0.9.2.zip`.
+`dist/sotuhire-extension-v0.9.3.zip`.
 
 ## Arquivos da listagem
 

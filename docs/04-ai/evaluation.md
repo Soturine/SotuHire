@@ -2,7 +2,9 @@
 
 A avaliação de IA no SotuHire mede se uma saída é válida, baseada em evidências, útil e segura. “O JSON abriu” não é suficiente: uma resposta pode estar estruturalmente correta e ainda atribuir uma experiência inexistente, omitir a evidência mais importante ou esconder um fallback.
 
-O benchmark completo pertence ao ciclo de avaliação e tracing. Esta fundação define métricas, dados necessários e regras de execução sem transformar chamadas externas em requisito do CI padrão.
+O benchmark reprodutível está implementado em `scripts/run_ai_benchmark.py`. Chamadas externas continuam fora do CI padrão e exigem opt-in; golden, adversarial, mock e fallback local não dependem de chave.
+
+Consulte também a [arquitetura de avaliação](ai-evaluation-architecture.md), o [benchmarking](../09-testing/ai-benchmarking.md) e o [painel de comparação](provider-model-comparison.md).
 
 ## Dimensões obrigatórias
 

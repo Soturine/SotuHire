@@ -39,8 +39,8 @@ O popup informa a versão obtida do próprio `manifest.json`. A resposta inclui:
 
 ```json
 {
-  "extension_version": "0.9.2",
-  "companion_version": "1.9.6",
+  "extension_version": "0.9.3",
+  "companion_version": "1.9.7",
   "api_version": "v1",
   "capabilities": ["capture.job", "queue.retry", "jobposting.jsonld"],
   "compatible": true,

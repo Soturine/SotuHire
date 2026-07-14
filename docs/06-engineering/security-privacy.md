@@ -127,6 +127,12 @@ No MVP, o mais seguro é não salvar currículo automaticamente. Se salvar no fu
 
 Ao usar APIs de IA, lembre que o currículo será enviado para um serviço externo. A documentação deve deixar isso claro.
 
+### Traces e feedback
+
+`AiRunStore` persiste somente metadados mínimos, hashes, contagens e referências seguras. Inputs/outputs integrais ficam desativados por padrão; erros são sanitizados e a retenção é configurável. Feedback humano guarda o vínculo com `run_id`, a avaliação e um comentário opcional sanitizado, nunca a resposta original.
+
+Conteúdo importado é delimitado como não confiável. Prompt injection não pode solicitar chave, revelar system prompt, promover afirmação sem evidência ou alterar uma decisão determinística. Benchmarks externos usam apenas fixtures fictícias e variáveis temporárias; chaves não entram em frontend, SQLite, logs, screenshots ou pacote da extensão.
+
 ## Mensagens geradas
 
 O usuário deve revisar toda mensagem antes de enviar. A IA pode cometer erro, exagerar ou omitir informações.

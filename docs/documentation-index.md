@@ -52,6 +52,11 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 - [Avaliação](04-ai/evaluation.md)
 - [Plano de avaliação](04-ai/ai-evaluation-plan.md)
 - [Golden datasets](09-testing/golden-datasets.md)
+- [Arquitetura de avaliação](04-ai/ai-evaluation-architecture.md)
+- [Governança de prompts](04-ai/prompt-governance.md)
+- [Comparação de providers/modelos](04-ai/provider-model-comparison.md)
+- [Feedback humano](04-ai/human-feedback.md)
+- [Outcome Learning](02-architecture/outcome-learning.md)
 
 ## Fontes
 
@@ -81,6 +86,7 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 - [Testes de regressão](09-testing/regression-testing.md)
 - [Testes de screenshot](09-testing/screenshot-testing.md)
 - [Golden datasets](09-testing/golden-datasets.md)
+- [Benchmarking de IA](09-testing/ai-benchmarking.md)
 
 ## Portfólio
 
@@ -98,5 +104,5 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 ## Releases
 
-- [Release atual](releases/v1.9.6.md)
+- [Release atual](releases/v1.9.7.md)
 - [Releases anteriores no GitHub](https://github.com/Soturine/SotuHire/tree/main/docs/releases)

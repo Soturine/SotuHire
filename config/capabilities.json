@@ -440,6 +440,85 @@
       "status": "complete",
       "gaps": [],
       "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32"
+    },
+    {
+      "capability_id": "ai_quality_outcomes",
+      "label": "Qualidade de IA, feedback humano e resultados profissionais",
+      "frontend_route": "/ai-quality",
+      "api_endpoints": [
+        "GET /api/v1/ai/quality/summary",
+        "GET /api/v1/ai/quality/runs",
+        "GET /api/v1/ai/quality/providers",
+        "GET /api/v1/ai/quality/prompts",
+        "GET /api/v1/ai/quality/benchmarks",
+        "POST /api/v1/ai/feedback",
+        "DELETE /api/v1/ai/feedback/{feedback_id}",
+        "GET /api/v1/outcomes/summary",
+        "POST /api/v1/outcomes/events",
+        "GET /api/v1/outcomes/applications/{application_id}"
+      ],
+      "backend_services": [
+        "apps/api/services/ai_quality.py",
+        "modules/ai/tracing.py",
+        "modules/outcomes/service.py"
+      ],
+      "core_modules": [
+        "modules/ai/task_registry.py",
+        "modules/ai/evaluation/metrics.py",
+        "modules/ai/feedback.py",
+        "modules/ai/untrusted_content.py"
+      ],
+      "stores": [
+        "modules/storage/ai_runs.py",
+        "modules/ai/benchmark_store.py",
+        "modules/ai/feedback.py",
+        "modules/outcomes/service.py"
+      ],
+      "profile_integration": "Usa somente contexto necessário e confirmado; itens não confirmados permanecem sinalizados e não viram fatos.",
+      "context_purpose": "dashboard",
+      "ai_support": {
+        "enabled": true,
+        "prompt_ids": [
+          "resume_extraction_v1",
+          "job_extraction_multi_domain_v1",
+          "domain_classification_v1",
+          "profile_items_extractor_v1",
+          "profile_lattes_extractor_v1",
+          "public_exam_notice_extractor_v1",
+          "match_analysis_evidence_based_v1",
+          "ats_analysis_v1",
+          "resume_tailor_v1",
+          "job_wishlist_builder_v1",
+          "job_radar_match_explanation_v1",
+          "source_import_enrichment_v1",
+          "github_repo_analysis_v2",
+          "github_profile_analysis_v1",
+          "portfolio_gap_analysis_v1",
+          "career_advice_v1"
+        ],
+        "providers": ["local", "gemini", "openai"],
+        "fallback": "Determinístico local, explícito e mensurado"
+      },
+      "extension_support": "A extensão 0.9.3 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo.",
+      "dedupe_strategy": "Eventos e feedback usam IDs únicos; métricas de deduplicação são avaliadas separadamente.",
+      "snapshot_support": "Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas.",
+      "tests": [
+        "tests/test_ai_task_registry.py",
+        "tests/test_ai_evaluation_metrics.py",
+        "tests/test_ai_golden_datasets.py",
+        "tests/test_ai_feedback_outcomes.py",
+        "tests/test_ai_quality_api.py",
+        "tests/test_prompt_injection_defense.py"
+      ],
+      "docs": [
+        "docs/04-ai/ai-evaluation-architecture.md",
+        "docs/04-ai/prompt-governance.md",
+        "docs/02-architecture/outcome-learning.md",
+        "docs/09-testing/ai-benchmarking.md"
+      ],
+      "status": "complete",
+      "gaps": ["Métricas externas dependem de execução opt-in com chaves temporárias."],
+      "last_verified_commit": "3a0e24afdda74e1f57e2474e186f21ee9b130658"
     }
   ]
 }

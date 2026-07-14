@@ -48,6 +48,7 @@ nav:
   - Início: index.md
   - Documentação: documentation-index.md
   - Auditoria:
+      - Sistema de IA v1.9.7: 00-audit/v1.9.7-ai-system-audit.md
       - Dados e integração v1.9.6: 00-audit/v1.9.6-data-and-integration-audit.md
       - Auditoria de documentação: 00-audit/documentation-audit.md
       - Relatório local: 00-audit/local-build-report.md
@@ -94,6 +95,7 @@ nav:
       - Pipeline de coleta de oportunidades: 02-architecture/opportunity-collection-pipeline.md
       - Modo rápido vs avançado: 02-architecture/quick-vs-advanced-mode.md
       - Career Memory Store: 02-architecture/career-memory-store.md
+      - Outcome Learning: 02-architecture/outcome-learning.md
   - Dados e persistência:
       - Repository architecture: 02-architecture/storage-repository-architecture.md
       - Schema SQLite e migrações: 02-architecture/sqlite-schema-and-migrations.md
@@ -139,6 +141,12 @@ nav:
           - Public Exam Notice Extractor v1: 04-ai/prompts/public-exam-notice-extractor-v1.md
       - Evaluation: 04-ai/evaluation.md
       - Plano de avaliação: 04-ai/ai-evaluation-plan.md
+      - Arquitetura de avaliação: 04-ai/ai-evaluation-architecture.md
+      - Governança de prompts: 04-ai/prompt-governance.md
+      - Comparação de providers e modelos: 04-ai/provider-model-comparison.md
+      - Feedback humano: 04-ai/human-feedback.md
+      - Defesa contra prompt injection: 04-ai/prompt-injection-defense.md
+      - Custo e latência: 04-ai/ai-cost-latency.md
       - RAG memory: 04-ai/rag-memory-architecture.md
       - Career Memory e RAG local: 04-ai/career-memory-rag.md
       - Calibração de evidências: 04-ai/evidence-calibration.md
@@ -175,6 +183,7 @@ nav:
       - Security Privacy: 06-engineering/security-privacy.md
       - Avoid overengineering: 06-engineering/avoid-overengineering.md
   - Testes:
+      - Benchmarking de IA: 09-testing/ai-benchmarking.md
       - Golden datasets: 09-testing/golden-datasets.md
       - Fixtures realistas: 09-testing/realistic-fixtures.md
       - Testes de regressão: 09-testing/regression-testing.md
@@ -233,6 +242,8 @@ nav:
       - v1.9.5 Teste manual: 07-development/v1.9.5-manual-acceptance-test.md
       - v1.9.6 Data Reliability: 07-development/v1.9.6-data-reliability-migrations-backups.md
       - v1.9.6 Migração limpa: 07-development/v1.9.6-clean-migration-checklist.md
+      - v1.9.7 Avaliação, tracing e outcomes: 07-development/v1.9.7-ai-evaluation-tracing-outcomes.md
+      - v1.9.7 Checklist de IA externa: 07-development/v1.9.7-external-ai-test-checklist.md
       - Release notes v1.8.1: releases/v1.8.1.md
       - Release notes v1.8.2: releases/v1.8.2.md
       - Release notes v1.9.0: releases/v1.9.0.md
@@ -242,6 +253,7 @@ nav:
       - Release notes v1.9.4: releases/v1.9.4.md
       - Release notes v1.9.5: releases/v1.9.5.md
       - Release notes v1.9.6: releases/v1.9.6.md
+      - Release notes v1.9.7: releases/v1.9.7.md
   - Portfólio:
       - Roteiro de demonstração: 09-portfolio/demo-script.md
       - Case study: 09-portfolio/portfolio-case-study.md

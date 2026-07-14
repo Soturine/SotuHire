@@ -37,6 +37,12 @@ class PromptSpec:
     temperature: float = 0.1
     mode: str = "structured_extraction"
     max_retries: int = 1
+    context_policy: str = "minimum_necessary"
+    evaluation_suite: str = "golden"
+    golden_cases: tuple[str, ...] = ()
+    failure_modes: tuple[str, ...] = (...)
+    providers_tested: tuple[str, ...] = ("local",)
+    baseline_status: str = "pending"
 ```
 
 ## Interface implementada
@@ -69,6 +75,12 @@ class PromptRegistry:
 - `profile_items_extractor_v1`;
 - `profile_lattes_extractor_v1`;
 - `public_exam_notice_extractor_v1`.
+- `github_profile_analysis_v1`;
+- `portfolio_gap_analysis_v1`.
+
+Os 16 prompts de produção pertencem a um único `AiTask`. `career_advice_v1` passou a ter consumidor seguro em `modules/ai/guidance.py`; não há prompt de produção órfão. Documentos conceituais fora do registry não são tratados como prompts ativos.
+
+Conteúdo interpolado é delimitado como não confiável e recebe uma system policy comum contra prompt injection. Cada tarefa declara providers, structured output, fallback, finalidade de contexto, política sensível, suíte e métricas padrão.
 
 O prompt do Radar explica evidências e lacunas, mas não altera score final.
 

@@ -4,6 +4,29 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.9.7] - 2026-07-14
+
+### Adicionado
+
+- Registry comum de 16 tarefas de IA, governança de prompts e defesa compartilhada contra prompt injection.
+- AiRunStore 2.0 com latência, tokens, custo disponível, schema, contexto, evidência, fallback, retenção e paginação seguros.
+- Golden datasets fictícios com 12 domínios, casos adversariais e métricas estruturais, de evidência, calibração, utilidade, operação e deduplicação.
+- Benchmark reprodutível com mocks, local, providers opt-in, seed, resume, regressão e baselines sanitizados.
+- Feedback humano, Outcome Learning não causal, APIs paginadas e painel `/ai-quality`.
+- Migration 4 para feedback, benchmarks, resultados e eventos/métricas de outcome.
+
+### Alterado
+
+- Chamadas de IA passam a registrar provider/modelo solicitado e usado, prompt, fallback e métricas disponíveis sem persistir conteúdo pessoal integral.
+- Gemini e OpenAI capturam uso/timing quando retornado e validam structured output; custo desconhecido permanece ausente.
+- Extensão 0.9.3 adiciona feedback de análise GitHub vinculado somente a trace seguro.
+- Catálogo de prompts inclui suíte, golden cases, benchmark, baseline e providers testados.
+
+### Segurança
+
+- Conteúdo importado é delimitado como não confiável, erros são sanitizados e segredos são excluídos de traces, benchmarks e feedback.
+- Testes externos aceitam somente variáveis temporárias específicas e fixtures fictícias.
+
 ## [1.9.6] - 2026-07-12
 
 ### Adicionado

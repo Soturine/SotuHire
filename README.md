@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.9.6-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.6)
+[![Release](https://img.shields.io/badge/release-v1.9.7-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.7)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -233,6 +233,18 @@ Os catálogos de modelo são consultados de verdade, possuem cache e podem ser a
 
 No site, a chave é armazenada somente no backend local e não é devolvida ao React. Ela não deve ir para Git, documentação, screenshot, log, `localStorage`, `sessionStorage`, backup ou export. Testes externos são opt-in; a suíte padrão usa mocks.
 
+## Qualidade e avaliação da IA
+
+O painel **IA e Qualidade** mede execuções por tarefa, provider, modelo e versão do prompt. Ele combina validação de schema, golden datasets multiárea, evidência, claims sem suporte, fallback, latência, tokens, custo disponível e feedback humano. Comparações sempre exibem o tamanho da amostra e não declaram um vencedor definitivo com poucos casos.
+
+Os traces usam retenção configurável e, por padrão, não armazenam inputs nem outputs completos. Gemini/OpenAI são testados somente por opt-in com fixtures fictícias; mocks e fallback local mantêm os testes e o produto utilizáveis sem chamada paga. Outcome Learning associa sinais do Tracker a fonte, variante de currículo, Match e ATS, mas não afirma causalidade nem altera Perfil ou pesos automaticamente.
+
+- [Arquitetura de avaliação](docs/04-ai/ai-evaluation-architecture.md)
+- [Governança de prompts](docs/04-ai/prompt-governance.md)
+- [Benchmarking](docs/09-testing/ai-benchmarking.md)
+- [Feedback humano](docs/04-ai/human-feedback.md)
+- [Outcome Learning](docs/02-architecture/outcome-learning.md)
+
 ## Extensão
 
 ### Instalar em modo de desenvolvimento
@@ -316,7 +328,7 @@ O SotuHire não realiza auto-apply, candidatura automática, inscrição automá
 
 ## Roadmap
 
-As próximas frentes são avaliação e rastreabilidade de IA, ingestão e edição avançada de documentos, conectores públicos oficiais com taxonomias profissionais e, depois, workflows de carreira sempre submetidos à aprovação humana. Consulte o [roadmap atual](docs/01-product/roadmap.md) para critérios, riscos e itens fora de escopo.
+As próximas frentes aprofundam calibração por domínio, edição avançada de documentos e conectores públicos oficiais, sempre mantendo workflows de carreira sob aprovação humana. Consulte o [roadmap atual](docs/01-product/roadmap.md) para critérios, riscos e itens fora de escopo.
 
 ## Contribuição
 
@@ -334,4 +346,4 @@ Distribuído sob a [Apache License 2.0](LICENSE).
 
 ---
 
-Release atual: [v1.9.6](https://github.com/Soturine/SotuHire/releases/tag/v1.9.6) · [Notas da release](docs/releases/v1.9.6.md) · [Tag](https://github.com/Soturine/SotuHire/tree/v1.9.6)
+Release atual: [v1.9.7](https://github.com/Soturine/SotuHire/releases/tag/v1.9.7) · [Notas da release](docs/releases/v1.9.7.md) · [Tag](https://github.com/Soturine/SotuHire/tree/v1.9.7)

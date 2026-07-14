@@ -90,15 +90,15 @@ Avaliar pares e grupos:
 
 ## Critério de regressão
 
-O baseline inicial será medido antes de definir threshold bloqueante. Depois disso, uma mudança não deve reduzir schema validity, evidence precision/recall ou aumentar unsupported claim/hallucination sem análise explícita. Custo e latência são trade-offs, não substitutos de segurança.
+O baseline local da v1.9.7 é gerado pelo runner antes do fechamento. Baselines Gemini/OpenAI só são criados depois de execução externa real bem-sucedida. Uma mudança não deve reduzir schema validity/evidence precision ou aumentar claims sem suporte sem análise explícita. Custo e latência são trade-offs, não substitutos de segurança.
 
-## Entregas futuras
+## Entregas da v1.9.7
 
-- runner de benchmark por feature/provider;
-- anotador/revisor local;
-- relatório agregado JSON/Markdown;
-- comparação entre commits e prompts;
-- dashboard de aceitação e outcomes;
-- baseline publicado sem dados pessoais.
+- runner de benchmark por tarefa/provider com seed, resume e regressão;
+- fixtures golden e adversariais fictícias;
+- relatório JSON sanitizado e persistência de benchmark;
+- comparação de providers/prompts com regra de amostra;
+- dashboard de feedback e outcomes;
+- baseline local sem dados pessoais.
 
-Até essas entregas existirem, nenhuma documentação deve afirmar que um provider “vence” outro ou que existe taxa de alucinação medida.
+Mesmo com essas entregas, nenhuma documentação deve afirmar que um provider “vence” outro sem amostra comparável, nem publicar taxa que não tenha sido medida pela fixture aplicável.

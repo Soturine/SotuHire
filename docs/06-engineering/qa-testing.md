@@ -75,6 +75,8 @@ python scripts/migrate_local_data.py --dry-run
 python scripts/check_data_health.py
 python scripts/verify_clean_install.py
 python scripts/package_extension.py
+python scripts/run_ai_benchmark.py --suite mock
+python scripts/run_ai_benchmark.py --suite golden --providers local
 mkdocs build --strict
 ```
 
@@ -89,6 +91,10 @@ npm run typecheck
 npm run build
 npm run test:e2e
 ```
+
+## Qualidade de IA
+
+O CI padrão valida schemas golden, domínios/casos adversariais, prompt injection, métricas e regressão local sem chave. External AI é opt-in e usa exclusivamente variáveis temporárias permitidas. Relatórios não contêm inputs/outputs completos. Veja [benchmarking de IA](../09-testing/ai-benchmarking.md).
 
 ## Cobertura
 

@@ -38,6 +38,9 @@ A documentação separa referências atuais de histórico. Para conhecer o produ
 - [Catálogo de prompts](04-ai/prompt-catalog.md)
 - [Avaliação](04-ai/evaluation.md)
 - [Plano de avaliação](04-ai/ai-evaluation-plan.md)
+- [Arquitetura de avaliação](04-ai/ai-evaluation-architecture.md)
+- [Outcome Learning](02-architecture/outcome-learning.md)
+- [Benchmarking](09-testing/ai-benchmarking.md)
 
 ## Fontes e extensão
 
@@ -57,5 +60,5 @@ A documentação separa referências atuais de histórico. Para conhecer o produ
 
 - [Case study](09-portfolio/portfolio-case-study.md)
 - [Histórico de desenvolvimento](07-development/setup.md)
-- [Release atual](releases/v1.9.6.md)
+- [Release atual](releases/v1.9.7.md)
 - [CHANGELOG no GitHub](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md)

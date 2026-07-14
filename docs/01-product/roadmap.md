@@ -1,5 +1,9 @@
 # Roadmap do SotuHire
 
+## Estado atual — v1.9.7
+
+Avaliação de IA, tracing seguro, golden datasets, comparação de providers, feedback humano e Outcome Learning foram integrados. A próxima etapa é acumular amostras reais suficientes por domínio e tarefa, aprofundar calibração e avaliar endpoint local OpenAI-compatible sem comprometer structured output ou fallback.
+
 Este documento apresenta somente o estado atual, prioridades, próximos ciclos, riscos, itens fora de escopo e critérios de entrada na v2.0. O histórico detalhado foi preservado no [arquivo do roadmap](roadmap-archive-through-v1.9.5.md), no [CHANGELOG](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md), nos [documentos de desenvolvimento](../07-development/v1.9.6-data-reliability-migrations-backups.md) e nas [release notes](../releases/v1.9.6.md).
 
 ## Estado atual

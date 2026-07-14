@@ -23,6 +23,7 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | ai_settings | Configuração de IA | `/settings` | 7 | sem contexto dedicado | não | A configuração do site não lê nem persiste a chave própria da extensão. | AiRunStore registra metadados seguros; segredos não entram em snapshots. | complete | nenhuma registrada |
 | notifications | Notificações locais | `/dashboard` | 4 | sem contexto dedicado | não | A extensão não recebe notificações do site. | A notificação referencia a origem; não é um snapshot de conteúdo. | complete | Não existe rota exclusiva; o resumo é exibido no Dashboard e no Radar. |
 | data_reliability | Persistência, migração, backup e saúde dos dados | `/privacy` | 5 | sem contexto dedicado | não | Backups não incluem chrome.storage, IndexedDB, chaves, tokens ou cookies. | Tabelas e triggers impedem UPDATE/DELETE de snapshots imutáveis. | complete | nenhuma registrada |
+| ai_quality_outcomes | Qualidade de IA, feedback humano e resultados profissionais | `/ai-quality` | 10 | dashboard | resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1 | A extensão 0.9.3 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. | complete | Métricas externas dependem de execução opt-in com chaves temporárias. |
 
 ## Contratos por capacidade
 
@@ -355,6 +356,28 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `status` | `complete` |
 | `gaps` | nenhuma registrada |
 | `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+
+### Qualidade de IA, feedback humano e resultados profissionais (`ai_quality_outcomes`)
+
+| Campo | Valor verificado |
+|---|---|
+| `capability_id` | `ai_quality_outcomes` |
+| `frontend_route` | `/ai-quality` |
+| `api_endpoints` | `GET /api/v1/ai/quality/summary`<br>`GET /api/v1/ai/quality/runs`<br>`GET /api/v1/ai/quality/providers`<br>`GET /api/v1/ai/quality/prompts`<br>`GET /api/v1/ai/quality/benchmarks`<br>`POST /api/v1/ai/feedback`<br>`DELETE /api/v1/ai/feedback/{feedback_id}`<br>`GET /api/v1/outcomes/summary`<br>`POST /api/v1/outcomes/events`<br>`GET /api/v1/outcomes/applications/{application_id}` |
+| `backend_services` | `apps/api/services/ai_quality.py`<br>`modules/ai/tracing.py`<br>`modules/outcomes/service.py` |
+| `core_modules` | `modules/ai/task_registry.py`<br>`modules/ai/evaluation/metrics.py`<br>`modules/ai/feedback.py`<br>`modules/ai/untrusted_content.py` |
+| `stores` | `modules/storage/ai_runs.py`<br>`modules/ai/benchmark_store.py`<br>`modules/ai/feedback.py`<br>`modules/outcomes/service.py` |
+| `profile_integration` | Usa somente contexto necessário e confirmado; itens não confirmados permanecem sinalizados e não viram fatos. |
+| `context_purpose` | `dashboard` |
+| `ai_support` | enabled=true; prompts=resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1; providers=local, gemini, openai; fallback=Determinístico local, explícito e mensurado |
+| `extension_support` | A extensão 0.9.3 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. |
+| `dedupe_strategy` | Eventos e feedback usam IDs únicos; métricas de deduplicação são avaliadas separadamente. |
+| `snapshot_support` | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. |
+| `tests` | `tests/test_ai_task_registry.py`<br>`tests/test_ai_evaluation_metrics.py`<br>`tests/test_ai_golden_datasets.py`<br>`tests/test_ai_feedback_outcomes.py`<br>`tests/test_ai_quality_api.py`<br>`tests/test_prompt_injection_defense.py` |
+| `docs` | `docs/04-ai/ai-evaluation-architecture.md`<br>`docs/04-ai/prompt-governance.md`<br>`docs/02-architecture/outcome-learning.md`<br>`docs/09-testing/ai-benchmarking.md` |
+| `status` | `complete` |
+| `gaps` | Métricas externas dependem de execução opt-in com chaves temporárias. |
+| `last_verified_commit` | `3a0e24afdda74e1f57e2474e186f21ee9b130658` |
 
 ## Como validar
 
