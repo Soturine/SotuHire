@@ -9,11 +9,13 @@ from fastapi.responses import JSONResponse
 
 from apps.api.config import ApiSettings
 from apps.api.routes import (
+    ai_quality,
     analysis,
     data,
     extension,
     health,
     notifications,
+    outcomes,
     profile,
     public_exams,
     radar,
@@ -43,6 +45,8 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(health.router)
     app.include_router(data.router)
     app.include_router(analysis.router)
+    app.include_router(ai_quality.router)
+    app.include_router(outcomes.router)
     app.include_router(tracker.router)
     app.include_router(settings_routes.router)
     app.include_router(profile.router)

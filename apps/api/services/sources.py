@@ -7,6 +7,7 @@ import json
 from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
 from modules.ai.schemas.analysis_insights import SourceImportEnrichmentOutput
+from modules.ai.tracing import record_ai_run, runtime_model, runtime_trace_kwargs
 from modules.context import CareerContext, CareerContextEngine, CareerContextPurpose, context_brief
 from modules.core.text_utils import normalize_text
 from modules.profile import ProfileContextOrchestrator
@@ -383,13 +384,13 @@ def _source_ai_context(*, enabled: bool, text: str, source_url: str) -> SourceIm
                 },
             )
             enrichment = SourceImportEnrichmentOutput.model_validate(output)
-            return context_metadata.model_copy(
+            result = context_metadata.model_copy(
                 update={
                     "requested": True,
                     "provider_used": runtime.provider_name,
                     "requested_provider": str(runtime.requested_provider),
                     "analysis_mode": runtime.analysis_mode,
-                    "model": runtime.model,
+                    "model": runtime_model(runtime),
                     "tags": enrichment.tags,
                     "domain": enrichment.domain,
                     "seniority": enrichment.seniority,
@@ -400,12 +401,27 @@ def _source_ai_context(*, enabled: bool, text: str, source_url: str) -> SourceIm
                     "warnings": [*warnings, *enrichment.warnings],
                 }
             )
-        except Exception:
+            record_ai_run(
+                "source_enrichment",
+                provider_requested=str(runtime.requested_provider),
+                provider_used=runtime.provider_name,
+                **runtime_trace_kwargs(runtime),
+                context_source_types=[item.source for item in career_context.evidence],
+                context_item_count=len(career_context.evidence),
+                evidence_count=len(career_context.evidence),
+                source_refs=[source_url],
+                warnings=result.warnings,
+            )
+            return result
+        except Exception as exc:
             warnings.append("IA falhou na importação; usei enriquecimento local.")
-    elif not warnings:
+            error_type = type(exc).__name__
+    else:
+        error_type = ""
+    if (not runtime.use_ai or runtime.provider_name == "local") and not warnings:
         warnings.append("IA de importação indisponível ou local; usei extração local.")
 
-    return context_metadata.model_copy(
+    result = context_metadata.model_copy(
         update={
             "requested": True,
             "provider_used": "local",
@@ -415,6 +431,24 @@ def _source_ai_context(*, enabled: bool, text: str, source_url: str) -> SourceIm
             "warnings": warnings,
         }
     )
+    record_ai_run(
+        "source_enrichment",
+        provider_requested=str(runtime.requested_provider),
+        provider_used="local",
+        **runtime_trace_kwargs(
+            runtime,
+            model_used="local",
+            fallback_used=runtime.requested_provider != "local",
+        ),
+        fallback_reason="; ".join(warnings),
+        context_source_types=[item.source for item in career_context.evidence],
+        context_item_count=len(career_context.evidence),
+        evidence_count=len(career_context.evidence),
+        source_refs=[source_url],
+        warnings=warnings,
+        error_type=error_type,
+    )
+    return result
 
 
 def _source_context_metadata(*, text: str, context: CareerContext) -> SourceImportAiContext:

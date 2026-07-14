@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import os
+import time
 from contextlib import suppress
+from datetime import UTC, datetime
 from typing import Literal, TypedDict
 
 from fastapi import HTTPException
@@ -12,6 +14,7 @@ from modules.ai.schemas.analysis_insights import AtsAiReviewOutput, ResumeTailor
 from modules.ai.structured_analysis import analyze_structured
 from modules.ai.structured_job_extractor import extract_structured_job
 from modules.ai.structured_resume_extractor import extract_structured_resume
+from modules.ai.task_registry import default_ai_task_registry
 from modules.ats.match_keywords import review_keywords_with_match
 from modules.context import (
     CareerContext,
@@ -64,10 +67,17 @@ class _TraceMetadataPayload(TypedDict):
     analysis_mode: Literal["local", "ai", "fallback"]
     fallback_used: bool
     fallback_reason: str
+    run_id: str
+    task_id: str
     request_id: str
     source_refs: list[str]
     evidence_used: list[CareerContextEvidence]
     needs_user_review: bool
+    latency_ms: int | None
+    input_tokens: int | None
+    output_tokens: int | None
+    total_tokens: int | None
+    estimated_cost: float | None
 
 
 def extract_resume(request: ResumeExtractRequest) -> tuple[ResumeExtractResponse, list[str]]:
@@ -652,6 +662,7 @@ def _trace_metadata(
 ) -> _TraceMetadataPayload:
     """Build one complete trace without exposing provider secrets or sensitive evidence."""
     spec = default_prompt_registry().get(prompt_id)
+    task = default_ai_task_registry().for_prompt(prompt_id)
     evidence = [item for item in (context.evidence if context else []) if not item.sensitive]
     refs = _unique(
         [
@@ -673,6 +684,59 @@ def _trace_metadata(
         )
     requested = str(runtime.requested_provider)
     effective_model = model_used or (runtime.model if provider_used != "local" else "local")
+    finished_at = datetime.now(UTC)
+    provider_metadata = getattr(runtime.provider, "last_call_metadata", {})
+    if not isinstance(provider_metadata, dict):
+        provider_metadata = {}
+    latency_ms = provider_metadata.get("latency_ms")
+    if latency_ms is None:
+        latency_ms = round((time.perf_counter() - runtime.started_monotonic) * 1000)
+    input_tokens = provider_metadata.get("input_tokens")
+    output_tokens = provider_metadata.get("output_tokens")
+    total_tokens = provider_metadata.get("total_tokens")
+    estimated_cost = provider_metadata.get("estimated_cost")
+    error_type = str(
+        provider_metadata.get("error_type") or ("provider_error" if fallback_used else "")
+    )
+    run = AiRun(
+        task_id=task.task_id,
+        feature=feature,
+        provider_requested=requested,
+        provider_used=provider_used,
+        model_requested=runtime.model_requested,
+        model_used=effective_model,
+        prompt_id=spec.prompt_id,
+        prompt_version=spec.version,
+        analysis_mode=_analysis_mode(provider_used, fallback_used),
+        fallback_used=fallback_used,
+        fallback_reason=fallback_reason,
+        schema_valid=True,
+        input_hash=content_fingerprint(
+            request_id,
+            " ".join(refs),
+            context.purpose.value if context else prompt_id,
+        ),
+        input_schema_version=task.input_schema.rsplit("@", 1)[-1],
+        output_schema_version=spec.version,
+        context_purpose=context.purpose.value if context else task.context_purpose,
+        context_source_types=_unique([item.source for item in evidence]),
+        context_item_count=len(context.evidence) if context else 0,
+        evidence_count=len(evidence),
+        started_at=runtime.started_at,
+        finished_at=finished_at,
+        latency_ms=latency_ms,
+        input_tokens=input_tokens,
+        output_tokens=output_tokens,
+        total_tokens=total_tokens,
+        estimated_cost=estimated_cost,
+        error_type=error_type,
+        error_message_sanitized=fallback_reason if fallback_used else "",
+        context_sources=_unique([item.source for item in evidence]),
+        source_refs=refs,
+        evidence_used=[item.model_dump(mode="json") for item in evidence],
+        warnings=list(warnings or []),
+        needs_user_review=True,
+    )
     trace: _TraceMetadataPayload = {
         "provider_requested": requested,
         "requested_provider": requested,
@@ -684,36 +748,19 @@ def _trace_metadata(
         "analysis_mode": _analysis_mode(provider_used, fallback_used),
         "fallback_used": fallback_used,
         "fallback_reason": fallback_reason,
+        "run_id": run.run_id,
+        "task_id": task.task_id,
         "request_id": request_id,
         "source_refs": refs,
         "evidence_used": evidence,
         "needs_user_review": True,
+        "latency_ms": latency_ms,
+        "input_tokens": input_tokens,
+        "output_tokens": output_tokens,
+        "total_tokens": total_tokens,
+        "estimated_cost": estimated_cost,
     }
     if not (os.getenv("PYTEST_CURRENT_TEST") and not os.getenv("SOTUHIRE_DATA_DIR")):
-        with suppress(OSError, ValueError):
-            AiRunStore().save(
-                AiRun(
-                    feature=feature,
-                    provider_requested=requested,
-                    provider_used=provider_used,
-                    model_requested=runtime.model_requested,
-                    model_used=effective_model,
-                    prompt_id=spec.prompt_id,
-                    prompt_version=spec.version,
-                    analysis_mode=trace["analysis_mode"],
-                    fallback_used=fallback_used,
-                    fallback_reason=fallback_reason,
-                    schema_valid=True,
-                    input_hash=content_fingerprint(
-                        request_id,
-                        " ".join(refs),
-                        context.purpose.value if context else prompt_id,
-                    ),
-                    context_sources=_unique([item.source for item in evidence]),
-                    source_refs=refs,
-                    evidence_used=[item.model_dump(mode="json") for item in evidence],
-                    warnings=list(warnings or []),
-                    needs_user_review=True,
-                )
-            )
+        with suppress(OSError, RuntimeError, ValueError):
+            AiRunStore().save(run)
     return trace

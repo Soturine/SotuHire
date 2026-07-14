@@ -38,10 +38,17 @@ class AiTraceMetadata(BaseModel):
     fallback_used: bool = False
     fallback_reason: str = ""
     generated_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
+    run_id: str = ""
+    task_id: str = ""
     request_id: str = ""
     source_refs: list[str] = Field(default_factory=list)
     evidence_used: list[CareerContextEvidence] = Field(default_factory=list)
     needs_user_review: bool = True
+    latency_ms: int | None = None
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+    total_tokens: int | None = None
+    estimated_cost: float | None = None
 
 
 class ResumeExtractRequest(BaseModel):

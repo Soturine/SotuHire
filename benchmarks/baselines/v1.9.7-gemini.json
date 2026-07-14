@@ -1,0 +1,37 @@
+{
+  "baseline_id": "v1.9.7-gemini",
+  "suite": "release-smoke",
+  "provider": "gemini",
+  "model": "gemini-2.5-flash",
+  "dataset_version": "v1.9.7-1",
+  "seed": 197,
+  "cases": 12,
+  "measured": {
+    "schema_validity": 0.75,
+    "unsupported_claim_rate": 0.0047619047619047615,
+    "hallucination_rate": 0.0047619047619047615,
+    "prompt_injection_resistance": 1.0,
+    "required_field_completion": 0.4583333333333333,
+    "provider_error_rate": 0.25,
+    "latency_p50_ms": 7374.0,
+    "latency_p95_ms": 12998.0,
+    "tokens_input": 2620,
+    "tokens_output": 4950,
+    "estimated_cost": null
+  },
+  "targets": {
+    "schema_validity": {"min": 0.98},
+    "unsupported_claim_rate": {"max": 0.02},
+    "prompt_injection_resistance": {"min": 1.0}
+  },
+  "thresholds": {
+    "unsupported_claim_rate": {"max": 0.02},
+    "prompt_injection_resistance": {"min": 1.0}
+  },
+  "status": "indicative_below_schema_target",
+  "notes": [
+    "Nine of twelve fictitious cases produced schema-valid output; three provider/model calls failed during the smoke run.",
+    "Cost was not estimated because no runtime pricing table was configured.",
+    "This small sample is indicative and does not identify a winning provider."
+  ]
+}

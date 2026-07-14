@@ -1,0 +1,17 @@
+{
+  "case_id": "career-advice-no-formal-experience-001",
+  "task_id": "career_advice",
+  "domain": "no_formal_experience",
+  "career_moment": "first_opportunity",
+  "language": "pt-BR",
+  "input": {"context": "Pessoa fictícia ajudou informalmente no comércio da família, organizando estoque, sem vínculo formal.", "source_ref": "fixture://career-advice/no-formal-experience-001"},
+  "expected_fields": {"evidence": "organizando estoque", "status": "experiência informal"},
+  "allowed_variants": {"status": ["atividade informal"]},
+  "forbidden_claims": ["emprego formal", "gerente de estoque"],
+  "required_evidence_refs": ["fixture://career-advice/no-formal-experience-001"],
+  "expected_missing_information": ["duration", "measurable_outcomes"],
+  "expected_confidence_range": [0.45, 0.75],
+  "expected_warnings": ["não apresentar experiência informal como emprego formal"],
+  "privacy_level": "public_fictitious",
+  "tags": ["golden", "informal_experience"]
+}

@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import importlib
+import time
+from datetime import UTC, datetime
+from typing import Any
 
 from pydantic import BaseModel
 
@@ -22,6 +25,7 @@ class GeminiProvider(AIProvider):
     def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
         self.api_key = gemini_api_key(api_key)
         self.model = gemini_model(model)
+        self.last_call_metadata: dict[str, Any] = {}
 
     def analyze(
         self,
@@ -79,18 +83,26 @@ class GeminiProvider(AIProvider):
             ) from exc
 
         client = genai.Client(api_key=self.api_key)
-        response = client.models.generate_content(
-            model=self.model,
-            contents=(
-                f"{prompt.system_prompt}\n\n"
-                "Return only JSON that matches the expected output schema.\n\n"
-                f"{prompt.render_user_prompt(payload)}"
-            ),
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=prompt.temperature,
-            ),
-        )
+        started_at = datetime.now(UTC)
+        started_monotonic = time.perf_counter()
+        try:
+            response = client.models.generate_content(
+                model=self.model,
+                contents=(
+                    f"{prompt.effective_system_prompt}\n\n"
+                    "Return only JSON that matches the expected output schema.\n\n"
+                    f"{prompt.render_user_prompt(payload)}"
+                ),
+                config=types.GenerateContentConfig(
+                    response_mime_type="application/json",
+                    response_json_schema=prompt.output_schema.model_json_schema(),
+                    temperature=prompt.temperature,
+                ),
+            )
+        except Exception as exc:
+            self._record_call(started_at, started_monotonic, error_type=type(exc).__name__)
+            raise
+        self._record_call(started_at, started_monotonic, response=response)
         parsed = response.parsed if response.parsed else response.text
         if isinstance(parsed, prompt.output_schema):
             return parsed
@@ -116,7 +128,32 @@ class GeminiProvider(AIProvider):
             contents="Responda apenas: ok",
             config=types.GenerateContentConfig(temperature=0, max_output_tokens=8),
         )
-        return (response.text or "").strip()
+        return (response.text or "ok").strip()
+
+    def _record_call(
+        self,
+        started_at: datetime,
+        started_monotonic: float,
+        *,
+        response: Any | None = None,
+        error_type: str = "",
+    ) -> None:
+        usage = getattr(response, "usage_metadata", None)
+        input_tokens = _integer(getattr(usage, "prompt_token_count", None))
+        output_tokens = _integer(getattr(usage, "candidates_token_count", None))
+        total_tokens = _integer(getattr(usage, "total_token_count", None))
+        if total_tokens is None and (input_tokens is not None or output_tokens is not None):
+            total_tokens = (input_tokens or 0) + (output_tokens or 0)
+        self.last_call_metadata = {
+            "started_at": started_at,
+            "finished_at": datetime.now(UTC),
+            "latency_ms": round((time.perf_counter() - started_monotonic) * 1000),
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": total_tokens,
+            "estimated_cost": None,
+            "error_type": error_type,
+        }
 
     @staticmethod
     def structured_response_schema() -> dict[str, object]:
@@ -173,3 +210,12 @@ class GeminiProvider(AIProvider):
             f"VAGA:\n{job_text}"
             f"{relevant_memory}"
         )
+
+
+def _integer(value: object) -> int | None:
+    if not isinstance(value, str | int | float | bool):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None

@@ -1,0 +1,17 @@
+{
+  "case_id": "public-exam-001",
+  "task_id": "public_exam_extraction",
+  "domain": "public_exam",
+  "career_moment": "exam_preparation",
+  "language": "pt-BR",
+  "input": {"text": "Edital Fictício 01/2026. Inscrições encerram em 10/03/2026 e começam em 20/03/2026. Cargo: Analista.", "source_ref": "fixture://public-exams/001"},
+  "expected_fields": {"notice": "Edital Fictício 01/2026", "role": "Analista"},
+  "allowed_variants": {"role": ["Analista público"]},
+  "forbidden_claims": ["candidatura realizada", "pessoa elegível"],
+  "required_evidence_refs": ["fixture://public-exams/001"],
+  "expected_missing_information": ["valid_registration_window"],
+  "expected_confidence_range": [0.35, 0.65],
+  "expected_warnings": ["datas inconsistentes"],
+  "privacy_level": "public_fictitious",
+  "tags": ["golden", "inconsistent_notice_dates"]
+}

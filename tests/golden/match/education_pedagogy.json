@@ -1,0 +1,17 @@
+{
+  "case_id": "match-education-pedagogy-001",
+  "task_id": "match_explanation",
+  "domain": "education_pedagogy",
+  "career_moment": "early_career",
+  "language": "pt-BR",
+  "input": {"resume_text": "Licenciatura em Pedagogia e estágio supervisionado.", "job_text": "Coordenação pedagógica sênior com cinco anos de gestão.", "source_ref": "fixture://match/education-pedagogy-001"},
+  "expected_fields": {"matched": "Pedagogia", "gap": "gestão sênior"},
+  "allowed_variants": {"gap": ["experiência de coordenação"]},
+  "forbidden_claims": ["cinco anos de gestão", "coordenação comprovada"],
+  "required_evidence_refs": ["fixture://match/education-pedagogy-001"],
+  "expected_missing_information": ["senior_management_experience"],
+  "expected_confidence_range": [0.45, 0.75],
+  "expected_warnings": ["senioridade incompatível"],
+  "privacy_level": "public_fictitious",
+  "tags": ["golden", "seniority_mismatch"]
+}

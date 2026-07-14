@@ -1,0 +1,17 @@
+{
+  "case_id": "job-chemistry-laboratory-001",
+  "task_id": "job_extraction",
+  "domain": "chemistry_laboratory",
+  "career_moment": "first_job",
+  "language": "pt-BR",
+  "input": {"job_text": "Laboratório Fictício procura técnica em Química para análises de bancada e controle de amostras.", "source_ref": "fixture://jobs/chemistry-laboratory-001"},
+  "expected_fields": {"primary_domain": "chemistry_laboratory", "skill": "análises de bancada"},
+  "allowed_variants": {"skill": ["análise laboratorial"]},
+  "forbidden_claims": ["CRQ confirmado", "gestão de equipe"],
+  "required_evidence_refs": ["fixture://jobs/chemistry-laboratory-001"],
+  "expected_missing_information": ["professional_registration"],
+  "expected_confidence_range": [0.55, 0.85],
+  "expected_warnings": ["validar registro profissional"],
+  "privacy_level": "public_fictitious",
+  "tags": ["golden", "broken_characters", "rate_limit"]
+}

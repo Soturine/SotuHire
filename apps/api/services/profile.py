@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import HTTPException
 from modules.academic import LattesImportInput, LattesService
 from modules.ai.prompt_loader import default_prompt_registry
+from modules.ai.tracing import record_ai_run, runtime_model, runtime_trace_kwargs
 from modules.profile import ProfileContextOrchestrator
 from modules.profile.models import ProfileImportDraft, ProfileItem
 from modules.profile.service import UniversalCareerProfileService
@@ -85,6 +86,13 @@ def profile_import_text(
         warnings=[],
     )
     if not request.use_ai:
+        record_ai_run(
+            "profile_item_extraction",
+            provider_requested="local",
+            provider_used="local",
+            source_refs=[request.source_type],
+            warnings=local.warnings,
+        )
         return ProfileImportTextResponse.model_validate(local.model_dump()), local.warnings
 
     runtime = get_ai_runtime("profile")
@@ -94,6 +102,15 @@ def profile_import_text(
             request.text,
             source_type=request.source_type,
             warnings=[*warnings, "IA indisponivel; usei extração local do perfil."],
+        )
+        record_ai_run(
+            "profile_item_extraction",
+            provider_requested=str(runtime.requested_provider),
+            provider_used="local",
+            **runtime_trace_kwargs(runtime, model_used="local"),
+            fallback_reason="; ".join(fallback.warnings),
+            source_refs=[request.source_type],
+            warnings=fallback.warnings,
         )
         return ProfileImportTextResponse.model_validate(fallback.model_dump()), fallback.warnings
 
@@ -131,8 +148,16 @@ def profile_import_text(
                 ],
             }
         )
+        record_ai_run(
+            "profile_item_extraction",
+            provider_requested=str(runtime.requested_provider),
+            provider_used=runtime.provider_name,
+            **runtime_trace_kwargs(runtime),
+            source_refs=[request.source_type],
+            warnings=draft.warnings,
+        )
         return ProfileImportTextResponse.model_validate(draft.model_dump()), draft.warnings
-    except Exception:
+    except Exception as exc:
         fallback = service.import_text_local(
             request.text,
             source_type=request.source_type,
@@ -143,6 +168,16 @@ def profile_import_text(
                 "requested_provider": str(runtime.requested_provider),
                 "analysis_mode": "fallback",
             }
+        )
+        record_ai_run(
+            "profile_item_extraction",
+            provider_requested=str(runtime.requested_provider),
+            provider_used="local",
+            **runtime_trace_kwargs(runtime, model_used="local", fallback_used=True),
+            fallback_reason="Provider de IA falhou; extração local utilizada.",
+            source_refs=[request.source_type],
+            warnings=fallback.warnings,
+            error_type=type(exc).__name__,
         )
         return ProfileImportTextResponse.model_validate(fallback.model_dump()), fallback.warnings
 
@@ -160,6 +195,13 @@ def profile_import_lattes(
     service = LattesService()
     if not request.use_ai:
         local = service.draft_local(payload)
+        record_ai_run(
+            "lattes_extraction",
+            provider_requested="local",
+            provider_used="local",
+            source_refs=[request.source_url],
+            warnings=local.warnings,
+        )
         return ProfileLattesImportResponse.model_validate(local.model_dump()), local.warnings
 
     runtime = get_ai_runtime("lattes")
@@ -168,6 +210,15 @@ def profile_import_lattes(
         fallback = service.draft_local(
             payload,
             warnings=[*warnings, "IA indisponível; usei parser local de Lattes."],
+        )
+        record_ai_run(
+            "lattes_extraction",
+            provider_requested=str(runtime.requested_provider),
+            provider_used="local",
+            **runtime_trace_kwargs(runtime, model_used="local"),
+            fallback_reason="; ".join(fallback.warnings),
+            source_refs=[request.source_url],
+            warnings=fallback.warnings,
         )
         return ProfileLattesImportResponse.model_validate(fallback.model_dump()), fallback.warnings
 
@@ -178,6 +229,19 @@ def profile_import_lattes(
         provider_name=runtime.provider_name,
         requested_provider=str(runtime.requested_provider),
         warnings=warnings,
+    )
+    record_ai_run(
+        "lattes_extraction",
+        provider_requested=str(runtime.requested_provider),
+        provider_used=result.provider_used,
+        **runtime_trace_kwargs(
+            runtime,
+            model_used=runtime_model(runtime) if result.provider_used != "local" else "local",
+            fallback_used=result.analysis_mode == "fallback",
+        ),
+        fallback_reason="; ".join(result.warnings) if result.analysis_mode == "fallback" else "",
+        source_refs=[request.source_url],
+        warnings=result.warnings,
     )
     return ProfileLattesImportResponse.model_validate(result.model_dump()), result.warnings
 

@@ -1,0 +1,17 @@
+{
+  "case_id": "tailor-law-001",
+  "task_id": "resume_tailor",
+  "domain": "law",
+  "career_moment": "career_entry",
+  "language": "pt-BR",
+  "input": {"job_text": "Assistência jurídica e pesquisa de jurisprudência.", "evidence_text": "Curso livre de introdução ao Direito e pesquisa acadêmica.", "source_ref": "fixture://tailor/law-001"},
+  "expected_fields": {"safe_action": "pesquisa acadêmica", "qualification": "curso livre"},
+  "allowed_variants": {"qualification": ["curso de extensão"]},
+  "forbidden_claims": ["graduação em Direito", "OAB"],
+  "required_evidence_refs": ["fixture://tailor/law-001"],
+  "expected_missing_information": ["law_degree", "professional_registration"],
+  "expected_confidence_range": [0.45, 0.75],
+  "expected_warnings": ["curso livre não é graduação"],
+  "privacy_level": "public_fictitious",
+  "tags": ["golden", "free_course_like_degree"]
+}

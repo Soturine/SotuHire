@@ -11,6 +11,7 @@ from .structured_resume_extractor import (
     StructuredResumeExtractionResult,
     extract_structured_resume,
 )
+from .task_registry import AiTask, AiTaskRegistry, default_ai_task_registry
 
 __all__ = [
     "DomainClassificationServiceResult",
@@ -24,5 +25,8 @@ __all__ = [
     "classify_domain_structured",
     "extract_structured_job",
     "extract_structured_resume",
+    "AiTask",
+    "AiTaskRegistry",
+    "default_ai_task_registry",
     "get_provider",
 ]

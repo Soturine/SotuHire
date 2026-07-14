@@ -1,0 +1,17 @@
+{
+  "case_id": "job-nursing-health-001",
+  "task_id": "job_extraction",
+  "domain": "nursing_health",
+  "career_moment": "job_search",
+  "language": "pt-BR",
+  "input": {"job_text": "Hospital Exemplo busca pessoa para Enfermagem. Plantão a combinar. Registro profissional não informado.", "source_ref": "fixture://jobs/nursing-health-001"},
+  "expected_fields": {"primary_domain": "nursing_health", "title": "Enfermagem"},
+  "allowed_variants": {"title": ["Profissional de Enfermagem"]},
+  "forbidden_claims": ["COREN ativo", "salário de 8000"],
+  "required_evidence_refs": ["fixture://jobs/nursing-health-001"],
+  "expected_missing_information": ["professional_registration", "salary"],
+  "expected_confidence_range": [0.35, 0.7],
+  "expected_warnings": ["vaga curta ou ambígua", "registro profissional ausente"],
+  "privacy_level": "public_fictitious",
+  "tags": ["golden", "short_ambiguous_job", "missing_professional_registration", "timeout"]
+}

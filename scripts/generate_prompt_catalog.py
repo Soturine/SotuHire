@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -18,16 +19,26 @@ FALLBACKS = {
     "match_analysis_evidence_based_v1": "Match Engine determinístico",
     "ats_analysis_v1": "Revisão local de palavras-chave",
     "resume_tailor_v1": "Regras locais de adaptação segura",
-    "career_advice_v1": "Sem consumidor ativo; fallback não executado",
+    "career_advice_v1": "Orientação local baseada em evidências",
     "source_import_enrichment_v1": "Normalização determinística da importação",
     "job_radar_match_explanation_v1": "Explicação determinística de aderência",
     "job_wishlist_builder_v1": "Parser local de wishlist",
     "profile_items_extractor_v1": "Extrator local de itens de perfil",
     "profile_lattes_extractor_v1": "Parser local de Lattes",
     "public_exam_notice_extractor_v1": "Parser local de edital",
+    "github_profile_analysis_v1": "Resumo local de evidências públicas",
+    "portfolio_gap_analysis_v1": "Comparação determinística de lacunas",
 }
 STATUS_OVERRIDES = {
     "domain_classification_v1": "implementado sem fluxo integrado",
+    "career_advice_v1": "implementado",
+    "github_profile_analysis_v1": "implementado",
+    "portfolio_gap_analysis_v1": "implementado",
+}
+INDIRECT_CONSUMERS = {
+    "career_advice_v1": ["modules/ai/guidance.py"],
+    "github_profile_analysis_v1": ["modules/ai/guidance.py"],
+    "portfolio_gap_analysis_v1": ["modules/ai/guidance.py"],
 }
 
 
@@ -36,8 +47,10 @@ def prompt_rows(root: Path = ROOT) -> list[dict[str, Any]]:
     if str(root) not in sys.path:
         sys.path.insert(0, str(root))
     from modules.ai.prompt_loader import initial_prompt_specs
+    from modules.ai.task_registry import default_ai_task_registry
 
     specs = sorted(initial_prompt_specs(), key=lambda item: item.prompt_id)
+    tasks = default_ai_task_registry()
     ids = {spec.prompt_id for spec in specs}
     consumers_by_id = _consumer_reference_index(
         ids,
@@ -56,8 +69,17 @@ def prompt_rows(root: Path = ROOT) -> list[dict[str, Any]]:
         suffixes={".md"},
     )
     rows: list[dict[str, Any]] = []
+    golden_by_task = _golden_case_index(root / "tests" / "golden")
+    baseline_providers = [
+        provider
+        for provider in ("local", "gemini", "openai")
+        if (root / "benchmarks" / "baselines" / f"v1.9.7-{provider}.json").is_file()
+    ]
     for spec in specs:
-        consumers = consumers_by_id[spec.prompt_id]
+        task = tasks.for_prompt(spec.prompt_id)
+        consumers = sorted(
+            set(consumers_by_id[spec.prompt_id] + INDIRECT_CONSUMERS.get(spec.prompt_id, []))
+        )
         tests = tests_by_id[spec.prompt_id]
         docs = docs_by_id[spec.prompt_id]
         if not docs:
@@ -74,11 +96,36 @@ def prompt_rows(root: Path = ROOT) -> list[dict[str, Any]]:
                 "consumers": consumers,
                 "providers": ["gemini", "openai"],
                 "fallback": FALLBACKS.get(spec.prompt_id, "Não documentado"),
+                "evaluation_suite": task.evaluation_suite,
+                "golden_cases": golden_by_task.get(task.task_id, []),
+                "last_benchmark": spec.last_benchmark or "release v1.9.7",
+                "baseline_status": (
+                    "available: " + ", ".join(baseline_providers)
+                    if baseline_providers
+                    else spec.baseline_status
+                ),
+                "providers_tested": baseline_providers or list(spec.providers_tested),
                 "tests": tests,
                 "docs": docs,
             }
         )
     return rows
+
+
+def _golden_case_index(root: Path) -> dict[str, list[str]]:
+    cases: dict[str, list[str]] = {}
+    if not root.is_dir():
+        return cases
+    for path in sorted(root.rglob("*.json")):
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            continue
+        task_id = str(payload.get("task_id", ""))
+        case_id = str(payload.get("case_id", ""))
+        if task_id and case_id:
+            cases.setdefault(task_id, []).append(case_id)
+    return cases
 
 
 def _consumer_reference_index(
@@ -179,7 +226,7 @@ def render_catalog(rows: list[dict[str, Any]]) -> str:
         "",
         "Este catálogo é gerado do `PromptRegistry` real. Ele diferencia contratos "
         "consumidos pelo produto de contratos apenas registrados e valida schema, consumidores, "
-        "providers, fallback, testes e documentação.",
+        "providers, fallback, avaliação, baselines, testes e documentação.",
         "",
         "A IA interpreta e sugere; schemas e regras determinísticas validam a resposta. "
         "Nenhum prompt autoriza inventar formação, experiência, publicação, registro ou resultado.",
@@ -231,8 +278,8 @@ def render_catalog(rows: list[dict[str, Any]]) -> str:
         "",
         "## Registro verificável",
         "",
-        "| prompt_id | version | status | schema | consumers | providers | fallback | tests | docs |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "| prompt_id | version | status | schema | consumers | providers | fallback | evaluation_suite | golden_cases | last_benchmark | baseline_status | providers_tested | tests | docs |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:
         lines.append(
@@ -246,6 +293,11 @@ def render_catalog(rows: list[dict[str, Any]]) -> str:
                     _code_list(row["consumers"]),
                     _cell(", ".join(row["providers"])),
                     _cell(row["fallback"]),
+                    _code(row["evaluation_suite"]),
+                    _code_list(row["golden_cases"]),
+                    _cell(row["last_benchmark"]),
+                    _cell(row["baseline_status"]),
+                    _cell(", ".join(row["providers_tested"])),
                     _code_list(row["tests"]),
                     _code_list(row["docs"]),
                 ]

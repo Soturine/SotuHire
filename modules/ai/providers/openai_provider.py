@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import time
 import urllib.error
 import urllib.request
 from collections.abc import Callable
+from datetime import UTC, datetime
 from typing import Any
 
 from pydantic import BaseModel
@@ -36,6 +38,7 @@ class OpenAIProvider(AIProvider):
         self.api_key = (api_key or "").strip()
         self.model = (model or DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL
         self.transport = transport
+        self.last_call_metadata: dict[str, Any] = {}
 
     def analyze(
         self,
@@ -69,7 +72,7 @@ class OpenAIProvider(AIProvider):
         """Run a Prompt Registry prompt and validate JSON locally."""
         response = self._responses_request(
             (
-                f"{prompt.system_prompt}\n\n"
+                f"{prompt.effective_system_prompt}\n\n"
                 "Responda somente JSON válido. Não use markdown. Não invente campos ausentes."
             ),
             prompt.render_user_prompt(payload),
@@ -79,7 +82,7 @@ class OpenAIProvider(AIProvider):
 
     def ping(self) -> str:
         """Run a minimal OpenAI call for user-triggered connection tests."""
-        response = self._responses_request("Responda apenas: ok", "ok", max_output_tokens=8)
+        response = self._responses_request("Responda apenas: ok", "ok", max_output_tokens=32)
         return _extract_response_text(response).strip()
 
     def _responses_request(
@@ -90,35 +93,79 @@ class OpenAIProvider(AIProvider):
         temperature: float = 0,
         max_output_tokens: int = 4096,
     ) -> dict[str, Any]:
+        started_at = datetime.now(UTC)
+        started_monotonic = time.perf_counter()
         if not self.api_key:
+            self._record_call(
+                started_at,
+                started_monotonic,
+                error_type="ProviderUnavailableError",
+            )
             raise ProviderUnavailableError(
                 "OpenAI não configurado: informe uma chave no backend local."
             )
-        body = {
+        body: dict[str, Any] = {
             "model": self.model,
             "input": [
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": user_prompt},
             ],
-            "temperature": temperature,
             "max_output_tokens": max_output_tokens,
         }
-        if self.transport is not None:
-            return self.transport(body)
-        request = urllib.request.Request(
-            "https://api.openai.com/v1/responses",
-            data=json.dumps(body).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-            },
-            method="POST",
-        )
+        if not self.model.lower().startswith(("gpt-5", "o1", "o3", "o4")):
+            body["temperature"] = temperature
         try:
-            with urllib.request.urlopen(request, timeout=30) as response:
-                return json.loads(response.read().decode("utf-8"))
+            if self.transport is not None:
+                payload = self.transport(body)
+            else:
+                request = urllib.request.Request(
+                    "https://api.openai.com/v1/responses",
+                    data=json.dumps(body).encode("utf-8"),
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    method="POST",
+                )
+                with urllib.request.urlopen(request, timeout=30) as response:
+                    payload = json.loads(response.read().decode("utf-8"))
         except urllib.error.URLError as exc:
-            raise ProviderUnavailableError("Falha ao chamar OpenAI pelo backend local.") from exc
+            self._record_call(started_at, started_monotonic, error_type=type(exc).__name__)
+            status = getattr(exc, "code", None)
+            suffix = f" (HTTP {status})" if isinstance(status, int) else ""
+            raise ProviderUnavailableError(
+                f"Falha ao chamar OpenAI pelo backend local{suffix}."
+            ) from exc
+        except Exception as exc:
+            self._record_call(started_at, started_monotonic, error_type=type(exc).__name__)
+            raise
+        self._record_call(started_at, started_monotonic, payload=payload)
+        return payload
+
+    def _record_call(
+        self,
+        started_at: datetime,
+        started_monotonic: float,
+        *,
+        payload: dict[str, Any] | None = None,
+        error_type: str = "",
+    ) -> None:
+        usage = payload.get("usage", {}) if isinstance(payload, dict) else {}
+        input_tokens = _integer(usage.get("input_tokens")) if isinstance(usage, dict) else None
+        output_tokens = _integer(usage.get("output_tokens")) if isinstance(usage, dict) else None
+        total_tokens = _integer(usage.get("total_tokens")) if isinstance(usage, dict) else None
+        if total_tokens is None and (input_tokens is not None or output_tokens is not None):
+            total_tokens = (input_tokens or 0) + (output_tokens or 0)
+        self.last_call_metadata = {
+            "started_at": started_at,
+            "finished_at": datetime.now(UTC),
+            "latency_ms": round((time.perf_counter() - started_monotonic) * 1000),
+            "input_tokens": input_tokens,
+            "output_tokens": output_tokens,
+            "total_tokens": total_tokens,
+            "estimated_cost": None,
+            "error_type": error_type,
+        }
 
 
 def _extract_response_text(payload: dict[str, Any]) -> str:
@@ -149,3 +196,12 @@ def _extract_response_text(payload: dict[str, Any]) -> str:
         if isinstance(content, str):
             return content
     return ""
+
+
+def _integer(value: object) -> int | None:
+    if not isinstance(value, str | int | float | bool):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None

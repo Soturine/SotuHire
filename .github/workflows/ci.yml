@@ -90,12 +90,36 @@ jobs:
           path: coverage.json
 
       - name: Secret pattern scan
-        shell: bash
+        run: python scripts/scan_secrets.py --paths . data dist
+
+  ai-quality:
+    name: AI golden, injection and local regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
         run: |
-          if git grep -n -I -E '(AIza[0-9A-Za-z_-]{20,}|sk-[A-Za-z0-9_-]{20,}|sk-proj-[A-Za-z0-9_-]{20,})' -- .; then
-            echo 'Potential credential found in tracked files.'
-            exit 1
-          fi
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: AI golden evaluation
+        run: pytest -q tests/test_ai_golden_datasets.py tests/test_ai_evaluation_metrics.py tests/test_ai_task_registry.py
+
+      - name: Prompt injection tests
+        run: pytest -q tests/test_prompt_injection_defense.py
+
+      - name: Benchmark regression local
+        run: |
+          python scripts/run_ai_benchmark.py --suite mock --output /tmp/sotuhire-ai-mock.json
+          python scripts/run_ai_benchmark.py --suite golden --providers local --output /tmp/sotuhire-ai-golden.json --fail-on-regression
 
   frontend:
     name: Frontend unit, build and E2E
@@ -118,6 +142,10 @@ jobs:
       - name: Unit and component tests
         working-directory: apps/web
         run: npm run test:unit
+
+      - name: Frontend AI Quality tests
+        working-directory: apps/web
+        run: npx vitest run src/routes/-ai-quality.test.tsx
 
       - name: Lint, typecheck and build
         working-directory: apps/web

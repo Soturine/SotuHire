@@ -1,0 +1,17 @@
+{
+  "case_id": "ats-administration-commercial-001",
+  "task_id": "ats_review",
+  "domain": "administration_commercial",
+  "career_moment": "mid_career",
+  "language": "pt-BR",
+  "input": {"resume_text": "Atendimento comercial e relatórios em Excel.", "job_text": "Vendas consultivas, CRM e Excel.", "source_ref": "fixture://ats/administration-commercial-001"},
+  "expected_fields": {"present": "Excel", "missing": "CRM"},
+  "allowed_variants": {"missing": ["sistema de CRM"]},
+  "forbidden_claims": ["Salesforce", "meta superada em 40%"],
+  "required_evidence_refs": ["fixture://ats/administration-commercial-001"],
+  "expected_missing_information": ["crm_evidence"],
+  "expected_confidence_range": [0.6, 0.85],
+  "expected_warnings": ["não adicionar CRM sem evidência"],
+  "privacy_level": "public_fictitious",
+  "tags": ["golden", "duplicate_tracking"]
+}

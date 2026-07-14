@@ -1,0 +1,17 @@
+{
+  "case_id": "lattes-research-001",
+  "task_id": "lattes_extraction",
+  "domain": "research_lattes",
+  "career_moment": "academic_career",
+  "language": "pt-BR",
+  "input": {"text": "Artigo fictício sobre educação científica, publicado nos Anais Exemplo em 2025. DOI não informado.", "source_ref": "fixture://lattes/research-001"},
+  "expected_fields": {"publication": "educação científica", "year": 2025},
+  "allowed_variants": {"publication": ["artigo sobre educação científica"]},
+  "forbidden_claims": ["10.1234/falso", "autoria principal"],
+  "required_evidence_refs": ["fixture://lattes/research-001"],
+  "expected_missing_information": ["doi", "authorship_order"],
+  "expected_confidence_range": [0.5, 0.8],
+  "expected_warnings": ["publicação sem DOI"],
+  "privacy_level": "public_fictitious",
+  "tags": ["golden", "publication_without_doi"]
+}

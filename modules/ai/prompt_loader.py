@@ -171,6 +171,38 @@ Evidence:
 {evidence}
 """
 
+GITHUB_PROFILE_ANALYSIS_SYSTEM_PROMPT = (
+    "You evaluate a public GitHub profile as portfolio evidence. Use only supplied public "
+    "repository metadata and evidence. Return valid JSON only. Do not infer employment, "
+    "identity, seniority, private activity, impact or ownership without explicit evidence."
+)
+
+GITHUB_PROFILE_ANALYSIS_USER_TEMPLATE = """Evaluate this public GitHub profile evidence.
+
+Target role: {target_role}
+Public profile metadata: {profile}
+Public repositories: {repositories}
+Evidence: {evidence}
+
+Return only JSON matching the expected schema.
+"""
+
+PORTFOLIO_GAP_ANALYSIS_SYSTEM_PROMPT = (
+    "You identify portfolio gaps using only confirmed profile and public project evidence. "
+    "Return valid JSON only. Treat missing evidence as unknown, never as a negative fact. "
+    "Do not invent experience, projects, outcomes, metrics, credentials or employment."
+)
+
+PORTFOLIO_GAP_ANALYSIS_USER_TEMPLATE = """Identify cautious portfolio gaps and safe actions.
+
+Target role: {target_role}
+Confirmed profile: {profile}
+Public portfolio: {portfolio}
+Evidence: {evidence}
+
+Return only JSON matching the expected schema.
+"""
+
 SOURCE_IMPORT_ENRICHMENT_SYSTEM_PROMPT = (
     "You enrich imported job opportunities for SotuHire intake. Use only the pasted text "
     "and source URL. Return valid JSON only. Do not invent requirements, company facts, "
@@ -427,6 +459,24 @@ def initial_prompt_specs(
             mode="career_advice",
         ),
         PromptSpec(
+            prompt_id="github_profile_analysis_v1",
+            version="1.0.0",
+            system_prompt=GITHUB_PROFILE_ANALYSIS_SYSTEM_PROMPT,
+            user_template=GITHUB_PROFILE_ANALYSIS_USER_TEMPLATE,
+            output_schema=schemas["github_profile_analysis_v1"],
+            temperature=0.1,
+            mode="github_profile_analysis",
+        ),
+        PromptSpec(
+            prompt_id="portfolio_gap_analysis_v1",
+            version="1.0.0",
+            system_prompt=PORTFOLIO_GAP_ANALYSIS_SYSTEM_PROMPT,
+            user_template=PORTFOLIO_GAP_ANALYSIS_USER_TEMPLATE,
+            output_schema=schemas["portfolio_gap_analysis_v1"],
+            temperature=0.1,
+            mode="portfolio_gap_analysis",
+        ),
+        PromptSpec(
             prompt_id="source_import_enrichment_v1",
             version="1.0.0",
             system_prompt=SOURCE_IMPORT_ENRICHMENT_SYSTEM_PROMPT,
@@ -515,6 +565,8 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         "ats_analysis_v1": AtsAiReviewOutput,
         "resume_tailor_v1": ResumeTailorAiOutput,
         "career_advice_v1": SafeAiInsightOutput,
+        "github_profile_analysis_v1": SafeAiInsightOutput,
+        "portfolio_gap_analysis_v1": SafeAiInsightOutput,
         "source_import_enrichment_v1": SourceImportEnrichmentOutput,
         "job_radar_match_explanation_v1": RadarMatchExplanationOutput,
         "job_wishlist_builder_v1": WishlistDraftOutput,

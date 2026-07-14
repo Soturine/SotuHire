@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor, TimeoutError
 from contextlib import suppress
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal, cast
@@ -72,6 +73,8 @@ class AiRuntime:
     allowed: bool
     allow_memory_context: bool
     warnings: tuple[str, ...] = ()
+    started_at: datetime = field(default_factory=lambda: datetime.now(UTC))
+    started_monotonic: float = field(default_factory=time.perf_counter)
 
     @property
     def fallback_used(self) -> bool:

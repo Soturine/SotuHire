@@ -7,6 +7,7 @@ import json
 from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
 from modules.ai.schemas.analysis_insights import RadarMatchExplanationOutput, WishlistDraftOutput
+from modules.ai.tracing import record_ai_run
 from modules.context import (
     CareerContext,
     CareerContextEngine,
@@ -111,6 +112,21 @@ def radar_draft_wishlist(
                 "needs_user_review": True,
             }
         )
+        record_ai_run(
+            "wishlist_builder",
+            provider_requested=str(runtime.requested_provider),
+            provider_used="local",
+            model_requested=runtime.model_requested,
+            model_used="local",
+            fallback_used=runtime.fallback_used,
+            fallback_reason="; ".join(draft.warnings),
+            provider=runtime.provider,
+            started_at=runtime.started_at,
+            started_monotonic=runtime.started_monotonic,
+            context_item_count=len(context.evidence) if context else 0,
+            evidence_count=len(context.evidence) if context else 0,
+            warnings=draft.warnings,
+        )
         return RadarWishlistDraftResponse.model_validate(draft.model_dump()), warnings
 
     payload = {
@@ -137,6 +153,19 @@ def radar_draft_wishlist(
                 ],
             }
         )
+        record_ai_run(
+            "wishlist_builder",
+            provider_requested=str(runtime.requested_provider),
+            provider_used=runtime.provider_name,
+            model_requested=runtime.model_requested,
+            model_used=runtime.model,
+            provider=runtime.provider,
+            started_at=runtime.started_at,
+            started_monotonic=runtime.started_monotonic,
+            context_item_count=len(context.evidence) if context else 0,
+            evidence_count=len(context.evidence) if context else 0,
+            warnings=ai_draft.warnings,
+        )
         return RadarWishlistDraftResponse.model_validate(ai_draft.model_dump()), warnings
     except (RuntimeError, ValidationError, ValueError, TypeError) as exc:
         fallback = build_local_wishlist_draft(
@@ -149,6 +178,22 @@ def radar_draft_wishlist(
                 "IA indisponivel ou resposta invalida; usei rascunho local.",
                 str(exc)[:160],
             ],
+        )
+        record_ai_run(
+            "wishlist_builder",
+            provider_requested=str(runtime.requested_provider),
+            provider_used="local",
+            model_requested=runtime.model_requested,
+            model_used="local",
+            fallback_used=True,
+            fallback_reason="Provider de IA indisponível ou resposta inválida.",
+            provider=runtime.provider,
+            started_at=runtime.started_at,
+            started_monotonic=runtime.started_monotonic,
+            context_item_count=len(context.evidence) if context else 0,
+            evidence_count=len(context.evidence) if context else 0,
+            warnings=fallback.warnings,
+            error_type=type(exc).__name__,
         )
         return RadarWishlistDraftResponse.model_validate(fallback.model_dump()), warnings
 
@@ -406,6 +451,19 @@ def _radar_ai_enricher(result: RadarResult, wishlist: JobWishlist) -> dict[str, 
     """Generate optional AI explanation for one radar match."""
     runtime = get_ai_runtime("radar")
     if not runtime.use_ai or runtime.provider_name == "local":
+        record_ai_run(
+            "radar_explanation",
+            provider_requested=str(runtime.requested_provider),
+            provider_used="local",
+            model_requested=runtime.model_requested,
+            model_used="local",
+            fallback_used=runtime.fallback_used,
+            fallback_reason="; ".join(runtime.warnings),
+            provider=runtime.provider,
+            started_at=runtime.started_at,
+            started_monotonic=runtime.started_monotonic,
+            warnings=list(runtime.warnings),
+        )
         raise RuntimeError("; ".join(runtime.warnings) or "IA indisponivel para Radar.")
     spec = default_prompt_registry().get("job_radar_match_explanation_v1")
     career_context = _safe_context(
@@ -441,13 +499,47 @@ def _radar_ai_enricher(result: RadarResult, wishlist: JobWishlist) -> dict[str, 
     }
     if "api_key" in json.dumps(payload).lower():
         raise RuntimeError("Payload de IA contem campo inseguro.")
-    output = runtime.provider.generate_structured(spec, payload)
-    enrichment = RadarMatchExplanationOutput.model_validate(output)
-    return {
+    try:
+        output = runtime.provider.generate_structured(spec, payload)
+        enrichment = RadarMatchExplanationOutput.model_validate(output)
+    except Exception as exc:
+        record_ai_run(
+            "radar_explanation",
+            provider_requested=str(runtime.requested_provider),
+            provider_used="local",
+            model_requested=runtime.model_requested,
+            model_used="local",
+            fallback_used=True,
+            fallback_reason="Provider de IA falhou na explicação do Radar.",
+            provider=runtime.provider,
+            started_at=runtime.started_at,
+            started_monotonic=runtime.started_monotonic,
+            context_item_count=len(career_context.evidence),
+            evidence_count=len(career_context.evidence),
+            source_refs=[result.url],
+            error_type=type(exc).__name__,
+        )
+        raise
+    response = {
         **enrichment.model_dump(),
         "provider_used": runtime.provider_name,
         "warnings": [*runtime.warnings, *enrichment.warnings],
     }
+    record_ai_run(
+        "radar_explanation",
+        provider_requested=str(runtime.requested_provider),
+        provider_used=runtime.provider_name,
+        model_requested=runtime.model_requested,
+        model_used=runtime.model,
+        provider=runtime.provider,
+        started_at=runtime.started_at,
+        started_monotonic=runtime.started_monotonic,
+        context_item_count=len(career_context.evidence),
+        evidence_count=len(career_context.evidence),
+        source_refs=[result.url],
+        warnings=response["warnings"],
+    )
+    return response
 
 
 def _draft_career_context(request: RadarWishlistDraftRequest) -> CareerContext | None:

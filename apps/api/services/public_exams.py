@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
+from modules.ai.tracing import record_ai_run, runtime_model, runtime_trace_kwargs
 from modules.public_exams import PublicExamImportInput, PublicExamService
 
 from apps.api.schemas.public_exams import (
@@ -30,6 +31,13 @@ def public_exams_import(
     service = PublicExamService()
     if not request.use_ai:
         local = service.draft_local(payload)
+        record_ai_run(
+            "public_exam_extraction",
+            provider_requested="local",
+            provider_used="local",
+            source_refs=[payload.source_url],
+            warnings=local.warnings,
+        )
         return PublicExamImportResponse.model_validate(local.model_dump()), local.warnings
 
     runtime = get_ai_runtime("public_exams")
@@ -38,6 +46,15 @@ def public_exams_import(
         fallback = service.draft_local(
             payload,
             warnings=[*warnings, "IA indisponível; usei parser local de edital."],
+        )
+        record_ai_run(
+            "public_exam_extraction",
+            provider_requested=str(runtime.requested_provider),
+            provider_used="local",
+            **runtime_trace_kwargs(runtime, model_used="local"),
+            fallback_reason="; ".join(fallback.warnings),
+            source_refs=[payload.source_url],
+            warnings=fallback.warnings,
         )
         return PublicExamImportResponse.model_validate(fallback.model_dump()), fallback.warnings
 
@@ -48,6 +65,19 @@ def public_exams_import(
         provider_name=runtime.provider_name,
         requested_provider=str(runtime.requested_provider),
         warnings=warnings,
+    )
+    record_ai_run(
+        "public_exam_extraction",
+        provider_requested=str(runtime.requested_provider),
+        provider_used=result.provider_used,
+        **runtime_trace_kwargs(
+            runtime,
+            model_used=runtime_model(runtime) if result.provider_used != "local" else "local",
+            fallback_used=result.analysis_mode == "fallback",
+        ),
+        fallback_reason="; ".join(result.warnings) if result.analysis_mode == "fallback" else "",
+        source_refs=[payload.source_url],
+        warnings=result.warnings,
     )
     return PublicExamImportResponse.model_validate(result.model_dump()), result.warnings
 

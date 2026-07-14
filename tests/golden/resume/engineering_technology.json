@@ -1,0 +1,17 @@
+{
+  "case_id": "resume-engineering-technology-001",
+  "task_id": "resume_extraction",
+  "domain": "engineering_technology",
+  "career_moment": "mid_career",
+  "language": "pt-BR",
+  "input": {"resume_text": "Pessoa Fictícia. Engenheira de software. Experiência com Python em Projeto Aurora.", "source_ref": "fixture://resume/engineering-technology-001"},
+  "expected_fields": {"primary_domain": "engineering_technology", "skill": "Python"},
+  "allowed_variants": {"primary_domain": ["software_engineering", "technology"]},
+  "forbidden_claims": ["Kubernetes", "doutorado"],
+  "required_evidence_refs": ["fixture://resume/engineering-technology-001"],
+  "expected_missing_information": ["education"],
+  "expected_confidence_range": [0.55, 0.85],
+  "expected_warnings": ["currículo incompleto"],
+  "privacy_level": "public_fictitious",
+  "tags": ["golden", "incomplete_resume", "invalid_json", "empty_response"]
+}

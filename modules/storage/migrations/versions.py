@@ -364,6 +364,136 @@ def _migration_003(connection: sqlite3.Connection) -> None:
     )
 
 
+def _migration_004(connection: sqlite3.Connection) -> None:
+    """Add secret-free AI quality, feedback, benchmark and outcome records."""
+    columns = {
+        "task_id": "TEXT NOT NULL DEFAULT ''",
+        "input_schema_version": "TEXT NOT NULL DEFAULT '1'",
+        "output_schema_version": "TEXT NOT NULL DEFAULT '1'",
+        "context_purpose": "TEXT NOT NULL DEFAULT ''",
+        "context_source_types": "TEXT NOT NULL DEFAULT '[]'",
+        "context_item_count": "INTEGER NOT NULL DEFAULT 0",
+        "evidence_count": "INTEGER NOT NULL DEFAULT 0",
+        "started_at": "TEXT NOT NULL DEFAULT ''",
+        "finished_at": "TEXT NOT NULL DEFAULT ''",
+        "input_tokens": "INTEGER",
+        "output_tokens": "INTEGER",
+        "total_tokens": "INTEGER",
+        "error_type": "TEXT NOT NULL DEFAULT ''",
+        "error_message_sanitized": "TEXT NOT NULL DEFAULT ''",
+        "benchmark_run_id": "TEXT NOT NULL DEFAULT ''",
+        "parent_run_id": "TEXT NOT NULL DEFAULT ''",
+    }
+    existing = {str(row[1]) for row in connection.execute("PRAGMA table_info(ai_runs)").fetchall()}
+    for name, definition in columns.items():
+        if name not in existing:
+            connection.execute(f"ALTER TABLE ai_runs ADD COLUMN {name} {definition}")
+    _execute_script(
+        connection,
+        """
+        CREATE INDEX IF NOT EXISTS idx_ai_runs_task_started
+        ON ai_runs(task_id, started_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_ai_runs_benchmark
+        ON ai_runs(benchmark_run_id);
+
+        CREATE TABLE IF NOT EXISTS ai_feedback (
+            feedback_id TEXT PRIMARY KEY,
+            run_id TEXT NOT NULL,
+            task_id TEXT NOT NULL,
+            rating TEXT NOT NULL,
+            decision TEXT NOT NULL,
+            edited INTEGER NOT NULL DEFAULT 0,
+            unsupported_claim INTEGER NOT NULL DEFAULT 0,
+            comment TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(run_id) REFERENCES ai_runs(run_id) ON DELETE CASCADE,
+            CHECK(rating IN ('useful', 'partial', 'not_useful')),
+            CHECK(decision IN ('accepted', 'edited', 'rejected', 'ignored'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_ai_feedback_run ON ai_feedback(run_id);
+        CREATE INDEX IF NOT EXISTS idx_ai_feedback_task_created
+        ON ai_feedback(task_id, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS ai_benchmarks (
+            benchmark_run_id TEXT PRIMARY KEY,
+            git_sha TEXT NOT NULL DEFAULT '',
+            app_version TEXT NOT NULL,
+            suite TEXT NOT NULL,
+            providers TEXT NOT NULL DEFAULT '[]',
+            models TEXT NOT NULL DEFAULT '[]',
+            prompt_versions TEXT NOT NULL DEFAULT '{}',
+            seed INTEGER NOT NULL,
+            dataset_version TEXT NOT NULL,
+            environment TEXT NOT NULL,
+            started_at TEXT NOT NULL,
+            finished_at TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'running'
+        );
+        CREATE TABLE IF NOT EXISTS ai_benchmark_results (
+            result_id TEXT PRIMARY KEY,
+            benchmark_run_id TEXT NOT NULL,
+            case_id TEXT NOT NULL,
+            task_id TEXT NOT NULL,
+            domain TEXT NOT NULL,
+            provider TEXT NOT NULL,
+            model TEXT NOT NULL DEFAULT '',
+            prompt_id TEXT NOT NULL,
+            prompt_version TEXT NOT NULL,
+            metrics TEXT NOT NULL DEFAULT '{}',
+            latency_ms INTEGER,
+            input_tokens INTEGER,
+            output_tokens INTEGER,
+            total_tokens INTEGER,
+            estimated_cost REAL,
+            fallback_used INTEGER NOT NULL DEFAULT 0,
+            schema_valid INTEGER NOT NULL DEFAULT 0,
+            error_type TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(benchmark_run_id) REFERENCES ai_benchmarks(benchmark_run_id)
+                ON DELETE CASCADE,
+            UNIQUE(benchmark_run_id, case_id, provider, model)
+        );
+        CREATE INDEX IF NOT EXISTS idx_ai_benchmark_results_lookup
+        ON ai_benchmark_results(task_id, domain, provider);
+
+        CREATE TABLE IF NOT EXISTS outcome_events (
+            event_id TEXT PRIMARY KEY,
+            application_id TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            occurred_at TEXT NOT NULL,
+            source TEXT NOT NULL DEFAULT '',
+            resume_variant_id TEXT NOT NULL DEFAULT '',
+            match_score REAL,
+            ats_score REAL,
+            metadata TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(application_id) REFERENCES applications(id) ON DELETE CASCADE,
+            CHECK(event_type IN (
+                'application_created', 'application_submitted_manually', 'response_received',
+                'interview_scheduled', 'interview_completed', 'offer_received', 'rejected',
+                'withdrawn', 'no_response'
+            ))
+        );
+        CREATE INDEX IF NOT EXISTS idx_outcome_events_application
+        ON outcome_events(application_id, occurred_at);
+        CREATE TABLE IF NOT EXISTS outcome_metrics (
+            metric_id TEXT PRIMARY KEY,
+            scope_type TEXT NOT NULL,
+            scope_id TEXT NOT NULL DEFAULT '',
+            metric_name TEXT NOT NULL,
+            value REAL NOT NULL,
+            sample_size INTEGER NOT NULL,
+            confidence TEXT NOT NULL,
+            calculated_at TEXT NOT NULL,
+            UNIQUE(scope_type, scope_id, metric_name)
+        );
+
+        INSERT INTO schema_metadata(key, value) VALUES ('schema_version', '4')
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+        """,
+    )
+
+
 MIGRATIONS = (
     Migration(
         version=1,
@@ -406,6 +536,24 @@ MIGRATIONS = (
         validation=_validate_tables("ai_runs", "legacy_migration_history"),
         rollback_strategy="Restaurar o backup pré-migração ou manter a tabela inativa.",
         created_at="2026-07-12T00:00:00Z",
+    ),
+    Migration(
+        version=4,
+        description="Qualidade de IA, feedback humano, benchmarks e outcome learning.",
+        up=_migration_004,
+        validation=_validate_tables(
+            "ai_runs",
+            "ai_feedback",
+            "ai_benchmarks",
+            "ai_benchmark_results",
+            "outcome_events",
+            "outcome_metrics",
+        ),
+        rollback_strategy=(
+            "Restaurar o backup pré-migração. As tabelas v4 podem permanecer inativas; "
+            "nenhum input/output sensível é necessário para recuperação."
+        ),
+        created_at="2026-07-14T00:00:00Z",
     ),
 )
 

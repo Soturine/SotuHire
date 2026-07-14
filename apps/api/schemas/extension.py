@@ -27,8 +27,8 @@ class ExtensionStatusResponse(BaseModel):
     enabled_flows: list[str] = Field(default_factory=list)
     ai_provider_status: str = "local"
     warnings: list[str] = Field(default_factory=list)
-    extension_version: str = "0.9.2"
-    companion_version: str = "1.9.6"
+    extension_version: str = "0.9.3"
+    companion_version: str = "1.9.7"
     api_version: str = "v1"
     compatible: bool = True
     capabilities: list[str] = Field(default_factory=list)
@@ -61,7 +61,7 @@ class ExtensionHandshakeRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    extension_version: str = Field(default="0.9.2", max_length=40)
+    extension_version: str = Field(default="0.9.3", max_length=40)
 
 
 class ExtensionHandshakeResponse(BaseModel):
