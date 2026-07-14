@@ -145,6 +145,15 @@
     `<div class="metric"><span>${escapeHtml(label)}</span><strong>${Number(value) || 0}/100</strong></div>`;
   const list = (items, empty) =>
     `<ul>${(items?.length ? items : [empty]).map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
+  const feedbackControls = (report) =>
+    report.run_id
+      ? `<article class="feedback"><h3>Este resultado ajudou?</h3><p>O feedback envia apenas o identificador do trace e sua avaliação; nenhum conteúdo do GitHub ou chave é incluído.</p><div class="feedback-buttons">
+          <button data-action="feedback" data-rating="useful" data-decision="accepted">Útil e aceito</button>
+          <button data-action="feedback" data-rating="partial" data-decision="edited">Útil após editar</button>
+          <button data-action="feedback" data-rating="not_useful" data-decision="rejected">Não útil</button>
+          <button data-action="feedback" data-rating="partial" data-decision="rejected" data-unsupported-claim="true">Afirmação sem evidência</button>
+        </div></article>`
+      : `<article class="feedback"><h3>Feedback</h3><p>Conecte a análise à IA do SotuHire para registrar feedback vinculado a um trace seguro.</p></article>`;
   const renderReport = (report) => `
     <section class="hero">
       <div class="score"><strong>${report.overall_score}</strong><span>/100</span></div>
@@ -169,6 +178,7 @@
     <article><h3>Recomendações por prioridade</h3>${list(report.priority_recommendations || report.risks, "Continue documentando evidências verificáveis.")}</article>
     <article><h3>Evidências para currículo</h3>${list(report.resume_highlights, "Analise mais arquivos para gerar evidências.")}</article>
     <article><h3>Rastreabilidade</h3><p>Prompt ${escapeHtml(report.prompt_id || "análise local")} · versão ${escapeHtml(report.prompt_version || "local")} · revisão humana obrigatória.</p></article>
+    ${feedbackControls(report)}
   `;
 
   const styles = `
@@ -177,7 +187,7 @@
     .modal{width:min(980px,96vw);max-height:92vh;overflow:hidden;border:1px solid #34506f;border-radius:18px;background:#071526;box-shadow:0 30px 90px #000b}
     header{display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #263d57;background:#081625}header strong{font-size:18px}button,select{font:inherit}button{cursor:pointer;border:1px solid #3c5878;border-radius:9px;padding:9px 13px;color:#f5f7fb;background:#142a44;font-weight:650}button:hover{border-color:#31d2ad}.primary{background:linear-gradient(135deg,#22cda9,#10927d);border-color:#31d2ad;color:#031f19}.close{font-size:20px;padding:3px 10px}.body{padding:20px;overflow:auto;max-height:calc(92vh - 136px)}
     .toolbar,.actions,.settings{display:flex;gap:9px;align-items:center;flex-wrap:wrap}.settings{padding:12px;margin-bottom:16px;border:1px solid #29435f;border-radius:12px;background:#0b1d32}.settings label{display:grid;gap:4px;color:#aebed1;font-size:11px}.settings select{min-width:175px;padding:8px;border:1px solid #3c5878;border-radius:7px;background:#071526;color:#fff}.toggle{display:flex!important;grid-template-columns:auto 1fr!important;align-items:center}.status{margin-left:auto;color:#9eb1ca}.hero{display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center;padding:18px;border:1px solid #29435f;border-radius:14px;background:linear-gradient(135deg,#102d4d,#0c1d32)}.hero h2{margin:7px 0}.hero p{color:#c8d3e2}.score{width:108px;height:108px;border-radius:50%;display:grid;place-content:center;text-align:center;border:9px solid #24c9a7;background:#08192c}.score strong{font-size:34px}.score span{color:#9eb1ca}.grade{display:inline-block;border-radius:999px;background:#176d5e;padding:4px 10px;font-weight:800}
-    .badges{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}.badges span{padding:5px 9px;border-radius:999px;background:#163654;color:#b9d8ff}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.metric,article{border:1px solid #29435f;border-radius:12px;padding:13px;background:#0b1d32}.metric{display:flex;justify-content:space-between}.columns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}article{margin-top:10px}article h3{margin:0 0 8px;color:#d8e8ff}article li,article p{color:#c8d3e2;line-height:1.45}.loading,.error,.empty{padding:60px;text-align:center;color:#c8d3e2}.error{color:#ff9aaa}.actions{padding:15px 20px;border-top:1px solid #263d57;background:#0b1d32}
+    .badges{display:flex;gap:7px;flex-wrap:wrap;margin:14px 0}.badges span{padding:5px 9px;border-radius:999px;background:#163654;color:#b9d8ff}.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.metric,article{border:1px solid #29435f;border-radius:12px;padding:13px;background:#0b1d32}.metric{display:flex;justify-content:space-between}.columns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}article{margin-top:10px}article h3{margin:0 0 8px;color:#d8e8ff}article li,article p{color:#c8d3e2;line-height:1.45}.feedback-buttons{display:flex;gap:8px;flex-wrap:wrap}.loading,.error,.empty{padding:60px;text-align:center;color:#c8d3e2}.error{color:#ff9aaa}.actions{padding:15px 20px;border-top:1px solid #263d57;background:#0b1d32}
     @media(max-width:700px){.metrics,.columns{grid-template-columns:1fr}.hero{grid-template-columns:1fr}.score{width:86px;height:86px}}
   `;
 
@@ -305,6 +315,22 @@
           currentReport = await standalone(currentProject, provider, model);
           reportNode.className = "report";
           reportNode.innerHTML = renderReport(currentReport);
+        }
+        if (action === "feedback") {
+          if (!currentReport?.run_id)
+            throw new Error("Este resultado não possui um trace do SotuHire.");
+          await backgroundRequest({
+            type: "SOTUHIRE_AI_FEEDBACK",
+            feedback: {
+              run_id: currentReport.run_id,
+              task_id: currentReport.task_id || "github_repo_analysis",
+              rating: event.target.dataset.rating,
+              decision: event.target.dataset.decision,
+              unsupported_claim:
+                event.target.dataset.unsupportedClaim === "true",
+            },
+          });
+          query(".status").textContent = "Feedback registrado com segurança.";
         }
         if (
           ["save", "evidence", "memory", "profile", "compare"].includes(action)

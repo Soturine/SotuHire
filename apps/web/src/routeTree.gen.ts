@@ -24,6 +24,7 @@ import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as GithubRouteImport } from './routes/github'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AtsRouteImport } from './routes/ats'
+import { Route as AiQualityRouteImport } from './routes/ai-quality'
 import { Route as IndexRouteImport } from './routes/index'
 
 const TrackerRoute = TrackerRouteImport.update({
@@ -101,6 +102,11 @@ const AtsRoute = AtsRouteImport.update({
   path: '/ats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AiQualityRoute = AiQualityRouteImport.update({
+  id: '/ai-quality',
+  path: '/ai-quality',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -109,6 +115,7 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/ai-quality': typeof AiQualityRoute
   '/ats': typeof AtsRoute
   '/dashboard': typeof DashboardRoute
   '/github': typeof GithubRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/ai-quality': typeof AiQualityRoute
   '/ats': typeof AtsRoute
   '/dashboard': typeof DashboardRoute
   '/github': typeof GithubRoute
@@ -146,6 +154,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/ai-quality': typeof AiQualityRoute
   '/ats': typeof AtsRoute
   '/dashboard': typeof DashboardRoute
   '/github': typeof GithubRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/ai-quality'
     | '/ats'
     | '/dashboard'
     | '/github'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/ai-quality'
     | '/ats'
     | '/dashboard'
     | '/github'
@@ -202,6 +213,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/ai-quality'
     | '/ats'
     | '/dashboard'
     | '/github'
@@ -221,6 +233,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AiQualityRoute: typeof AiQualityRoute
   AtsRoute: typeof AtsRoute
   DashboardRoute: typeof DashboardRoute
   GithubRoute: typeof GithubRoute
@@ -345,6 +358,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ai-quality': {
+      id: '/ai-quality'
+      path: '/ai-quality'
+      fullPath: '/ai-quality'
+      preLoaderRoute: typeof AiQualityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -357,6 +377,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AiQualityRoute: AiQualityRoute,
   AtsRoute: AtsRoute,
   DashboardRoute: DashboardRoute,
   GithubRoute: GithubRoute,

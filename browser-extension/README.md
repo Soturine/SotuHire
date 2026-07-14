@@ -85,7 +85,7 @@ revisão humana.
 5. Fixe o SotuHire na barra do navegador, se desejar.
 
 Para testar um ZIP gerado pelo projeto, extraia-o primeiro e carregue a pasta resultante. O arquivo
-`manifest.json` informa a versão instalada; a implementação atual usa a linha `0.9.2`.
+`manifest.json` informa a versão instalada; a implementação atual usa a linha `0.9.3`.
 
 ### Iniciar a integração local
 
@@ -137,6 +137,8 @@ O modo **Análise local — sem chave** produz um relatório determinístico. Ta
 seguro quando um provider externo falha. O relatório informa `provider_requested`,
 `provider_used`, modelo, modo de análise e motivo do fallback; a troca não deve ser silenciosa.
 
+Quando a IA do SotuHire devolve um `run_id` persistido, o modal permite marcar o resultado como útil, editado, rejeitado ou contendo afirmação sem evidência. A extensão envia somente `run_id`, `task_id`, rating, decisão e o booleano de claim sem suporte. README, relatório, texto da página, chave e token não entram nesse payload.
+
 ## Como as chaves são tratadas
 
 - por padrão, a chave própria fica em `chrome.storage.session` e termina com a sessão do navegador;
@@ -160,8 +162,8 @@ O popup envia sua versão ao endpoint `POST /handshake` da Local Companion. A re
 
 ```json
 {
-  "extension_version": "0.9.2",
-  "companion_version": "1.9.6",
+  "extension_version": "0.9.3",
+  "companion_version": "1.9.7",
   "api_version": "v1",
   "capabilities": [],
   "compatible": true,

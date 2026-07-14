@@ -70,6 +70,9 @@ async function handleMessage(message) {
   if (message.type === "SOTUHIRE_AI_ANALYZE") {
     return analyzeProject(message.project, message.options || {});
   }
+  if (message.type === "SOTUHIRE_AI_FEEDBACK") {
+    return submitAiFeedback(message.feedback || {});
+  }
   if (message.type === "SOTUHIRE_GITHUB_ENRICH") {
     return {
       project: await enrichGitHubProject(
@@ -415,6 +418,8 @@ async function analyzeWithSotuHire(project, localReport, trace) {
             analysis_mode: data.analysis_mode || "local",
             fallback_used: Boolean(data.fallback_used),
             fallback_reason: data.fallback_reason || "",
+            run_id: data.run_id || "",
+            task_id: data.task_id || "github_repo_analysis",
             source_refs: data.source_refs || trace.source_refs,
             evidence_used: data.evidence_used || [],
             needs_user_review: true,
@@ -448,16 +453,44 @@ async function analyzeWithSotuHire(project, localReport, trace) {
       ...trace,
       provider_used: report.provider_used || "local",
       model_used: report.model_used || "configurado-no-sotuhire",
-      analysis_mode:
-        apiFallbackReason
-          ? "fallback"
-          : report.provider_used && !report.provider_used.startsWith("local")
+      analysis_mode: apiFallbackReason
+        ? "fallback"
+        : report.provider_used && !report.provider_used.startsWith("local")
           ? "ai"
           : "local",
       fallback_used: Boolean(report.fallback_used || apiFallbackReason),
       fallback_reason: report.fallback_reason || apiFallbackReason,
     },
   };
+}
+
+async function submitAiFeedback(feedback) {
+  const ratings = new Set(["useful", "partial", "not_useful"]);
+  const decisions = new Set(["accepted", "edited", "rejected", "ignored"]);
+  const runId = String(feedback.run_id || "").trim();
+  const taskId = String(feedback.task_id || "").trim();
+  if (!runId || !taskId) {
+    throw new Error(
+      "Este resultado não possui um trace do SotuHire para receber feedback.",
+    );
+  }
+  if (!ratings.has(feedback.rating) || !decisions.has(feedback.decision)) {
+    throw new Error("Feedback inválido.");
+  }
+  const response = await fetch(`${APP_API}/ai/feedback`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      run_id: runId,
+      task_id: taskId,
+      rating: feedback.rating,
+      decision: feedback.decision,
+      edited: feedback.decision === "edited",
+      unsupported_claim: Boolean(feedback.unsupported_claim),
+    }),
+  });
+  const payload = await responseJson(response);
+  return { feedback_id: payload.data?.feedback_id || "" };
 }
 
 function normalizeSotuHireReport(report) {

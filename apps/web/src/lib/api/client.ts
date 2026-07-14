@@ -1,7 +1,14 @@
 import type {
   ApiEnvelope,
   AiProvider,
+  AiBenchmarkSummary,
+  AiFeedback,
+  AiFeedbackPage,
   AiProvidersResult,
+  AiPromptQuality,
+  AiProviderComparison,
+  AiQualitySummary,
+  AiRunsPage,
   AiModelsResult,
   AiSettings,
   AiSettingsPayload,
@@ -43,6 +50,7 @@ import type {
   NotificationBulkResult,
   NotificationResult,
   NotificationsResult,
+  OutcomeSummary,
   ProfileDeduplicateResult,
   ProfileImportResult,
   ProfileItem,
@@ -113,6 +121,15 @@ import {
   mockSources,
   mockTailor,
 } from "@/mocks/data";
+import {
+  mockAiQualitySummary,
+  mockAiRuns,
+  mockBenchmarks,
+  mockFeedback,
+  mockOutcomeSummary,
+  mockPromptQuality,
+  mockProviderComparison,
+} from "@/mocks/ai-quality";
 import type { ApiMode } from "./mode";
 import { getActiveDemoPersona } from "@/mocks/personas";
 
@@ -656,6 +673,53 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeTrackerSources,
       ),
 
+    aiQualitySummary: () =>
+      call<AiQualitySummary>(mode, baseUrl, "/ai/quality/summary", undefined, mockAiQualitySummary),
+    aiQualityRuns: () => call<AiRunsPage>(mode, baseUrl, "/ai/quality/runs", undefined, mockAiRuns),
+    aiQualityProviders: () =>
+      call<{ items: AiProviderComparison[] }>(mode, baseUrl, "/ai/quality/providers", undefined, {
+        items: mockProviderComparison,
+      }),
+    aiQualityPrompts: () =>
+      call<{ items: AiPromptQuality[] }>(mode, baseUrl, "/ai/quality/prompts", undefined, {
+        items: mockPromptQuality,
+      }),
+    aiQualityBenchmarks: () =>
+      call<{ items: AiBenchmarkSummary[] }>(mode, baseUrl, "/ai/quality/benchmarks", undefined, {
+        items: mockBenchmarks,
+      }),
+    aiFeedback: () => call<AiFeedbackPage>(mode, baseUrl, "/ai/feedback", undefined, mockFeedback),
+    aiFeedbackCreate: (payload: {
+      run_id: string;
+      task_id: string;
+      rating: AiFeedback["rating"];
+      decision: AiFeedback["decision"];
+      edited: boolean;
+      unsupported_claim: boolean;
+      comment: string;
+    }) =>
+      call<AiFeedback>(
+        mode,
+        baseUrl,
+        "/ai/feedback",
+        { method: "POST", body: JSON.stringify(payload) },
+        {
+          feedback_id: `demo-feedback-${Date.now()}`,
+          ...payload,
+          created_at: new Date().toISOString(),
+        },
+      ),
+    aiFeedbackDelete: (feedbackId: string) =>
+      call<{ deleted: boolean }>(
+        mode,
+        baseUrl,
+        `/ai/feedback/${encodeURIComponent(feedbackId)}`,
+        { method: "DELETE" },
+        { deleted: true },
+      ),
+    outcomesSummary: () =>
+      call<OutcomeSummary>(mode, baseUrl, "/outcomes/summary", undefined, mockOutcomeSummary),
+
     authenticatedBrowserStatus: (browser_cdp_url = "http://127.0.0.1:9222") =>
       call<AuthenticatedBrowserStatus>(
         mode,
@@ -740,7 +804,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
           ai_provider_status: "local",
           extension_version: "0.9.2",
-          companion_version: "1.9.6",
+          companion_version: "1.9.7",
           api_version: "v1",
           compatible: true,
           capabilities: ["capture.snapshot", "queue.retry", "jobposting.jsonld"],
@@ -756,9 +820,9 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         { method: "POST", body: JSON.stringify({ extension_version }) },
         {
           extension_version,
-          companion_version: "1.9.6",
+          companion_version: "1.9.7",
           api_version: "v1",
-          app_version: "1.9.6",
+          app_version: "1.9.7",
           capabilities: ["capture.snapshot", "queue.retry", "jobposting.jsonld"],
           compatible: true,
           warnings: [],
@@ -3129,7 +3193,7 @@ function normalizeHealth(value: unknown): Health {
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "1.9.6",
+    version: asString(raw.version) || "1.9.7",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),

@@ -1,7 +1,7 @@
 // Centralized public-facing labels for SotuHire.
 // Keep internal API enum values intact; this file translates them for the UI.
 
-export const APP_VERSION = "1.9.6";
+export const APP_VERSION = "1.9.7";
 export const APP_NAME = "SotuHire";
 export const APP_TAGLINE = "Inteligência de carreira · local-first";
 export const API_LOCAL_HOST = "127.0.0.1:8787";

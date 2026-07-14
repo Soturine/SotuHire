@@ -96,7 +96,8 @@ CHROME_STUB = r"""
             weaknesses: ["Pode documentar melhor decisões arquiteturais."], inconsistencies: [],
             priority_recommendations: ["Adicionar ADRs curtos para decisões centrais."],
             resume_highlights: ["Desenvolveu API FastAPI com testes automatizados."],
-            prompt_id: "extension_github_portfolio_analysis_v2", prompt_version: "2.0.0"
+            prompt_id: "extension_github_portfolio_analysis_v2", prompt_version: "2.0.0",
+            run_id: "run-extension-fictitious-001", task_id: "github_repo_analysis"
           }
         };
         return { ok: true };
@@ -119,10 +120,10 @@ CHROME_STUB = r"""
     let payload = { ok: true, message: "Ação concluída no Companion local." };
     if (path.endsWith("/health")) payload = { ok: true, message: "SotuHire Local Companion conectado." };
     if (path.endsWith("/handshake")) payload = {
-      extension_version: "0.9.2",
-      companion_version: "1.9.6",
+      extension_version: "0.9.3",
+      companion_version: "1.9.7",
       api_version: "v1",
-      app_version: "1.9.6",
+      app_version: "1.9.7",
       capabilities: [
         "capture.job", "capture.public_exam", "capture.github", "capture.snapshot",
         "queue.retry", "queue.export_import", "jobposting.jsonld", "ai.own_key"
@@ -130,12 +131,12 @@ CHROME_STUB = r"""
       compatible: true,
       warnings: [],
       min_supported_extension_version: "0.9.1",
-      max_tested_extension_version: "0.9.2",
+      max_tested_extension_version: "0.9.3",
       min_supported_companion_version: "1.9.5"
     };
     if (path.includes("context-summary")) payload = {
       ok: true,
-      app_version: "1.9.6",
+      app_version: "1.9.7",
       profile_available: true,
       profile_summary: "Resumo seguro disponível no backend local.",
       enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
@@ -253,6 +254,8 @@ def _capture_github_modal(browser: Browser) -> None:
     page.locator("button[data-action='analyze']").click()
     page.locator(".report .hero").wait_for(timeout=5_000)
     page.screenshot(path=str(OUTPUT / "github-analysis-modal.png"), full_page=False)
+    page.locator(".feedback").scroll_into_view_if_needed()
+    page.screenshot(path=str(OUTPUT / "github-analysis-feedback.png"), full_page=False)
     page.close()
 
 

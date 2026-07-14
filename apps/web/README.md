@@ -137,6 +137,10 @@ Na v1.9.4, a UI mostra presets **Local seguro**, **IA básica**, **IA completa**
 
 A chave digitada é enviada somente para o backend local e limpa do estado do componente após salvar. Ela não é persistida em `localStorage`, `sessionStorage` ou bundle público. A API nunca retorna a chave; retorna apenas provider, modelo, `configured`, `status`, toggles, warnings e `updated_at`.
 
+## IA e Qualidade
+
+A rota `/ai-quality` funciona em Demo e API Real e organiza Resumo, Providers, Prompts, Benchmarks, Feedback, Resultados profissionais e Privacidade. Ela mostra somente metadados seguros, exige tamanho de amostra nas comparações e oferece criação/remoção de feedback e eventos manuais de outcome. O empty state padrão é “Não há execuções suficientes para gerar métricas confiáveis.”
+
 Estados exibidos na UI:
 
 ```txt

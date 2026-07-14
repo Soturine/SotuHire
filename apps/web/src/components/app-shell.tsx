@@ -17,6 +17,7 @@ import {
   RadioTower,
   ScrollText,
   UserRound,
+  BrainCircuit,
   ChevronRight,
   Menu,
   X,
@@ -56,6 +57,7 @@ const nav = [
     group: "Conta",
     items: [
       { to: "/profile", label: "Perfil", icon: UserRound },
+      { to: "/ai-quality", label: "IA e Qualidade", icon: BrainCircuit },
       { to: "/settings", label: "Configurações", icon: Settings },
       { to: "/privacy", label: "Privacidade", icon: ShieldCheck },
     ],

@@ -69,7 +69,7 @@ def test_popup_uses_versioned_handshake_contract() -> None:
     popup = Path("browser-extension/popup.js").read_text(encoding="utf-8")
     manifest = json.loads(Path("browser-extension/manifest.json").read_text(encoding="utf-8"))
 
-    assert manifest["version"] == "0.9.2"
+    assert manifest["version"] == "0.9.3"
     assert 'request("/handshake"' in popup
     assert "chrome.runtime.getManifest().version" in popup
     assert "handshake.compatible" in popup
@@ -82,12 +82,12 @@ def test_companion_handshake_negotiates_current_and_old_extension(
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
     app = LocalCompanionApp(token="")
 
-    status, current = app.handle("POST", "/handshake", body=b'{"extension_version":"0.9.2"}')
+    status, current = app.handle("POST", "/handshake", body=b'{"extension_version":"0.9.3"}')
     old_status, old = app.handle("POST", "/handshake", body=b'{"extension_version":"0.8.9"}')
 
     assert status == 200
-    assert current["extension_version"] == "0.9.2"
-    assert current["companion_version"] == "1.9.6"
+    assert current["extension_version"] == "0.9.3"
+    assert current["companion_version"] == "1.9.7"
     assert current["compatible"] is True
     capabilities = cast(list[str], current["capabilities"])
     assert "queue.retry" in capabilities
@@ -101,5 +101,6 @@ def test_sotuhire_provider_fallback_is_explicit() -> None:
     background = Path("browser-extension/background.js").read_text(encoding="utf-8")
 
     assert "apiFallbackReason" in background
-    assert 'analysis_mode:\n        apiFallbackReason\n          ? "fallback"' in background
+    assert "analysis_mode: apiFallbackReason" in background
+    assert '? "fallback"' in background
     assert "fallback_used: Boolean(report.fallback_used || apiFallbackReason)" in background

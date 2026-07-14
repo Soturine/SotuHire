@@ -1350,3 +1350,157 @@ export interface RadarAlertResult {
   alert: RadarAlert;
   message: string;
 }
+
+export type SampleConfidence = "insufficient" | "indicative" | "comparable";
+
+export interface AiQualitySummary {
+  executions: number;
+  schema_validity?: number | null;
+  fallback_rate?: number | null;
+  average_latency_ms?: number | null;
+  total_tokens: number;
+  estimated_cost: number | null;
+  human_acceptance_rate?: number | null;
+  human_edit_rate?: number | null;
+  human_rejection_rate?: number | null;
+  unsupported_claim_rate?: number | null;
+  sample_confidence: SampleConfidence | string;
+  empty_state: boolean;
+  message: string;
+}
+
+export interface AiRunTrace {
+  run_id: string;
+  task_id: string;
+  feature: string;
+  provider_requested: string;
+  provider_used: string;
+  model_requested: string;
+  model_used: string;
+  prompt_id: string;
+  prompt_version: string;
+  analysis_mode: "local" | "ai" | "fallback";
+  schema_valid: boolean;
+  fallback_used: boolean;
+  fallback_reason: string;
+  latency_ms?: number | null;
+  input_tokens?: number | null;
+  output_tokens?: number | null;
+  total_tokens?: number | null;
+  estimated_cost?: number | null;
+  context_purpose: string;
+  context_item_count: number;
+  evidence_count: number;
+  warnings: string[];
+  needs_user_review: boolean;
+  started_at: string;
+  finished_at: string;
+}
+
+export interface AiRunsPage {
+  items: AiRunTrace[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface AiProviderComparison {
+  task: string;
+  provider: string;
+  model: string;
+  sample_size: number;
+  sample_confidence: SampleConfidence;
+  quality: number;
+  latency_ms?: number | null;
+  cost: number;
+  fallback_rate: number;
+  acceptance_rate?: number | null;
+}
+
+export interface AiPromptQuality {
+  task_id: string;
+  prompt_id: string;
+  prompt_version: string;
+  evaluation_suite: string;
+  providers_supported: string[];
+  run_count: number;
+  baseline_status: string;
+}
+
+export interface AiBenchmarkSummary {
+  benchmark_run_id: string;
+  git_sha: string;
+  app_version: string;
+  suite: string;
+  providers: string[];
+  models: string[];
+  dataset_version: string;
+  environment: string;
+  started_at: string;
+  finished_at: string;
+  status: string;
+}
+
+export interface AiFeedback {
+  feedback_id: string;
+  run_id: string;
+  task_id: string;
+  rating: "useful" | "partial" | "not_useful";
+  decision: "accepted" | "edited" | "rejected" | "ignored";
+  edited: boolean;
+  unsupported_claim: boolean;
+  comment: string;
+  created_at: string;
+}
+
+export interface AiFeedbackPage {
+  items: AiFeedback[];
+  limit: number;
+  offset: number;
+}
+
+export interface OutcomeRate {
+  value: number;
+  numerator: number;
+  denominator: number;
+  sample_size: number;
+  confidence: SampleConfidence;
+  note: string;
+}
+
+export interface OutcomeGroup {
+  key: string;
+  applications: number;
+  responses: number;
+  interviews: number;
+  offers: number;
+  response_rate: number;
+  confidence: SampleConfidence;
+}
+
+export interface OutcomeSummary {
+  sample_size: number;
+  confidence: SampleConfidence;
+  response_rate: OutcomeRate;
+  interview_rate: OutcomeRate;
+  offer_rate: OutcomeRate;
+  average_time_to_response_hours?: number | null;
+  average_time_in_stage_hours?: number | null;
+  source_effectiveness: OutcomeGroup[];
+  resume_variant_effectiveness: OutcomeGroup[];
+  match_score_vs_outcome: {
+    sample_size: number;
+    successful_average?: number | null;
+    other_average?: number | null;
+    confidence: SampleConfidence;
+    note: string;
+  };
+  ats_score_vs_outcome: {
+    sample_size: number;
+    successful_average?: number | null;
+    other_average?: number | null;
+    confidence: SampleConfidence;
+    note: string;
+  };
+  note: string;
+}

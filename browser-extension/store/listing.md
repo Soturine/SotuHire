@@ -33,7 +33,7 @@ GitHub. O modo conectado envia somente o conteúdo capturado para a API local do
 
 ## Checklist de publicação
 
-- enviar `dist/sotuhire-extension-v0.9.2.zip`;
+- enviar `dist/sotuhire-extension-v0.9.3.zip`;
 - usar as imagens de `store/screenshots/`;
 - preencher a política de privacidade com `store/privacy-policy.md`;
 - informar que `activeTab`, `scripting`, `storage`, localhost, GitHub público, Gemini e OpenAI são usados;

@@ -10,6 +10,52 @@ const shots: Array<{
   prepare?: (page: Page) => Promise<void>;
 }> = [
   {
+    path: "/ai-quality",
+    file: "sotuhire-web-ai-quality-summary.png",
+  },
+  {
+    path: "/ai-quality",
+    file: "sotuhire-web-ai-quality-provider-comparison.png",
+    prepare: async (page) => {
+      await page.getByRole("tab", { name: "Providers" }).click();
+    },
+  },
+  {
+    path: "/ai-quality",
+    file: "sotuhire-web-ai-quality-prompts.png",
+    prepare: async (page) => {
+      await page.getByRole("tab", { name: "Prompts" }).click();
+    },
+  },
+  {
+    path: "/ai-quality",
+    file: "sotuhire-web-ai-quality-benchmarks.png",
+    prepare: async (page) => {
+      await page.getByRole("tab", { name: "Benchmarks" }).click();
+    },
+  },
+  {
+    path: "/ai-quality",
+    file: "sotuhire-web-ai-quality-feedback.png",
+    prepare: async (page) => {
+      await page.getByRole("tab", { name: "Feedback", exact: true }).click();
+    },
+  },
+  {
+    path: "/ai-quality",
+    file: "sotuhire-web-ai-quality-outcomes.png",
+    prepare: async (page) => {
+      await page.getByRole("tab", { name: "Resultados profissionais" }).click();
+    },
+  },
+  {
+    path: "/ai-quality",
+    file: "sotuhire-web-ai-quality-trace-privacy.png",
+    prepare: async (page) => {
+      await page.getByRole("tab", { name: "Privacidade" }).click();
+    },
+  },
+  {
     path: "/radar",
     file: "sotuhire-v1.8.1-web-radar-ai-wishlist.png",
     prepare: async (page) => {
