@@ -11,6 +11,7 @@ from apps.api.config import ApiSettings
 from apps.api.routes import (
     ai_quality,
     analysis,
+    application_lab,
     data,
     extension,
     health,
@@ -39,12 +40,14 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
         CORSMiddleware,
         allow_origins=resolved.allowed_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
         allow_headers=["Content-Type", "Authorization"],
     )
     app.include_router(health.router)
     app.include_router(data.router)
     app.include_router(analysis.router)
+    app.include_router(application_lab.application_lab_router)
+    app.include_router(application_lab.resume_studio_router)
     app.include_router(ai_quality.router)
     app.include_router(outcomes.router)
     app.include_router(tracker.router)

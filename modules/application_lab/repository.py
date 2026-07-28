@@ -259,6 +259,18 @@ class ApplicationLabRepository:
                 ).fetchall()
         return [_variant_from_row(row) for row in rows]
 
+    def count_variants(self, *, master_resume_id: str = "") -> int:
+        ensure_database(self.database_path)
+        with connect_database(self.database_path) as connection:
+            if master_resume_id:
+                row = connection.execute(
+                    "SELECT COUNT(*) AS total FROM resume_variants WHERE master_resume_id = ?",
+                    (master_resume_id,),
+                ).fetchone()
+            else:
+                row = connection.execute("SELECT COUNT(*) AS total FROM resume_variants").fetchone()
+        return int(row["total"]) if row is not None else 0
+
     def list_templates(self) -> list[ResumeTemplate]:
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
@@ -376,6 +388,14 @@ class ApplicationLabRepository:
                 (bounded_limit, bounded_offset),
             ).fetchall()
         return [_session_from_row(row) for row in rows]
+
+    def count_sessions(self) -> int:
+        ensure_database(self.database_path)
+        with connect_database(self.database_path) as connection:
+            row = connection.execute(
+                "SELECT COUNT(*) AS total FROM application_lab_sessions"
+            ).fetchone()
+        return int(row["total"]) if row is not None else 0
 
     def save_report(self, report: ApplicationReadinessReport) -> ApplicationReadinessReport:
         ensure_database(self.database_path)
