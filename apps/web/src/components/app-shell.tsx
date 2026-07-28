@@ -18,6 +18,8 @@ import {
   ScrollText,
   UserRound,
   BrainCircuit,
+  FlaskConical,
+  Files,
   ChevronRight,
   Menu,
   X,
@@ -35,6 +37,8 @@ const nav = [
   {
     group: "Análise",
     items: [
+      { to: "/application-lab", label: "Preparar candidatura", icon: FlaskConical },
+      { to: "/resume-studio", label: "Resume Studio", icon: Files },
       { to: "/resume", label: "Currículo", icon: FileText },
       { to: "/job", label: "Vaga", icon: Briefcase },
       { to: "/match", label: "Compatibilidade", icon: Target },

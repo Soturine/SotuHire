@@ -9,6 +9,7 @@ import {
   Download,
   ExternalLink,
   Filter,
+  FlaskConical,
   Github,
   Merge,
   Monitor,
@@ -1279,7 +1280,7 @@ function LocalExtensionPanel() {
   });
   const handshakeQ = useQuery({
     queryKey: ["extension-handshake", mode, baseUrl],
-    queryFn: () => api.extensionHandshake("0.9.3"),
+    queryFn: () => api.extensionHandshake("0.9.4"),
     retry: false,
   });
   const capturesQ = useQuery({
@@ -1533,6 +1534,14 @@ function LocalExtensionPanel() {
                     `/public-exams?capture_id=${encodeURIComponent(capture.id)}`,
                   );
                 }}
+                onPrepareApplication={() => {
+                  const query = new URLSearchParams({
+                    novo: "1",
+                    capture_id: capture.id,
+                  });
+                  if (capture.snapshot_id) query.set("job_snapshot_id", capture.snapshot_id);
+                  window.location.assign(`/application-lab?${query.toString()}`);
+                }}
                 onProfileCandidates={() =>
                   profileCandidates.mutate({
                     captureId: capture.id,
@@ -1575,6 +1584,7 @@ function ExtensionCaptureRow({
   onImportTracker,
   onImportGithub,
   onImportPublicExam,
+  onPrepareApplication,
   onProfileCandidates,
   onReview,
   onArchive,
@@ -1586,6 +1596,7 @@ function ExtensionCaptureRow({
   onImportTracker: () => void;
   onImportGithub: () => void;
   onImportPublicExam: () => void;
+  onPrepareApplication: () => void;
   onProfileCandidates: () => void;
   onReview: () => void;
   onArchive: () => void;
@@ -1644,6 +1655,18 @@ function ExtensionCaptureRow({
           )}
         </div>
         <div className="flex shrink-0 flex-wrap gap-1.5">
+          {!isGithub && !isPublicExam && (
+            <button
+              type="button"
+              onClick={onPrepareApplication}
+              disabled={busy}
+              data-testid="prepare-capture-application"
+              className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent hover:bg-accent/15 disabled:opacity-50"
+            >
+              <FlaskConical className="h-3 w-3" />
+              Preparar candidatura
+            </button>
+          )}
           <button
             type="button"
             onClick={onProfileCandidates}

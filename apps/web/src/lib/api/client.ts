@@ -15,6 +15,12 @@ import type {
   AiSettingsStatus,
   AiSettingsTestPayload,
   AiSettingsTestResult,
+  ApplicationActionPlan,
+  ApplicationKit,
+  ApplicationLabAnalyzeResult,
+  ApplicationLabDetail,
+  ApplicationLabSessionsResult,
+  ApplicationSuggestion,
   AtsReview,
   AuthenticatedBrowserCollectResult,
   AuthenticatedBrowserStatus,
@@ -87,9 +93,15 @@ import type {
   RadarWishlistResult,
   RadarWishlistsResult,
   ResumeExtractResult,
+  ResumeExportFormat,
+  ResumeExportResult,
+  MasterResume,
   ResumeProfile,
   ResumeTailor,
   ResumeTailorResult,
+  ResumeTemplate,
+  ResumeVariant,
+  ResumeVariantsResult,
   SourceCaptureImportJobResult,
   SourceCaptureResult,
   SourceCaptureSaveTrackerResult,
@@ -130,6 +142,17 @@ import {
   mockPromptQuality,
   mockProviderComparison,
 } from "@/mocks/ai-quality";
+import {
+  mockKit,
+  mockLabAnalyze,
+  mockLabDetail,
+  mockLabSession,
+  mockMasterResume,
+  mockPlan,
+  mockSuggestions,
+  mockTemplates,
+  mockVariant,
+} from "@/mocks/application-lab";
 import type { ApiMode } from "./mode";
 import { getActiveDemoPersona } from "@/mocks/personas";
 
@@ -673,6 +696,242 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeTrackerSources,
       ),
 
+    applicationLabSessions: (limit = 25, offset = 0) =>
+      call<ApplicationLabSessionsResult>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions?limit=${limit}&offset=${offset}`,
+        undefined,
+        {
+          items: [mockLabSession],
+          pagination: { limit, offset, total: 1, has_more: false },
+        },
+      ),
+    applicationLabSession: (sessionId: string) =>
+      call<ApplicationLabDetail>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}`,
+        undefined,
+        mockLabDetail,
+      ),
+    applicationLabCreate: (payload: {
+      profile_id?: string;
+      master_resume_id?: string;
+      job_id?: string;
+      job_snapshot_id?: string;
+      selected_context_refs?: string[];
+    }) =>
+      call<ApplicationLabDetail>(
+        mode,
+        baseUrl,
+        "/application-lab/sessions",
+        { method: "POST", body: JSON.stringify(payload) },
+        {
+          ...mockLabDetail,
+          session: {
+            ...mockLabSession,
+            ...payload,
+            status: payload.master_resume_id && payload.job_snapshot_id ? "ready" : "draft",
+          },
+        },
+      ),
+    applicationLabUpdate: (
+      sessionId: string,
+      payload: Partial<{
+        profile_id: string;
+        master_resume_id: string;
+        job_id: string;
+        job_snapshot_id: string;
+        current_step: number;
+        status: import("./types").ApplicationLabStatus;
+        selected_context_refs: string[];
+      }>,
+    ) =>
+      call<ApplicationLabDetail>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}`,
+        { method: "PATCH", body: JSON.stringify(payload) },
+        { ...mockLabDetail, session: { ...mockLabSession, ...payload } },
+      ),
+    applicationLabCancel: (sessionId: string) =>
+      call<ApplicationLabDetail>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}/cancel`,
+        { method: "POST", body: "{}" },
+        { ...mockLabDetail, session: { ...mockLabSession, status: "cancelled" } },
+      ),
+    applicationLabAnalyze: (sessionId: string) =>
+      call<ApplicationLabAnalyzeResult>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}/analyze`,
+        { method: "POST", body: "{}" },
+        mockLabAnalyze,
+      ),
+    applicationLabReviewSuggestion: (
+      sessionId: string,
+      suggestionId: string,
+      action: "accept" | "edit" | "reject" | "undo",
+      editedValue = "",
+    ) => {
+      const status = {
+        accept: "accepted",
+        edit: "edited",
+        reject: "rejected",
+        undo: "pending",
+      }[action] as ApplicationSuggestion["status"];
+      const suggestion =
+        mockSuggestions.find((item) => item.suggestion_id === suggestionId) ?? mockSuggestions[0]!;
+      return call<ApplicationSuggestion>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}/suggestions/${encodeURIComponent(suggestionId)}/${action}`,
+        {
+          method: "POST",
+          body: JSON.stringify(action === "edit" ? { edited_value: editedValue } : {}),
+        },
+        { ...suggestion, status, edited_value: editedValue },
+      );
+    },
+    applicationLabCreateVariant: (sessionId: string, title = "") =>
+      call<ResumeVariant>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}/variant`,
+        { method: "POST", body: JSON.stringify({ title }) },
+        { ...mockVariant, title: title || mockVariant.title },
+      ),
+    applicationLabCreateKit: (sessionId: string) =>
+      call<{ kit: ApplicationKit; snapshot_id: string }>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}/kit`,
+        { method: "POST", body: "{}" },
+        { kit: mockKit, snapshot_id: "kit-snapshot-demo" },
+      ),
+    applicationLabCreatePlan: (sessionId: string, periodDays: 7 | 14 | 30) =>
+      call<ApplicationActionPlan>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}/action-plan`,
+        { method: "POST", body: JSON.stringify({ period_days: periodDays }) },
+        { ...mockPlan, period_days: periodDays },
+      ),
+    applicationLabSaveTracker: (
+      sessionId: string,
+      payload: { privacy_acknowledged: boolean; source_capture_id?: string },
+    ) =>
+      call<{ tracker_application_id: string; session: typeof mockLabSession }>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}/tracker`,
+        { method: "POST", body: JSON.stringify(payload) },
+        {
+          tracker_application_id: "tracker-demo",
+          session: {
+            ...mockLabSession,
+            status: "completed",
+            current_step: 10,
+            tracker_application_id: "tracker-demo",
+          },
+        },
+      ),
+
+    resumeStudioMaster: () =>
+      call<{ resume: MasterResume }>(mode, baseUrl, "/resume-studio/master", undefined, {
+        resume: mockMasterResume,
+      }),
+    resumeStudioSaveMaster: (resume: MasterResume) =>
+      call<{ resume: MasterResume }>(
+        mode,
+        baseUrl,
+        "/resume-studio/master",
+        { method: "PUT", body: JSON.stringify({ resume }) },
+        { resume },
+      ),
+    resumeStudioVariants: (masterResumeId = "", limit = 25, offset = 0) =>
+      call<ResumeVariantsResult>(
+        mode,
+        baseUrl,
+        `/resume-studio/variants?master_resume_id=${encodeURIComponent(masterResumeId)}&limit=${limit}&offset=${offset}`,
+        undefined,
+        {
+          items: [mockVariant],
+          pagination: { limit, offset, total: 1, has_more: false },
+        },
+      ),
+    resumeStudioVariant: (variantId: string) =>
+      call<{ variant: ResumeVariant }>(
+        mode,
+        baseUrl,
+        `/resume-studio/variants/${encodeURIComponent(variantId)}`,
+        undefined,
+        { variant: mockVariant },
+      ),
+    resumeStudioSaveVariant: (variant: ResumeVariant) =>
+      call<{ variant: ResumeVariant }>(
+        mode,
+        baseUrl,
+        "/resume-studio/variants",
+        { method: "POST", body: JSON.stringify({ variant }) },
+        { variant },
+      ),
+    resumeStudioUpdateVariant: (variantId: string, patch: Partial<ResumeVariant>) =>
+      call<{ variant: ResumeVariant }>(
+        mode,
+        baseUrl,
+        `/resume-studio/variants/${encodeURIComponent(variantId)}`,
+        { method: "PATCH", body: JSON.stringify(patch) },
+        { variant: { ...mockVariant, ...patch } },
+      ),
+    resumeStudioTemplates: () =>
+      call<{ items: ResumeTemplate[] }>(mode, baseUrl, "/resume-studio/templates", undefined, {
+        items: mockTemplates,
+      }),
+    resumeStudioExport: (variantId: string, format: ResumeExportFormat, templateId: string) =>
+      call<ResumeExportResult>(
+        mode,
+        baseUrl,
+        `/resume-studio/variants/${encodeURIComponent(variantId)}/export`,
+        { method: "POST", body: JSON.stringify({ format, template_id: templateId }) },
+        {
+          export: {
+            export_id: `export-demo-${format}`,
+            master_resume_id: mockMasterResume.master_resume_id,
+            resume_variant_id: variantId,
+            template_id: templateId,
+            format,
+            status: format === "json_resume" ? "ready" : "pending",
+            file_name:
+              format === "json_resume" ? "curriculo-demo.resume.json" : `curriculo-demo.${format}`,
+            content_hash: format === "json_resume" ? "demo-content-hash" : "",
+            warnings:
+              format === "json_resume"
+                ? []
+                : [`Exportação ${format.toUpperCase()} permanece pendente para a v1.9.9.`],
+            created_at: new Date().toISOString(),
+          },
+          payload:
+            format === "json_resume"
+              ? {
+                  basics: {
+                    label: mockMasterResume.target_role,
+                    summary: mockMasterResume.summary,
+                  },
+                  work: [
+                    {
+                      name: "Projeto de qualidade",
+                      summary: mockMasterResume.sections[0]?.entries[0]?.content,
+                    },
+                  ],
+                }
+              : null,
+        },
+      ),
+
     aiQualitySummary: () =>
       call<AiQualitySummary>(mode, baseUrl, "/ai/quality/summary", undefined, mockAiQualitySummary),
     aiQualityRuns: () => call<AiRunsPage>(mode, baseUrl, "/ai/quality/runs", undefined, mockAiRuns),
@@ -803,7 +1062,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           profile_summary: "Resumo seguro demo do Perfil Universal.",
           enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
           ai_provider_status: "local",
-          extension_version: "0.9.2",
+          extension_version: "0.9.4",
           companion_version: "1.9.7",
           api_version: "v1",
           compatible: true,
@@ -812,7 +1071,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeExtensionStatus,
       ),
 
-    extensionHandshake: (extension_version = "0.9.2") =>
+    extensionHandshake: (extension_version = "0.9.4") =>
       call<ExtensionHandshake>(
         mode,
         baseUrl,
@@ -827,7 +1086,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           compatible: true,
           warnings: [],
           min_supported_extension_version: "0.9.1",
-          max_tested_extension_version: "0.9.2",
+          max_tested_extension_version: "0.9.4",
           min_supported_companion_version: "1.9.5",
         },
         normalizeExtensionHandshake,
@@ -852,6 +1111,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
               status: "captured",
               profile_candidate_count: 2,
               context_signal: "Vaga pode atualizar objetivos, preferencias ou gaps revisaveis.",
+              snapshot_id: "job-snapshot-demo",
               captured_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             },

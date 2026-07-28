@@ -176,3 +176,31 @@
   background: color-mix(in oklab, var(--color-card) 70%, transparent);
   backdrop-filter: blur(12px);
 }
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .resume-print-preview,
+  .resume-print-preview * {
+    visibility: visible;
+  }
+  .resume-print-preview {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    border: 0;
+    box-shadow: none;
+  }
+}

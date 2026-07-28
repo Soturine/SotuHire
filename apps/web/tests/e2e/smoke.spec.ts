@@ -4,6 +4,8 @@ const coreScreens = [
   { path: "/", heading: /SotuHire/i },
   { path: "/dashboard", heading: "Dashboard" },
   { path: "/resume", heading: /Curr.culo/ },
+  { path: "/application-lab", heading: /Preparar candidatura/ },
+  { path: "/resume-studio", heading: /Resume Studio/ },
   { path: "/job", heading: "Vaga" },
   { path: "/match", heading: /Compatibilidade/ },
   { path: "/ats", heading: /ATS/ },

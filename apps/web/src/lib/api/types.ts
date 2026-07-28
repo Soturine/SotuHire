@@ -1504,3 +1504,273 @@ export interface OutcomeSummary {
   };
   note: string;
 }
+
+export type ApplicationLabStatus =
+  | "draft"
+  | "ready"
+  | "analyzing"
+  | "review"
+  | "completed"
+  | "cancelled"
+  | "failed";
+export type SuggestionStatus = "pending" | "accepted" | "edited" | "rejected";
+export type ResumeExportFormat = "json_resume" | "pdf" | "docx";
+export type ResumeEvidence = string | Record<string, unknown>;
+
+export interface ResumeEntry {
+  entry_id: string;
+  entry_type: string;
+  title: string;
+  subtitle: string;
+  content: string;
+  start_date: string;
+  end_date: string;
+  position: number;
+  enabled: boolean;
+  source_profile_item_ids: string[];
+  source_refs: string[];
+  confirmed_by_user: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResumeSection {
+  section_id: string;
+  section_type: string;
+  title: string;
+  position: number;
+  enabled: boolean;
+  content: string;
+  entries: ResumeEntry[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MasterResume {
+  master_resume_id: string;
+  profile_id: string;
+  title: string;
+  target_role: string;
+  summary: string;
+  raw_text: string;
+  source_type: "manual" | "profile" | "pdf" | "docx" | "txt" | "json_resume";
+  source_refs: string[];
+  source_profile_item_ids: string[];
+  sections: ResumeSection[];
+  validation_warnings: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResumeVariantChange {
+  change_id: string;
+  change_type: "added" | "removed" | "edited" | "reordered";
+  section: string;
+  before: string;
+  after: string;
+  reason: string;
+  evidence_used: ResumeEvidence[];
+  source_refs: string[];
+  warning: string;
+  created_at: string;
+}
+
+export interface ResumeVariant {
+  resume_variant_id: string;
+  master_resume_id: string;
+  job_snapshot_id: string;
+  title: string;
+  target_role: string;
+  sections: ResumeSection[];
+  source_profile_item_ids: string[];
+  change_set: ResumeVariantChange[];
+  validation_warnings: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ReadinessDimension {
+  dimension: string;
+  label: string;
+  status: "met" | "partial" | "missing" | "not_applicable";
+  coverage: number | null;
+  weight: number;
+  evidence_count: number;
+  explanation: string;
+}
+
+export interface ReadinessPerspective {
+  perspective_id: "structure_ats" | "narrative_positioning" | "evidence_differentiators";
+  label: string;
+  summary: string;
+  findings: string[];
+}
+
+export interface ApplicationReadinessReport {
+  report_id: string;
+  session_id: string;
+  readiness_score: number;
+  score_explanation: string;
+  evidence_coverage: number;
+  requirement_coverage: number;
+  source_dimensions: Record<string, ReadinessDimension>;
+  strengths: string[];
+  top_blockers: string[];
+  missing_information: string[];
+  unsupported_claim_risks: string[];
+  recommended_edits: string[];
+  copy_ready_snippets: string[];
+  action_plan_preview: string[];
+  warnings: string[];
+  provider_metadata: Record<string, unknown>;
+  evidence_used: ResumeEvidence[];
+  perspectives: Record<string, ReadinessPerspective>;
+  created_at: string;
+}
+
+export interface ApplicationSuggestion {
+  suggestion_id: string;
+  session_id: string;
+  suggestion_type: string;
+  section: string;
+  before: string;
+  after: string;
+  reason: string;
+  evidence_used: ResumeEvidence[];
+  source_refs: string[];
+  warnings: string[];
+  status: SuggestionStatus;
+  edited_value: string;
+  provider_run_id: string;
+  created_at: string;
+  reviewed_at: string | null;
+}
+
+export interface ApplicationKitItem {
+  item_id: string;
+  type: string;
+  content: string;
+  evidence_used: ResumeEvidence[];
+  warnings: string[];
+  provider_run_id: string;
+  status: SuggestionStatus;
+  edited_content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApplicationKit {
+  application_kit_id: string;
+  session_id: string;
+  title: string;
+  items: ApplicationKitItem[];
+  warnings: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ActionPlanItem {
+  action_item_id: string;
+  title: string;
+  reason: string;
+  priority: "low" | "medium" | "high";
+  due_at: string | null;
+  related_gap: string;
+  related_evidence: ResumeEvidence[];
+  estimated_effort: string;
+  status: "pending" | "in_progress" | "completed" | "cancelled";
+  created_at: string;
+  completed_at: string | null;
+}
+
+export interface ApplicationActionPlan {
+  action_plan_id: string;
+  session_id: string;
+  period_days: 7 | 14 | 30;
+  title: string;
+  items: ActionPlanItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ApplicationLabSession {
+  session_id: string;
+  profile_id: string;
+  master_resume_id: string;
+  job_id: string;
+  job_snapshot_id: string;
+  current_step: number;
+  status: ApplicationLabStatus;
+  selected_context_refs: string[];
+  analysis_run_ids: string[];
+  readiness_report_id: string;
+  resume_variant_id: string;
+  application_kit_id: string;
+  action_plan_id: string;
+  tracker_application_id: string;
+  invalidated_steps: number[];
+  warnings: string[];
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+}
+
+export interface ApplicationLabDetail {
+  session: ApplicationLabSession;
+  report: ApplicationReadinessReport | null;
+  suggestions: ApplicationSuggestion[];
+  variant: ResumeVariant | null;
+  kit: ApplicationKit | null;
+  action_plan: ApplicationActionPlan | null;
+}
+
+export interface ApplicationLabAnalyzeResult extends ApplicationLabDetail {
+  analysis_snapshot_id: string;
+  progress_steps: string[];
+}
+
+export interface PaginationMeta {
+  limit: number;
+  offset: number;
+  total: number;
+  has_more: boolean;
+}
+
+export interface ApplicationLabSessionsResult {
+  items: ApplicationLabSession[];
+  pagination: PaginationMeta;
+}
+
+export interface ResumeVariantsResult {
+  items: ResumeVariant[];
+  pagination: PaginationMeta;
+}
+
+export interface ResumeTemplate {
+  template_id: string;
+  name: string;
+  description: string;
+  ats_safe: boolean;
+  page_sizes: Array<"A4" | "Letter">;
+  configuration: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ResumeExport {
+  export_id: string;
+  master_resume_id: string;
+  resume_variant_id: string;
+  template_id: string;
+  format: ResumeExportFormat;
+  status: "ready" | "pending" | "failed";
+  file_name: string;
+  content_hash: string;
+  warnings: string[];
+  created_at: string;
+}
+
+export interface ResumeExportResult {
+  export: ResumeExport;
+  payload: Record<string, unknown> | null;
+}

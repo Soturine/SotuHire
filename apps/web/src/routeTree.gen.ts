@@ -13,6 +13,7 @@ import { Route as TrackerRouteImport } from './routes/tracker'
 import { Route as TailorRouteImport } from './routes/tailor'
 import { Route as SourcesRouteImport } from './routes/sources'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as ResumeStudioRouteImport } from './routes/resume-studio'
 import { Route as ResumeRouteImport } from './routes/resume'
 import { Route as RadarRouteImport } from './routes/radar'
 import { Route as PublicExamsRouteImport } from './routes/public-exams'
@@ -24,6 +25,7 @@ import { Route as IntelligenceRouteImport } from './routes/intelligence'
 import { Route as GithubRouteImport } from './routes/github'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AtsRouteImport } from './routes/ats'
+import { Route as ApplicationLabRouteImport } from './routes/application-lab'
 import { Route as AiQualityRouteImport } from './routes/ai-quality'
 import { Route as IndexRouteImport } from './routes/index'
 
@@ -45,6 +47,11 @@ const SourcesRoute = SourcesRouteImport.update({
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResumeStudioRoute = ResumeStudioRouteImport.update({
+  id: '/resume-studio',
+  path: '/resume-studio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResumeRoute = ResumeRouteImport.update({
@@ -102,6 +109,11 @@ const AtsRoute = AtsRouteImport.update({
   path: '/ats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApplicationLabRoute = ApplicationLabRouteImport.update({
+  id: '/application-lab',
+  path: '/application-lab',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AiQualityRoute = AiQualityRouteImport.update({
   id: '/ai-quality',
   path: '/ai-quality',
@@ -116,6 +128,7 @@ const IndexRoute = IndexRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/ai-quality': typeof AiQualityRoute
+  '/application-lab': typeof ApplicationLabRoute
   '/ats': typeof AtsRoute
   '/dashboard': typeof DashboardRoute
   '/github': typeof GithubRoute
@@ -127,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/public-exams': typeof PublicExamsRoute
   '/radar': typeof RadarRoute
   '/resume': typeof ResumeRoute
+  '/resume-studio': typeof ResumeStudioRoute
   '/settings': typeof SettingsRoute
   '/sources': typeof SourcesRoute
   '/tailor': typeof TailorRoute
@@ -135,6 +149,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/ai-quality': typeof AiQualityRoute
+  '/application-lab': typeof ApplicationLabRoute
   '/ats': typeof AtsRoute
   '/dashboard': typeof DashboardRoute
   '/github': typeof GithubRoute
@@ -146,6 +161,7 @@ export interface FileRoutesByTo {
   '/public-exams': typeof PublicExamsRoute
   '/radar': typeof RadarRoute
   '/resume': typeof ResumeRoute
+  '/resume-studio': typeof ResumeStudioRoute
   '/settings': typeof SettingsRoute
   '/sources': typeof SourcesRoute
   '/tailor': typeof TailorRoute
@@ -155,6 +171,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/ai-quality': typeof AiQualityRoute
+  '/application-lab': typeof ApplicationLabRoute
   '/ats': typeof AtsRoute
   '/dashboard': typeof DashboardRoute
   '/github': typeof GithubRoute
@@ -166,6 +183,7 @@ export interface FileRoutesById {
   '/public-exams': typeof PublicExamsRoute
   '/radar': typeof RadarRoute
   '/resume': typeof ResumeRoute
+  '/resume-studio': typeof ResumeStudioRoute
   '/settings': typeof SettingsRoute
   '/sources': typeof SourcesRoute
   '/tailor': typeof TailorRoute
@@ -176,6 +194,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/ai-quality'
+    | '/application-lab'
     | '/ats'
     | '/dashboard'
     | '/github'
@@ -187,6 +206,7 @@ export interface FileRouteTypes {
     | '/public-exams'
     | '/radar'
     | '/resume'
+    | '/resume-studio'
     | '/settings'
     | '/sources'
     | '/tailor'
@@ -195,6 +215,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/ai-quality'
+    | '/application-lab'
     | '/ats'
     | '/dashboard'
     | '/github'
@@ -206,6 +227,7 @@ export interface FileRouteTypes {
     | '/public-exams'
     | '/radar'
     | '/resume'
+    | '/resume-studio'
     | '/settings'
     | '/sources'
     | '/tailor'
@@ -214,6 +236,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/ai-quality'
+    | '/application-lab'
     | '/ats'
     | '/dashboard'
     | '/github'
@@ -225,6 +248,7 @@ export interface FileRouteTypes {
     | '/public-exams'
     | '/radar'
     | '/resume'
+    | '/resume-studio'
     | '/settings'
     | '/sources'
     | '/tailor'
@@ -234,6 +258,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AiQualityRoute: typeof AiQualityRoute
+  ApplicationLabRoute: typeof ApplicationLabRoute
   AtsRoute: typeof AtsRoute
   DashboardRoute: typeof DashboardRoute
   GithubRoute: typeof GithubRoute
@@ -245,6 +270,7 @@ export interface RootRouteChildren {
   PublicExamsRoute: typeof PublicExamsRoute
   RadarRoute: typeof RadarRoute
   ResumeRoute: typeof ResumeRoute
+  ResumeStudioRoute: typeof ResumeStudioRoute
   SettingsRoute: typeof SettingsRoute
   SourcesRoute: typeof SourcesRoute
   TailorRoute: typeof TailorRoute
@@ -279,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resume-studio': {
+      id: '/resume-studio'
+      path: '/resume-studio'
+      fullPath: '/resume-studio'
+      preLoaderRoute: typeof ResumeStudioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/resume': {
@@ -358,6 +391,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AtsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/application-lab': {
+      id: '/application-lab'
+      path: '/application-lab'
+      fullPath: '/application-lab'
+      preLoaderRoute: typeof ApplicationLabRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ai-quality': {
       id: '/ai-quality'
       path: '/ai-quality'
@@ -378,6 +418,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AiQualityRoute: AiQualityRoute,
+  ApplicationLabRoute: ApplicationLabRoute,
   AtsRoute: AtsRoute,
   DashboardRoute: DashboardRoute,
   GithubRoute: GithubRoute,
@@ -389,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   PublicExamsRoute: PublicExamsRoute,
   RadarRoute: RadarRoute,
   ResumeRoute: ResumeRoute,
+  ResumeStudioRoute: ResumeStudioRoute,
   SettingsRoute: SettingsRoute,
   SourcesRoute: SourcesRoute,
   TailorRoute: TailorRoute,
