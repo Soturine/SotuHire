@@ -18,7 +18,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { Progress } from "@/components/ui/progress";
@@ -79,6 +79,7 @@ function ApplicationLabPage() {
   const search = Route.useSearch();
   const qc = useQueryClient();
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const hydratedSessionId = useRef<string | null>(null);
   const [viewStep, setViewStep] = useState(1);
   const [jobSnapshotId, setJobSnapshotId] = useState(
     search.job_snapshot_id ?? (mode === "demo" ? "job-snapshot-demo" : ""),
@@ -114,7 +115,10 @@ function ApplicationLabPage() {
 
   useEffect(() => {
     const session = detailQ.data?.session;
-    if (session) setViewStep(session.current_step);
+    if (session && hydratedSessionId.current !== session.session_id) {
+      hydratedSessionId.current = session.session_id;
+      setViewStep(session.current_step);
+    }
   }, [detailQ.data?.session]);
 
   useEffect(() => {
