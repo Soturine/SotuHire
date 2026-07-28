@@ -13,3 +13,7 @@ class AIJsonParseError(AIJsonError):
 
 class AISchemaValidationError(AIJsonError):
     """Raised when parsed JSON does not match the expected schema."""
+
+
+class ProviderUnavailableError(RuntimeError):
+    """Raised when an optional AI provider cannot be used."""

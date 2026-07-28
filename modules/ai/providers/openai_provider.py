@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import json
+import random
+import re
 import time
 import urllib.error
 import urllib.request
@@ -14,7 +16,14 @@ from pydantic import BaseModel
 
 from modules.ai.json_guard import validate_ai_json
 from modules.ai.prompt_spec import PromptSpec
-from modules.ai.providers.base import AIProvider, ProviderUnavailableError
+from modules.ai.provider_errors import (
+    ProviderCallError,
+    ProviderError,
+    ProviderErrorCategory,
+    ProviderRetryPolicy,
+    classify_openai_error,
+)
+from modules.ai.providers.base import AIProvider
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
 
@@ -34,10 +43,16 @@ class OpenAIProvider(AIProvider):
         model: str | None = None,
         *,
         transport: OpenAITransport | None = None,
+        retry_policy: ProviderRetryPolicy | None = None,
+        sleeper: Callable[[float], None] = time.sleep,
+        random_value: Callable[[], float] = random.random,
     ) -> None:
         self.api_key = (api_key or "").strip()
         self.model = (model or DEFAULT_OPENAI_MODEL).strip() or DEFAULT_OPENAI_MODEL
         self.transport = transport
+        self.retry_policy = retry_policy or ProviderRetryPolicy()
+        self.sleeper = sleeper
+        self.random_value = random_value
         self.last_call_metadata: dict[str, Any] = {}
 
     def analyze(
@@ -77,8 +92,16 @@ class OpenAIProvider(AIProvider):
             ),
             prompt.render_user_prompt(payload),
             temperature=prompt.temperature,
+            response_schema=prompt.output_schema,
+            schema_name=prompt.prompt_id,
         )
-        return validate_ai_json(_extract_response_text(response), prompt.output_schema).data
+        text = _extract_response_text(response)
+        if not text.strip():
+            raise self._response_error(
+                ProviderErrorCategory.EMPTY_RESPONSE,
+                "OpenAI retornou resposta vazia.",
+            )
+        return validate_ai_json(text, prompt.output_schema).data
 
     def ping(self) -> str:
         """Run a minimal OpenAI call for user-triggered connection tests."""
@@ -92,18 +115,23 @@ class OpenAIProvider(AIProvider):
         *,
         temperature: float = 0,
         max_output_tokens: int = 4096,
+        response_schema: type[BaseModel] | None = None,
+        schema_name: str = "response",
     ) -> dict[str, Any]:
         started_at = datetime.now(UTC)
         started_monotonic = time.perf_counter()
         if not self.api_key:
-            self._record_call(
-                started_at,
-                started_monotonic,
+            error = ProviderError(
+                provider=self.name,
+                model=self.model,
+                error_code="missing_api_key",
                 error_type="ProviderUnavailableError",
+                category=ProviderErrorCategory.AUTHENTICATION,
+                sanitized_message="OpenAI não configurado no backend local.",
+                max_attempts=self.retry_policy.max_attempts,
             )
-            raise ProviderUnavailableError(
-                "OpenAI não configurado: informe uma chave no backend local."
-            )
+            self._record_call(started_at, started_monotonic, provider_error=error)
+            raise ProviderCallError(error)
         body: dict[str, Any] = {
             "model": self.model,
             "input": [
@@ -114,33 +142,125 @@ class OpenAIProvider(AIProvider):
         }
         if not self.model.lower().startswith(("gpt-5", "o1", "o3", "o4")):
             body["temperature"] = temperature
-        try:
-            if self.transport is not None:
-                payload = self.transport(body)
-            else:
-                request = urllib.request.Request(
-                    "https://api.openai.com/v1/responses",
-                    data=json.dumps(body).encode("utf-8"),
-                    headers={
-                        "Authorization": f"Bearer {self.api_key}",
-                        "Content-Type": "application/json",
-                    },
-                    method="POST",
+        if response_schema is not None:
+            body["text"] = {
+                "format": {
+                    "type": "json_schema",
+                    "name": _schema_name(schema_name),
+                    "schema": response_schema.model_json_schema(),
+                    "strict": False,
+                }
+            }
+        retry_history: list[dict[str, Any]] = []
+        for attempt in range(1, self.retry_policy.max_attempts + 1):
+            try:
+                payload = self._execute_request(body)
+            except ProviderCallError as exc:
+                error = exc.error.model_copy(
+                    update={"attempt": attempt, "max_attempts": self.retry_policy.max_attempts}
                 )
-                with urllib.request.urlopen(request, timeout=30) as response:
-                    payload = json.loads(response.read().decode("utf-8"))
-        except urllib.error.URLError as exc:
-            self._record_call(started_at, started_monotonic, error_type=type(exc).__name__)
-            status = getattr(exc, "code", None)
-            suffix = f" (HTTP {status})" if isinstance(status, int) else ""
-            raise ProviderUnavailableError(
-                f"Falha ao chamar OpenAI pelo backend local{suffix}."
-            ) from exc
-        except Exception as exc:
-            self._record_call(started_at, started_monotonic, error_type=type(exc).__name__)
-            raise
-        self._record_call(started_at, started_monotonic, payload=payload)
-        return payload
+            except urllib.error.HTTPError as exc:
+                error_body = _read_http_error(exc)
+                error = classify_openai_error(
+                    model=self.model,
+                    status_code=exc.code,
+                    headers=exc.headers,
+                    body=error_body,
+                    exception=exc,
+                    attempt=attempt,
+                    max_attempts=self.retry_policy.max_attempts,
+                )
+            except urllib.error.URLError as exc:
+                error = classify_openai_error(
+                    model=self.model,
+                    status_code=getattr(exc, "code", None),
+                    headers=getattr(exc, "headers", None),
+                    exception=exc,
+                    attempt=attempt,
+                    max_attempts=self.retry_policy.max_attempts,
+                )
+            except (TimeoutError, OSError) as exc:
+                error = classify_openai_error(
+                    model=self.model,
+                    status_code=None,
+                    exception=exc,
+                    attempt=attempt,
+                    max_attempts=self.retry_policy.max_attempts,
+                )
+            except Exception as exc:
+                self._record_call(
+                    started_at,
+                    started_monotonic,
+                    error_type=type(exc).__name__,
+                    attempt=attempt,
+                    retry_history=retry_history,
+                )
+                raise
+            else:
+                self._record_call(
+                    started_at,
+                    started_monotonic,
+                    payload=payload,
+                    attempt=attempt,
+                    retry_history=retry_history,
+                )
+                if str(payload.get("status", "")).casefold() == "incomplete":
+                    reason = payload.get("incomplete_details", {})
+                    raise self._response_error(
+                        ProviderErrorCategory.TRUNCATED_RESPONSE,
+                        f"Resposta incompleta: {reason}",
+                    )
+                return payload
+            retry_history.append(error.model_dump(mode="json"))
+            if not error.retryable or attempt >= self.retry_policy.max_attempts:
+                self._record_call(
+                    started_at,
+                    started_monotonic,
+                    provider_error=error,
+                    attempt=attempt,
+                    retry_history=retry_history,
+                )
+                raise ProviderCallError(error)
+            self.sleeper(
+                self.retry_policy.delay_seconds(error, random_value=self.random_value)
+            )
+        raise RuntimeError("OpenAI retry loop exited unexpectedly")
+
+    def _execute_request(self, body: dict[str, Any]) -> dict[str, Any]:
+        if self.transport is not None:
+            return self.transport(body)
+        request = urllib.request.Request(
+            "https://api.openai.com/v1/responses",
+            data=json.dumps(body).encode("utf-8"),
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(request, timeout=30) as response:
+            return json.loads(response.read().decode("utf-8"))
+
+    def _response_error(
+        self, category: ProviderErrorCategory, message: str
+    ) -> ProviderCallError:
+        error = ProviderError(
+            provider=self.name,
+            model=self.model,
+            error_code=category.value.casefold(),
+            error_type="ProviderResponseError",
+            category=category,
+            sanitized_message=message,
+            attempt=int(self.last_call_metadata.get("attempt") or 1),
+            max_attempts=self.retry_policy.max_attempts,
+        )
+        self.last_call_metadata.update(
+            {
+                "error_type": error.error_type,
+                "provider_error": error.model_dump(mode="json"),
+            }
+        )
+        return ProviderCallError(error)
 
     def _record_call(
         self,
@@ -149,6 +269,9 @@ class OpenAIProvider(AIProvider):
         *,
         payload: dict[str, Any] | None = None,
         error_type: str = "",
+        provider_error: ProviderError | None = None,
+        attempt: int = 1,
+        retry_history: list[dict[str, Any]] | None = None,
     ) -> None:
         usage = payload.get("usage", {}) if isinstance(payload, dict) else {}
         input_tokens = _integer(usage.get("input_tokens")) if isinstance(usage, dict) else None
@@ -164,7 +287,15 @@ class OpenAIProvider(AIProvider):
             "output_tokens": output_tokens,
             "total_tokens": total_tokens,
             "estimated_cost": None,
-            "error_type": error_type,
+            "error_type": provider_error.error_type if provider_error else error_type,
+            "request_id": provider_error.request_id if provider_error else "",
+            "attempt": attempt,
+            "max_attempts": self.retry_policy.max_attempts,
+            "retries": max(0, attempt - 1),
+            "retry_history": retry_history or [],
+            "provider_error": (
+                provider_error.model_dump(mode="json") if provider_error is not None else None
+            ),
         }
 
 
@@ -201,6 +332,18 @@ def _extract_response_text(payload: dict[str, Any]) -> str:
 def _integer(value: object) -> int | None:
     if not isinstance(value, str | int | float | bool):
         return None
+
+
+def _read_http_error(error: urllib.error.HTTPError) -> bytes:
+    try:
+        return error.read(64_000)
+    except (OSError, ValueError):
+        return b""
+
+
+def _schema_name(value: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9_-]+", "_", value).strip("_")
+    return (cleaned or "sotuhire_response")[:64]
     try:
         return int(value)
     except (TypeError, ValueError):

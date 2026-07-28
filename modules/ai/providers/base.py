@@ -6,13 +6,10 @@ from abc import ABC, abstractmethod
 
 from pydantic import BaseModel
 
+from modules.ai.exceptions import ProviderUnavailableError
 from modules.ai.prompt_spec import PromptSpec
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
-
-
-class ProviderUnavailableError(RuntimeError):
-    """Raised when an optional AI provider cannot be used."""
 
 
 class AIProvider(ABC):
