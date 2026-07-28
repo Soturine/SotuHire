@@ -12,7 +12,7 @@ def test_migrations_create_versioned_schema_and_are_idempotent(tmp_path):
     runner = MigrationRunner(database)
 
     assert runner.current_version() == 0
-    assert runner.apply(create_backup=False) == [1, 2, 3, 4]
+    assert runner.apply(create_backup=False) == [1, 2, 3, 4, 5]
     assert runner.current_version() == LATEST_SCHEMA_VERSION
     assert runner.apply(create_backup=False) == []
     assert runner.verify() == []
@@ -40,6 +40,20 @@ def test_migrations_create_versioned_schema_and_are_idempotent(tmp_path):
             "ai_benchmark_results",
             "outcome_events",
             "outcome_metrics",
+            "application_lab_sessions",
+            "application_readiness_reports",
+            "application_suggestions",
+            "master_resumes",
+            "resume_sections",
+            "resume_entries",
+            "resume_variants",
+            "resume_variant_changes",
+            "resume_templates",
+            "resume_exports",
+            "application_kits",
+            "application_kit_items",
+            "application_action_plans",
+            "application_action_items",
             "migration_history",
         } <= tables
         assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
