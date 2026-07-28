@@ -108,7 +108,7 @@ Bloqueio por quota/faturamento é registrado como `BLOCKED_EXTERNAL_ACCOUNT`; ra
 
 ## Cobertura
 
-A cobertura é medida, não presumida. O baseline local desta entrega é **86%**: 16.105 statements e 2.315 não cobertos, medidos com Python 3.12. O CI publica `coverage.json` como artefato e não impõe threshold arbitrário nesta primeira medição. A política seguinte deve impedir regressão e manter a evolução dos módulos críticos.
+A cobertura é medida, não presumida. O baseline local desta entrega é **86%**: 18.871 statements e 2.632 não cobertos, medidos com Python 3.12. O CI publica `coverage.json` como artefato e não impõe threshold arbitrário nesta primeira medição. A política seguinte deve impedir regressão e manter a evolução dos módulos críticos.
 
 ## Critério de fechamento
 
