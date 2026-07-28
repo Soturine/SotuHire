@@ -60,7 +60,7 @@ CHROME_STUB = r"""
       get: async () => ({}), set: async () => {}, remove: async () => {}
     }},
     runtime: {
-      getManifest: () => ({ version: "0.9.2" }),
+      getManifest: () => ({ version: "0.9.4" }),
       sendMessage: async (message) => {
         if (message.type === "SOTUHIRE_AI_STATUS") return {
           ok: true,
@@ -105,6 +105,7 @@ CHROME_STUB = r"""
     },
     tabs: {
       query: async () => [{ id: 1 }],
+      create: async ({ url }) => { globalThis.__openedApplicationLab = url; return { id: 2, url }; },
       sendMessage: async (_id, message) => {
         if (message.type === "SOTUHIRE_PROJECT") return { project };
         if (message.type === "SOTUHIRE_APPLICATIONS") return { applications: [capture] };
@@ -120,23 +121,24 @@ CHROME_STUB = r"""
     let payload = { ok: true, message: "Ação concluída no Companion local." };
     if (path.endsWith("/health")) payload = { ok: true, message: "SotuHire Local Companion conectado." };
     if (path.endsWith("/handshake")) payload = {
-      extension_version: "0.9.3",
-      companion_version: "1.9.7",
+      extension_version: "0.9.4",
+      companion_version: "1.9.8",
       api_version: "v1",
-      app_version: "1.9.7",
+      app_version: "1.9.8",
       capabilities: [
         "capture.job", "capture.public_exam", "capture.github", "capture.snapshot",
-        "queue.retry", "queue.export_import", "jobposting.jsonld", "ai.own_key"
+        "queue.retry", "queue.export_import", "jobposting.jsonld", "ai.own_key",
+        "application_lab.open"
       ],
       compatible: true,
       warnings: [],
       min_supported_extension_version: "0.9.1",
-      max_tested_extension_version: "0.9.3",
+      max_tested_extension_version: "0.9.4",
       min_supported_companion_version: "1.9.5"
     };
     if (path.includes("context-summary")) payload = {
       ok: true,
-      app_version: "1.9.7",
+      app_version: "1.9.8",
       profile_available: true,
       profile_summary: "Resumo seguro disponível no backend local.",
       enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
@@ -151,6 +153,7 @@ CHROME_STUB = r"""
     if (path.includes("/capture/job")) payload = {
       ok: true,
       message: "Vaga fictícia capturada localmente com snapshot imutável.",
+      capture_id: "capture-fictitious-extension-198",
       snapshot_id: "job-snapshot-demo"
     };
     return { ok: true, status: 200, json: async () => payload };
@@ -174,6 +177,7 @@ def main() -> None:
         _shot(page, "popup-main.png")
         _action(page, "health", "status-connected.png")
         _action(page, "capture", "capture-job.png")
+        _action(page, "prepare-application", "prepare-application-lab.png")
         _action(page, "capture-public-exam", "capture-public-exam.png")
         _tab(page, "projects-panel")
         _action(page, "project-standalone", "capture-github.png")
