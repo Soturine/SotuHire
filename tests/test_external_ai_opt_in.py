@@ -1,16 +1,32 @@
 from __future__ import annotations
 
 import os
+from typing import NoReturn
 
 import pytest
 from modules.ai.prompt_loader import default_prompt_registry
+from modules.ai.provider_errors import ProviderCallError
 from modules.ai.providers import GeminiProvider, OpenAIProvider
-from modules.ai.providers.base import ProviderUnavailableError
 from modules.ai.schemas.analysis_insights import SafeAiInsightOutput
 from modules.ai.tracing import record_ai_run
 from modules.storage.ai_runs import AiRunStore
 
 pytestmark = pytest.mark.external_ai
+
+
+def _handle_provider_error(error: ProviderCallError) -> NoReturn:
+    diagnostic = error.error
+    if diagnostic.blocked_external_account:
+        pytest.skip(
+            "BLOCKED_EXTERNAL_ACCOUNT "
+            f"provider={diagnostic.provider} category={diagnostic.category.value} "
+            f"error_type={diagnostic.error_type} request_id={diagnostic.request_id or 'absent'}"
+        )
+    pytest.fail(
+        "EXTERNAL_PROVIDER_ERROR "
+        f"provider={diagnostic.provider} category={diagnostic.category.value} "
+        f"error_type={diagnostic.error_type} request_id={diagnostic.request_id or 'absent'}"
+    )
 
 
 def test_real_gemini_ping_opt_in() -> None:
@@ -20,10 +36,8 @@ def test_real_gemini_ping_opt_in() -> None:
 
     try:
         result = GeminiProvider(api_key=api_key, model="gemini-2.5-flash").ping()
-    except Exception as exc:
-        if "503" in str(exc) or "UNAVAILABLE" in str(exc):
-            pytest.xfail("Gemini ping reached the provider during transient model saturation.")
-        raise
+    except ProviderCallError as exc:
+        _handle_provider_error(exc)
 
     assert result
 
@@ -35,10 +49,8 @@ def test_real_openai_ping_opt_in() -> None:
 
     try:
         result = OpenAIProvider(api_key=api_key, model="gpt-4.1-mini").ping()
-    except ProviderUnavailableError as exc:
-        if "HTTP 429" in str(exc):
-            pytest.xfail("OpenAI opt-in account reached its provider quota/rate limit.")
-        raise
+    except ProviderCallError as exc:
+        _handle_provider_error(exc)
 
     assert result
 
@@ -51,13 +63,16 @@ def test_real_gemini_structured_output_and_safe_trace_opt_in(tmp_path, monkeypat
     provider = GeminiProvider(api_key=api_key, model="gemini-2.5-flash")
     spec = default_prompt_registry().get("career_advice_v1")
 
-    output = provider.generate_structured(
-        spec,
-        {
-            "context": "Pessoa fictícia busca primeira oportunidade administrativa.",
-            "evidence": "Curso fictício de planilhas concluído; sem experiência formal.",
-        },
-    )
+    try:
+        output = provider.generate_structured(
+            spec,
+            {
+                "context": "Pessoa fictícia busca primeira oportunidade administrativa.",
+                "evidence": "Curso fictício de planilhas concluído; sem experiência formal.",
+            },
+        )
+    except ProviderCallError as exc:
+        _handle_provider_error(exc)
     validated = SafeAiInsightOutput.model_validate(output)
     trace = record_ai_run(
         "career_advice",
@@ -93,10 +108,8 @@ def test_real_openai_structured_output_and_safe_trace_opt_in(tmp_path, monkeypat
                 "evidence": "Curso fictício de planilhas concluído; sem experiência formal.",
             },
         )
-    except ProviderUnavailableError as exc:
-        if "HTTP 429" in str(exc):
-            pytest.xfail("OpenAI opt-in account reached its provider quota/rate limit.")
-        raise
+    except ProviderCallError as exc:
+        _handle_provider_error(exc)
     validated = SafeAiInsightOutput.model_validate(output)
     trace = record_ai_run(
         "career_advice",

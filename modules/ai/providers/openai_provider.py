@@ -331,6 +331,7 @@ class OpenAIProvider(AIProvider):
         total_tokens = _integer(usage.get("total_tokens")) if isinstance(usage, dict) else None
         if total_tokens is None and (input_tokens is not None or output_tokens is not None):
             total_tokens = (input_tokens or 0) + (output_tokens or 0)
+        response_id = str(payload.get("id", "")) if isinstance(payload, dict) else ""
         self.last_call_metadata = {
             "started_at": started_at,
             "finished_at": datetime.now(UTC),
@@ -340,7 +341,8 @@ class OpenAIProvider(AIProvider):
             "total_tokens": total_tokens,
             "estimated_cost": None,
             "error_type": provider_error.error_type if provider_error else error_type,
-            "request_id": provider_error.request_id if provider_error else "",
+            "request_id": provider_error.request_id if provider_error else response_id,
+            "response_id": response_id,
             "attempt": attempt,
             "max_attempts": self.retry_policy.max_attempts,
             "retries": max(0, attempt - 1),

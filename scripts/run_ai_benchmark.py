@@ -23,6 +23,7 @@ if str(ROOT) not in sys.path:
 from modules.ai.benchmark_store import AiBenchmark, AiBenchmarkResult, AiBenchmarkStore
 from modules.ai.evaluation.dataset import GoldenCase, iter_golden_cases
 from modules.ai.evaluation.metrics import hallucination_rate, normalized_exact_match
+from modules.ai.provider_errors import ProviderCallError, sanitize_provider_message
 from modules.ai.providers import GeminiProvider, MockProvider, OpenAIProvider
 from modules.ai.schemas.analysis_insights import WishlistDraftOutput
 from modules.ai.structured_analysis import analyze_structured
@@ -35,7 +36,13 @@ from modules.radar.wishlist_draft import build_local_wishlist_draft
 APP_VERSION = "1.9.7"
 DATASET_VERSION = "v1.9.7-1"
 EXTERNAL_CALL_CAP = 20
-RELEASE_SMOKE_CALL_CAP = 10
+RELEASE_SMOKE_CALL_CAP = 12
+STRUCTURED_OUTPUT_CASE_IDS = {
+    "career-advice-no-formal-experience-001",
+    "job-nursing-health-001",
+    "resume-engineering-technology-001",
+    "github-arts-design-001",
+}
 
 
 def main() -> int:
@@ -73,6 +80,13 @@ def main() -> int:
     for provider_name in providers:
         provider = _provider(provider_name, args.models)
         model = str(getattr(provider, "model", "local"))
+        if args.suite == "provider-diagnostic":
+            diagnostic = _run_diagnostic(provider_name, provider, benchmark_id)
+            if (diagnostic["case_id"], provider_name, model) not in completed:
+                store.save_result(AiBenchmarkResult.model_validate(_persistable(diagnostic)))
+                results.append(_public_result(diagnostic))
+                _write_report(output_path, run, results)
+            continue
         cap = RELEASE_SMOKE_CALL_CAP if args.suite == "release-smoke" else EXTERNAL_CALL_CAP
         for case in cases:
             if (case.case_id, provider_name, model) in completed:
@@ -81,9 +95,11 @@ def main() -> int:
                 break
             result = _run_case(case, provider_name, provider, benchmark_id)
             provider_calls[provider_name] += int(provider_name != "local")
-            store.save_result(AiBenchmarkResult.model_validate(result))
+            store.save_result(AiBenchmarkResult.model_validate(_persistable(result)))
             results.append(_public_result(result))
             _write_report(output_path, run, results)
+            if result.get("status") == "BLOCKED_EXTERNAL_ACCOUNT":
+                break
     finished = datetime.now(UTC)
     run = run.model_copy(update={"finished_at": finished, "status": "completed"})
     store.save_run(run)
@@ -98,7 +114,18 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--suite",
         required=True,
-        choices=["mock", "local", "release-smoke", "golden", "adversarial", "full"],
+        choices=[
+            "mock",
+            "local",
+            "provider-diagnostic",
+            "provider-structured-output",
+            "release-smoke",
+            "schema-repair",
+            "fallback",
+            "golden",
+            "adversarial",
+            "full",
+        ],
     )
     parser.add_argument("--providers", default="local")
     parser.add_argument("--models", default="")
@@ -121,6 +148,8 @@ def _select_cases(args: argparse.Namespace) -> list[GoldenCase]:
         cases = [case for case in cases if case.domain in domains]
     if args.suite == "adversarial":
         cases = [case for case in cases if any(tag != "golden" for tag in case.tags)]
+    if args.suite == "provider-structured-output":
+        cases = [case for case in cases if case.case_id in STRUCTURED_OUTPUT_CASE_IDS]
     random.Random(args.seed).shuffle(cases)
     if args.max_cases > 0:
         cases = cases[: args.max_cases]
@@ -163,6 +192,13 @@ def _run_case(
     started = time.perf_counter()
     schema_valid = False
     error_type = ""
+    error_category = ""
+    error_code = ""
+    sanitized_message = ""
+    request_id = ""
+    retry_after_seconds: float | None = None
+    status = "valid"
+    schema_error = ""
     output: dict[str, Any] = {}
     try:
         if provider_name == "local":
@@ -172,8 +208,19 @@ def _run_case(
         validated = task.output_schema.model_validate(model)
         output = validated.model_dump(mode="json")
         schema_valid = True
+    except ProviderCallError as exc:
+        error = exc.error
+        error_type = error.error_type or type(exc).__name__
+        error_category = error.category.value
+        error_code = error.error_code
+        sanitized_message = error.sanitized_message
+        request_id = error.request_id
+        retry_after_seconds = error.retry_after_seconds
+        status = "BLOCKED_EXTERNAL_ACCOUNT" if error.blocked_external_account else "provider_error"
     except Exception as exc:
         error_type = type(exc).__name__
+        schema_error = sanitize_provider_message(f"{type(exc).__name__}: {exc}")
+        status = "schema_invalid"
     latency_ms = round((time.perf_counter() - started) * 1000)
     metadata = getattr(provider, "last_call_metadata", {}) if provider is not None else {}
     if not isinstance(metadata, dict):
@@ -209,7 +256,7 @@ def _run_case(
             or unsupported == 0
         ),
     }
-    return AiBenchmarkResult(
+    result = AiBenchmarkResult(
         benchmark_run_id=benchmark_id,
         case_id=case.case_id,
         task_id=case.task_id,
@@ -228,6 +275,110 @@ def _run_case(
         schema_valid=schema_valid,
         error_type=error_type,
     ).model_dump(mode="json")
+    provider_error = metadata.get("provider_error")
+    if isinstance(provider_error, dict):
+        error_category = error_category or str(provider_error.get("category", ""))
+        error_code = error_code or str(provider_error.get("error_code", ""))
+        sanitized_message = sanitized_message or str(provider_error.get("sanitized_message", ""))
+        request_id = request_id or str(provider_error.get("request_id", ""))
+        if retry_after_seconds is None:
+            retry_after_seconds = _float_or_none(provider_error.get("retry_after_seconds"))
+    result.update(
+        {
+            "status": status,
+            "error_category": error_category,
+            "error_code": error_code,
+            "sanitized_message": sanitize_provider_message(sanitized_message),
+            "request_id": sanitize_provider_message(request_id, limit=160),
+            "retry_after_seconds": retry_after_seconds,
+            "attempt": _int_or_none(metadata.get("attempt")),
+            "max_attempts": _int_or_none(metadata.get("max_attempts")),
+            "retries": _int_or_none(metadata.get("retries")) or 0,
+            "repaired": bool(metadata.get("repaired")),
+            "repair_attempted": bool(metadata.get("repair_attempted")),
+            "repair_reason": sanitize_provider_message(metadata.get("repair_reason", "")),
+            "finish_reason": sanitize_provider_message(metadata.get("finish_reason", "")),
+            "safety_status": sanitize_provider_message(metadata.get("safety_status", "")),
+            "raw_shape": _safe_shape(metadata.get("raw_shape")),
+            "schema_error": schema_error,
+            "degraded_mode": False,
+        }
+    )
+    return result
+
+
+def _run_diagnostic(
+    provider_name: str, provider: object | None, benchmark_id: str
+) -> dict[str, Any]:
+    started = time.perf_counter()
+    status = "valid"
+    error_type = ""
+    diagnostics: dict[str, Any] = {}
+    try:
+        if provider_name != "local":
+            provider.ping()  # type: ignore[union-attr]
+    except ProviderCallError as exc:
+        error = exc.error
+        status = "BLOCKED_EXTERNAL_ACCOUNT" if error.blocked_external_account else "provider_error"
+        error_type = error.error_type or type(exc).__name__
+        diagnostics = {
+            "error_category": error.category.value,
+            "error_code": error.error_code,
+            "sanitized_message": error.sanitized_message,
+            "request_id": error.request_id,
+            "retry_after_seconds": error.retry_after_seconds,
+            "attempt": error.attempt,
+            "max_attempts": error.max_attempts,
+        }
+    except Exception as exc:
+        status = "provider_error"
+        error_type = type(exc).__name__
+        diagnostics = {"sanitized_message": sanitize_provider_message(exc)}
+    metadata = getattr(provider, "last_call_metadata", {}) if provider is not None else {}
+    if not isinstance(metadata, dict):
+        metadata = {}
+    result = AiBenchmarkResult(
+        benchmark_run_id=benchmark_id,
+        case_id=f"provider-diagnostic-{provider_name}",
+        task_id="provider_diagnostic",
+        domain="provider",
+        provider=provider_name,
+        model=str(getattr(provider, "model", "local")),
+        prompt_id="provider-diagnostic",
+        prompt_version="1.0.0",
+        metrics={"diagnostic_success": float(status == "valid"), "schema_validity": None},
+        latency_ms=int(metadata.get("latency_ms") or (time.perf_counter() - started) * 1000),
+        input_tokens=_int_or_none(metadata.get("input_tokens")),
+        output_tokens=_int_or_none(metadata.get("output_tokens")),
+        total_tokens=_int_or_none(metadata.get("total_tokens")),
+        estimated_cost=None,
+        fallback_used=False,
+        schema_valid=False,
+        error_type=error_type,
+    ).model_dump(mode="json")
+    result.update(
+        {
+            "status": status,
+            "error_category": "",
+            "error_code": "",
+            "sanitized_message": "",
+            "request_id": "",
+            "retry_after_seconds": None,
+            "attempt": _int_or_none(metadata.get("attempt")),
+            "max_attempts": _int_or_none(metadata.get("max_attempts")),
+            "retries": _int_or_none(metadata.get("retries")) or 0,
+            "repaired": False,
+            "repair_attempted": False,
+            "repair_reason": "",
+            "finish_reason": sanitize_provider_message(metadata.get("finish_reason", "")),
+            "safety_status": sanitize_provider_message(metadata.get("safety_status", "")),
+            "raw_shape": _safe_shape(metadata.get("raw_shape")),
+            "schema_error": "",
+            "degraded_mode": False,
+            **diagnostics,
+        }
+    )
+    return result
 
 
 def _local_output(case: GoldenCase) -> object:
@@ -347,6 +498,15 @@ def _aggregate_group(results: list[dict[str, Any]]) -> dict[str, Any]:
         "provider_error_rate": (
             sum(bool(item.get("error_type")) for item in results) / count if count else 0.0
         ),
+        "blocked_external_account": sum(
+            item.get("status") == "BLOCKED_EXTERNAL_ACCOUNT" for item in results
+        ),
+        "repair_rate": (
+            sum(bool(item.get("repaired")) for item in results) / count if count else 0.0
+        ),
+        "retry_rate": (
+            sum(bool(item.get("retries")) for item in results) / count if count else 0.0
+        ),
         "timeout_rate": (
             sum("timeout" in str(item.get("error_type", "")).lower() for item in results) / count
             if count
@@ -394,6 +554,23 @@ def _public_result(result: dict[str, Any]) -> dict[str, Any]:
         "fallback_used",
         "schema_valid",
         "error_type",
+        "status",
+        "error_category",
+        "error_code",
+        "sanitized_message",
+        "request_id",
+        "retry_after_seconds",
+        "attempt",
+        "max_attempts",
+        "retries",
+        "repaired",
+        "repair_attempted",
+        "repair_reason",
+        "finish_reason",
+        "safety_status",
+        "raw_shape",
+        "schema_error",
+        "degraded_mode",
         "created_at",
     }
     return {key: value for key, value in result.items() if key in allowed}
@@ -487,6 +664,17 @@ def _float_or_none(value: object) -> float | None:
         return float(value)
     except (TypeError, ValueError):
         return None
+
+
+def _persistable(result: dict[str, Any]) -> dict[str, Any]:
+    return {key: value for key, value in result.items() if key in AiBenchmarkResult.model_fields}
+
+
+def _safe_shape(value: object) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    allowed = {"response_type", "parsed_type", "text_present", "candidate_count"}
+    return {key: nested for key, nested in value.items() if key in allowed}
 
 
 if __name__ == "__main__":
