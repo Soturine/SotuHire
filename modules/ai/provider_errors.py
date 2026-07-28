@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import random
 import re
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from datetime import UTC, datetime
 from email.utils import parsedate_to_datetime
 from enum import StrEnum
@@ -132,7 +132,7 @@ def classify_openai_error(
     *,
     model: str,
     status_code: int | None,
-    headers: Mapping[str, object] | None = None,
+    headers: object = None,
     body: object = None,
     exception: BaseException | None = None,
     attempt: int = 1,
@@ -257,7 +257,9 @@ def _openai_category(
             return ProviderErrorCategory.INSUFFICIENT_QUOTA, False
         if any(token in lower for token in ("billing_not_active", "billing", "payment required")):
             return ProviderErrorCategory.BILLING_REQUIRED, False
-        if any(token in lower for token in ("project_limit", "organization_limit", "project quota")):
+        if any(
+            token in lower for token in ("project_limit", "organization_limit", "project quota")
+        ):
             return ProviderErrorCategory.PROJECT_LIMIT, False
         if "rate_limit_exceeded" in lower or retry_after is not None:
             return ProviderErrorCategory.RATE_LIMIT, True
@@ -301,7 +303,7 @@ def _header(headers: object, name: str) -> str:
     return ""
 
 
-def _request_id(headers: Mapping[str, object] | None) -> str:
+def _request_id(headers: object) -> str:
     for name in ("x-request-id", "openai-request-id", "request-id"):
         value = _header(headers, name)
         if value:
@@ -314,6 +316,8 @@ def _text(value: object) -> str:
 
 
 def _integer(value: object) -> int | None:
+    if not isinstance(value, str | int | float | bool):
+        return None
     try:
         return int(value) if value not in (None, "") else None
     except (TypeError, ValueError):

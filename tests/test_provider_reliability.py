@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 
 import pytest
 from modules.ai.prompt_spec import PromptSpec
@@ -15,7 +16,13 @@ from modules.ai.provider_errors import (
     parse_retry_after,
     sanitize_provider_message,
 )
+from modules.ai.providers.gemini_provider import GeminiProvider
 from modules.ai.providers.openai_provider import OpenAIProvider
+from modules.ai.schema_repair import (
+    SchemaRepairError,
+    repair_instructions,
+    validate_with_single_repair,
+)
 from pydantic import BaseModel
 
 
@@ -99,7 +106,9 @@ def test_retry_after_seconds_and_http_date_are_supported() -> None:
     now = datetime.now(UTC)
 
     assert parse_retry_after("2.5", now=now) == 2.5
-    parsed = parse_retry_after((now + timedelta(seconds=10)).strftime("%a, %d %b %Y %H:%M:%S GMT"), now=now)
+    parsed = parse_retry_after(
+        (now + timedelta(seconds=10)).strftime("%a, %d %b %Y %H:%M:%S GMT"), now=now
+    )
     assert parsed is not None
     assert 9 <= parsed <= 10
 
@@ -199,6 +208,159 @@ def test_openai_does_not_retry_account_quota_and_uses_native_schema() -> None:
     assert captured.value.error.blocked_external_account
     assert len(bodies) == 1
     assert bodies[0]["text"]["format"]["type"] == "json_schema"  # type: ignore[index]
+
+
+def test_openai_repairs_invalid_schema_at_most_once() -> None:
+    bodies: list[dict[str, object]] = []
+
+    def transport(body: dict[str, object]) -> dict[str, object]:
+        bodies.append(body)
+        output = '{"wrong":"shape"}' if len(bodies) == 1 else '{"answer":"repaired"}'
+        return {"id": f"resp_{len(bodies)}", "output_text": output}
+
+    provider = OpenAIProvider(
+        api_key="test-only-value",
+        model="gpt-4.1-mini",
+        transport=transport,
+        retry_policy=ProviderRetryPolicy(max_attempts=1),
+    )
+
+    result = provider.generate_structured(_prompt(), {"context": "original-context"})
+
+    assert result.answer == "repaired"
+    assert len(bodies) == 2
+    assert provider.last_call_metadata["repaired"] is True
+    assert provider.last_call_metadata["repair_attempted"] is True
+    repair_input = json.dumps(bodies[1], ensure_ascii=False)
+    assert "original-context" not in repair_input
+    assert "wrong" in repair_input
+
+
+def test_schema_repair_never_invokes_more_than_one_repair() -> None:
+    calls = 0
+
+    def repair(_: str, __: dict[str, object]) -> object:
+        nonlocal calls
+        calls += 1
+        return {"still_wrong": True}
+
+    with pytest.raises(SchemaRepairError):
+        validate_with_single_repair({"wrong": True}, _StructuredSample, repair)
+
+    assert calls == 1
+
+
+def test_schema_repair_prompt_forbids_new_facts_and_missing_evidence() -> None:
+    system, user = repair_instructions('{"answer":7}', _StructuredSample.model_json_schema())
+
+    assert "Do not add facts" in system
+    assert '"maximum_repairs": 1' in user
+    assert '"add_facts": false' in user
+    assert '"infer_missing_evidence": false' in user
+
+
+def _gemini_response(
+    *,
+    parsed: object = None,
+    text: str = "",
+    finish_reason: str = "STOP",
+    response_id: str = "gemini-safe-id",
+) -> SimpleNamespace:
+    return SimpleNamespace(
+        parsed=parsed,
+        text=text,
+        response_id=response_id,
+        candidates=[
+            SimpleNamespace(
+                finish_reason=finish_reason,
+                safety_ratings=[],
+            )
+        ],
+        usage_metadata=SimpleNamespace(
+            prompt_token_count=10,
+            candidates_token_count=5,
+            total_token_count=15,
+        ),
+    )
+
+
+def test_gemini_uses_native_pydantic_schema_and_records_response_metadata() -> None:
+    payloads: list[dict[str, object]] = []
+
+    def transport(payload: dict[str, object]) -> object:
+        payloads.append(payload)
+        return _gemini_response(parsed={"answer": "ok"})
+
+    provider = GeminiProvider(
+        api_key="test-only-value",
+        model="gemini-2.5-flash",
+        transport=transport,
+        retry_policy=ProviderRetryPolicy(max_attempts=1),
+    )
+
+    result = provider.generate_structured(_prompt(), {"context": "fixture"})
+
+    assert result.answer == "ok"
+    assert payloads[0]["config"]["response_schema"] is _StructuredSample  # type: ignore[index]
+    assert provider.last_call_metadata["request_id"] == "gemini-safe-id"
+    assert provider.last_call_metadata["finish_reason"] == "STOP"
+    assert provider.last_call_metadata["total_tokens"] == 15
+
+
+def test_gemini_retries_transient_server_failure_then_repairs_once() -> None:
+    calls = 0
+    sleeps: list[float] = []
+
+    class TransientError(RuntimeError):
+        code = 503
+
+    def transport(_: dict[str, object]) -> object:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise TransientError("503 UNAVAILABLE")
+        if calls == 2:
+            return _gemini_response(text='{"wrong":"shape"}')
+        return _gemini_response(parsed={"answer": "repaired"}, response_id="repair-safe-id")
+
+    provider = GeminiProvider(
+        api_key="test-only-value",
+        model="gemini-2.5-flash",
+        transport=transport,
+        retry_policy=ProviderRetryPolicy(max_attempts=2, jitter_ratio=0),
+        sleeper=sleeps.append,
+    )
+
+    result = provider.generate_structured(_prompt(), {"context": "fixture"})
+
+    assert result.answer == "repaired"
+    assert calls == 3
+    assert len(sleeps) == 1
+    assert provider.last_call_metadata["repaired"] is True
+    assert provider.last_call_metadata["repair_call_metadata"]["request_id"] == "repair-safe-id"
+
+
+def test_gemini_safety_block_is_not_repaired_or_retried() -> None:
+    calls = 0
+
+    def transport(_: dict[str, object]) -> object:
+        nonlocal calls
+        calls += 1
+        return _gemini_response(finish_reason="SAFETY")
+
+    provider = GeminiProvider(
+        api_key="test-only-value",
+        model="gemini-2.5-flash",
+        transport=transport,
+        retry_policy=ProviderRetryPolicy(max_attempts=2),
+        sleeper=lambda _: pytest.fail("safety block must not retry"),
+    )
+
+    with pytest.raises(ProviderCallError) as captured:
+        provider.generate_structured(_prompt(), {"context": "fixture"})
+
+    assert captured.value.error.category is ProviderErrorCategory.SAFETY_BLOCK
+    assert calls == 1
 
 
 def test_gemini_server_and_quota_failures_are_distinct() -> None:

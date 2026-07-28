@@ -24,6 +24,11 @@ from modules.ai.provider_errors import (
     classify_openai_error,
 )
 from modules.ai.providers.base import AIProvider
+from modules.ai.schema_repair import (
+    SchemaRepairError,
+    repair_instructions,
+    validate_with_single_repair,
+)
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.schemas.user_preferences import UserPreferences
 
@@ -101,7 +106,58 @@ class OpenAIProvider(AIProvider):
                 ProviderErrorCategory.EMPTY_RESPONSE,
                 "OpenAI retornou resposta vazia.",
             )
-        return validate_ai_json(text, prompt.output_schema).data
+        original_metadata = dict(self.last_call_metadata)
+        repair_metadata: dict[str, Any] = {}
+
+        def repair(invalid_response: str, output_schema: dict[str, Any]) -> object:
+            nonlocal repair_metadata
+            system, user = repair_instructions(invalid_response, output_schema)
+            repaired_response = self._responses_request(
+                system,
+                user,
+                temperature=0,
+                response_schema=prompt.output_schema,
+                schema_name=f"{prompt.prompt_id}_repair",
+            )
+            repair_metadata = dict(self.last_call_metadata)
+            repaired_text = _extract_response_text(repaired_response)
+            if not repaired_text.strip():
+                raise self._response_error(
+                    ProviderErrorCategory.EMPTY_RESPONSE,
+                    "OpenAI retornou reparo vazio.",
+                )
+            return repaired_text
+
+        try:
+            result = validate_with_single_repair(text, prompt.output_schema, repair)
+        except ProviderCallError:
+            self.last_call_metadata = _merge_repair_metadata(
+                original_metadata,
+                dict(self.last_call_metadata),
+                repaired=False,
+                repair_attempted=True,
+            )
+            raise
+        except SchemaRepairError as exc:
+            self.last_call_metadata = _merge_repair_metadata(
+                original_metadata,
+                repair_metadata,
+                repaired=False,
+                repair_attempted=True,
+                repair_reason=exc.original_reason,
+            )
+            raise self._response_error(
+                ProviderErrorCategory.SCHEMA_INVALID,
+                str(exc),
+            ) from exc
+        self.last_call_metadata = _merge_repair_metadata(
+            original_metadata,
+            repair_metadata,
+            repaired=result.repaired,
+            repair_attempted=result.repaired,
+            repair_reason=result.repair_reason,
+        )
+        return result.data
 
     def ping(self) -> str:
         """Run a minimal OpenAI call for user-triggered connection tests."""
@@ -221,9 +277,7 @@ class OpenAIProvider(AIProvider):
                     retry_history=retry_history,
                 )
                 raise ProviderCallError(error)
-            self.sleeper(
-                self.retry_policy.delay_seconds(error, random_value=self.random_value)
-            )
+            self.sleeper(self.retry_policy.delay_seconds(error, random_value=self.random_value))
         raise RuntimeError("OpenAI retry loop exited unexpectedly")
 
     def _execute_request(self, body: dict[str, Any]) -> dict[str, Any]:
@@ -241,9 +295,7 @@ class OpenAIProvider(AIProvider):
         with urllib.request.urlopen(request, timeout=30) as response:
             return json.loads(response.read().decode("utf-8"))
 
-    def _response_error(
-        self, category: ProviderErrorCategory, message: str
-    ) -> ProviderCallError:
+    def _response_error(self, category: ProviderErrorCategory, message: str) -> ProviderCallError:
         error = ProviderError(
             provider=self.name,
             model=self.model,
@@ -332,6 +384,10 @@ def _extract_response_text(payload: dict[str, Any]) -> str:
 def _integer(value: object) -> int | None:
     if not isinstance(value, str | int | float | bool):
         return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
 def _read_http_error(error: urllib.error.HTTPError) -> bytes:
@@ -344,7 +400,43 @@ def _read_http_error(error: urllib.error.HTTPError) -> bytes:
 def _schema_name(value: str) -> str:
     cleaned = re.sub(r"[^A-Za-z0-9_-]+", "_", value).strip("_")
     return (cleaned or "sotuhire_response")[:64]
-    try:
-        return int(value)
-    except (TypeError, ValueError):
-        return None
+
+
+def _merge_repair_metadata(
+    original: dict[str, Any],
+    repair: dict[str, Any],
+    *,
+    repaired: bool,
+    repair_attempted: bool,
+    repair_reason: str = "",
+) -> dict[str, Any]:
+    merged = dict(original)
+    for field in ("latency_ms", "input_tokens", "output_tokens", "total_tokens", "retries"):
+        values = [value.get(field) for value in (original, repair)]
+        numeric = [int(value) for value in values if isinstance(value, int | float)]
+        merged[field] = sum(numeric) if numeric else None
+    if repair:
+        merged["finished_at"] = repair.get("finished_at", original.get("finished_at"))
+    merged.update(
+        {
+            "repaired": repaired,
+            "repair_attempted": repair_attempted,
+            "repair_reason": repair_reason,
+            "repair_call_metadata": {
+                key: value
+                for key, value in repair.items()
+                if key
+                in {
+                    "latency_ms",
+                    "input_tokens",
+                    "output_tokens",
+                    "total_tokens",
+                    "request_id",
+                    "response_id",
+                    "error_type",
+                    "provider_error",
+                }
+            },
+        }
+    )
+    return merged
