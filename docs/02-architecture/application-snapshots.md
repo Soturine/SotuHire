@@ -154,3 +154,9 @@ pytest tests/test_extension_capture_flow.py
 ```
 
 Os testes confirmam reutilização por conteúdo, novo hash quando o texto muda, vínculo da candidatura e rejeição de mutação no banco.
+
+## Snapshots do Application Lab
+
+Ao analisar, o Lab cria ou reutiliza `ResumeSnapshot` do mestre e cria `AnalysisSnapshot` do readiness com o `JobSnapshot` exato, regras versionadas e referências. A variante recebe snapshot separado. Kit e plano permanecem entidades vinculadas; o snapshot do kit é criado junto do artefato. Ao salvar, `ApplicationRecord` guarda os links do relatório, currículo/variante e demais artefatos.
+
+Trocar vaga ou mestre não muta snapshots: a sessão marca etapas 5–10 como inválidas e a próxima execução cria a nova cadeia. Sugestões aceitas continuam registradas, mas não são aplicadas silenciosamente à nova entrada.

@@ -133,6 +133,8 @@ Ao usar APIs de IA, lembre que o currículo será enviado para um serviço exter
 
 Conteúdo importado é delimitado como não confiável. Prompt injection não pode solicitar chave, revelar system prompt, promover afirmação sem evidência ou alterar uma decisão determinística. Benchmarks externos usam apenas fixtures fictícias e variáveis temporárias; chaves não entram em frontend, SQLite, logs, screenshots ou pacote da extensão.
 
+Application Lab persiste referências e snapshots necessários, não envia candidatura nem Perfil completo pela extensão. JSON Resume exporta somente entradas confirmadas e não inclui trace. PDF/DOCX não são gerados enquanto não houver renderer e validação de metadados. Relatórios externos guardam erro sanitizado/request ID, nunca chave ou corpo pessoal integral.
+
 ## Mensagens geradas
 
 O usuário deve revisar toda mensagem antes de enviar. A IA pode cometer erro, exagerar ou omitir informações.

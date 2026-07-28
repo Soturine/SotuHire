@@ -10,12 +10,13 @@ SotuHire é um assistente de carreira local-first, multiárea e baseado em evid�
 | Instalar e executar | [README do repositório](https://github.com/Soturine/SotuHire#readme) |
 | Ver como os módulos se conectam | [Mapa de módulos](02-architecture/module-integration-map.md) |
 | Conferir capacidades reais | [Matriz verificável](02-architecture/integration-capability-matrix.md) |
+| Preparar uma candidatura | [Application Lab](02-architecture/application-lab.md) e [Resume Studio](02-architecture/resume-studio.md) |
 | Entender dados locais | [Repository architecture](02-architecture/storage-repository-architecture.md) |
 | Ver a demonstração | [Roteiro](09-portfolio/demo-script.md) e [case study](09-portfolio/portfolio-case-study.md) |
 
 ## Produto
 
-O Perfil Universal reúne fatos confirmados e candidatos revisáveis com origem, confiança e sensibilidade. O Career Context seleciona apenas o necessário para cada finalidade. Análises preservam warnings, provider/modelo efetivos e evidências; quando seguem ao Tracker, podem ser ligadas a snapshots imutáveis.
+O Perfil Universal reúne fatos confirmados e candidatos revisáveis com origem, confiança e sensibilidade. O Career Context seleciona apenas o necessário para cada finalidade. O Application Lab orquestra readiness, sugestões, variante, kit, plano e Tracker; o Resume Studio preserva o mestre e a proveniência de cada mudança.
 
 O frontend possui modo Demo e modo API Real. A extensão pode capturar vagas, editais e projetos, operar com Local Companion sem o React aberto e usar análise local, IA do SotuHire ou chave própria opcional isolada no service worker.
 
@@ -27,7 +28,7 @@ SQLite local adiciona transações, foreign keys, migrações e vínculos entre 
 - [Snapshots](02-architecture/application-snapshots.md)
 - [Backup, restore e health](02-architecture/backup-restore-and-data-health.md)
 - [Linhagem e dedupe](02-architecture/data-lineage-and-deduplication.md)
-- [Auditoria atual da IA](00-audit/v1.9.7-ai-system-audit.md)
+- [Auditoria atual de repositório e fluxo](00-audit/v1.9.8-repository-product-flow-audit.md)
 
 ## IA responsável
 
@@ -39,6 +40,8 @@ Gemini e OpenAI são opcionais. O caminho local continua disponível e o fallbac
 - [Plano de avaliação](04-ai/ai-evaluation-plan.md)
 - [Golden datasets](09-testing/golden-datasets.md)
 - [Arquitetura de avaliação](04-ai/ai-evaluation-architecture.md)
+- [Taxonomia de erros](04-ai/provider-error-taxonomy.md)
+- [Validação externa v1.9.8](07-development/v1.9.8-external-provider-validation.md)
 - [Feedback humano e outcomes](04-ai/human-feedback.md)
 
 ## Extensão e fontes

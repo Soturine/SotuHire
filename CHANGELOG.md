@@ -4,6 +4,31 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.9.8] - 2026-07-28
+
+### Adicionado
+
+- Application Lab persistente em dez etapas, com readiness multiárea, sugestões revisáveis, variante, kit, plano, snapshots e Tracker.
+- Resume Studio com Currículo Mestre, editor, reordenação, undo/redo, autosave, diff, quatro templates ATS-safe, preview e JSON Resume.
+- Migration 5 e APIs paginadas para sessões, relatórios, currículos, variantes, exports e artefatos de candidatura.
+- Suites externas `provider-diagnostic` e `provider-structured-output`, além de evidências visuais desktop/mobile e GIF da jornada.
+
+### Alterado
+
+- Extensão 0.9.4 captura/deduplica a vaga e abre o Lab somente com `capture_id` e `job_snapshot_id`.
+- Gemini/OpenAI compartilham taxonomia de erros, retry limitado com `Retry-After`, reparo controlado e fallback explícito.
+
+### Corrigido
+
+- OpenAI 429 diferencia quota insuficiente de rate limit, billing e project limit; bloqueio de conta não vira aprovação.
+- Schemas Gemini são reduzidos ao subconjunto suportado e não recebem defaults silenciosos após resposta inválida.
+- Superfícies de gradiente do Application Lab mantêm contraste correto.
+
+### Limitações conhecidas
+
+- PDF/DOCX permanecem pendentes para a v1.9.9; preview e JSON Resume são funcionais.
+- A rodada externa final encontrou rate limit/alta demanda no Gemini e quota insuficiente no OpenAI; nenhum caso foi ocultado ou usado para baseline inválido.
+
 ## [1.9.7] - 2026-07-14
 
 ### Adicionado

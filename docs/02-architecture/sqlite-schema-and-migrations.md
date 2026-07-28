@@ -189,3 +189,11 @@ Um banco já existente sem versão reconhecida não recebe backup isolado pelo r
 ## Estado de execução
 
 Os testes automatizados exercitam criação, idempotência, FKs e imutabilidade em diretórios temporários. Esta documentação não afirma que `--apply` tenha sido executado sobre os dados reais do ambiente; essa decisão exige revisão do dry-run e autorização explícita.
+
+## Migration 5 — Application Lab e Resume Studio
+
+A migration 5 adiciona `application_lab_sessions`, `application_readiness_reports`, `application_suggestions`, `master_resumes`, `resume_sections`, `resume_entries`, `resume_variants`, `resume_variant_changes`, `resume_templates`, `resume_exports`, `application_kits`, `application_kit_items`, `application_action_plans` e `application_action_items`. Também adiciona links do Lab à candidatura e diagnósticos estruturados de provider.
+
+Há foreign keys, índices de sessão/mestre/vaga/status, timestamps e checks de estado. Quatro templates ATS-safe são semeados idempotentemente. O runner continua transacional e registra schema version 5.
+
+Para validar esta migration, use sempre diretório e banco temporários explícitos; nunca omita `--data-dir` em um ambiente que contenha dados pessoais.

@@ -31,6 +31,9 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 - [Local Companion API](02-architecture/local-companion-api.md)
 - [Extensão e Perfil Universal](02-architecture/extension-profile-bridge.md)
 - [Fundação de editais](02-architecture/public-exams-foundation.md)
+- [Application Lab](02-architecture/application-lab.md)
+- [Resume Studio](02-architecture/resume-studio.md)
+- [Application Readiness Report](02-architecture/application-readiness-report.md)
 
 ## Dados e persistência
 
@@ -57,6 +60,9 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 - [Comparação de providers/modelos](04-ai/provider-model-comparison.md)
 - [Feedback humano](04-ai/human-feedback.md)
 - [Outcome Learning](02-architecture/outcome-learning.md)
+- [Confiabilidade de providers](02-architecture/provider-reliability.md)
+- [Taxonomia de erros](04-ai/provider-error-taxonomy.md)
+- [Schema repair e fallback](04-ai/schema-repair-and-fallback.md)
 
 ## Fontes
 
@@ -87,6 +93,8 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 - [Testes de screenshot](09-testing/screenshot-testing.md)
 - [Golden datasets](09-testing/golden-datasets.md)
 - [Benchmarking de IA](09-testing/ai-benchmarking.md)
+- [Testes do Application Lab](09-testing/application-lab-testing.md)
+- [Testes do Resume Studio](09-testing/resume-studio-testing.md)
 
 ## Portfólio
 
@@ -101,8 +109,10 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 - [Arquivo do roadmap até a release anterior](01-product/roadmap-archive-through-v1.9.5.md)
 - [Data reliability, migrações e backups](07-development/v1.9.6-data-reliability-migrations-backups.md)
 - [Setup e desenvolvimento](07-development/setup.md)
+- [Application Lab e Resume Studio v1.9.8](07-development/v1.9.8-guided-application-lab-resume-studio.md)
+- [Validação externa v1.9.8](07-development/v1.9.8-external-provider-validation.md)
 
 ## Releases
 
-- [Release atual](releases/v1.9.7.md)
+- [Release atual](releases/v1.9.8.md)
 - [Releases anteriores no GitHub](https://github.com/Soturine/SotuHire/tree/main/docs/releases)

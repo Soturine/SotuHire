@@ -92,9 +92,19 @@ npm run build
 npm run test:e2e
 ```
 
+Fluxos novos têm testes dedicados:
+
+```bash
+pytest tests/test_application_lab_service.py tests/test_application_lab_repository.py tests/test_application_lab_api.py
+cd apps/web
+npx playwright test tests/e2e/application-lab.spec.ts
+```
+
 ## Qualidade de IA
 
 O CI padrão valida schemas golden, domínios/casos adversariais, prompt injection, métricas e regressão local sem chave. External AI é opt-in e usa exclusivamente variáveis temporárias permitidas. Relatórios não contêm inputs/outputs completos. Veja [benchmarking de IA](../09-testing/ai-benchmarking.md).
+
+Bloqueio por quota/faturamento é registrado como `BLOCKED_EXTERNAL_ACCOUNT`; rate limit/model unavailable esgotado é falha, não xfail genérico.
 
 ## Cobertura
 

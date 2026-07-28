@@ -2,7 +2,7 @@
 
 Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o OpenAPI real, as rotas TanStack e os arquivos de testes e documentação.
 
-**Commit-base da última verificação:** `8cd82f026a762752fd042ce3f39c8f1d1885ba32`
+**Commit-base da última verificação:** `7d90a46`
 
 ## Resumo
 
@@ -23,7 +23,9 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | ai_settings | Configuração de IA | `/settings` | 7 | sem contexto dedicado | não | A configuração do site não lê nem persiste a chave própria da extensão. | AiRunStore registra metadados seguros; segredos não entram em snapshots. | complete | nenhuma registrada |
 | notifications | Notificações locais | `/dashboard` | 4 | sem contexto dedicado | não | A extensão não recebe notificações do site. | A notificação referencia a origem; não é um snapshot de conteúdo. | complete | Não existe rota exclusiva; o resumo é exibido no Dashboard e no Radar. |
 | data_reliability | Persistência, migração, backup e saúde dos dados | `/privacy` | 5 | sem contexto dedicado | não | Backups não incluem chrome.storage, IndexedDB, chaves, tokens ou cookies. | Tabelas e triggers impedem UPDATE/DELETE de snapshots imutáveis. | complete | nenhuma registrada |
-| ai_quality_outcomes | Qualidade de IA, feedback humano e resultados profissionais | `/ai-quality` | 10 | dashboard | resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1 | A extensão 0.9.3 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. | complete | Métricas externas dependem de execução opt-in com chaves temporárias. |
+| ai_quality_outcomes | Qualidade de IA, feedback humano e resultados profissionais | `/ai-quality` | 10 | dashboard | resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1 | A extensão 0.9.4 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. | complete | Métricas externas dependem de execução opt-in com chaves temporárias. |
+| application_lab | Preparar candidatura | `/application-lab` | 9 | match | match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1 | A extensão 0.9.4 abre o Lab somente com capture_id e job_snapshot_id; o Perfil completo permanece local. | Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker. | complete | Notificações do plano permanecem locais; nenhum calendário externo é criado automaticamente. |
+| resume_studio | Resume Studio | `/resume-studio` | 8 | sem contexto dedicado | não | A extensão encaminha a vaga ao Application Lab; não lê nem envia o currículo. | O Tracker preserva snapshots distintos do mestre e da variante usada. | partial | PDF e DOCX permanecem explicitamente pendentes para a v1.9.9; preview e JSON Resume estão funcionais. |
 
 ## Contratos por capacidade
 
@@ -370,14 +372,58 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `profile_integration` | Usa somente contexto necessário e confirmado; itens não confirmados permanecem sinalizados e não viram fatos. |
 | `context_purpose` | `dashboard` |
 | `ai_support` | enabled=true; prompts=resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1; providers=local, gemini, openai; fallback=Determinístico local, explícito e mensurado |
-| `extension_support` | A extensão 0.9.3 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. |
+| `extension_support` | A extensão 0.9.4 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. |
 | `dedupe_strategy` | Eventos e feedback usam IDs únicos; métricas de deduplicação são avaliadas separadamente. |
 | `snapshot_support` | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. |
 | `tests` | `tests/test_ai_task_registry.py`<br>`tests/test_ai_evaluation_metrics.py`<br>`tests/test_ai_golden_datasets.py`<br>`tests/test_ai_feedback_outcomes.py`<br>`tests/test_ai_quality_api.py`<br>`tests/test_prompt_injection_defense.py` |
 | `docs` | `docs/04-ai/ai-evaluation-architecture.md`<br>`docs/04-ai/prompt-governance.md`<br>`docs/02-architecture/outcome-learning.md`<br>`docs/09-testing/ai-benchmarking.md` |
 | `status` | `complete` |
 | `gaps` | Métricas externas dependem de execução opt-in com chaves temporárias. |
-| `last_verified_commit` | `3a0e24afdda74e1f57e2474e186f21ee9b130658` |
+| `last_verified_commit` | `7d90a46` |
+
+### Preparar candidatura (`application_lab`)
+
+| Campo | Valor verificado |
+|---|---|
+| `capability_id` | `application_lab` |
+| `frontend_route` | `/application-lab` |
+| `api_endpoints` | `POST /api/v1/application-lab/sessions`<br>`GET /api/v1/application-lab/sessions`<br>`GET /api/v1/application-lab/sessions/{session_id}`<br>`PATCH /api/v1/application-lab/sessions/{session_id}`<br>`POST /api/v1/application-lab/sessions/{session_id}/analyze`<br>`POST /api/v1/application-lab/sessions/{session_id}/variant`<br>`POST /api/v1/application-lab/sessions/{session_id}/kit`<br>`POST /api/v1/application-lab/sessions/{session_id}/action-plan`<br>`POST /api/v1/application-lab/sessions/{session_id}/tracker` |
+| `backend_services` | `apps/api/services/application_lab.py` |
+| `core_modules` | `modules/application_lab/service.py`<br>`modules/application_lab/readiness.py`<br>`modules/application_lab/repository.py` |
+| `stores` | `modules/application_lab/repository.py`<br>`modules/storage/snapshots.py` |
+| `profile_integration` | Seleciona referências confirmadas do Perfil e preserva a origem; candidatos não viram fatos automaticamente. |
+| `context_purpose` | `match` |
+| `ai_support` | enabled=true; prompts=match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1; providers=local, gemini, openai; fallback=Relatório de prontidão determinístico e fallback local explícito |
+| `extension_support` | A extensão 0.9.4 abre o Lab somente com capture_id e job_snapshot_id; o Perfil completo permanece local. |
+| `dedupe_strategy` | Reutiliza identidade da captura, job_snapshot_id e snapshots existentes em vez de duplicar a vaga. |
+| `snapshot_support` | Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker. |
+| `tests` | `tests/test_application_lab_service.py`<br>`tests/test_application_lab_api.py`<br>`tests/test_application_lab_repository.py`<br>`apps/web/tests/e2e/application-lab.spec.ts` |
+| `docs` | `docs/02-architecture/application-lab.md`<br>`docs/03-business-rules/application-readiness.md` |
+| `status` | `complete` |
+| `gaps` | Notificações do plano permanecem locais; nenhum calendário externo é criado automaticamente. |
+| `last_verified_commit` | `7d90a46` |
+
+### Resume Studio (`resume_studio`)
+
+| Campo | Valor verificado |
+|---|---|
+| `capability_id` | `resume_studio` |
+| `frontend_route` | `/resume-studio` |
+| `api_endpoints` | `GET /api/v1/resume-studio/master`<br>`PUT /api/v1/resume-studio/master`<br>`GET /api/v1/resume-studio/variants`<br>`POST /api/v1/resume-studio/variants`<br>`GET /api/v1/resume-studio/variants/{variant_id}`<br>`PATCH /api/v1/resume-studio/variants/{variant_id}`<br>`GET /api/v1/resume-studio/templates`<br>`POST /api/v1/resume-studio/variants/{variant_id}/export` |
+| `backend_services` | `apps/api/services/application_lab.py` |
+| `core_modules` | `modules/application_lab/models.py`<br>`modules/application_lab/export.py` |
+| `stores` | `modules/application_lab/repository.py` |
+| `profile_integration` | O Currículo Mestre usa itens confirmados e mantém source_profile_item_ids em variantes. |
+| `context_purpose` | — |
+| `ai_support` | enabled=false; prompts=nenhum; providers=local; fallback=Editor, diff, preview e export JSON Resume são determinísticos |
+| `extension_support` | A extensão encaminha a vaga ao Application Lab; não lê nem envia o currículo. |
+| `dedupe_strategy` | Variantes têm ID próprio, master_resume_id e job_snapshot_id; o mestre nunca é alterado pela variante. |
+| `snapshot_support` | O Tracker preserva snapshots distintos do mestre e da variante usada. |
+| `tests` | `tests/test_application_lab_api.py`<br>`tests/test_application_lab_service.py`<br>`apps/web/src/components/resume-editor-state.test.ts`<br>`apps/web/tests/e2e/application-lab.spec.ts` |
+| `docs` | `docs/02-architecture/resume-studio.md`<br>`docs/03-business-rules/resume-variants-and-suggestions.md` |
+| `status` | `partial` |
+| `gaps` | PDF e DOCX permanecem explicitamente pendentes para a v1.9.9; preview e JSON Resume estão funcionais. |
+| `last_verified_commit` | `7d90a46` |
 
 ## Como validar
 

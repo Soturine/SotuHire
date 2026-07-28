@@ -206,3 +206,9 @@ O SotuHire ainda opera com JSON/JSONL e SQLite em paralelo. Essa condição é e
 - a migração completa de cada store deve ocorrer por etapas verificáveis.
 
 Veja [Arquitetura de repositórios](storage-repository-architecture.md), [Schema SQLite](sqlite-schema-and-migrations.md) e [Snapshots](application-snapshots.md).
+
+## Linhagem do Lab e das variantes
+
+`ApplicationLabSession` referencia Perfil, mestre e `JobSnapshot`. O relatório preserva `evidence_used`, `source_refs` e `analysis_snapshot_id`; sugestões mantêm evidências e decisão. A variante guarda `master_resume_id`, `job_snapshot_id`, `source_profile_item_ids` e change set. O Tracker recebe os IDs finais e reutiliza snapshots por identidade/hash, evitando duplicar a mesma captura.
+
+Uma variante nunca é deduplicada contra o mestre como se fossem o mesmo documento: a relação é derivação. Vagas continuam usando identidade canônica/capture ID. Outcomes referenciam candidatura e artefatos; não reescrevem a linhagem.

@@ -2,7 +2,7 @@
   "schema_version": 1,
   "manifest_id": "sotuhire-capabilities",
   "description": "Inventário verificável das capacidades principais expostas pela API e pelo frontend local do SotuHire.",
-  "last_verified_commit": "8cd82f026a762752fd042ce3f39c8f1d1885ba32",
+  "last_verified_commit": "7d90a46",
   "capabilities": [
     {
       "capability_id": "resume_extraction",
@@ -499,7 +499,7 @@
         "providers": ["local", "gemini", "openai"],
         "fallback": "Determinístico local, explícito e mensurado"
       },
-      "extension_support": "A extensão 0.9.3 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo.",
+      "extension_support": "A extensão 0.9.4 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo.",
       "dedupe_strategy": "Eventos e feedback usam IDs únicos; métricas de deduplicação são avaliadas separadamente.",
       "snapshot_support": "Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas.",
       "tests": [
@@ -518,7 +518,96 @@
       ],
       "status": "complete",
       "gaps": ["Métricas externas dependem de execução opt-in com chaves temporárias."],
-      "last_verified_commit": "3a0e24afdda74e1f57e2474e186f21ee9b130658"
+      "last_verified_commit": "7d90a46"
+    },
+    {
+      "capability_id": "application_lab",
+      "label": "Preparar candidatura",
+      "frontend_route": "/application-lab",
+      "api_endpoints": [
+        "POST /api/v1/application-lab/sessions",
+        "GET /api/v1/application-lab/sessions",
+        "GET /api/v1/application-lab/sessions/{session_id}",
+        "PATCH /api/v1/application-lab/sessions/{session_id}",
+        "POST /api/v1/application-lab/sessions/{session_id}/analyze",
+        "POST /api/v1/application-lab/sessions/{session_id}/variant",
+        "POST /api/v1/application-lab/sessions/{session_id}/kit",
+        "POST /api/v1/application-lab/sessions/{session_id}/action-plan",
+        "POST /api/v1/application-lab/sessions/{session_id}/tracker"
+      ],
+      "backend_services": ["apps/api/services/application_lab.py"],
+      "core_modules": [
+        "modules/application_lab/service.py",
+        "modules/application_lab/readiness.py",
+        "modules/application_lab/repository.py"
+      ],
+      "stores": ["modules/application_lab/repository.py", "modules/storage/snapshots.py"],
+      "profile_integration": "Seleciona referências confirmadas do Perfil e preserva a origem; candidatos não viram fatos automaticamente.",
+      "context_purpose": "match",
+      "ai_support": {
+        "enabled": true,
+        "prompt_ids": ["match_analysis_evidence_based_v1", "ats_analysis_v1", "resume_tailor_v1"],
+        "providers": ["local", "gemini", "openai"],
+        "fallback": "Relatório de prontidão determinístico e fallback local explícito"
+      },
+      "extension_support": "A extensão 0.9.4 abre o Lab somente com capture_id e job_snapshot_id; o Perfil completo permanece local.",
+      "dedupe_strategy": "Reutiliza identidade da captura, job_snapshot_id e snapshots existentes em vez de duplicar a vaga.",
+      "snapshot_support": "Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker.",
+      "tests": [
+        "tests/test_application_lab_service.py",
+        "tests/test_application_lab_api.py",
+        "tests/test_application_lab_repository.py",
+        "apps/web/tests/e2e/application-lab.spec.ts"
+      ],
+      "docs": [
+        "docs/02-architecture/application-lab.md",
+        "docs/03-business-rules/application-readiness.md"
+      ],
+      "status": "complete",
+      "gaps": ["Notificações do plano permanecem locais; nenhum calendário externo é criado automaticamente."],
+      "last_verified_commit": "7d90a46"
+    },
+    {
+      "capability_id": "resume_studio",
+      "label": "Resume Studio",
+      "frontend_route": "/resume-studio",
+      "api_endpoints": [
+        "GET /api/v1/resume-studio/master",
+        "PUT /api/v1/resume-studio/master",
+        "GET /api/v1/resume-studio/variants",
+        "POST /api/v1/resume-studio/variants",
+        "GET /api/v1/resume-studio/variants/{variant_id}",
+        "PATCH /api/v1/resume-studio/variants/{variant_id}",
+        "GET /api/v1/resume-studio/templates",
+        "POST /api/v1/resume-studio/variants/{variant_id}/export"
+      ],
+      "backend_services": ["apps/api/services/application_lab.py"],
+      "core_modules": ["modules/application_lab/models.py", "modules/application_lab/export.py"],
+      "stores": ["modules/application_lab/repository.py"],
+      "profile_integration": "O Currículo Mestre usa itens confirmados e mantém source_profile_item_ids em variantes.",
+      "context_purpose": null,
+      "ai_support": {
+        "enabled": false,
+        "prompt_ids": [],
+        "providers": ["local"],
+        "fallback": "Editor, diff, preview e export JSON Resume são determinísticos"
+      },
+      "extension_support": "A extensão encaminha a vaga ao Application Lab; não lê nem envia o currículo.",
+      "dedupe_strategy": "Variantes têm ID próprio, master_resume_id e job_snapshot_id; o mestre nunca é alterado pela variante.",
+      "snapshot_support": "O Tracker preserva snapshots distintos do mestre e da variante usada.",
+      "tests": [
+        "tests/test_application_lab_api.py",
+        "tests/test_application_lab_service.py",
+        "apps/web/src/components/resume-editor-state.test.ts",
+        "apps/web/tests/e2e/application-lab.spec.ts"
+      ],
+      "docs": [
+        "docs/02-architecture/resume-studio.md",
+        "docs/03-business-rules/resume-variants-and-suggestions.md"
+      ],
+      "status": "partial",
+      "gaps": ["PDF e DOCX permanecem explicitamente pendentes para a v1.9.9; preview e JSON Resume estão funcionais."],
+      "last_verified_commit": "7d90a46"
     }
   ]
 }

@@ -200,3 +200,21 @@ flowchart LR
 A identidade usa URL normalizada, referências fortes e hash de conteúdo. A captura preserva todas
 as fontes; merges incertos continuam sugestões. Handshake e warnings evitam integração silenciosa
 entre versões incompatíveis.
+
+## Fluxo guiado de candidatura
+
+```mermaid
+flowchart LR
+    P[Perfil e evidências] --> C[Career Context]
+    M[Currículo Mestre] --> L[Application Lab]
+    J[JobSnapshot] --> L
+    C --> L
+    L --> R[Readiness determinístico]
+    R --> S[Sugestões revisáveis]
+    S --> V[Variante + diff]
+    V --> K[Kit e plano]
+    K --> T[Tracker + snapshots]
+    T --> O[Outcomes e feedback]
+```
+
+O Lab persiste apenas IDs, referências e artefatos necessários. Alterar uma entrada invalida os descendentes, não o histórico anterior. A extensão entra pelo `capture_id`/`job_snapshot_id` e nunca anexa o Perfil ao URL.

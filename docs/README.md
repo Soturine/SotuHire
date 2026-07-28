@@ -9,6 +9,8 @@ A documentação separa referências atuais de histórico. Para conhecer o produ
 - [Roadmap](01-product/roadmap.md)
 - [Visão geral da arquitetura](02-architecture/overview.md)
 - [Matriz de capacidades](02-architecture/integration-capability-matrix.md)
+- [Application Lab](02-architecture/application-lab.md)
+- [Resume Studio](02-architecture/resume-studio.md)
 - [Roteiro de demonstração](09-portfolio/demo-script.md)
 
 ## Produto
@@ -40,6 +42,8 @@ A documentação separa referências atuais de histórico. Para conhecer o produ
 - [Plano de avaliação](04-ai/ai-evaluation-plan.md)
 - [Arquitetura de avaliação](04-ai/ai-evaluation-architecture.md)
 - [Outcome Learning](02-architecture/outcome-learning.md)
+- [Confiabilidade de providers](02-architecture/provider-reliability.md)
+- [Taxonomia de erros](04-ai/provider-error-taxonomy.md)
 - [Benchmarking](09-testing/ai-benchmarking.md)
 
 ## Fontes e extensão
@@ -55,10 +59,12 @@ A documentação separa referências atuais de histórico. Para conhecer o produ
 - [CI/CD](06-engineering/ci-cd.md)
 - [Segurança e privacidade](06-engineering/security-privacy.md)
 - [Golden datasets](09-testing/golden-datasets.md)
+- [Testes do Application Lab](09-testing/application-lab-testing.md)
+- [Testes do Resume Studio](09-testing/resume-studio-testing.md)
 
 ## Portfólio e histórico
 
 - [Case study](09-portfolio/portfolio-case-study.md)
 - [Histórico de desenvolvimento](07-development/setup.md)
-- [Release atual](releases/v1.9.7.md)
+- [Release atual](releases/v1.9.8.md)
 - [CHANGELOG no GitHub](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md)

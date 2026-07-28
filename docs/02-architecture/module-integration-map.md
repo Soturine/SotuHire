@@ -119,6 +119,15 @@ allow_memory_context
 Currículo, vaga, importações, Radar e o rascunho de editais usam IA quando `use_ai=true` e `provider=gemini` ou `provider=openai` está configurado.
 A UI mostra provider, modo e baixa confiança sem expor segredo.
 
+## Application Lab e Resume Studio v1.9.8
+
+| UI | API | Serviço/regra | Persistência | Continuidade |
+|---|---|---|---|---|
+| `/application-lab` | `/api/v1/application-lab/*` | `ApplicationLabService`, `build_readiness_report` | sessões, relatórios, sugestões, kits, planos e snapshots | retomar, invalidar 5–10, salvar no Tracker |
+| `/resume-studio` | `/api/v1/resume-studio/*` | repository, export e reducer do editor | mestre, seções, entries, variantes, changes, templates e exports | autosave, undo/redo, diff e preview |
+
+A extensão 0.9.4 produz `capture_id`/`job_snapshot_id`; o Lab consome esses IDs, Career Context e o mestre. O Tracker recebe os artefatos e outcomes os correlacionam sem alterar pesos automaticamente.
+
 ## Ponte da extensão
 
 Endpoints FastAPI:

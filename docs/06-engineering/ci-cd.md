@@ -58,3 +58,5 @@ Vitest/Testing Library/MSW cobrem contratos rápidos; Playwright valida o navega
 6. anexar somente ZIPs já escaneados e sem dados pessoais.
 
 Falha de audit, CodeQL ou dependência deve ser analisada; falso positivo documentado não deve ser ocultado nem tratado automaticamente como vulnerabilidade explorável.
+
+Application Lab, Resume Studio, export JSON, migration/health e taxonomia de providers entram nas suites determinísticas. O E2E Chromium cobre a jornada e o job cross-browser percorre Chromium, Firefox e WebKit. Captura visual é opt-in e não altera o gate padrão.

@@ -35,11 +35,16 @@ exclusivamente no backend local.
 - usa seletores semânticos e texto visível como fallback;
 - analisa a vaga com Match/ATS local ou com a IA configurada no SotuHire;
 - envia a vaga ao Tracker preservando a origem e o anúncio usado;
+- oferece **Preparar candidatura**, salva/deduplica a captura e abre o Application Lab somente com `capture_id` e `job_snapshot_id`;
 - acumula páginas de candidaturas já realizadas em lote, com limite de 500 itens por envio;
 - deduplica URLs equivalentes, inclusive parâmetros comuns de tracking.
 
 A captura é assistida: a pessoa abre a página e clica na ação desejada. A extensão não percorre
 listas por conta própria e não clica em botões nativos de candidatura.
+
+O fluxo do Lab exige Local Companion conectado. O Perfil completo, currículo e texto visível não entram na URL nem são enviados ao popup de destino. Se a chamada falhar, a captura permanece na fila offline existente.
+
+![Preparar candidatura no popup](../docs/assets/screenshots/extension/prepare-application-lab.png)
 
 ### Editais e concursos
 
@@ -163,9 +168,9 @@ O popup envia sua versão ao endpoint `POST /handshake` da Local Companion. A re
 ```json
 {
   "extension_version": "0.9.4",
-  "companion_version": "1.9.7",
+  "companion_version": "1.9.8",
   "api_version": "v1",
-  "capabilities": [],
+  "capabilities": ["application_lab.open"],
   "compatible": true,
   "warnings": []
 }

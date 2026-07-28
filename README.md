@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.9.7-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.7)
+[![Release](https://img.shields.io/badge/release-v1.9.8-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.8)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -35,7 +35,11 @@ Centraliza objetivos, formação, experiências, projetos, competências, idioma
 
 ### Currículo Mestre
 
-Extrai e organiza currículos TXT, PDF e DOCX, mantém uma base reutilizável e prepara a fundação para variantes por vaga. A interoperabilidade com JSON Resume permite exportar fatos confirmados e importar dados como candidatos revisáveis.
+Extrai e organiza currículos TXT, PDF e DOCX e mantém uma base reutilizável. O **Resume Studio** cria variantes por vaga com diff, editor, reordenação, undo/redo, autosave, preview ATS-safe e export JSON Resume. PDF/DOCX finais permanecem explicitamente pendentes.
+
+### Preparar candidatura
+
+O **Application Lab** conecta Perfil/evidências, Currículo Mestre, vaga, readiness determinístico, sugestões revisáveis, variante, kit, plano, snapshots e Tracker em dez etapas. Cada mudança depende de aprovação humana, sessões podem ser retomadas e trocar uma entrada invalida apenas os artefatos dependentes.
 
 ### Vaga, Match, ATS e Tailor
 
@@ -74,7 +78,7 @@ Captura vaga, edital, projeto GitHub e lotes visíveis; analisa repositórios de
 
 ### IA, memória e rastreabilidade
 
-Gemini, OpenAI e o caminho local usam contratos estruturados. Execuções importantes registram provider e modelo solicitado/usado, prompt, fallback, evidências, avisos e necessidade de revisão — nunca a chave. A memória/RAG local recupera somente o contexto relevante para cada finalidade.
+Gemini, OpenAI e o caminho local usam contratos estruturados. Erros distinguem quota, rate limit, billing, projeto, modelo, schema e rede; retry respeita `Retry-After`, reparo é limitado e fallback nunca é silencioso. Execuções importantes registram provider e modelo solicitado/usado, prompt, fallback, evidências, avisos e necessidade de revisão — nunca a chave.
 
 ### Snapshots, backup e export
 
@@ -87,7 +91,9 @@ Perfil + evidências revisadas
             ↓
       Career Context
             ↓
-Match · ATS · Tailor · Radar · Editais · GitHub
+       Application Lab
+            ↓
+Match · ATS · Tailor · variante · kit · plano
             ↓
   Tracker + snapshots + histórico
             ↓
@@ -97,6 +103,12 @@ Match · ATS · Tailor · Radar · Editais · GitHub
 Cada fluxo recebe apenas o contexto necessário. Evidências sensíveis são omitidas de providers externos por padrão, e conteúdo não confirmado não deve ser apresentado como fato seguro.
 
 ## Preview
+
+| Application Lab | Resume Studio |
+| --- | --- |
+| ![Início da preparação guiada](docs/assets/screenshots/sotuhire-v1.9.8-application-lab-start.png) | ![Editor e preview de variante](docs/assets/screenshots/sotuhire-v1.9.8-resume-studio.png) |
+
+[Ver GIF da jornada completa](docs/assets/screenshots/sotuhire-v1.9.8-guided-application-walkthrough.gif) e [galeria de telas da v1.9.8](docs/releases/v1.9.8.md).
 
 ![Visão geral do produto SotuHire](docs/assets/screenshots/sotuhire-web-product-walkthrough.gif)
 
@@ -262,6 +274,7 @@ Os traces usam retenção configurável e, por padrão, não armazenam inputs ne
 - permite exportar/importar a fila sem incluir chaves;
 - usa handshake para informar versões, capacidades e compatibilidade;
 - consulta apenas um resumo seguro do Perfil/Career Context;
+- oferece **Preparar candidatura** e abre o Lab somente com IDs de captura/snapshot;
 - funciona com Local Companion mesmo quando o frontend está fechado.
 
 Para análise GitHub, é possível usar processamento local, a IA configurada no SotuHire, Gemini próprio ou OpenAI próprio. A chave própria fica em sessão por padrão; persistência no cofre IndexedDB do service worker exige consentimento. Ela nunca usa `chrome.storage.sync`, não entra no content script ou na página e pode ser removida a qualquer momento.
@@ -309,6 +322,9 @@ O SotuHire não realiza auto-apply, candidatura automática, inscrição automá
 - [Repositories e persistência](docs/02-architecture/storage-repository-architecture.md)
 - [Schema SQLite e migrações](docs/02-architecture/sqlite-schema-and-migrations.md)
 - [Snapshots de candidatura](docs/02-architecture/application-snapshots.md)
+- [Application Lab](docs/02-architecture/application-lab.md)
+- [Resume Studio](docs/02-architecture/resume-studio.md)
+- [Confiabilidade de providers](docs/02-architecture/provider-reliability.md)
 - [Backup, restore e data health](docs/02-architecture/backup-restore-and-data-health.md)
 - [Orquestração de IA](docs/04-ai/ai-orchestration-and-confidence.md)
 - [Extensão e Perfil](docs/02-architecture/extension-profile-bridge.md)
@@ -346,4 +362,4 @@ Distribuído sob a [Apache License 2.0](LICENSE).
 
 ---
 
-Release atual: [v1.9.7](https://github.com/Soturine/SotuHire/releases/tag/v1.9.7) · [Notas da release](docs/releases/v1.9.7.md) · [Tag](https://github.com/Soturine/SotuHire/tree/v1.9.7)
+Release atual: [v1.9.8](https://github.com/Soturine/SotuHire/releases/tag/v1.9.8) · [Notas da release](docs/releases/v1.9.8.md) · [Tag](https://github.com/Soturine/SotuHire/tree/v1.9.8)

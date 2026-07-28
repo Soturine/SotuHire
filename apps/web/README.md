@@ -1,6 +1,6 @@
 ﻿# SotuHire Web
 
-Frontend moderno do SotuHire em `apps/web` para a versão `v1.9.2`.
+Frontend moderno do SotuHire em `apps/web` para a versão `v1.9.8`.
 
 ## Stack
 
@@ -102,6 +102,8 @@ O modo Demo simula esses estados para demonstração visual: ele não cria, baix
 ## Telas
 
 - Home/Dashboard
+- Preparar candidatura / Application Lab
+- Resume Studio
 - Currículo
 - Vaga
 - Análise de Compatibilidade
@@ -116,6 +118,12 @@ O modo Demo simula esses estados para demonstração visual: ele não cria, baix
 - Fontes e Captura
 - Configurações
 - Privacidade, Data Health, Backup e Restauração
+
+## Application Lab e Resume Studio
+
+`/application-lab` percorre objetivo, evidências, mestre, vaga, análise, melhorias, variante, kit, plano e Tracker. O progresso usa `aria-live`, os estados são retomáveis e mudar entrada mostra o que será recalculado. `/resume-studio` edita variantes com autosave, undo/redo, reorder, preview A4/Letter, diff e JSON Resume. PDF/DOCX exibem pendência real.
+
+O modo Demo usa apenas fixtures fictícias. No modo API Real, as rotas consomem `/api/v1/application-lab/*` e `/api/v1/resume-studio/*`; nenhuma regra do score é recalculada no React.
 
 ## IA e Providers
 
@@ -193,7 +201,7 @@ A tela **Fontes e Captura** inclui importadores, Caixa de Entrada, Diretório de
 - exige confirmação de uso autorizado antes de coletar;
 - chama `/api/v1/sources/authenticated-browser/*` no modo API Real.
 
-O painel **Extensão Local** consulta `/api/v1/extension/status`, `/api/v1/extension/captures` e `/api/v1/extension/context`. Ele mostra capturas salvas pela Local Companion API, permite enviar para Vaga/Editais/GitHub/Candidaturas e gera candidatos revisáveis para o Perfil.
+O painel **Extensão Local** consulta `/api/v1/extension/status`, `/api/v1/extension/captures` e `/api/v1/extension/context`. Ele mostra capturas salvas pela Local Companion API, permite enviar para Vaga/Editais/GitHub/Candidaturas, abrir o Application Lab e gerar candidatos revisáveis para o Perfil.
 
 Capturas com `kind=public_exam` podem abrir `/public-exams?capture_id=...` e virar rascunho revisável. O frontend não expõe API key nem recebe Perfil completo da extensão.
 

@@ -38,3 +38,7 @@ Por padrão, `ai_trace_store_inputs=false`, `ai_trace_store_outputs=false` e `ai
 ## Limites
 
 O sistema não declara vencedor de provider com amostra insuficiente, não infere causalidade a partir do Tracker, não altera Perfil/pesos automaticamente e funciona sem provider externo por meio de fallback determinístico explícito.
+
+## Confiabilidade v1.9.8
+
+O runner separa diagnóstico, structured output e release-smoke. `ProviderError` fornece categorias equivalentes entre adapters; métricas incluem bloqueio de conta, retry, repair, timeout e request ID sanitizado. Suites de provider não aplicam fallback para mascarar falha; fluxos de produto aplicam fallback local e o registram explicitamente.
