@@ -41,6 +41,13 @@ class ApplicationRecord(BaseModel):
     follow_up_at: datetime | None = None
     outcome: str = ""
     outcome_reason: str = ""
+    application_lab_session_id: str = ""
+    readiness_report_id: str = ""
+    resume_variant_id: str = ""
+    application_kit_id: str = ""
+    action_plan_id: str = ""
+    lab_analysis_snapshot_id: str = ""
+    application_kit_snapshot_id: str = ""
     payload: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
@@ -79,9 +86,13 @@ class ApplicationRepository:
                  match_analysis_snapshot_id, ats_analysis_snapshot_id, source_capture_id,
                  job_title, organization, source_url, status, applied_at, stage_history,
                  contact_history, interview_notes, follow_up_at, outcome, outcome_reason,
-                 payload, created_at, updated_at)
+                 application_lab_session_id, readiness_report_id, resume_variant_id,
+                 application_kit_id, action_plan_id, lab_analysis_snapshot_id,
+                 application_kit_snapshot_id, payload, created_at, updated_at)
                 VALUES (?, NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''),
-                        NULLIF(?, ''), NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        NULLIF(?, ''), NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                        NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''),
+                        NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     job_snapshot_id=excluded.job_snapshot_id,
                     resume_snapshot_id=excluded.resume_snapshot_id,
@@ -100,6 +111,13 @@ class ApplicationRepository:
                     follow_up_at=excluded.follow_up_at,
                     outcome=excluded.outcome,
                     outcome_reason=excluded.outcome_reason,
+                    application_lab_session_id=excluded.application_lab_session_id,
+                    readiness_report_id=excluded.readiness_report_id,
+                    resume_variant_id=excluded.resume_variant_id,
+                    application_kit_id=excluded.application_kit_id,
+                    action_plan_id=excluded.action_plan_id,
+                    lab_analysis_snapshot_id=excluded.lab_analysis_snapshot_id,
+                    application_kit_snapshot_id=excluded.application_kit_snapshot_id,
                     payload=excluded.payload,
                     updated_at=excluded.updated_at""",
                 (
@@ -121,6 +139,13 @@ class ApplicationRepository:
                     record.follow_up_at.isoformat() if record.follow_up_at else None,
                     record.outcome,
                     record.outcome_reason,
+                    record.application_lab_session_id,
+                    record.readiness_report_id,
+                    record.resume_variant_id,
+                    record.application_kit_id,
+                    record.action_plan_id,
+                    record.lab_analysis_snapshot_id,
+                    record.application_kit_snapshot_id,
                     _json(record.payload),
                     record.created_at.isoformat(),
                     record.updated_at.isoformat(),
@@ -182,6 +207,13 @@ def _from_row(row: Any) -> ApplicationRecord:
         follow_up_at=row["follow_up_at"],
         outcome=row["outcome"],
         outcome_reason=row["outcome_reason"],
+        application_lab_session_id=row["application_lab_session_id"] or "",
+        readiness_report_id=row["readiness_report_id"] or "",
+        resume_variant_id=row["resume_variant_id"] or "",
+        application_kit_id=row["application_kit_id"] or "",
+        action_plan_id=row["action_plan_id"] or "",
+        lab_analysis_snapshot_id=row["lab_analysis_snapshot_id"] or "",
+        application_kit_snapshot_id=row["application_kit_snapshot_id"] or "",
         payload=_load(row["payload"], {}),
         created_at=row["created_at"],
         updated_at=row["updated_at"],

@@ -43,6 +43,8 @@ class JobTracker:
         resume_variant_id: str = "master",
         source_capture_id: str = "",
         trace: dict[str, Any] | None = None,
+        existing_job_snapshot_id: str = "",
+        existing_resume_snapshot_id: str = "",
     ) -> StoredAnalysis:
         """Store a reviewed analysis without raw resume or vacancy text."""
         existing = self._find_duplicate(job_title, company, source_url)
@@ -92,6 +94,8 @@ class JobTracker:
                 profile_id=profile_id,
                 resume_variant_id=resume_variant_id,
                 trace=trace,
+                existing_job_snapshot_id=existing_job_snapshot_id,
+                existing_resume_snapshot_id=existing_resume_snapshot_id,
             )
             self.memory.remember_analysis(
                 analysis,
@@ -132,6 +136,8 @@ class JobTracker:
             profile_id=profile_id,
             resume_variant_id=resume_variant_id,
             trace=trace,
+            existing_job_snapshot_id=existing_job_snapshot_id,
+            existing_resume_snapshot_id=existing_resume_snapshot_id,
         )
         self.memory.remember_analysis(
             analysis,
@@ -283,30 +289,40 @@ class JobTracker:
         profile_id: str = "default",
         resume_variant_id: str = "master",
         trace: dict[str, Any] | None = None,
+        existing_job_snapshot_id: str = "",
+        existing_resume_snapshot_id: str = "",
     ) -> StoredAnalysis:
         """Link the mutable tracker card to immutable evidence snapshots."""
         database = self.store.path.parent / "sotuhire.db"
         snapshots = SnapshotStore(database)
-        job_snapshot = snapshots.create_job(
-            JobSnapshot(
-                opportunity_id=record.id,
-                title=record.job_title,
-                organization=record.company,
-                location=record.modality,
-                description=job_text or record.notes,
-                source_url=record.source_url,
-                source_refs=record.source_urls,
-                source_kind=record.collection_method,
-                raw_text=job_text,
-                structured_data={
-                    "requirements": record.requirements,
-                    "seniority": record.seniority,
-                    "modality": record.modality,
-                },
-            )
+        job_snapshot = (
+            snapshots.get_job(existing_job_snapshot_id) if existing_job_snapshot_id else None
         )
-        resume_snapshot = None
-        if resume_text.strip():
+        if job_snapshot is None:
+            job_snapshot = snapshots.create_job(
+                JobSnapshot(
+                    opportunity_id=record.id,
+                    title=record.job_title,
+                    organization=record.company,
+                    location=record.modality,
+                    description=job_text or record.notes,
+                    source_url=record.source_url,
+                    source_refs=record.source_urls,
+                    source_kind=record.collection_method,
+                    raw_text=job_text,
+                    structured_data={
+                        "requirements": record.requirements,
+                        "seniority": record.seniority,
+                        "modality": record.modality,
+                    },
+                )
+            )
+        resume_snapshot = (
+            snapshots.get_resume(existing_resume_snapshot_id)
+            if existing_resume_snapshot_id
+            else None
+        )
+        if resume_snapshot is None and resume_text.strip():
             resume_snapshot = snapshots.create_resume(
                 ResumeSnapshot(
                     profile_id=profile_id,

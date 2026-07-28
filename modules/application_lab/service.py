@@ -1,0 +1,667 @@
+"""Application Lab orchestration over existing context, snapshot and tracker engines."""
+
+from __future__ import annotations
+
+from copy import deepcopy
+from datetime import timedelta
+from pathlib import Path
+from typing import Any, Literal
+from uuid import uuid4
+
+from modules.application_lab.export import resume_plain_text
+from modules.application_lab.models import (
+    ActionPlanItem,
+    ApplicationActionPlan,
+    ApplicationKit,
+    ApplicationKitItem,
+    ApplicationLabSession,
+    ApplicationLabStatus,
+    ApplicationReadinessReport,
+    ApplicationSuggestion,
+    MasterResume,
+    ResumeVariant,
+    ResumeVariantChange,
+    SuggestionStatus,
+    utc_now,
+)
+from modules.application_lab.readiness import build_readiness_report
+from modules.application_lab.repository import ApplicationLabRepository
+from modules.context import CareerContextEngine, CareerContextPurpose
+from modules.schemas.job_analysis import JobAnalysisSchema
+from modules.storage.applications import ApplicationRepository
+from modules.storage.local_store import LocalStore
+from modules.storage.snapshots import AnalysisSnapshot, JobSnapshot, ResumeSnapshot, SnapshotStore
+from modules.tracker.job_tracker import JobTracker
+
+ReviewAction = Literal["accepted", "edited", "rejected", "pending"]
+
+
+class ApplicationLabService:
+    """Coordinate a resumable, human-approved application workflow."""
+
+    def __init__(
+        self,
+        database_path: str | Path | None = None,
+        *,
+        repository: ApplicationLabRepository | None = None,
+        context_engine: CareerContextEngine | None = None,
+        tracker: JobTracker | None = None,
+    ) -> None:
+        self.repository = repository or ApplicationLabRepository(database_path)
+        self.database_path = self.repository.database_path
+        self.snapshots = SnapshotStore(self.database_path)
+        self.context_engine = context_engine or CareerContextEngine()
+        self.tracker = tracker or JobTracker(
+            LocalStore(self.database_path.parent / "sotuhire-history.json")
+        )
+        self.applications = ApplicationRepository(self.database_path)
+
+    def create_session(self, session: ApplicationLabSession) -> ApplicationLabSession:
+        """Create a draft session after validating any supplied relational links."""
+        if session.master_resume_id:
+            self._master(session.master_resume_id)
+        if session.job_snapshot_id:
+            self._job(session.job_snapshot_id)
+        ready = bool(session.master_resume_id and session.job_snapshot_id)
+        prepared = session.model_copy(
+            update={
+                "status": ApplicationLabStatus.READY if ready else ApplicationLabStatus.DRAFT,
+                "current_step": max(session.current_step, 5 if ready else 1),
+                "updated_at": utc_now(),
+            }
+        )
+        return self.repository.save_session(prepared)
+
+    def update_session(self, session_id: str, changes: dict[str, Any]) -> ApplicationLabSession:
+        """Update inputs and invalidate only their dependent workflow steps."""
+        current = self._session(session_id)
+        allowed = {
+            "profile_id",
+            "master_resume_id",
+            "job_id",
+            "job_snapshot_id",
+            "current_step",
+            "selected_context_refs",
+            "status",
+        }
+        update = {
+            key: value for key, value in changes.items() if key in allowed and value is not None
+        }
+        if "master_resume_id" in update and update["master_resume_id"]:
+            self._master(str(update["master_resume_id"]))
+        if "job_snapshot_id" in update and update["job_snapshot_id"]:
+            self._job(str(update["job_snapshot_id"]))
+
+        inputs_changed = any(
+            key in update and update[key] != getattr(current, key)
+            for key in ("master_resume_id", "job_snapshot_id", "selected_context_refs")
+        )
+        if inputs_changed:
+            update.update(
+                {
+                    "readiness_report_id": "",
+                    "resume_variant_id": "",
+                    "application_kit_id": "",
+                    "action_plan_id": "",
+                    "tracker_application_id": "",
+                    "analysis_run_ids": [],
+                    "invalidated_steps": list(range(5, 11)),
+                    "status": ApplicationLabStatus.READY,
+                }
+            )
+        update["updated_at"] = utc_now()
+        return self.repository.save_session(current.model_copy(update=update))
+
+    def cancel_session(self, session_id: str) -> ApplicationLabSession:
+        current = self._session(session_id)
+        return self.repository.save_session(
+            current.model_copy(
+                update={
+                    "status": ApplicationLabStatus.CANCELLED,
+                    "updated_at": utc_now(),
+                }
+            )
+        )
+
+    def analyze(
+        self, session_id: str
+    ) -> tuple[ApplicationReadinessReport, list[ApplicationSuggestion], AnalysisSnapshot]:
+        """Run deterministic readiness and save its exact evidence snapshot."""
+        session = self._session(session_id)
+        if session.status is ApplicationLabStatus.CANCELLED:
+            raise ValueError("Sessão cancelada; reative-a antes de analisar.")
+        master = self._master(session.master_resume_id)
+        job = self._job(session.job_snapshot_id)
+        self.repository.save_session(
+            session.model_copy(
+                update={"status": ApplicationLabStatus.ANALYZING, "updated_at": utc_now()}
+            )
+        )
+        try:
+            context = self.context_engine.build(
+                CareerContextPurpose.MATCH,
+                query=f"{job.title} {job.description}",
+                include_memory=False,
+                include_tracker=False,
+                include_sources=False,
+                include_extension=False,
+                include_github=False,
+                max_evidence=20,
+            )
+            base_report = build_readiness_report(session_id, master, job)
+            resume_snapshot = self._resume_snapshot(master)
+            snapshot = self.snapshots.create_analysis(
+                AnalysisSnapshot(
+                    analysis_type="application_readiness",
+                    job_snapshot_id=job.snapshot_id,
+                    resume_snapshot_id=resume_snapshot.snapshot_id,
+                    prompt_id="application_readiness_rules_v1",
+                    prompt_version="1.0.0",
+                    result=base_report.model_dump(mode="json"),
+                    evidence_used=base_report.evidence_used,
+                    source_refs=list(dict.fromkeys([*master.source_refs, *job.source_refs])),
+                )
+            )
+            report = base_report.model_copy(
+                update={
+                    "provider_metadata": {
+                        **base_report.provider_metadata,
+                        "analysis_snapshot_id": snapshot.snapshot_id,
+                        "context_evidence_count": len(context.evidence),
+                        "context_warnings": context.warnings,
+                    }
+                }
+            )
+            self.repository.save_report(report)
+            suggestions = self._suggestions(session, master, report)
+            self.repository.replace_pending_suggestions(session_id, suggestions)
+            refreshed = self._session(session_id)
+            completed = refreshed.model_copy(
+                update={
+                    "status": ApplicationLabStatus.REVIEW,
+                    "current_step": 6,
+                    "readiness_report_id": report.report_id,
+                    "analysis_run_ids": [
+                        *refreshed.analysis_run_ids,
+                        snapshot.snapshot_id,
+                    ],
+                    "invalidated_steps": [step for step in refreshed.invalidated_steps if step < 5],
+                    "warnings": list(dict.fromkeys([*refreshed.warnings, *context.warnings])),
+                    "updated_at": utc_now(),
+                }
+            )
+            self.repository.save_session(completed)
+            return report, self.repository.list_suggestions(session_id), snapshot
+        except Exception as exc:
+            failed = self._session(session_id).model_copy(
+                update={
+                    "status": ApplicationLabStatus.FAILED,
+                    "warnings": [
+                        *session.warnings,
+                        "A análise falhou sem alterar sugestões já revisadas.",
+                    ],
+                    "updated_at": utc_now(),
+                }
+            )
+            self.repository.save_session(failed)
+            raise ValueError(f"Não foi possível concluir a análise: {exc}") from exc
+
+    def review_suggestion(
+        self,
+        session_id: str,
+        suggestion_id: str,
+        action: ReviewAction,
+        *,
+        edited_value: str = "",
+    ) -> ApplicationSuggestion:
+        """Apply a review decision without mutating any resume."""
+        self._session(session_id)
+        item = self.repository.get_suggestion(suggestion_id)
+        if item is None or item.session_id != session_id:
+            raise LookupError("Sugestão não encontrada nesta sessão.")
+        if action == "edited" and not edited_value.strip():
+            raise ValueError("Informe o texto revisado antes de aceitar a edição.")
+        selected_text = edited_value if action == "edited" else item.after
+        if action in {"accepted", "edited"} and selected_text.strip() and not item.evidence_used:
+            raise ValueError("Afirmações sem evidência não podem ser aceitas.")
+        reviewed = self.repository.review_suggestion(
+            suggestion_id,
+            SuggestionStatus(action),
+            edited_value=edited_value.strip() if action == "edited" else "",
+        )
+        if reviewed is None:
+            raise LookupError("Sugestão não encontrada.")
+        return reviewed
+
+    def create_variant(self, session_id: str, *, title: str = "") -> ResumeVariant:
+        """Create a copy-on-write variant from explicitly accepted suggestions."""
+        session = self._session(session_id)
+        master = self._master(session.master_resume_id)
+        job = self._job(session.job_snapshot_id)
+        sections = deepcopy(master.sections)
+        changes: list[ResumeVariantChange] = []
+        warnings: list[str] = []
+        for suggestion in self.repository.list_suggestions(session_id):
+            if suggestion.status not in {SuggestionStatus.ACCEPTED, SuggestionStatus.EDITED}:
+                continue
+            after = (
+                suggestion.edited_value
+                if suggestion.status is SuggestionStatus.EDITED
+                else suggestion.after
+            ).strip()
+            if not after:
+                warnings.append(f"Sugestão {suggestion.suggestion_id} não contém texto aplicável.")
+                continue
+            applied = _replace_in_sections(sections, suggestion.before, after)
+            if not applied:
+                warnings.append(
+                    f"Sugestão {suggestion.suggestion_id} preservada no diff, mas o texto-base mudou."
+                )
+            changes.append(
+                ResumeVariantChange(
+                    change_type="edited" if suggestion.before else "added",
+                    section=suggestion.section,
+                    before=suggestion.before,
+                    after=after,
+                    reason=suggestion.reason,
+                    evidence_used=suggestion.evidence_used,
+                    source_refs=suggestion.source_refs,
+                    warning=""
+                    if applied
+                    else "Texto-base não localizado; revisão manual necessária.",
+                )
+            )
+        variant = ResumeVariant(
+            resume_variant_id=session.resume_variant_id or uuid4().hex,
+            master_resume_id=master.master_resume_id,
+            job_snapshot_id=job.snapshot_id,
+            title=title.strip() or f"{master.title} — {job.title or 'vaga'}",
+            target_role=job.title,
+            sections=sections,
+            source_profile_item_ids=master.source_profile_item_ids,
+            change_set=changes,
+            validation_warnings=warnings,
+        )
+        saved = self.repository.save_variant(variant)
+        self.repository.save_session(
+            session.model_copy(
+                update={
+                    "resume_variant_id": saved.resume_variant_id,
+                    "current_step": 8,
+                    "invalidated_steps": [step for step in session.invalidated_steps if step < 7],
+                    "updated_at": utc_now(),
+                }
+            )
+        )
+        return saved
+
+    def create_kit(self, session_id: str) -> tuple[ApplicationKit, AnalysisSnapshot]:
+        """Build an evidence-linked draft kit; every item still requires review."""
+        session = self._session(session_id)
+        master = self._master(session.master_resume_id)
+        job = self._job(session.job_snapshot_id)
+        variant = (
+            self.repository.get_variant(session.resume_variant_id)
+            if session.resume_variant_id
+            else None
+        )
+        evidence: list[str | dict[str, Any]] = list(dict.fromkeys(master.source_refs))
+        job_evidence: list[str | dict[str, Any]] = list(job.source_refs)
+        items: list[ApplicationKitItem] = []
+        if master.summary.strip():
+            items.append(
+                ApplicationKitItem(
+                    type="professional_summary",
+                    content=master.summary,
+                    evidence_used=evidence,
+                    warnings=[]
+                    if evidence
+                    else ["Resumo sem referência de origem; revise antes de usar."],
+                )
+            )
+        items.append(
+            ApplicationKitItem(
+                type="short_form_text",
+                content=f"Candidatura para {job.title} em {job.organization}".strip(),
+                evidence_used=job_evidence,
+                warnings=["Texto factual mínimo; personalize antes de copiar."],
+            )
+        )
+        kit = ApplicationKit(
+            application_kit_id=session.application_kit_id or uuid4().hex,
+            session_id=session_id,
+            items=items,
+            warnings=["Nenhum item é enviado automaticamente."],
+        )
+        saved = self.repository.save_kit(kit)
+        resume_snapshot = self._resume_snapshot(variant or master)
+        snapshot = self.snapshots.create_analysis(
+            AnalysisSnapshot(
+                analysis_type="application_kit",
+                job_snapshot_id=job.snapshot_id,
+                resume_snapshot_id=resume_snapshot.snapshot_id,
+                prompt_id="application_kit_local_v1",
+                prompt_version="1.0.0",
+                result=saved.model_dump(mode="json"),
+                evidence_used=[item for entry in saved.items for item in entry.evidence_used],
+                source_refs=list(dict.fromkeys([*master.source_refs, *job.source_refs])),
+            )
+        )
+        refreshed = self._session(session_id)
+        self.repository.save_session(
+            refreshed.model_copy(
+                update={
+                    "application_kit_id": saved.application_kit_id,
+                    "current_step": 9,
+                    "analysis_run_ids": [*refreshed.analysis_run_ids, snapshot.snapshot_id],
+                    "updated_at": utc_now(),
+                }
+            )
+        )
+        return saved, snapshot
+
+    def create_action_plan(
+        self, session_id: str, *, period_days: Literal[7, 14, 30] = 7
+    ) -> ApplicationActionPlan:
+        session = self._session(session_id)
+        report = self.repository.get_report(session_id=session_id)
+        if report is None:
+            raise ValueError("Execute a análise antes de criar o plano de ação.")
+        gaps = report.top_blockers or report.recommended_edits
+        now = utc_now()
+        plan = ApplicationActionPlan(
+            action_plan_id=session.action_plan_id or uuid4().hex,
+            session_id=session_id,
+            period_days=period_days,
+            items=[
+                ActionPlanItem(
+                    title=gap,
+                    reason="Gap priorizado pelo relatório determinístico de prontidão.",
+                    priority="high" if index < 2 else "medium",
+                    due_at=now
+                    + timedelta(days=max(1, round(period_days * (index + 1) / max(1, len(gaps))))),
+                    related_gap=gap,
+                    related_evidence=report.evidence_used,
+                    estimated_effort="30–60 min",
+                )
+                for index, gap in enumerate(gaps[:8])
+            ],
+        )
+        saved = self.repository.save_action_plan(plan)
+        refreshed = self._session(session_id)
+        self.repository.save_session(
+            refreshed.model_copy(
+                update={
+                    "action_plan_id": saved.action_plan_id,
+                    "current_step": 10,
+                    "updated_at": utc_now(),
+                }
+            )
+        )
+        return saved
+
+    def save_to_tracker(
+        self,
+        session_id: str,
+        *,
+        privacy_acknowledged: bool,
+        source_capture_id: str = "",
+    ) -> str:
+        """Save one deduplicated tracker card linked to all Lab artifacts and snapshots."""
+        if not privacy_acknowledged:
+            raise ValueError("Confirme o aviso de privacidade antes de salvar no Tracker.")
+        session = self._session(session_id)
+        report = self.repository.get_report(session_id=session_id)
+        if report is None:
+            raise ValueError("Execute a análise antes de salvar no Tracker.")
+        master = self._master(session.master_resume_id)
+        job = self._job(session.job_snapshot_id)
+        variant = (
+            self.repository.get_variant(session.resume_variant_id)
+            if session.resume_variant_id
+            else None
+        )
+        resume = variant or master
+        resume_snapshot = self._resume_snapshot(resume)
+        requirements = _job_requirements(job.structured_data)
+        missing = [
+            item.removeprefix("Requisito sem evidência: ")
+            for item in report.top_blockers
+            if item.startswith("Requisito sem evidência: ")
+        ]
+        matched = [item for item in requirements if item not in missing]
+        resume_dimension = report.source_dimensions.get("resume")
+        resume_coverage = resume_dimension.coverage if resume_dimension is not None else 0
+        analysis = JobAnalysisSchema(
+            match_score=round(report.requirement_coverage * 100),
+            ats_score=round((resume_coverage or 0) * 100),
+            opportunity_fit_score=round(report.evidence_coverage * 100),
+            risk_score=min(100, len(report.unsupported_claim_risks) * 20),
+            recommendation=(
+                "apply_with_adjustments" if report.requirement_coverage >= 0.6 else "save_for_later"
+            ),
+            strengths=report.strengths,
+            gaps=report.top_blockers,
+            missing_keywords=missing,
+            analysis_version="match_engine_v2",
+            confidence_score=report.evidence_coverage,
+            evidence_score=round(report.evidence_coverage * 100),
+            matched_requirements=matched,
+            missing_requirements=missing,
+            critical_gaps=report.top_blockers,
+            evidence_used=[str(item) for item in report.evidence_used],
+            safe_actions=report.action_plan_preview,
+            resume_improvements=report.recommended_edits,
+            ats_present_keywords=matched,
+            ats_missing_without_evidence=missing,
+            score_reasoning=[report.score_explanation],
+        )
+        stored = self.tracker.add_analysis(
+            analysis,
+            job_title=job.title,
+            company=job.organization,
+            modality=job.location,
+            notes="Criado pelo Application Lab; revisar antes de qualquer candidatura.",
+            privacy_acknowledged=True,
+            source_url=job.source_url,
+            collection_method="browser_assisted_capture" if source_capture_id else "manual_url",
+            requirements=requirements,
+            profile_id=master.profile_id or "default",
+            resume_variant_id=variant.resume_variant_id if variant else master.master_resume_id,
+            source_capture_id=source_capture_id,
+            trace={
+                "provider_requested": "local",
+                "provider_used": "local",
+                "prompt_id": "application_readiness_rules_v1",
+                "prompt_version": "1.0.0",
+                "fallback_used": False,
+            },
+            existing_job_snapshot_id=job.snapshot_id,
+            existing_resume_snapshot_id=resume_snapshot.snapshot_id,
+        )
+        application = self.applications.get(stored.id)
+        if application is None:
+            raise RuntimeError("Tracker não persistiu o vínculo relacional esperado.")
+        lab_snapshot_id = str(report.provider_metadata.get("analysis_snapshot_id", ""))
+        kit_snapshot_id = _kit_snapshot_id(session.analysis_run_ids, self.snapshots)
+        self.applications.save(
+            application.model_copy(
+                update={
+                    "application_lab_session_id": session_id,
+                    "readiness_report_id": report.report_id,
+                    "resume_variant_id": session.resume_variant_id,
+                    "application_kit_id": session.application_kit_id,
+                    "action_plan_id": session.action_plan_id,
+                    "lab_analysis_snapshot_id": lab_snapshot_id,
+                    "application_kit_snapshot_id": kit_snapshot_id,
+                    "payload": {
+                        **application.payload,
+                        "application_lab": {
+                            "session_id": session_id,
+                            "readiness_score": report.readiness_score,
+                            "readiness_is_probability": False,
+                        },
+                    },
+                }
+            )
+        )
+        self.repository.save_session(
+            session.model_copy(
+                update={
+                    "tracker_application_id": stored.id,
+                    "status": ApplicationLabStatus.COMPLETED,
+                    "current_step": 10,
+                    "completed_at": utc_now(),
+                    "updated_at": utc_now(),
+                }
+            )
+        )
+        return stored.id
+
+    def _resume_snapshot(self, resume: MasterResume | ResumeVariant) -> ResumeSnapshot:
+        return self.snapshots.create_resume(
+            ResumeSnapshot(
+                profile_id=(resume.profile_id if isinstance(resume, MasterResume) else ""),
+                resume_variant_id=(
+                    resume.master_resume_id
+                    if isinstance(resume, MasterResume)
+                    else resume.resume_variant_id
+                ),
+                title=resume.title,
+                content=resume_plain_text(resume),
+                structured_sections={
+                    "sections": [item.model_dump(mode="json") for item in resume.sections]
+                },
+                source_profile_item_ids=resume.source_profile_item_ids,
+            )
+        )
+
+    def _suggestions(
+        self,
+        session: ApplicationLabSession,
+        master: MasterResume,
+        report: ApplicationReadinessReport,
+    ) -> list[ApplicationSuggestion]:
+        existing = self.repository.list_suggestions(session.session_id)
+        protected = [
+            item
+            for item in existing
+            if item.status in {SuggestionStatus.ACCEPTED, SuggestionStatus.EDITED}
+        ]
+        allowed_refs = set(session.selected_context_refs)
+        generated: list[ApplicationSuggestion] = []
+        for section in master.sections:
+            for entry in section.entries:
+                refs = entry.source_refs
+                if not entry.enabled or not entry.confirmed_by_user or not refs:
+                    continue
+                if allowed_refs and not allowed_refs.intersection(refs):
+                    continue
+                if (
+                    entry.title
+                    and entry.content
+                    and entry.title.casefold() not in entry.content.casefold()
+                ):
+                    suggestion_evidence: list[str | dict[str, Any]] = list(refs)
+                    generated.append(
+                        ApplicationSuggestion(
+                            session_id=session.session_id,
+                            suggestion_type="bullet",
+                            section=section.title,
+                            before=entry.content,
+                            after=f"{entry.title}: {entry.content}",
+                            reason="Tornar a evidência confirmada mais explícita sem acrescentar fatos.",
+                            evidence_used=suggestion_evidence,
+                            source_refs=refs,
+                        )
+                    )
+                if len(generated) >= 5:
+                    break
+            if len(generated) >= 5:
+                break
+        generated.extend(
+            ApplicationSuggestion(
+                session_id=session.session_id,
+                suggestion_type="coverage",
+                section="Prontidão",
+                reason=item,
+                warnings=["Requer texto e evidência confirmados pelo usuário."],
+            )
+            for item in report.recommended_edits[:5]
+        )
+        protected_keys = {(item.section, item.before, item.after) for item in protected}
+        return [
+            *protected,
+            *[
+                item
+                for item in generated
+                if (item.section, item.before, item.after) not in protected_keys
+            ],
+        ]
+
+    def _session(self, session_id: str) -> ApplicationLabSession:
+        session = self.repository.get_session(session_id)
+        if session is None:
+            raise LookupError("Sessão do Application Lab não encontrada.")
+        return session
+
+    def _master(self, master_resume_id: str) -> MasterResume:
+        if not master_resume_id:
+            raise ValueError("Selecione um Currículo Mestre.")
+        resume = self.repository.get_master_resume(master_resume_id)
+        if resume is None:
+            raise LookupError("Currículo Mestre não encontrado.")
+        return resume
+
+    def _job(self, snapshot_id: str) -> JobSnapshot:
+        if not snapshot_id:
+            raise ValueError("Selecione uma vaga antes de continuar.")
+        snapshot = self.snapshots.get_job(snapshot_id)
+        if snapshot is None:
+            raise LookupError("Snapshot da vaga não encontrado.")
+        return snapshot
+
+
+def _replace_in_sections(sections: list[Any], before: str, after: str) -> bool:
+    if not before:
+        return False
+    for section in sections:
+        if before in section.content:
+            section.content = section.content.replace(before, after, 1)
+            section.updated_at = utc_now()
+            return True
+        for entry in section.entries:
+            if before in entry.content:
+                entry.content = entry.content.replace(before, after, 1)
+                entry.updated_at = utc_now()
+                return True
+    return False
+
+
+def _job_requirements(data: dict[str, Any]) -> list[str]:
+    result: list[str] = []
+    for key in ("requirements", "required_skills", "mandatory_requirements", "qualifications"):
+        value = data.get(key)
+        if isinstance(value, list):
+            for item in value:
+                text = (
+                    item
+                    if isinstance(item, str)
+                    else str(item.get("name", ""))
+                    if isinstance(item, dict)
+                    else ""
+                )
+                if text.strip():
+                    result.append(text.strip())
+    return list(dict.fromkeys(result))
+
+
+def _kit_snapshot_id(snapshot_ids: list[str], snapshots: SnapshotStore) -> str:
+    for snapshot_id in reversed(snapshot_ids):
+        snapshot = snapshots.get_analysis(snapshot_id)
+        if snapshot is not None and snapshot.analysis_type == "application_kit":
+            return snapshot.snapshot_id
+    return ""
+
+
+__all__ = ["ApplicationLabService", "ReviewAction"]

@@ -39,6 +39,8 @@ class ApplicationLabRepository:
         )
 
     def save_master_resume(self, resume: MasterResume) -> MasterResume:
+        resume = resume.model_copy(deep=True)
+        _normalize_positions(resume.sections)
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
             if resume.profile_id:
@@ -171,6 +173,8 @@ class ApplicationLabRepository:
         )
 
     def save_variant(self, variant: ResumeVariant) -> ResumeVariant:
+        variant = variant.model_copy(deep=True)
+        _normalize_positions(variant.sections)
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
             connection.execute(
@@ -498,6 +502,19 @@ class ApplicationLabRepository:
                 )
         return suggestions
 
+    def replace_pending_suggestions(
+        self, session_id: str, suggestions: list[ApplicationSuggestion]
+    ) -> list[ApplicationSuggestion]:
+        """Replace only unreviewed drafts while preserving every human decision."""
+        ensure_database(self.database_path)
+        with connect_database(self.database_path) as connection:
+            connection.execute(
+                """DELETE FROM application_suggestions
+                WHERE session_id = ? AND status = 'pending'""",
+                (session_id,),
+            )
+        return self.save_suggestions(suggestions)
+
     def list_suggestions(self, session_id: str) -> list[ApplicationSuggestion]:
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
@@ -716,6 +733,13 @@ def _section_from_rows(section: Any, entries: list[Any]) -> ResumeSection:
         created_at=section["created_at"],
         updated_at=section["updated_at"],
     )
+
+
+def _normalize_positions(sections: list[ResumeSection]) -> None:
+    for section_position, section in enumerate(sections):
+        section.position = section_position
+        for entry_position, entry in enumerate(section.entries):
+            entry.position = entry_position
 
 
 def _variant_from_row(row: Any) -> ResumeVariant:
