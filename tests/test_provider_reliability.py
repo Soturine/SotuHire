@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
+from typing import cast
 
 import pytest
 from modules.ai.prompt_spec import PromptSpec
@@ -167,7 +168,10 @@ def test_openai_retries_only_retryable_error_and_records_metadata() -> None:
         sleeper=sleeps.append,
     )
 
-    result = provider.generate_structured(_prompt(), {"context": "fixture"})
+    result = cast(
+        _StructuredSample,
+        provider.generate_structured(_prompt(), {"context": "fixture"}),
+    )
 
     assert result.answer == "ok"
     assert calls == 2
@@ -225,7 +229,10 @@ def test_openai_repairs_invalid_schema_at_most_once() -> None:
         retry_policy=ProviderRetryPolicy(max_attempts=1),
     )
 
-    result = provider.generate_structured(_prompt(), {"context": "original-context"})
+    result = cast(
+        _StructuredSample,
+        provider.generate_structured(_prompt(), {"context": "original-context"}),
+    )
 
     assert result.answer == "repaired"
     assert len(bodies) == 2
@@ -298,7 +305,10 @@ def test_gemini_uses_native_pydantic_schema_and_records_response_metadata() -> N
         retry_policy=ProviderRetryPolicy(max_attempts=1),
     )
 
-    result = provider.generate_structured(_prompt(), {"context": "fixture"})
+    result = cast(
+        _StructuredSample,
+        provider.generate_structured(_prompt(), {"context": "fixture"}),
+    )
 
     assert result.answer == "ok"
     response_schema = payloads[0]["config"]["response_json_schema"]  # type: ignore[index]
@@ -333,7 +343,10 @@ def test_gemini_retries_transient_server_failure_then_repairs_once() -> None:
         sleeper=sleeps.append,
     )
 
-    result = provider.generate_structured(_prompt(), {"context": "fixture"})
+    result = cast(
+        _StructuredSample,
+        provider.generate_structured(_prompt(), {"context": "fixture"}),
+    )
 
     assert result.answer == "repaired"
     assert calls == 3
