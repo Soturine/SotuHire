@@ -395,7 +395,7 @@ function AiQualityPage() {
           </TabsContent>
 
           <TabsContent value="privacy">
-            <SectionCard title="Privacidade de traces" description="Default seguro da v1.9.7.">
+            <SectionCard title="Privacidade de traces" description="Default seguro da v1.9.8.">
               <div className="grid gap-4 sm:grid-cols-3">
                 <PrivacyItem title="Inputs completos" value="não armazenados" />
                 <PrivacyItem title="Outputs completos" value="não armazenados" />

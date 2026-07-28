@@ -50,7 +50,7 @@ def test_ai_quality_reads_the_dedicated_sanitized_benchmark_store(tmp_path, monk
     monkeypatch.setenv("SOTUHIRE_BENCHMARK_DATABASE", str(benchmark_database))
     AiBenchmarkStore(benchmark_database).save_run(
         AiBenchmark(
-            app_version="1.9.7",
+            app_version="1.9.8",
             suite="golden",
             providers=["local"],
             seed=197,

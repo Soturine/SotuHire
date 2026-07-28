@@ -4,6 +4,9 @@ from pathlib import Path
 def test_readme_is_atemporal_and_references_current_product_screenshots():
     readme = Path("README.md").read_text(encoding="utf-8")
     screenshots = [
+        Path("docs/assets/screenshots/sotuhire-v1.9.8-application-lab-start.png"),
+        Path("docs/assets/screenshots/sotuhire-v1.9.8-resume-studio.png"),
+        Path("docs/assets/screenshots/sotuhire-v1.9.8-guided-application-walkthrough.gif"),
         Path("docs/assets/screenshots/sotuhire-web-product-walkthrough.gif"),
         Path("docs/assets/screenshots/sotuhire-web-profile.png"),
         Path("docs/assets/screenshots/sotuhire-web-match.png"),
@@ -23,7 +26,7 @@ def test_readme_is_atemporal_and_references_current_product_screenshots():
         assert 10_000 < screenshot.stat().st_size < 2_000_000
     assert readme.count("docs/assets/screenshots/") == len(screenshots)
     assert "[CHANGELOG](CHANGELOG.md)" in readme
-    assert "release-v1.9.7" in readme
+    assert "release-v1.9.8" in readme
     assert "Frontend moderno v1.9.0" not in readme
     assert "API local v1.9.0" not in readme
     assert "Na v1.8.2" not in readme
@@ -46,7 +49,7 @@ def test_readme_is_atemporal_and_references_current_product_screenshots():
         "docs/06-engineering/security-privacy.md",
         "docs/09-testing/golden-datasets.md",
         "docs/05-data-sources/job-sources.md",
-        "docs/releases/v1.9.7.md",
+        "docs/releases/v1.9.8.md",
         "CHANGELOG.md",
         "browser-extension/README.md",
         "apps/web/README.md",
@@ -73,4 +76,5 @@ def test_readme_is_atemporal_and_references_current_product_screenshots():
         "## Licença",
     ]
     assert all(section in readme for section in required_sections)
-    assert readme.count("v1.9.7") == 6  # badge URL/text and technical footer links only
+    assert "v1.9.7" not in readme
+    assert readme.count("v1.9.8") >= 6

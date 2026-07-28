@@ -82,7 +82,7 @@ _DEFAULT_METRICS = (
 
 
 def default_ai_task_registry(prompts: PromptRegistry | None = None) -> AiTaskRegistry:
-    """Build the complete v1.9.7 task registry."""
+    """Build the complete v1.9.8 task registry."""
     if prompts is None:
         from modules.ai.prompt_loader import default_prompt_registry
 

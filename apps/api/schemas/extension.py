@@ -28,7 +28,7 @@ class ExtensionStatusResponse(BaseModel):
     ai_provider_status: str = "local"
     warnings: list[str] = Field(default_factory=list)
     extension_version: str = "0.9.4"
-    companion_version: str = "1.9.7"
+    companion_version: str = "1.9.8"
     api_version: str = "v1"
     compatible: bool = True
     capabilities: list[str] = Field(default_factory=list)
