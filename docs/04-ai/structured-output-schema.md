@@ -49,6 +49,7 @@ A Gemini API oferece suporte a saídas estruturadas, e a documentação oficial 
 from pydantic import BaseModel, Field
 from typing import Literal
 
+
 class MatchAnalysis(BaseModel):
     match_score: int = Field(ge=0, le=100)
     recommendation: Literal[

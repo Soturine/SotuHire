@@ -40,7 +40,7 @@ class PromptSpec:
     context_policy: str = "minimum_necessary"
     evaluation_suite: str = "golden"
     golden_cases: tuple[str, ...] = ()
-    failure_modes: tuple[str, ...] = (...)
+    failure_modes: tuple[str, ...] = ...
     providers_tested: tuple[str, ...] = ("local",)
     baseline_status: str = "pending"
 ```
@@ -49,14 +49,11 @@ class PromptSpec:
 
 ```python
 class PromptRegistry:
-    def get(self, prompt_id: str, version: str | None = None) -> PromptSpec:
-        ...
+    def get(self, prompt_id: str, version: str | None = None) -> PromptSpec: ...
 
-    def render_user_prompt(self, prompt_id: str, payload: dict) -> str:
-        ...
+    def render_user_prompt(self, prompt_id: str, payload: dict) -> str: ...
 
-    def output_schema(self, prompt_id: str, version: str | None = None) -> type[BaseModel]:
-        ...
+    def output_schema(self, prompt_id: str, version: str | None = None) -> type[BaseModel]: ...
 ```
 
 ## Prompts registrados inicialmente

@@ -77,8 +77,8 @@ Essa fronteira mantém custo, privacidade e falhas de rede fora do caminho crít
 O `GeminiProvider` usa o SDK opcional `google-genai` e configura:
 
 ```python
-response_mime_type="application/json"
-response_schema=JobAnalysisSchema
+response_mime_type = "application/json"
+response_schema = JobAnalysisSchema
 ```
 
 O provider valida `response.parsed` ou o JSON retornado com Pydantic. Sem `GEMINI_API_KEY` ou sem o SDK opcional, `analyze_structured()` retorna o resultado local e informa que houve fallback.

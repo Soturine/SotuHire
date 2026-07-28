@@ -16,11 +16,9 @@ Isso evita espalhar lógica de scraping pela aplicação inteira.
 class JobSourceConnector:
     name: str
 
-    def search(self, query: JobSearchQuery) -> list[RawJob]:
-        ...
+    def search(self, query: JobSearchQuery) -> list[RawJob]: ...
 
-    def normalize(self, raw_job: RawJob) -> NormalizedJob:
-        ...
+    def normalize(self, raw_job: RawJob) -> NormalizedJob: ...
 ```
 
 ## Tipos de fonte
@@ -305,11 +303,9 @@ class JobSourceConnector:
     source_name: str
     access_mode: str
 
-    def search(self, query: JobSearchQuery) -> list[JobPosting]:
-        ...
+    def search(self, query: JobSearchQuery) -> list[JobPosting]: ...
 
-    def parse(self, raw: str) -> list[JobPosting]:
-        ...
+    def parse(self, raw: str) -> list[JobPosting]: ...
 ```
 
 ## Conectores planejados

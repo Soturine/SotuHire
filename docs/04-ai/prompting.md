@@ -43,8 +43,7 @@ Regras:
 Evite um prompt gigante no meio do `app.py`. Use funções:
 
 ```python
-def build_match_prompt(cv_text: str, job_description: str) -> str:
-    ...
+def build_match_prompt(cv_text: str, job_description: str) -> str: ...
 ```
 
 Ou separe:

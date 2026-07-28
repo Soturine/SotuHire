@@ -169,8 +169,9 @@ Interface conceitual:
 
 ```python
 class AIProvider:
-    def generate_structured(self, prompt_id: str, payload: dict, schema: type[BaseModel]) -> BaseModel:
-        ...
+    def generate_structured(
+        self, prompt_id: str, payload: dict, schema: type[BaseModel]
+    ) -> BaseModel: ...
 ```
 
 Provedores possíveis:
