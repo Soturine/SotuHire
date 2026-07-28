@@ -392,6 +392,23 @@ async function analyzeCurrentProject() {
   display(payload);
 }
 
+async function prepareApplication() {
+  const { capture } = await extract();
+  const saved = await sendOrQueue("/capture/job", capture, "Vaga para o Application Lab");
+  if (!saved.capture_id || !saved.snapshot_id) {
+    throw new Error("O Companion não devolveu os identificadores seguros da vaga.");
+  }
+  const target = new URL("/application-lab", saved.app_url || "http://127.0.0.1:5173");
+  target.searchParams.set("novo", "1");
+  target.searchParams.set("capture_id", saved.capture_id);
+  target.searchParams.set("job_snapshot_id", saved.snapshot_id);
+  await chrome.tabs.create({ url: target.toString() });
+  return {
+    message:
+      "Application Lab aberto com capture_id e job_snapshot_id. O Perfil completo não saiu do SotuHire.",
+  };
+}
+
 const act = async (action) => {
   showResult("Processando…", "Coletando somente os dados necessários.", "…");
   try {
@@ -494,6 +511,7 @@ const act = async (action) => {
         await sendOrQueue(paths[action], project, "Projeto público"),
       );
     }
+    if (action === "prepare-application") return display(await prepareApplication());
     const { capture } = await extract();
     if (action === "copy") {
       await navigator.clipboard.writeText(capture.visible_text);

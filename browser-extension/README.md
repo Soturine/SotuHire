@@ -85,7 +85,7 @@ revisão humana.
 5. Fixe o SotuHire na barra do navegador, se desejar.
 
 Para testar um ZIP gerado pelo projeto, extraia-o primeiro e carregue a pasta resultante. O arquivo
-`manifest.json` informa a versão instalada; a implementação atual usa a linha `0.9.3`.
+`manifest.json` informa a versão instalada; a implementação atual usa a linha `0.9.4`.
 
 ### Iniciar a integração local
 
@@ -162,7 +162,7 @@ O popup envia sua versão ao endpoint `POST /handshake` da Local Companion. A re
 
 ```json
 {
-  "extension_version": "0.9.3",
+  "extension_version": "0.9.4",
   "companion_version": "1.9.7",
   "api_version": "v1",
   "capabilities": [],

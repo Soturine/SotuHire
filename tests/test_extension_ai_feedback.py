@@ -27,9 +27,9 @@ def test_extension_feedback_requires_a_persisted_trace_and_uses_safe_fields() ->
     )
 
 
-def test_extension_feedback_version_is_093() -> None:
+def test_extension_feedback_version_is_094() -> None:
     manifest = (ROOT / "browser-extension" / "manifest.json").read_text(encoding="utf-8")
     popup = (ROOT / "browser-extension" / "popup.html").read_text(encoding="utf-8")
 
-    assert '"version": "0.9.3"' in manifest
-    assert "v0.9.3" in popup
+    assert '"version": "0.9.4"' in manifest
+    assert "v0.9.4" in popup

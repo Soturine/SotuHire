@@ -13,7 +13,7 @@ def test_release_versions_are_aligned_and_extension_is_independent():
     manifest = json.loads(_read("browser-extension/manifest.json"))
     web_package = json.loads(_read("apps/web/package.json"))
 
-    assert manifest["version"] == "0.9.3"
+    assert manifest["version"] == "0.9.4"
     assert web_package["version"] == "1.9.7"
     assert 'version = "1.9.7"' in _read("pyproject.toml")
     assert 'API_VERSION = "1.9.7"' in _read("apps/api/config.py")

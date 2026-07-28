@@ -6,7 +6,7 @@ APP_VERSION = "1.9.7"
 COMPANION_VERSION = "1.9.7"
 API_VERSION = "v1"
 MIN_SUPPORTED_EXTENSION_VERSION = "0.9.1"
-MAX_TESTED_EXTENSION_VERSION = "0.9.3"
+MAX_TESTED_EXTENSION_VERSION = "0.9.4"
 MIN_SUPPORTED_COMPANION_VERSION = "1.9.5"
 EXTENSION_CAPABILITIES = [
     "capture.job",
@@ -19,6 +19,7 @@ EXTENSION_CAPABILITIES = [
     "ai.own_key",
     "ai.sotuhire_provider",
     "profile.review_candidates",
+    "application_lab.open",
 ]
 
 
