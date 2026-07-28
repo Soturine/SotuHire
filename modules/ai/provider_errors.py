@@ -88,7 +88,7 @@ class ProviderRetryPolicy(BaseModel):
 
     max_attempts: int = Field(default=2, ge=1, le=3)
     base_delay_seconds: float = Field(default=0.5, ge=0, le=30)
-    max_delay_seconds: float = Field(default=8.0, ge=0, le=120)
+    max_delay_seconds: float = Field(default=30.0, ge=0, le=120)
     jitter_ratio: float = Field(default=0.2, ge=0, le=1)
 
     def delay_seconds(
@@ -183,6 +183,7 @@ def classify_gemini_error(
         getattr(exception, "retry_after", None)
         or _header(getattr(exception, "headers", None), "retry-after")
     )
+    retry_after = retry_after if retry_after is not None else _retry_after_from_message(raw_message)
     if status in {401} or "unauthenticated" in lower or "api key not valid" in lower:
         category, retryable = ProviderErrorCategory.AUTHENTICATION, False
     elif status == 403 or "permission_denied" in lower:
@@ -190,7 +191,12 @@ def classify_gemini_error(
     elif status == 404 or "not_found" in lower:
         category, retryable = ProviderErrorCategory.MODEL_NOT_FOUND, False
     elif status == 429 or "resource_exhausted" in lower:
-        if any(token in lower for token in ("billing", "enable billing")):
+        if retry_after is not None:
+            category, retryable = ProviderErrorCategory.RATE_LIMIT, True
+        elif any(
+            token in lower
+            for token in ("billing_not_active", "billing is not active", "enable billing")
+        ):
             category, retryable = ProviderErrorCategory.BILLING_REQUIRED, False
         elif any(token in lower for token in ("per day", "daily", "quota")) and retry_after is None:
             category, retryable = ProviderErrorCategory.INSUFFICIENT_QUOTA, False
@@ -322,6 +328,11 @@ def _integer(value: object) -> int | None:
         return int(value) if value not in (None, "") else None
     except (TypeError, ValueError):
         return None
+
+
+def _retry_after_from_message(message: str) -> float | None:
+    match = re.search(r"(?i)(?:please\s+)?retry\s+in\s+([0-9]+(?:\.[0-9]+)?)\s*s", message)
+    return float(match.group(1)) if match else None
 
 
 __all__ = [

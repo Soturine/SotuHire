@@ -16,7 +16,7 @@ from modules.ai.provider_errors import (
     parse_retry_after,
     sanitize_provider_message,
 )
-from modules.ai.providers.gemini_provider import GeminiProvider
+from modules.ai.providers.gemini_provider import GeminiProvider, gemini_response_json_schema
 from modules.ai.providers.openai_provider import OpenAIProvider
 from modules.ai.schema_repair import (
     SchemaRepairError,
@@ -301,7 +301,9 @@ def test_gemini_uses_native_pydantic_schema_and_records_response_metadata() -> N
     result = provider.generate_structured(_prompt(), {"context": "fixture"})
 
     assert result.answer == "ok"
-    assert payloads[0]["config"]["response_schema"] is _StructuredSample  # type: ignore[index]
+    response_schema = payloads[0]["config"]["response_json_schema"]  # type: ignore[index]
+    assert response_schema["type"] == "object"  # type: ignore[index]
+    assert "additionalProperties" not in json.dumps(response_schema)
     assert provider.last_call_metadata["request_id"] == "gemini-safe-id"
     assert provider.last_call_metadata["finish_reason"] == "STOP"
     assert provider.last_call_metadata["total_tokens"] == 15
@@ -363,6 +365,17 @@ def test_gemini_safety_block_is_not_repaired_or_retried() -> None:
     assert calls == 1
 
 
+def test_gemini_schema_normalizer_removes_only_unsupported_annotations() -> None:
+    schema = gemini_response_json_schema(_StructuredSample)
+    serialized = json.dumps(schema)
+
+    assert schema["type"] == "object"
+    assert "answer" in schema["properties"]
+    assert "title" not in serialized
+    assert "default" not in serialized
+    assert "additionalProperties" not in serialized
+
+
 def test_gemini_server_and_quota_failures_are_distinct() -> None:
     server = classify_gemini_error(
         RuntimeError("503 UNAVAILABLE: model overloaded"),
@@ -380,13 +393,25 @@ def test_gemini_server_and_quota_failures_are_distinct() -> None:
     assert quota.category is ProviderErrorCategory.INSUFFICIENT_QUOTA
     assert not quota.retryable
 
+    temporary = classify_gemini_error(
+        RuntimeError(
+            "429 RESOURCE_EXHAUSTED: free_tier_requests limit; please retry in 10.25s; "
+            "check plan and billing details"
+        ),
+        model="gemini-2.5-flash",
+        max_attempts=2,
+    )
+    assert temporary.category is ProviderErrorCategory.RATE_LIMIT
+    assert temporary.retryable
+    assert temporary.retry_after_seconds == 10.25
+
 
 def test_provider_message_redacts_credentials_and_is_bounded() -> None:
     message = sanitize_provider_message(
-        "Authorization: Bearer sk-example-secret-token api_key=AIzaExampleSecretValue " + "x" * 600
+        "Authorization: Bearer sk-example123 api_key=AIzaExample12345 " + "x" * 600
     )
 
-    assert "sk-example" not in message
-    assert "AIzaExample" not in message
+    assert "sk-example123" not in message
+    assert "AIzaExample12345" not in message
     assert "[REDACTED]" in message
     assert len(message) <= 500

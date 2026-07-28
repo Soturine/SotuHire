@@ -76,6 +76,7 @@ class GeminiProvider(AIProvider):
             "response_json_schema": self.structured_response_schema(),
             "temperature": 0,
             "max_output_tokens": 8_192,
+            "thinking_config": {"thinking_budget": 0},
         }
         return JobAnalysisSchema.model_validate(
             self._generate_and_validate(contents, config, JobAnalysisSchema)
@@ -94,9 +95,10 @@ class GeminiProvider(AIProvider):
         )
         config: dict[str, Any] = {
             "response_mime_type": "application/json",
-            "response_schema": prompt.output_schema,
+            "response_json_schema": gemini_response_json_schema(prompt.output_schema),
             "temperature": prompt.temperature,
             "max_output_tokens": 8_192,
+            "thinking_config": {"thinking_budget": 0},
         }
         return self._generate_and_validate(contents, config, prompt.output_schema)
 
@@ -104,7 +106,11 @@ class GeminiProvider(AIProvider):
         """Run a minimal Gemini call with the same diagnostic and retry contract."""
         response = self._generate_request(
             "Responda apenas: ok",
-            {"temperature": 0, "max_output_tokens": 16},
+            {
+                "temperature": 0,
+                "max_output_tokens": 128,
+                "thinking_config": {"thinking_budget": 0},
+            },
         )
         text = _response_text(response).strip()
         if not text:
@@ -190,6 +196,7 @@ class GeminiProvider(AIProvider):
             raise ProviderCallError(error)
         retry_history: list[dict[str, Any]] = []
         for attempt in range(1, self.retry_policy.max_attempts + 1):
+            error_response: Any | None = None
             try:
                 response = self._execute_request(contents, config)
             except ProviderCallError as exc:
@@ -221,11 +228,13 @@ class GeminiProvider(AIProvider):
                     )
                     return response
                 error = problem
+                error_response = response
             retry_history.append(error.model_dump(mode="json"))
             if not error.retryable or attempt >= self.retry_policy.max_attempts:
                 self._record_call(
                     started_at,
                     started_monotonic,
+                    response=error_response,
                     provider_error=error,
                     attempt=attempt,
                     retry_history=retry_history,
@@ -516,3 +525,35 @@ def _integer(value: object) -> int | None:
         return int(value)
     except (TypeError, ValueError):
         return None
+
+
+def gemini_response_json_schema(schema: type[BaseModel]) -> dict[str, Any]:
+    """Return standard JSON Schema without keywords rejected by Gemini generation config."""
+    unsupported = {
+        "$schema",
+        "additionalProperties",
+        "default",
+        "deprecated",
+        "examples",
+        "readOnly",
+        "title",
+        "writeOnly",
+    }
+
+    def normalize(value: object) -> object:
+        if isinstance(value, dict):
+            normalized: dict[str, object] = {}
+            for key, nested in value.items():
+                if key in unsupported:
+                    continue
+                if key == "const":
+                    normalized["enum"] = [normalize(nested)]
+                    continue
+                normalized[key] = normalize(nested)
+            return normalized
+        if isinstance(value, list):
+            return [normalize(item) for item in value]
+        return value
+
+    result = normalize(schema.model_json_schema())
+    return result if isinstance(result, dict) else {}

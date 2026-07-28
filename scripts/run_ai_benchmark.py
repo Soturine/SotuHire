@@ -100,6 +100,11 @@ def main() -> int:
             _write_report(output_path, run, results)
             if result.get("status") == "BLOCKED_EXTERNAL_ACCOUNT":
                 break
+            if (
+                result.get("status") == "provider_error"
+                and result.get("error_category") == "RATE_LIMIT"
+            ):
+                break
     finished = datetime.now(UTC)
     run = run.model_copy(update={"finished_at": finished, "status": "completed"})
     store.save_run(run)
