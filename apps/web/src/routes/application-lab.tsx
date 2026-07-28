@@ -396,7 +396,7 @@ function LabStart({
 }) {
   return (
     <div className="mx-auto max-w-5xl space-y-6" data-testid="application-lab-start">
-      <div className="overflow-hidden rounded-3xl border bg-[var(--gradient-ink)] px-6 py-10 text-primary-foreground shadow-[var(--shadow-elevated)] sm:px-10">
+      <div className="overflow-hidden rounded-3xl border bg-[image:var(--gradient-ink)] px-6 py-10 text-primary-foreground shadow-[var(--shadow-elevated)] sm:px-10">
         <div className="grid gap-8 md:grid-cols-[1fr_280px] md:items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs">
@@ -983,7 +983,7 @@ function ReadinessReport({
   return (
     <div className="space-y-6" data-testid="readiness-report">
       <div className="grid gap-4 lg:grid-cols-[180px_1fr]">
-        <div className="grid place-items-center rounded-2xl bg-[var(--gradient-ink)] p-5 text-primary-foreground">
+        <div className="grid place-items-center rounded-2xl bg-[image:var(--gradient-ink)] p-5 text-primary-foreground">
           <span className="text-display text-5xl tabular-nums">{report.readiness_score}</span>
           <span className="mt-1 text-xs text-white/65">readiness / 100</span>
         </div>
