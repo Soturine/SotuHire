@@ -220,7 +220,7 @@ def match_requirement(
         confidence = min(0.98, max(item.confidence for item in matching) + 0.05)
         return RequirementMatch(
             requirement=requirement,
-            match_status="matched",
+            match_status="met",
             candidate_evidence=matching,
             evidence_source=matching[0].evidence_source,
             confidence=confidence,
@@ -240,6 +240,16 @@ def match_requirement(
             safe_action="Descrever a experiência relacionada sem afirmar domínio direto sem evidência.",
         )
 
+    if requirement.confidence < 0.55 or requirement.importance == "unclear":
+        return RequirementMatch(
+            requirement=requirement,
+            match_status="unknown",
+            candidate_evidence=[],
+            evidence_source="none",
+            confidence=min(0.5, max(0.1, requirement.confidence)),
+            gap_severity="none",
+            safe_action="Confirmar o requisito e buscar evidência antes de concluir o fit.",
+        )
     severity = _missing_gap_severity(requirement)
     return RequirementMatch(
         requirement=requirement,

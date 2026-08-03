@@ -81,7 +81,7 @@ def test_present_professional_license_increases_evidence_and_confidence() -> Non
     evidence = evidence_from_text("COREN ativo numero 12345", source="resume")
     match = match_requirement(requirement, evidence)
 
-    assert match.match_status == "matched"
+    assert match.match_status == "met"
     assert match.evidence_source == "resume"
     assert match.confidence >= 0.9
     assert match.candidate_evidence[0].category == "professional_license"

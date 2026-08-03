@@ -36,7 +36,7 @@ RequirementCategory = Literal[
 ]
 RequirementImportance = Literal["required", "preferred", "optional", "unclear"]
 RequirementCriticality = Literal["low", "medium", "high", "knockout"]
-MatchStatus = Literal["matched", "partial", "missing", "unclear", "not_applicable"]
+MatchStatus = Literal["met", "partial", "missing", "unknown", "not_applicable"]
 GapSeverity = Literal["none", "low", "medium", "high", "knockout"]
 EvidenceSource = Literal["resume", "github", "portfolio", "memory", "profile", "manual", "none"]
 EvidenceStrength = Literal["weak", "medium", "strong", "verified", "unclear"]
@@ -86,7 +86,7 @@ class RequirementMatch(MatchModel):
     """Result of comparing one requirement against candidate evidence."""
 
     requirement: MatchRequirement
-    match_status: MatchStatus = "unclear"
+    match_status: MatchStatus = "unknown"
     candidate_evidence: list[CandidateEvidence] = Field(default_factory=list)
     evidence_source: EvidenceSource = "none"
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
@@ -133,6 +133,12 @@ class MatchScoreBreakdown(MatchModel):
     risk_score: int = Field(ge=0, le=100)
     confidence_score: float = Field(ge=0.0, le=1.0)
     overall_score: int = Field(ge=0, le=100)
+    assessed_match_score: int | None = Field(default=None, ge=0, le=100)
+    requirement_coverage: float | None = Field(default=None, ge=0.0, le=1.0)
+    requirement_coverage_status: Literal["sufficient", "insufficient"] = "insufficient"
+    applicable_requirement_count: int = Field(default=0, ge=0)
+    unknown_requirement_count: int = Field(default=0, ge=0)
+    not_applicable_requirement_count: int = Field(default=0, ge=0)
 
 
 class MatchExplanation(MatchModel):
@@ -143,6 +149,8 @@ class MatchExplanation(MatchModel):
     matched_requirements: list[str] = Field(default_factory=list)
     partial_requirements: list[str] = Field(default_factory=list)
     missing_requirements: list[str] = Field(default_factory=list)
+    unknown_requirements: list[str] = Field(default_factory=list)
+    not_applicable_requirements: list[str] = Field(default_factory=list)
     critical_gaps: list[str] = Field(default_factory=list)
     transferable_skills: list[str] = Field(default_factory=list)
     evidence_used: list[str] = Field(default_factory=list)

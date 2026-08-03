@@ -58,6 +58,20 @@ def calculate_match_scores(
     )
     overall = _apply_caps(raw - risk_penalty, matches)
     risk_score = _clamp(risk_penalty)
+    applicable = [
+        match for match in matches if match.match_status not in {"unknown", "not_applicable"}
+    ]
+    unknown_count = sum(match.match_status == "unknown" for match in matches)
+    not_applicable_count = sum(match.match_status == "not_applicable" for match in matches)
+    coverage = (
+        sum(
+            1.0 if match.match_status == "met" else 0.5 if match.match_status == "partial" else 0.0
+            for match in applicable
+        )
+        / len(applicable)
+        if applicable
+        else None
+    )
     return MatchScoreBreakdown(
         required_requirements_score=required,
         preferred_requirements_score=preferred,
@@ -76,6 +90,12 @@ def calculate_match_scores(
         risk_score=risk_score,
         confidence_score=confidence,
         overall_score=overall,
+        assessed_match_score=overall if applicable else None,
+        requirement_coverage=round(coverage, 3) if coverage is not None else None,
+        requirement_coverage_status="sufficient" if applicable else "insufficient",
+        applicable_requirement_count=len(applicable),
+        unknown_requirement_count=unknown_count,
+        not_applicable_requirement_count=not_applicable_count,
     )
 
 
@@ -84,17 +104,15 @@ def _requirement_group_score(matches: list[RequirementMatch]) -> int:
         return 100
     values = []
     for match in matches:
-        if match.match_status == "matched":
+        if match.match_status == "met":
             values.append(100)
         elif match.match_status == "partial":
             values.append(55)
-        elif match.match_status == "unclear":
-            values.append(35)
-        elif match.match_status == "not_applicable":
-            values.append(70)
+        elif match.match_status in {"unknown", "not_applicable"}:
+            continue
         else:
             values.append(0)
-    return round(sum(values) / len(values))
+    return round(sum(values) / len(values)) if values else 100
 
 
 def _education_credentials_score(matches: list[RequirementMatch]) -> int:
@@ -116,7 +134,7 @@ def _evidence_strength_score(
         item
         for match in matches
         for item in match.candidate_evidence
-        if match.match_status in {"matched", "partial"}
+        if match.match_status in {"met", "partial"}
     ]
     if not matched_evidence:
         return 20 if evidence else 10

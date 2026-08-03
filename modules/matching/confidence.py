@@ -15,7 +15,7 @@ def calculate_confidence_score(
     """Calculate confidence separately from score quality."""
     if not matches:
         return 0.25
-    matched = [item for item in matches if item.match_status in {"matched", "partial"}]
+    matched = [item for item in matches if item.match_status in {"met", "partial"}]
     explicit_evidence = [item for item in evidence if item.confidence >= 0.65]
     coverage = len(matched) / len(matches)
     evidence_strength = min(1.0, len(explicit_evidence) / max(1, len(matches)))
@@ -29,4 +29,6 @@ def calculate_confidence_score(
     )
     if not explicit_evidence:
         base -= 0.15
+    unknown_ratio = sum(item.match_status == "unknown" for item in matches) / len(matches)
+    base -= unknown_ratio * 0.25
     return round(max(0.1, min(0.98, base)), 2)

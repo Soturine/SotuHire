@@ -9,6 +9,8 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from modules.evidence import EvidenceReviewStatus
+
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
@@ -47,9 +49,22 @@ class ResumeEntry(LabModel):
     enabled: bool = True
     source_profile_item_ids: list[str] = Field(default_factory=list)
     source_refs: list[str] = Field(default_factory=list)
+    review_status: EvidenceReviewStatus = EvidenceReviewStatus.CANDIDATE
     confirmed_by_user: bool = False
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
+
+    @model_validator(mode="after")
+    def normalize_review_status(self) -> ResumeEntry:
+        if self.confirmed_by_user:
+            self.review_status = EvidenceReviewStatus.CONFIRMED
+        elif self.review_status == EvidenceReviewStatus.CONFIRMED:
+            self.confirmed_by_user = True
+        elif self.review_status == EvidenceReviewStatus.CANDIDATE and self.source_refs:
+            self.review_status = EvidenceReviewStatus.SOURCED
+        if self.review_status in {EvidenceReviewStatus.REJECTED, EvidenceReviewStatus.STALE}:
+            self.confirmed_by_user = False
+        return self
 
 
 class ResumeSection(LabModel):
@@ -165,7 +180,7 @@ class ApplicationLabSession(LabModel):
 class ReadinessDimension(LabModel):
     dimension: str
     label: str
-    status: Literal["met", "partial", "missing", "not_applicable"]
+    status: Literal["met", "partial", "missing", "unknown", "not_applicable"]
     coverage: float | None = Field(default=None, ge=0, le=1)
     weight: float = Field(default=0, ge=0, le=1)
     evidence_count: int = Field(default=0, ge=0)
@@ -186,6 +201,12 @@ class ApplicationReadinessReport(LabModel):
     score_explanation: str
     evidence_coverage: float = Field(ge=0, le=1)
     requirement_coverage: float = Field(ge=0, le=1)
+    evidence_coverage_value: float | None = Field(default=None, ge=0, le=1)
+    requirement_coverage_value: float | None = Field(default=None, ge=0, le=1)
+    confidence_score: float = Field(default=0.0, ge=0, le=1)
+    risk_score: float = Field(default=0.0, ge=0, le=100)
+    assessment_status: Literal["sufficient", "insufficient"] = "insufficient"
+    unknown_dimension_count: int = Field(default=0, ge=0)
     source_dimensions: dict[str, ReadinessDimension] = Field(default_factory=dict)
     strengths: list[str] = Field(default_factory=list)
     top_blockers: list[str] = Field(default_factory=list)
@@ -198,6 +219,8 @@ class ApplicationReadinessReport(LabModel):
     provider_metadata: dict[str, Any] = Field(default_factory=dict)
     evidence_used: list[str | dict[str, Any]] = Field(default_factory=list)
     perspectives: dict[str, ReadinessPerspective] = Field(default_factory=dict)
+    dependency_hash: str = ""
+    stale_reason: str = ""
     created_at: datetime = Field(default_factory=utc_now)
 
 

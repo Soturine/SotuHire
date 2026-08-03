@@ -12,6 +12,7 @@ from modules.application_lab.models import (
     ReadinessPerspective,
 )
 from modules.core.text_utils import normalize_text
+from modules.evidence import EvidenceReviewStatus
 from modules.storage.snapshots import JobSnapshot
 
 DIMENSION_WEIGHTS: dict[str, float] = {
@@ -101,9 +102,13 @@ def build_readiness_report(
     section_map = _sections(master_resume)
     requirements = _requirements(job_snapshot)
     requirement_hits = [item for item in requirements if _requirement_present(item, resume_text)]
-    requirement_coverage = len(requirement_hits) / len(requirements) if requirements else 0.0
+    requirement_coverage_value = (
+        len(requirement_hits) / len(requirements) if requirements else None
+    )
+    requirement_coverage = requirement_coverage_value or 0.0
     evidence_total, evidence_confirmed = _evidence_counts(master_resume)
-    evidence_coverage = evidence_confirmed / evidence_total if evidence_total else 0.0
+    evidence_coverage_value = evidence_confirmed / evidence_total if evidence_total else None
+    evidence_coverage = evidence_coverage_value or 0.0
     github_applicable = _github_relevant(job_text, master_resume.target_role)
 
     coverages: dict[str, float | None] = {
@@ -124,7 +129,7 @@ def build_readiness_report(
         "professional_registrations": _section_coverage(section_map, "professional_registrations"),
         "languages": _section_coverage(section_map, "languages"),
         "github": _section_coverage(section_map, "github") if github_applicable else None,
-        "requirements": requirement_coverage,
+        "requirements": requirement_coverage_value,
     }
     applicable_weight = sum(
         DIMENSION_WEIGHTS[key] for key, coverage in coverages.items() if coverage is not None
@@ -139,7 +144,7 @@ def build_readiness_report(
         key: ReadinessDimension(
             dimension=key,
             label=DIMENSION_LABELS[key],
-            status=_status(coverage),
+            status=_status(coverage, unknown=key == "requirements" and not requirements),
             coverage=round(coverage, 3) if coverage is not None else None,
             weight=round(DIMENSION_WEIGHTS[key] / applicable_weight, 3)
             if coverage is not None and applicable_weight
@@ -157,6 +162,30 @@ def build_readiness_report(
         if dimension.status == "missing" and dimension.dimension != "requirements"
     ]
     unsupported = _unsupported_claim_risks(master_resume)
+    unknown_dimension_count = sum(
+        dimension.status == "unknown" for dimension in dimensions.values()
+    )
+    known_dimension_count = sum(
+        dimension.status not in {"unknown", "not_applicable"}
+        for dimension in dimensions.values()
+    )
+    confidence_score = min(
+        1.0,
+        0.25
+        + (known_dimension_count / max(1, len(dimensions))) * 0.45
+        + (evidence_coverage_value or 0.0) * 0.30,
+    )
+    confidence_score = max(0.1, confidence_score - unknown_dimension_count * 0.08)
+    risk_score = min(
+        100.0,
+        len(unsupported) * 10.0
+        + sum(
+            25.0
+            for dimension in dimensions.values()
+            if dimension.dimension == "professional_registrations"
+            and dimension.status == "missing"
+        ),
+    )
     warnings = [
         "Readiness é uma medida de cobertura e preparação; não é probabilidade de entrevista."
     ]
@@ -190,6 +219,22 @@ def build_readiness_report(
         ),
         evidence_coverage=round(evidence_coverage, 3),
         requirement_coverage=round(requirement_coverage, 3),
+        evidence_coverage_value=(
+            round(evidence_coverage_value, 3) if evidence_coverage_value is not None else None
+        ),
+        requirement_coverage_value=(
+            round(requirement_coverage_value, 3)
+            if requirement_coverage_value is not None
+            else None
+        ),
+        confidence_score=round(confidence_score, 3),
+        risk_score=round(risk_score, 1),
+        assessment_status=(
+            "sufficient"
+            if requirement_coverage_value is not None and evidence_coverage_value is not None
+            else "insufficient"
+        ),
+        unknown_dimension_count=unknown_dimension_count,
         source_dimensions=dimensions,
         strengths=strengths,
         top_blockers=blockers[:5],
@@ -299,7 +344,7 @@ def _requirement_present(requirement: str, resume_text: str) -> bool:
 
 def _evidence_counts(resume: MasterResume) -> tuple[int, int]:
     entries = [entry for section in resume.sections for entry in section.entries if entry.enabled]
-    confirmed = sum(bool(entry.confirmed_by_user or entry.source_refs) for entry in entries)
+    confirmed = sum(entry.review_status == EvidenceReviewStatus.CONFIRMED for entry in entries)
     return len(entries), confirmed
 
 
@@ -310,7 +355,11 @@ def _github_relevant(job_text: str, target_role: str) -> bool:
 
 def _status(
     coverage: float | None,
-) -> Literal["met", "partial", "missing", "not_applicable"]:
+    *,
+    unknown: bool = False,
+) -> Literal["met", "partial", "missing", "unknown", "not_applicable"]:
+    if unknown:
+        return "unknown"
     if coverage is None:
         return "not_applicable"
     if coverage >= 0.8:
@@ -333,15 +382,20 @@ def _dimension_explanation(
     hits: list[str],
 ) -> str:
     if coverage is None:
-        return "Dimensão não aplicável à vaga atual."
+        return (
+            "Não há informação suficiente para classificar os requisitos."
+            if key == "requirements" and not requirements
+            else "Dimensão não aplicável à vaga atual."
+        )
     if key == "requirements":
         return f"{len(hits)} de {len(requirements)} requisitos tiveram evidência textual."
     return {
         "met": "Conteúdo suficiente e habilitado no currículo mestre.",
         "partial": "Conteúdo presente, mas ainda incompleto ou pouco detalhado.",
         "missing": "Nenhum conteúdo confirmado foi encontrado nesta dimensão.",
+        "unknown": "Informação insuficiente; confirme antes de concluir.",
         "not_applicable": "Dimensão não aplicável.",
-    }[_status(coverage)]
+    }[_status(coverage, unknown=key == "requirements" and not requirements)]
 
 
 def _blockers(
@@ -364,7 +418,7 @@ def _unsupported_claim_risks(resume: MasterResume) -> list[str]:
             if (
                 entry.enabled
                 and entry.content.strip()
-                and not (entry.confirmed_by_user or entry.source_refs)
+                and entry.review_status != EvidenceReviewStatus.CONFIRMED
             ):
                 risks.append(f"{section.title}: {entry.title or 'entrada sem título'}")
     return risks[:20]
@@ -374,7 +428,8 @@ def _recommended_edits(dimensions: dict[str, ReadinessDimension], blockers: list
     edits = [
         f"Completar a seção {item.label} com fatos confirmados."
         for item in dimensions.values()
-        if item.status in {"missing", "partial"} and item.dimension != "requirements"
+        if item.status in {"missing", "partial", "unknown"}
+        and item.dimension != "requirements"
     ]
     edits.extend(
         f"Revisar evidência para {item}." for item in blockers if item.startswith("Requisito")

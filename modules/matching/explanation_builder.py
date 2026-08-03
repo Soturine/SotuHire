@@ -19,9 +19,11 @@ def build_match_explanation(
     scores: MatchScoreBreakdown,
 ) -> MatchExplanation:
     """Build a clear explanation for the candidate."""
-    matched = [item for item in matches if item.match_status == "matched"]
+    matched = [item for item in matches if item.match_status == "met"]
     partial = [item for item in matches if item.match_status == "partial"]
     missing = [item for item in matches if item.match_status == "missing"]
+    unknown = [item for item in matches if item.match_status == "unknown"]
+    not_applicable = [item for item in matches if item.match_status == "not_applicable"]
     return MatchExplanation(
         summary=_summary(scores, critical_gaps),
         score_reasoning=[
@@ -34,6 +36,8 @@ def build_match_explanation(
         matched_requirements=[_req(item) for item in matched],
         partial_requirements=[_req(item) for item in partial],
         missing_requirements=[_req(item) for item in missing],
+        unknown_requirements=[_req(item) for item in unknown],
+        not_applicable_requirements=[_req(item) for item in not_applicable],
         critical_gaps=[gap.reason for gap in critical_gaps],
         transferable_skills=[
             (
@@ -71,6 +75,7 @@ def _summary(scores: MatchScoreBreakdown, gaps: list[CriticalGap]) -> str:
 def _safe_actions(matches: list[RequirementMatch], gaps: list[CriticalGap]) -> list[str]:
     actions = [gap.safe_action for gap in gaps]
     actions.extend(match.safe_action for match in matches if match.match_status == "partial")
+    actions.extend(match.safe_action for match in matches if match.match_status == "unknown")
     if not actions:
         actions.append("Manter evidências verdadeiras visíveis e adaptar o currículo à vaga.")
     return list(dict.fromkeys(actions))[:8]
@@ -79,7 +84,7 @@ def _safe_actions(matches: list[RequirementMatch], gaps: list[CriticalGap]) -> l
 def _resume_improvements(matches: list[RequirementMatch]) -> list[str]:
     improvements = []
     for match in matches:
-        if match.match_status in {"missing", "partial"}:
+        if match.match_status in {"missing", "partial", "unknown"}:
             improvements.append(
                 f"Se for verdadeiro, tornar mais visível: {match.requirement.requirement_text}."
             )
