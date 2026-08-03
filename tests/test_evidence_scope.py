@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-from pydantic import ValidationError
 
 from modules.context import (
     CareerContext,
@@ -11,6 +10,7 @@ from modules.context import (
     EvidenceScope,
     format_context_for_prompt,
 )
+from pydantic import ValidationError
 
 
 def test_source_reference_is_provenance_not_confirmation() -> None:
