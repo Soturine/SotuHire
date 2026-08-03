@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import pytest
-
 from modules.context import (
     CareerContext,
     CareerContextEvidence,
