@@ -12,7 +12,7 @@ def test_migrations_create_versioned_schema_and_are_idempotent(tmp_path):
     runner = MigrationRunner(database)
 
     assert runner.current_version() == 0
-    assert runner.apply(create_backup=False) == [1, 2, 3, 4, 5]
+    assert runner.apply(create_backup=False) == [1, 2, 3, 4, 5, 6]
     assert runner.current_version() == LATEST_SCHEMA_VERSION
     assert runner.apply(create_backup=False) == []
     assert runner.verify() == []
@@ -54,6 +54,12 @@ def test_migrations_create_versioned_schema_and_are_idempotent(tmp_path):
             "application_kit_items",
             "application_action_plans",
             "application_action_items",
+            "application_analysis_bundles",
+            "professional_documents",
+            "document_ingestions",
+            "professional_assets",
+            "scheduler_locks",
+            "idempotency_records",
             "migration_history",
         } <= tables
         assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1

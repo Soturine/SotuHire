@@ -821,6 +821,186 @@ def _migration_005(connection: sqlite3.Connection) -> None:
     )
 
 
+def _migration_006(connection: sqlite3.Connection) -> None:
+    """Harden semantic state, dependency lineage and professional document storage."""
+    additions = {
+        "profile_items": {
+            "review_status": "TEXT NOT NULL DEFAULT 'candidate'",
+            "source_location": "TEXT NOT NULL DEFAULT '{}'",
+            "observed_at": "TEXT",
+        },
+        "resume_entries": {
+            "review_status": "TEXT NOT NULL DEFAULT 'candidate'",
+        },
+        "resume_snapshots": {
+            "master_resume_id": "TEXT NOT NULL DEFAULT ''",
+            "document_kind": "TEXT NOT NULL DEFAULT 'master'",
+            "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+            "evidence_scope": "TEXT NOT NULL DEFAULT '{}'",
+        },
+        "analysis_snapshots": {
+            "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+            "dependency_inputs": "TEXT NOT NULL DEFAULT '{}'",
+        },
+        "master_resumes": {
+            "canonical_document": "TEXT NOT NULL DEFAULT '{}'",
+            "content_hash": "TEXT NOT NULL DEFAULT ''",
+            "document_version": "INTEGER NOT NULL DEFAULT 1",
+        },
+        "resume_variants": {
+            "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+            "stale_reason": "TEXT NOT NULL DEFAULT ''",
+        },
+        "resume_exports": {
+            "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+            "stale_reason": "TEXT NOT NULL DEFAULT ''",
+        },
+        "application_lab_sessions": {
+            "evidence_scope": "TEXT NOT NULL DEFAULT '{}'",
+            "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+            "analysis_bundle_id": "TEXT",
+        },
+        "application_readiness_reports": {
+            "evidence_coverage_value": "REAL",
+            "requirement_coverage_value": "REAL",
+            "confidence_score": "REAL NOT NULL DEFAULT 0",
+            "risk_score": "REAL NOT NULL DEFAULT 0",
+            "assessment_status": "TEXT NOT NULL DEFAULT 'insufficient'",
+            "unknown_dimension_count": "INTEGER NOT NULL DEFAULT 0",
+            "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+            "stale_reason": "TEXT NOT NULL DEFAULT ''",
+        },
+        "application_suggestions": {
+            "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+            "conflict_reason": "TEXT NOT NULL DEFAULT ''",
+        },
+        "application_kits": {
+            "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+            "stale_reason": "TEXT NOT NULL DEFAULT ''",
+        },
+        "applications": {
+            "readiness_analysis_snapshot_id": "TEXT",
+            "tailor_analysis_snapshot_id": "TEXT",
+            "analysis_bundle_id": "TEXT",
+            "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+        },
+    }
+    for table, columns in additions.items():
+        existing = {
+            str(row[1]) for row in connection.execute(f"PRAGMA table_info({table})").fetchall()
+        }
+        for name, definition in columns.items():
+            if name not in existing:
+                connection.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
+
+    _execute_script(
+        connection,
+        """
+        CREATE TABLE IF NOT EXISTS application_analysis_bundles (
+            bundle_id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL,
+            evidence_scope TEXT NOT NULL DEFAULT '{}',
+            dependency_hash TEXT NOT NULL,
+            match_result TEXT NOT NULL DEFAULT '{}',
+            ats_result TEXT NOT NULL DEFAULT '{}',
+            readiness_result TEXT NOT NULL DEFAULT '{}',
+            tailor_result TEXT NOT NULL DEFAULT '{}',
+            match_snapshot_id TEXT,
+            ats_snapshot_id TEXT,
+            readiness_snapshot_id TEXT,
+            tailor_snapshot_id TEXT,
+            status TEXT NOT NULL DEFAULT 'current',
+            stale_reason TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(session_id) REFERENCES application_lab_sessions(session_id)
+                ON DELETE CASCADE,
+            FOREIGN KEY(match_snapshot_id) REFERENCES analysis_snapshots(snapshot_id),
+            FOREIGN KEY(ats_snapshot_id) REFERENCES analysis_snapshots(snapshot_id),
+            FOREIGN KEY(readiness_snapshot_id) REFERENCES analysis_snapshots(snapshot_id),
+            FOREIGN KEY(tailor_snapshot_id) REFERENCES analysis_snapshots(snapshot_id),
+            CHECK(status IN ('current', 'stale', 'failed'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_application_analysis_bundles_session_created
+        ON application_analysis_bundles(session_id, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS professional_documents (
+            document_id TEXT PRIMARY KEY,
+            profile_id TEXT,
+            document_kind TEXT NOT NULL,
+            title TEXT NOT NULL DEFAULT '',
+            canonical_document TEXT NOT NULL DEFAULT '{}',
+            content_hash TEXT NOT NULL,
+            version INTEGER NOT NULL DEFAULT 1,
+            source_refs TEXT NOT NULL DEFAULT '[]',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(profile_id) REFERENCES profiles(id) ON DELETE SET NULL,
+            CHECK(document_kind IN ('master_resume', 'resume_variant', 'professional_asset')),
+            UNIQUE(document_id, version)
+        );
+
+        CREATE TABLE IF NOT EXISTS document_ingestions (
+            ingestion_id TEXT PRIMARY KEY,
+            document_id TEXT,
+            file_name TEXT NOT NULL DEFAULT '',
+            media_type TEXT NOT NULL DEFAULT '',
+            byte_size INTEGER NOT NULL DEFAULT 0,
+            content_hash TEXT NOT NULL,
+            status TEXT NOT NULL,
+            provenance TEXT NOT NULL DEFAULT '{}',
+            extraction_result TEXT NOT NULL DEFAULT '{}',
+            warnings TEXT NOT NULL DEFAULT '[]',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(document_id) REFERENCES professional_documents(document_id)
+                ON DELETE SET NULL,
+            CHECK(status IN ('accepted', 'needs_review', 'rejected', 'failed'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_document_ingestions_hash
+        ON document_ingestions(content_hash, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS professional_assets (
+            asset_id TEXT PRIMARY KEY,
+            profile_id TEXT,
+            session_id TEXT,
+            asset_type TEXT NOT NULL,
+            title TEXT NOT NULL DEFAULT '',
+            content TEXT NOT NULL DEFAULT '{}',
+            evidence_scope TEXT NOT NULL DEFAULT '{}',
+            source_refs TEXT NOT NULL DEFAULT '[]',
+            dependency_hash TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'draft',
+            stale_reason TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(profile_id) REFERENCES profiles(id) ON DELETE SET NULL,
+            FOREIGN KEY(session_id) REFERENCES application_lab_sessions(session_id)
+                ON DELETE SET NULL,
+            CHECK(status IN ('draft', 'review', 'accepted', 'rejected', 'stale'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_professional_assets_session_updated
+        ON professional_assets(session_id, updated_at DESC);
+
+        CREATE TABLE IF NOT EXISTS scheduler_locks (
+            lock_name TEXT PRIMARY KEY,
+            owner_id TEXT NOT NULL,
+            acquired_at TEXT NOT NULL,
+            expires_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS idempotency_records (
+            operation_key TEXT PRIMARY KEY,
+            operation_type TEXT NOT NULL,
+            result_ref TEXT NOT NULL DEFAULT '',
+            result_hash TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL
+        );
+
+        INSERT INTO schema_metadata(key, value) VALUES ('schema_version', '6')
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+        """,
+    )
+
+
 MIGRATIONS = (
     Migration(
         version=1,
@@ -909,6 +1089,27 @@ MIGRATIONS = (
             "permanecem preservados."
         ),
         created_at="2026-07-28T00:00:00Z",
+    ),
+    Migration(
+        version=6,
+        description=(
+            "Estados canônicos de evidência, linhagem de dependências, ingestão documental "
+            "e bundles independentes do Application Lab."
+        ),
+        up=_migration_006,
+        validation=_validate_tables(
+            "application_analysis_bundles",
+            "professional_documents",
+            "document_ingestions",
+            "professional_assets",
+            "scheduler_locks",
+            "idempotency_records",
+        ),
+        rollback_strategy=(
+            "Restaurar o backup pré-migração v6. Snapshots anteriores e stores legados "
+            "permanecem preservados e nunca são regravados durante o upgrade."
+        ),
+        created_at="2026-08-03T00:00:00Z",
     ),
 )
 

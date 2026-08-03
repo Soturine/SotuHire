@@ -403,17 +403,27 @@ class ApplicationLabRepository:
             connection.execute(
                 """INSERT INTO application_readiness_reports
                 (report_id, session_id, readiness_score, score_explanation,
-                 evidence_coverage, requirement_coverage, source_dimensions, strengths,
+                 evidence_coverage, requirement_coverage, evidence_coverage_value,
+                 requirement_coverage_value, confidence_score, risk_score,
+                 assessment_status, unknown_dimension_count, source_dimensions, strengths,
                  top_blockers, missing_information, unsupported_claim_risks,
                  recommended_edits, copy_ready_snippets, action_plan_preview, warnings,
-                 provider_metadata, evidence_used, perspectives, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 provider_metadata, evidence_used, perspectives, dependency_hash,
+                 stale_reason, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                        ?, ?, ?, ?, ?)
                 ON CONFLICT(session_id) DO UPDATE SET
                     report_id=excluded.report_id,
                     readiness_score=excluded.readiness_score,
                     score_explanation=excluded.score_explanation,
                     evidence_coverage=excluded.evidence_coverage,
                     requirement_coverage=excluded.requirement_coverage,
+                    evidence_coverage_value=excluded.evidence_coverage_value,
+                    requirement_coverage_value=excluded.requirement_coverage_value,
+                    confidence_score=excluded.confidence_score,
+                    risk_score=excluded.risk_score,
+                    assessment_status=excluded.assessment_status,
+                    unknown_dimension_count=excluded.unknown_dimension_count,
                     source_dimensions=excluded.source_dimensions,
                     strengths=excluded.strengths,
                     top_blockers=excluded.top_blockers,
@@ -426,6 +436,8 @@ class ApplicationLabRepository:
                     provider_metadata=excluded.provider_metadata,
                     evidence_used=excluded.evidence_used,
                     perspectives=excluded.perspectives,
+                    dependency_hash=excluded.dependency_hash,
+                    stale_reason=excluded.stale_reason,
                     created_at=excluded.created_at""",
                 (
                     report.report_id,
@@ -434,6 +446,12 @@ class ApplicationLabRepository:
                     report.score_explanation,
                     report.evidence_coverage,
                     report.requirement_coverage,
+                    report.evidence_coverage_value,
+                    report.requirement_coverage_value,
+                    report.confidence_score,
+                    report.risk_score,
+                    report.assessment_status,
+                    report.unknown_dimension_count,
                     _json(
                         {
                             key: value.model_dump(mode="json")
@@ -456,6 +474,8 @@ class ApplicationLabRepository:
                             for key, value in report.perspectives.items()
                         }
                     ),
+                    report.dependency_hash,
+                    report.stale_reason,
                     report.created_at.isoformat(),
                 ),
             )
@@ -812,6 +832,12 @@ def _report_from_row(row: Any) -> ApplicationReadinessReport:
         score_explanation=row["score_explanation"],
         evidence_coverage=row["evidence_coverage"],
         requirement_coverage=row["requirement_coverage"],
+        evidence_coverage_value=row["evidence_coverage_value"],
+        requirement_coverage_value=row["requirement_coverage_value"],
+        confidence_score=row["confidence_score"],
+        risk_score=row["risk_score"],
+        assessment_status=row["assessment_status"],
+        unknown_dimension_count=row["unknown_dimension_count"],
         source_dimensions={
             key: ReadinessDimension.model_validate(value)
             for key, value in _load(row["source_dimensions"], {}).items()
@@ -830,6 +856,8 @@ def _report_from_row(row: Any) -> ApplicationReadinessReport:
             key: ReadinessPerspective.model_validate(value)
             for key, value in _load(row["perspectives"], {}).items()
         },
+        dependency_hash=row["dependency_hash"],
+        stale_reason=row["stale_reason"],
         created_at=row["created_at"],
     )
 
