@@ -14,6 +14,9 @@ from modules.application_lab.models import (
 from apps.api.routes.responses import ok
 from apps.api.schemas.application_lab import (
     ActionPlanCreateRequest,
+    ApplicationKitExportResponse,
+    ApplicationKitItemResponse,
+    ApplicationKitItemReviewRequest,
     ApplicationKitResponse,
     ApplicationLabAnalyzeResponse,
     ApplicationLabSessionCreateRequest,
@@ -211,6 +214,38 @@ def create_session_kit(
         ApplicationKitResponse(kit=kit, snapshot_id=snapshot.snapshot_id),
         request_id=payload.request_id,
     )
+
+
+@application_lab_router.post(
+    "/sessions/{session_id}/kit/items/{item_id}/review",
+    response_model=ApiEnvelope[ApplicationKitItemResponse],
+)
+def review_kit_item(
+    session_id: str,
+    item_id: str,
+    payload: ApplicationKitItemReviewRequest,
+    service: LabDependency,
+) -> ApiEnvelope[ApplicationKitItemResponse]:
+    item = service._call(
+        service.domain.review_kit_item,
+        session_id,
+        item_id,
+        payload.status,
+        edited_content=payload.edited_content,
+    )
+    return ok(ApplicationKitItemResponse(item=item), request_id=payload.request_id)
+
+
+@application_lab_router.get(
+    "/sessions/{session_id}/kit/export",
+    response_model=ApiEnvelope[ApplicationKitExportResponse],
+)
+def export_kit(
+    session_id: str,
+    service: LabDependency,
+) -> ApiEnvelope[ApplicationKitExportResponse]:
+    kit_id, items = service._call(service.domain.export_kit, session_id)
+    return ok(ApplicationKitExportResponse(application_kit_id=kit_id, items=items))
 
 
 @application_lab_router.post(

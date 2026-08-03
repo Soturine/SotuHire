@@ -8,6 +8,7 @@ from modules.application_lab.models import (
     ApplicationActionPlan,
     ApplicationAnalysisBundle,
     ApplicationKit,
+    ApplicationKitItem,
     ApplicationLabSession,
     ApplicationLabStatus,
     ApplicationReadinessReport,
@@ -106,6 +107,21 @@ class ApplicationKitResponse(LabApiModel):
     snapshot_id: str
 
 
+class ApplicationKitItemReviewRequest(LabApiModel):
+    status: Literal["pending", "accepted", "edited", "rejected", "stale"]
+    edited_content: str = Field(default="", max_length=100_000)
+    request_id: str = Field(default="", max_length=120)
+
+
+class ApplicationKitItemResponse(LabApiModel):
+    item: ApplicationKitItem
+
+
+class ApplicationKitExportResponse(LabApiModel):
+    application_kit_id: str
+    items: dict[str, str] = Field(default_factory=dict)
+
+
 class MasterResumeUpsertRequest(LabApiModel):
     resume: MasterResume
     request_id: str = Field(default="", max_length=120)
@@ -167,6 +183,9 @@ class ResumeExportResponse(LabApiModel):
 __all__ = [
     "ActionPlanCreateRequest",
     "ApplicationKitResponse",
+    "ApplicationKitExportResponse",
+    "ApplicationKitItemResponse",
+    "ApplicationKitItemReviewRequest",
     "ApplicationLabAnalyzeResponse",
     "ApplicationLabSessionCreateRequest",
     "ApplicationLabSessionDetail",

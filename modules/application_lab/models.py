@@ -39,6 +39,14 @@ class SuggestionStatus(StrEnum):
     REJECTED = "rejected"
 
 
+class KitItemStatus(StrEnum):
+    PENDING = "pending"
+    ACCEPTED = "accepted"
+    EDITED = "edited"
+    REJECTED = "rejected"
+    STALE = "stale"
+
+
 class ResumeEntry(LabModel):
     entry_id: str = Field(default_factory=lambda: uuid4().hex)
     entry_type: str = "item"
@@ -297,7 +305,7 @@ class ApplicationKitItem(LabModel):
     evidence_used: list[str | dict[str, Any]] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     provider_run_id: str = ""
-    status: SuggestionStatus = SuggestionStatus.PENDING
+    status: KitItemStatus = KitItemStatus.PENDING
     edited_content: str = ""
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
@@ -309,6 +317,8 @@ class ApplicationKit(LabModel):
     title: str = "Kit de candidatura"
     items: list[ApplicationKitItem] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
+    dependency_hash: str = ""
+    stale_reason: str = ""
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
 
@@ -348,6 +358,7 @@ __all__ = [
     "ApplicationLabStatus",
     "ApplicationReadinessReport",
     "ApplicationSuggestion",
+    "KitItemStatus",
     "MasterResume",
     "ReadinessDimension",
     "ReadinessPerspective",

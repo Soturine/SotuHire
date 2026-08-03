@@ -16,6 +16,7 @@ from modules.application_lab.models import (
     ApplicationLabSession,
     ApplicationReadinessReport,
     ApplicationSuggestion,
+    KitItemStatus,
     MasterResume,
     ReadinessDimension,
     ReadinessPerspective,
@@ -745,17 +746,22 @@ class ApplicationLabRepository:
         with connect_database(self.database_path) as connection:
             connection.execute(
                 """INSERT INTO application_kits
-                (application_kit_id, session_id, title, warnings, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?)
+                (application_kit_id, session_id, title, warnings, dependency_hash,
+                 stale_reason, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(session_id) DO UPDATE SET
                     application_kit_id=excluded.application_kit_id,
                     title=excluded.title, warnings=excluded.warnings,
+                    dependency_hash=excluded.dependency_hash,
+                    stale_reason=excluded.stale_reason,
                     updated_at=excluded.updated_at""",
                 (
                     kit.application_kit_id,
                     kit.session_id,
                     kit.title,
                     _json(kit.warnings),
+                    kit.dependency_hash,
+                    kit.stale_reason,
                     kit.created_at.isoformat(),
                     kit.updated_at.isoformat(),
                 ),
@@ -811,9 +817,42 @@ class ApplicationLabRepository:
             title=row["title"],
             warnings=_load(row["warnings"], []),
             items=[_kit_item_from_row(item) for item in items],
+            dependency_hash=row["dependency_hash"],
+            stale_reason=row["stale_reason"],
             created_at=row["created_at"],
             updated_at=row["updated_at"],
         )
+
+    def review_kit_item(
+        self,
+        application_kit_id: str,
+        item_id: str,
+        status: KitItemStatus,
+        *,
+        edited_content: str = "",
+    ) -> ApplicationKitItem | None:
+        kit = self.get_kit(application_kit_id)
+        if kit is None:
+            return None
+        item = next((value for value in kit.items if value.item_id == item_id), None)
+        if item is None:
+            return None
+        selected_content = edited_content.strip() if status is KitItemStatus.EDITED else item.content
+        if status in {KitItemStatus.ACCEPTED, KitItemStatus.EDITED}:
+            if not selected_content.strip():
+                raise ValueError("Item vazio não pode ser aceito.")
+            if not item.evidence_used:
+                raise ValueError("Item com afirmações exige evidência antes da aceitação.")
+        updated = item.model_copy(
+            update={
+                "status": status,
+                "edited_content": edited_content.strip() if status is KitItemStatus.EDITED else "",
+                "updated_at": utc_now(),
+            }
+        )
+        kit.items = [updated if value.item_id == item_id else value for value in kit.items]
+        self.save_kit(kit.model_copy(update={"updated_at": utc_now()}))
+        return updated
 
     def save_action_plan(self, plan: ApplicationActionPlan) -> ApplicationActionPlan:
         ensure_database(self.database_path)

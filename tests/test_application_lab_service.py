@@ -16,6 +16,7 @@ from modules.application_lab.models import (
 )
 from modules.application_lab.service import ApplicationLabService
 from modules.context.models import CareerContext, CareerContextPurpose
+from modules.professional_assets import ProfessionalAssetRepository
 from modules.storage.applications import ApplicationRepository
 from modules.storage.snapshots import JobSnapshot, SnapshotStore
 
@@ -136,7 +137,36 @@ def test_full_application_lab_journey_links_snapshots_and_tracker(tmp_path) -> N
 
     kit, kit_snapshot = service.create_kit(session.session_id)
     assert kit.items
+    assert {item.type for item in kit.items} == {
+        "headline",
+        "professional_summary",
+        "about_section",
+        "recruiter_message",
+        "cover_letter",
+        "why_this_role",
+        "project_highlight",
+        "manual_checklist",
+    }
     assert kit_snapshot.analysis_type == "application_kit"
+    reviewable = next(item for item in kit.items if item.content and item.evidence_used)
+    accepted_item = service.review_kit_item(
+        session.session_id,
+        reviewable.item_id,
+        "accepted",
+    )
+    kit_id, exported_items = service.export_kit(session.session_id)
+    assert kit_id == kit.application_kit_id
+    assert exported_items[reviewable.type] == accepted_item.content
+    regenerated, regenerated_snapshot = service.create_kit(session.session_id)
+    assert next(item for item in regenerated.items if item.type == reviewable.type).status == "accepted"
+    assets = ProfessionalAssetRepository(tmp_path / "sotuhire.db").list(
+        session_id=session.session_id
+    )
+    assert {item.asset_type.value for item in assets} >= {
+        "application_kit",
+        "cover_letter",
+        "recruiter_message",
+    }
     plan = service.create_action_plan(session.session_id, period_days=14)
     assert plan.period_days == 14
 
@@ -161,7 +191,7 @@ def test_full_application_lab_journey_links_snapshots_and_tracker(tmp_path) -> N
     assert application.tailor_analysis_snapshot_id == bundle.tailor_snapshot_id
     assert application.analysis_bundle_id == bundle.bundle_id
     assert application.dependency_hash == bundle.dependency_hash
-    assert application.application_kit_snapshot_id == kit_snapshot.snapshot_id
+    assert application.application_kit_snapshot_id == regenerated_snapshot.snapshot_id
     assert service.snapshots.get_job(application.job_snapshot_id) == job
 
 

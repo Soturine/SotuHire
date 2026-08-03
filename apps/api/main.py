@@ -20,6 +20,7 @@ from apps.api.routes import (
     local_security,
     notifications,
     outcomes,
+    professional_assets,
     profile,
     public_exams,
     radar,
@@ -83,6 +84,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(settings_routes.router)
     app.include_router(profile.router)
     app.include_router(public_exams.router)
+    app.include_router(professional_assets.router)
     app.include_router(sources.router)
     app.include_router(radar.router)
     app.include_router(notifications.router)

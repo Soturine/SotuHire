@@ -893,6 +893,31 @@ def _migration_006(connection: sqlite3.Connection) -> None:
             if name not in existing:
                 connection.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
 
+    connection.execute(
+        """CREATE TABLE application_kit_items_v6 (
+            item_id TEXT PRIMARY KEY,
+            application_kit_id TEXT NOT NULL,
+            item_type TEXT NOT NULL,
+            content TEXT NOT NULL DEFAULT '',
+            evidence_used TEXT NOT NULL DEFAULT '[]',
+            warnings TEXT NOT NULL DEFAULT '[]',
+            provider_run_id TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'pending',
+            edited_content TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(application_kit_id) REFERENCES application_kits(application_kit_id)
+                ON DELETE CASCADE,
+            CHECK(status IN ('pending', 'accepted', 'edited', 'rejected', 'stale'))
+        )"""
+    )
+    connection.execute(
+        """INSERT INTO application_kit_items_v6
+        SELECT * FROM application_kit_items"""
+    )
+    connection.execute("DROP TABLE application_kit_items")
+    connection.execute("ALTER TABLE application_kit_items_v6 RENAME TO application_kit_items")
+
     _execute_script(
         connection,
         """
@@ -962,20 +987,28 @@ def _migration_006(connection: sqlite3.Connection) -> None:
             asset_id TEXT PRIMARY KEY,
             profile_id TEXT,
             session_id TEXT,
+            target_opportunity_id TEXT,
             asset_type TEXT NOT NULL,
             title TEXT NOT NULL DEFAULT '',
-            content TEXT NOT NULL DEFAULT '{}',
+            content TEXT NOT NULL DEFAULT '',
+            structured_content TEXT NOT NULL DEFAULT '{}',
+            evidence_scope_id TEXT NOT NULL DEFAULT '',
             evidence_scope TEXT NOT NULL DEFAULT '{}',
             source_refs TEXT NOT NULL DEFAULT '[]',
+            evidence_ids TEXT NOT NULL DEFAULT '[]',
+            document_snapshot_ids TEXT NOT NULL DEFAULT '[]',
             dependency_hash TEXT NOT NULL,
             status TEXT NOT NULL DEFAULT 'draft',
+            review_status TEXT NOT NULL DEFAULT 'candidate',
+            stale_at TEXT,
             stale_reason TEXT NOT NULL DEFAULT '',
             created_at TEXT NOT NULL,
             updated_at TEXT NOT NULL,
             FOREIGN KEY(profile_id) REFERENCES profiles(id) ON DELETE SET NULL,
             FOREIGN KEY(session_id) REFERENCES application_lab_sessions(session_id)
                 ON DELETE SET NULL,
-            CHECK(status IN ('draft', 'review', 'accepted', 'rejected', 'stale'))
+            CHECK(status IN ('draft', 'review', 'confirmed', 'archived', 'stale')),
+            CHECK(review_status IN ('candidate', 'sourced', 'confirmed', 'rejected', 'stale'))
         );
         CREATE INDEX IF NOT EXISTS idx_professional_assets_session_updated
         ON professional_assets(session_id, updated_at DESC);

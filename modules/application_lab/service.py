@@ -23,6 +23,7 @@ from modules.application_lab.models import (
     ApplicationLabStatus,
     ApplicationReadinessReport,
     ApplicationSuggestion,
+    KitItemStatus,
     MasterResume,
     ResumeVariant,
     ResumeVariantChange,
@@ -31,6 +32,13 @@ from modules.application_lab.models import (
 )
 from modules.application_lab.repository import ApplicationLabRepository
 from modules.context import CareerContextEngine, CareerContextPurpose
+from modules.evidence import EvidenceReviewStatus
+from modules.professional_assets import (
+    AssetStatus,
+    AssetType,
+    ProfessionalAsset,
+    ProfessionalAssetRepository,
+)
 from modules.storage.applications import ApplicationRepository
 from modules.storage.local_store import LocalStore
 from modules.storage.snapshots import AnalysisSnapshot, JobSnapshot, ResumeSnapshot, SnapshotStore
@@ -102,6 +110,10 @@ class ApplicationLabService:
         if inputs_changed:
             self.repository.mark_analysis_bundle_stale(
                 current.analysis_bundle_id,
+                "master_resume_job_or_evidence_scope_changed",
+            )
+            ProfessionalAssetRepository(self.database_path).mark_session_stale(
+                session_id,
                 "master_resume_job_or_evidence_scope_changed",
             )
             update.update(
@@ -417,35 +429,104 @@ class ApplicationLabService:
             if session.resume_variant_id
             else None
         )
-        evidence: list[str | dict[str, Any]] = list(dict.fromkeys(master.source_refs))
+        bundle = self.repository.get_analysis_bundle(session.analysis_bundle_id)
+        if bundle is None:
+            raise ValueError("Execute a análise antes de criar o Application Kit.")
+        selected_refs = list(bundle.evidence_scope.get("selected_source_refs", []))
+        selected_ids = list(bundle.evidence_scope.get("selected_evidence_ids", []))
+        evidence: list[str | dict[str, Any]] = list(dict.fromkeys([*selected_refs, *selected_ids]))
         job_evidence: list[str | dict[str, Any]] = list(job.source_refs)
-        items: list[ApplicationKitItem] = []
-        if master.summary.strip():
-            items.append(
-                ApplicationKitItem(
-                    type="professional_summary",
-                    content=master.summary,
-                    evidence_used=evidence,
-                    warnings=[]
-                    if evidence
-                    else ["Resumo sem referência de origem; revise antes de usar."],
-                )
-            )
-        items.append(
-            ApplicationKitItem(
-                type="short_form_text",
-                content=f"Candidatura para {job.title} em {job.organization}".strip(),
-                evidence_used=job_evidence,
-                warnings=["Texto factual mínimo; personalize antes de copiar."],
-            )
+        safe_summary = bundle.tailor_result.professional_summary.strip()
+        project_highlight = next(
+            (item for item in bundle.tailor_result.improved_bullets if item.strip()), ""
         )
+        evidence_warning = [] if evidence else ["Sem evidência confirmada selecionada."]
+        items = [
+            ApplicationKitItem(
+                type="headline",
+                content=job.title,
+                evidence_used=job_evidence,
+                warnings=["Headline baseada somente no título da oportunidade; revise."],
+            ),
+            ApplicationKitItem(
+                type="professional_summary",
+                content=safe_summary,
+                evidence_used=evidence,
+                warnings=evidence_warning,
+            ),
+            ApplicationKitItem(
+                type="about_section",
+                content=safe_summary,
+                evidence_used=evidence,
+                warnings=evidence_warning,
+            ),
+            ApplicationKitItem(
+                type="recruiter_message",
+                content=(
+                    f"Olá, tenho interesse na oportunidade {job.title}. {safe_summary}".strip()
+                    if safe_summary
+                    else ""
+                ),
+                evidence_used=[*job_evidence, *evidence],
+                warnings=evidence_warning,
+            ),
+            ApplicationKitItem(
+                type="cover_letter",
+                content=(
+                    f"Tenho interesse em {job.title} na {job.organization}. {safe_summary}".strip()
+                    if safe_summary
+                    else ""
+                ),
+                evidence_used=[*job_evidence, *evidence],
+                warnings=evidence_warning,
+            ),
+            ApplicationKitItem(
+                type="why_this_role",
+                content=(
+                    f"A oportunidade busca {job.title}; a evidência selecionada registra: "
+                    f"{safe_summary}"
+                    if safe_summary
+                    else ""
+                ),
+                evidence_used=[*job_evidence, *evidence],
+                warnings=evidence_warning,
+            ),
+            ApplicationKitItem(
+                type="project_highlight",
+                content=project_highlight,
+                evidence_used=evidence,
+                warnings=evidence_warning,
+            ),
+            ApplicationKitItem(
+                type="manual_checklist",
+                content=(
+                    "Revisar fatos; confirmar anexos; conferir destinatário; "
+                    "registrar envio manual no Tracker."
+                ),
+                evidence_used=job_evidence,
+                warnings=["Checklist não executa nem envia a candidatura."],
+            ),
+        ]
+        existing = (
+            self.repository.get_kit(session.application_kit_id)
+            if session.application_kit_id
+            else None
+        )
+        protected = {
+            item.type: item
+            for item in (existing.items if existing else [])
+            if item.status.value in {"accepted", "edited", "rejected"}
+        }
+        items = [protected.get(item.type, item) for item in items]
         kit = ApplicationKit(
             application_kit_id=session.application_kit_id or uuid4().hex,
             session_id=session_id,
             items=items,
             warnings=["Nenhum item é enviado automaticamente."],
+            dependency_hash=bundle.dependency_hash,
         )
         saved = self.repository.save_kit(kit)
+        self._save_kit_assets(saved, session, master, job, bundle)
         resume_snapshot = self._resume_snapshot(variant or master)
         snapshot = self.snapshots.create_analysis(
             AnalysisSnapshot(
@@ -457,6 +538,7 @@ class ApplicationLabService:
                 result=saved.model_dump(mode="json"),
                 evidence_used=[item for entry in saved.items for item in entry.evidence_used],
                 source_refs=list(dict.fromkeys([*master.source_refs, *job.source_refs])),
+                dependency_hash=bundle.dependency_hash,
             )
         )
         refreshed = self._session(session_id)
@@ -471,6 +553,120 @@ class ApplicationLabService:
             )
         )
         return saved, snapshot
+
+    def _save_kit_assets(
+        self,
+        kit: ApplicationKit,
+        session: ApplicationLabSession,
+        master: MasterResume,
+        job: JobSnapshot,
+        bundle: ApplicationAnalysisBundle,
+    ) -> None:
+        repository = ProfessionalAssetRepository(self.database_path)
+        type_map = {
+            "professional_summary": AssetType.PROFESSIONAL_BIO,
+            "about_section": AssetType.ABOUT_SECTION,
+            "recruiter_message": AssetType.RECRUITER_MESSAGE,
+            "cover_letter": AssetType.COVER_LETTER,
+            "project_highlight": AssetType.PROJECT_HIGHLIGHT,
+        }
+        source_refs = list(
+            dict.fromkeys(
+                [
+                    *bundle.evidence_scope.get("selected_source_refs", []),
+                    *job.source_refs,
+                ]
+            )
+        )
+        evidence_ids = list(bundle.evidence_scope.get("selected_evidence_ids", []))
+        match_snapshot = self.snapshots.get_analysis(bundle.match_snapshot_id)
+        document_snapshot_ids = (
+            [match_snapshot.resume_snapshot_id]
+            if match_snapshot is not None and match_snapshot.resume_snapshot_id
+            else []
+        )
+        for item in kit.items:
+            asset_type = type_map.get(item.type)
+            if asset_type is None or not item.content.strip():
+                continue
+            repository.save(
+                ProfessionalAsset(
+                    asset_id=f"{kit.application_kit_id}:{item.type}",
+                    asset_type=asset_type,
+                    title=f"{item.type.replace('_', ' ').title()} — {job.title}",
+                    status=AssetStatus.REVIEW,
+                    content=item.content,
+                    structured_content={"kit_item_id": item.item_id, "item_type": item.type},
+                    profile_id=master.profile_id,
+                    target_opportunity_id=job.opportunity_id,
+                    application_lab_session_id=session.session_id,
+                    evidence_scope_id=str(bundle.evidence_scope.get("scope_id", "")),
+                    evidence_scope=bundle.evidence_scope,
+                    source_refs=source_refs,
+                    evidence_ids=evidence_ids,
+                    document_snapshot_ids=document_snapshot_ids,
+                    dependency_hash=bundle.dependency_hash,
+                    review_status=EvidenceReviewStatus.SOURCED,
+                )
+            )
+        repository.save(
+            ProfessionalAsset(
+                asset_id=kit.application_kit_id,
+                asset_type=AssetType.APPLICATION_KIT,
+                title=kit.title,
+                status=AssetStatus.REVIEW,
+                content="\n\n".join(item.content for item in kit.items if item.content.strip()),
+                structured_content=kit.model_dump(mode="json"),
+                profile_id=master.profile_id,
+                target_opportunity_id=job.opportunity_id,
+                application_lab_session_id=session.session_id,
+                evidence_scope_id=str(bundle.evidence_scope.get("scope_id", "")),
+                evidence_scope=bundle.evidence_scope,
+                source_refs=source_refs,
+                evidence_ids=evidence_ids,
+                document_snapshot_ids=document_snapshot_ids,
+                dependency_hash=bundle.dependency_hash,
+                review_status=EvidenceReviewStatus.SOURCED,
+            )
+        )
+
+    def review_kit_item(
+        self,
+        session_id: str,
+        item_id: str,
+        status: str,
+        *,
+        edited_content: str = "",
+    ) -> ApplicationKitItem:
+        session = self._session(session_id)
+        if not session.application_kit_id:
+            raise ValueError("Crie o Application Kit antes de revisar seus itens.")
+        reviewed = self.repository.review_kit_item(
+            session.application_kit_id,
+            item_id,
+            KitItemStatus(status),
+            edited_content=edited_content,
+        )
+        if reviewed is None:
+            raise LookupError("Item do Application Kit não encontrado.")
+        return reviewed
+
+    def export_kit(self, session_id: str) -> tuple[str, dict[str, str]]:
+        session = self._session(session_id)
+        kit = (
+            self.repository.get_kit(session.application_kit_id)
+            if session.application_kit_id
+            else None
+        )
+        if kit is None:
+            raise LookupError("Application Kit não encontrado.")
+        return kit.application_kit_id, {
+            item.type: (
+                item.edited_content if item.status is KitItemStatus.EDITED else item.content
+            )
+            for item in kit.items
+            if item.status in {KitItemStatus.ACCEPTED, KitItemStatus.EDITED}
+        }
 
     def create_action_plan(
         self, session_id: str, *, period_days: Literal[7, 14, 30] = 7
