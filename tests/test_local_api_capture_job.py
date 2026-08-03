@@ -9,6 +9,8 @@ from modules.opportunities import OpportunityStore
 from modules.storage.local_store import LocalStore
 from modules.tracker.job_tracker import JobTracker
 
+TOKEN = "companion-test-token"
+
 
 def _service(tmp_path):
     return LocalCompanionService(
@@ -22,7 +24,7 @@ def _service(tmp_path):
 
 def test_local_api_capture_becomes_opportunity_and_memory(tmp_path):
     service = _service(tmp_path)
-    app = LocalCompanionApp(service)
+    app = LocalCompanionApp(service, token=TOKEN)
     capture = BrowserCapturePayload(
         page_title="Desenvolvedor Python Júnior",
         url="https://jobs.example/vaga-python",
@@ -36,6 +38,7 @@ def test_local_api_capture_becomes_opportunity_and_memory(tmp_path):
         "POST",
         "/capture/job",
         body=capture.model_dump_json().encode(),
+        token=TOKEN,
     )
 
     assert status == 200
@@ -46,7 +49,7 @@ def test_local_api_capture_becomes_opportunity_and_memory(tmp_path):
 
 def test_local_api_capture_public_exam_does_not_become_private_job(tmp_path):
     service = _service(tmp_path)
-    app = LocalCompanionApp(service)
+    app = LocalCompanionApp(service, token=TOKEN)
     capture = BrowserCapturePayload(
         kind="public_exam",
         page_title="Edital 01/2026",
@@ -60,8 +63,11 @@ def test_local_api_capture_public_exam_does_not_become_private_job(tmp_path):
         "POST",
         "/capture/public-exam",
         body=capture.model_dump_json().encode(),
+        token=TOKEN,
     )
-    context_status, context_payload = app.handle("GET", "/capture/context-summary")
+    context_status, context_payload = app.handle(
+        "GET", "/capture/context-summary", token=TOKEN
+    )
 
     assert status == 200
     assert payload["capture_id"]

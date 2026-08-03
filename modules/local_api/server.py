@@ -6,8 +6,10 @@ import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from typing import cast
 
 from modules.local_api.app import LocalCompanionApp
+from modules.security import LocalRateLimiter, RequestLimitError, RequestPolicy
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8765
@@ -19,8 +21,14 @@ class CompanionRequestHandler(BaseHTTPRequestHandler):
     """Translate local HTTP requests into LocalCompanionApp calls."""
 
     app = LocalCompanionApp()
+    policy = RequestPolicy(max_body_bytes=1_048_576, max_batch_items=100, max_json_depth=16)
+    rate_limiter = LocalRateLimiter(requests=120, window_seconds=60)
 
     def do_OPTIONS(self) -> None:  # noqa: N802
+        error = self._boundary_error()
+        if error:
+            self._send_json(*error)
+            return
         self.send_response(204)
         self._cors_headers()
         self.end_headers()
@@ -35,15 +43,41 @@ class CompanionRequestHandler(BaseHTTPRequestHandler):
         return
 
     def _handle(self) -> None:
-        length = int(self.headers.get("Content-Length", "0"))
-        body = self.rfile.read(length) if length else b""
+        error = self._boundary_error()
+        if error:
+            self._send_json(*error)
+            return
+        try:
+            raw_length = self.headers.get("Content-Length", "")
+            self.policy.validate_content_length(raw_length)
+            length = int(raw_length or "0")
+            if self.command == "POST":
+                content_type = self.headers.get("Content-Type", "").split(";", 1)[0].casefold()
+                if content_type != "application/json":
+                    self._send_json(415, {"ok": False, "message": "Content-Type não aceito."})
+                    return
+            self.connection.settimeout(self.policy.timeout_seconds)
+            body = self.rfile.read(length) if length else b""
+            if body:
+                self.policy.validate_json(json.loads(body))
+        except (RequestLimitError, json.JSONDecodeError, RecursionError) as exc:
+            status = exc.status_code if isinstance(exc, RequestLimitError) else 400
+            self._send_json(status, {"ok": False, "message": "Payload local inválido."})
+            return
+        except TimeoutError:
+            self._send_json(408, {"ok": False, "message": "Tempo limite da requisição excedido."})
+            return
         status, payload = self.app.handle(
             self.command,
             self.path,
             body=body,
             client_host=self.client_address[0],
             token=self.headers.get("X-SotuHire-Token", ""),
+            origin=self.headers.get("Origin", ""),
         )
+        self._send_json(status, payload)
+
+    def _send_json(self, status: int, payload: dict[str, object]) -> None:
         encoded = json.dumps(payload, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self._cors_headers()
@@ -52,10 +86,40 @@ class CompanionRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(encoded)
 
+    def _boundary_error(self) -> tuple[int, dict[str, object]] | None:
+        host = self.headers.get("Host", "").casefold()
+        server_address = cast(tuple[str, int], self.server.server_address)
+        port = server_address[1]
+        allowed_hosts = {
+            f"127.0.0.1:{port}",
+            f"localhost:{port}",
+            f"[::1]:{port}",
+        }
+        if host not in allowed_hosts:
+            return 400, {"ok": False, "message": "Host local inválido."}
+        origin = self.headers.get("Origin", "")
+        if origin and not _origin_allowed(origin):
+            return 403, {"ok": False, "message": "Origem não autorizada."}
+        key = f"{self.client_address[0]}:{self.path}"
+        if not self.rate_limiter.allow(key):
+            return 429, {"ok": False, "message": "Muitas requisições locais."}
+        return None
+
     def _cors_headers(self) -> None:
-        self.send_header("Access-Control-Allow-Origin", "*")
+        origin = self.headers.get("Origin", "")
+        if origin and _origin_allowed(origin):
+            self.send_header("Access-Control-Allow-Origin", origin)
+            self.send_header("Vary", "Origin")
         self.send_header("Access-Control-Allow-Headers", "Content-Type, X-SotuHire-Token")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Cache-Control", "no-store")
+
+
+def _origin_allowed(origin: str) -> bool:
+    return origin.startswith("chrome-extension://") or origin in {
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    }
 
 
 def start_server(

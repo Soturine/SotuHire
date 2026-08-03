@@ -155,6 +155,7 @@ import {
 } from "@/mocks/application-lab";
 import type { ApiMode } from "./mode";
 import { getActiveDemoPersona } from "@/mocks/personas";
+import { pairedApiFetch } from "@/features/local-security/api-pairing";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -173,7 +174,7 @@ async function call<T>(
     return mockValue;
   }
 
-  const res = await fetch(`${baseUrl.replace(/\/+$/, "")}${path}`, {
+  const res = await pairedApiFetch(baseUrl, path, {
     ...init,
     headers: {
       "content-type": "application/json",

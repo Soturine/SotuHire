@@ -14,6 +14,7 @@ from modules.application_lab.models import (
 from modules.application_lab.service import ApplicationLabService
 from modules.context.models import CareerContext, CareerContextPurpose
 from modules.storage.snapshots import JobSnapshot
+from tests.api_test_helpers import api_test_settings, authenticated_test_client
 
 
 class EmptyContextEngine:
@@ -28,9 +29,9 @@ def _client(tmp_path) -> tuple[TestClient, ApplicationLabApiService]:
         context_engine=EmptyContextEngine(),  # type: ignore[arg-type]
     )
     service = ApplicationLabApiService(domain)
-    app = create_app()
+    app = create_app(api_test_settings())
     app.dependency_overrides[get_application_lab_api_service] = lambda: service
-    return TestClient(app), service
+    return authenticated_test_client(app), service
 
 
 def _master() -> MasterResume:

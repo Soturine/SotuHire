@@ -18,14 +18,14 @@ def is_local_client(host: str) -> bool:
 
 
 def configured_token() -> str:
-    """Return the optional local companion token."""
+    """Return an explicitly configured local companion installation token."""
     return os.getenv("SOTUHIRE_COMPANION_TOKEN", "").strip()
 
 
 def token_is_valid(provided: str, expected: str | None = None) -> bool:
-    """Require a matching token only when one is configured."""
+    """Require a non-empty constant-time installation-token match."""
     required = configured_token() if expected is None else expected
-    return not required or hmac.compare_digest(provided, required)
+    return bool(required and provided and hmac.compare_digest(provided, required))
 
 
 def sanitize_text(value: str, *, limit: int) -> str:

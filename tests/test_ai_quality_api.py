@@ -1,9 +1,9 @@
 from apps.api.main import create_app
-from fastapi.testclient import TestClient
 from modules.ai.benchmark_store import AiBenchmark, AiBenchmarkStore
 from modules.ai.feedback import AiFeedbackStore
 from modules.storage.ai_runs import AiRun, AiRunStore
 from modules.storage.migrations import MigrationRunner
+from tests.api_test_helpers import api_test_settings, authenticated_test_client
 
 
 def test_ai_quality_feedback_and_run_endpoints(tmp_path, monkeypatch) -> None:
@@ -20,7 +20,7 @@ def test_ai_quality_feedback_and_run_endpoints(tmp_path, monkeypatch) -> None:
             schema_valid=True,
         )
     )
-    client = TestClient(create_app())
+    client = authenticated_test_client(create_app(api_test_settings()))
 
     summary = client.get("/api/v1/ai/quality/summary")
     runs = client.get("/api/v1/ai/quality/runs?limit=1")
@@ -60,7 +60,9 @@ def test_ai_quality_reads_the_dedicated_sanitized_benchmark_store(tmp_path, monk
         )
     )
 
-    response = TestClient(create_app()).get("/api/v1/ai/quality/benchmarks")
+    response = authenticated_test_client(create_app(api_test_settings())).get(
+        "/api/v1/ai/quality/benchmarks"
+    )
 
     assert response.status_code == 200
     assert response.json()["data"]["items"][0]["providers"] == ["local"]

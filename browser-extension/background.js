@@ -54,6 +54,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
 });
 
 async function handleMessage(message) {
+  if (message.type === "SOTUHIRE_COMPANION_PAIR") return pairCompanion();
+  if (message.type === "SOTUHIRE_COMPANION_STATUS") return companionStatus();
+  if (message.type === "SOTUHIRE_COMPANION_REQUEST") {
+    return companionRequest(message.path, message.body);
+  }
   if (message.type === "SOTUHIRE_AI_STATUS") return aiStatus();
   if (message.type === "SOTUHIRE_AI_SAVE_KEY") {
     return saveProviderKey(
@@ -82,6 +87,76 @@ async function handleMessage(message) {
     };
   }
   throw new Error("Ação da extensão não reconhecida.");
+}
+
+async function pairCompanion() {
+  const start = await companionFetch("/pairing/start", {}, "");
+  const complete = await companionFetch(
+    "/pairing/complete",
+    { challenge_id: start.challenge_id, proof: start.proof },
+    "",
+  );
+  await chrome.storage.session.set({
+    companionSessionToken: complete.session_token,
+    companionSessionExpiresAt:
+      Date.now() + Number(complete.expires_in_seconds || 0) * 1000,
+  });
+  return { paired: true, expiresInSeconds: complete.expires_in_seconds };
+}
+
+async function companionStatus() {
+  const saved = await chrome.storage.session.get([
+    "companionSessionToken",
+    "companionSessionExpiresAt",
+  ]);
+  const paired = Boolean(
+    saved.companionSessionToken &&
+      Number(saved.companionSessionExpiresAt || 0) > Date.now(),
+  );
+  return { paired };
+}
+
+async function companionRequest(path, body) {
+  const saved = await chrome.storage.session.get([
+    "companionSessionToken",
+    "companionSessionExpiresAt",
+  ]);
+  if (
+    !saved.companionSessionToken ||
+    Number(saved.companionSessionExpiresAt || 0) <= Date.now()
+  ) {
+    await chrome.storage.session.remove([
+      "companionSessionToken",
+      "companionSessionExpiresAt",
+    ]);
+    throw new Error("Pareie a extensão com o Local Companion.");
+  }
+  return companionFetch(path, body, saved.companionSessionToken);
+}
+
+async function companionFetch(path, body, sessionToken) {
+  const response = await fetch(`${COMPANION_API}${path}`, {
+    method: body === undefined ? "GET" : "POST",
+    headers: {
+      ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+      ...(sessionToken ? { "X-SotuHire-Token": sessionToken } : {}),
+    },
+    body: body === undefined ? undefined : JSON.stringify(body),
+    credentials: "omit",
+  });
+  const payload = await response.json();
+  if (!response.ok || payload.ok === false) {
+    if (response.status === 401) {
+      await chrome.storage.session.remove([
+        "companionSessionToken",
+        "companionSessionExpiresAt",
+      ]);
+    }
+    throw new Error(
+      payload.message || `Local Companion: HTTP ${response.status}`,
+    );
+  }
+  return payload;
 }
 
 async function aiStatus() {
@@ -431,20 +506,11 @@ async function analyzeWithSotuHire(project, localReport, trace) {
       apiFallbackReason = `API local indisponível: ${safeError(error)}`;
     }
   }
-  const saved = await chrome.storage.local.get(["localToken"]);
-  const response = await fetch(`${COMPANION_API}/capture/repo-analysis`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "X-SotuHire-Token": saved.localToken || "",
-    },
-    body: JSON.stringify({
-      ...project,
-      provider_used: "local",
-      analysis_result: { ...(project.analysis_result || {}), use_ai: true },
-    }),
+  const payload = await companionRequest("/capture/repo-analysis", {
+    ...project,
+    provider_used: "local",
+    analysis_result: { ...(project.analysis_result || {}), use_ai: true },
   });
-  const payload = await responseJson(response);
   const report = payload.report || localReport;
   return {
     project,

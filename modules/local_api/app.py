@@ -41,7 +41,6 @@ from modules.local_api.security import (
     configured_token,
     is_local_client,
     sanitize_text,
-    token_is_valid,
 )
 from modules.memory import CareerMemory
 from modules.opportunities import OpportunityStore
@@ -57,6 +56,7 @@ from modules.portfolio import (
 from modules.schemas.job_analysis import JobAnalysisSchema, Recommendation
 from modules.schemas.user_preferences import UserPreferences
 from modules.scraping.connectors.manual_url import opportunity_from_text
+from modules.security import LocalAuthManager, PairingError
 from modules.storage import (
     AnalysisSnapshot,
     JobSnapshot,
@@ -646,10 +646,19 @@ class LocalCompanionApp:
     """Minimal request router shared by HTTP and unit tests."""
 
     def __init__(
-        self, service: LocalCompanionService | None = None, *, token: str | None = None
+        self,
+        service: LocalCompanionService | None = None,
+        *,
+        token: str | None = None,
+        auth: LocalAuthManager | None = None,
     ) -> None:
         self.service = service or LocalCompanionService()
         self.token = configured_token() if token is None else token
+        base = Path(os.getenv("SOTUHIRE_DATA_DIR", "data"))
+        self.auth = auth or LocalAuthManager(
+            installation_token=self.token,
+            token_path=base / "security" / "companion-auth.json",
+        )
 
     def handle(
         self,
@@ -659,17 +668,46 @@ class LocalCompanionApp:
         body: bytes = b"",
         client_host: str = "127.0.0.1",
         token: str = "",
+        origin: str = "",
     ) -> tuple[int, dict[str, object]]:
         if not is_local_client(client_host):
             return 403, {"ok": False, "message": "A Local API aceita somente localhost."}
-        if not token_is_valid(token, self.token):
-            return 401, {"ok": False, "message": "Token local inválido."}
         try:
             if method == "GET" and path == "/health":
                 return 200, self.service.health().model_dump(mode="json")
+            payload = json.loads(body.decode("utf-8") or "{}")
+            if method == "POST" and path == "/pairing/start":
+                if not _pairing_origin_allowed(origin):
+                    return 403, {"ok": False, "message": "Origem de pairing não autorizada."}
+                challenge = self.auth.start_pairing(origin=origin, client_kind="extension")
+                return 200, {
+                    "ok": True,
+                    "challenge_id": challenge.challenge_id,
+                    "proof": challenge.proof,
+                    "expires_in_seconds": self.auth.pairing_ttl_seconds,
+                }
+            if method == "POST" and path == "/pairing/complete":
+                if not _pairing_origin_allowed(origin):
+                    return 403, {"ok": False, "message": "Origem de pairing não autorizada."}
+                credentials = self.auth.complete_pairing(
+                    challenge_id=str(payload.get("challenge_id", "")),
+                    proof=str(payload.get("proof", "")),
+                    origin=origin,
+                    client_kind="extension",
+                )
+                return 200, {
+                    "ok": True,
+                    "paired": True,
+                    "session_token": credentials.session_token,
+                    "expires_in_seconds": self.auth.session_ttl_seconds,
+                }
+            authenticated = self.auth.authenticate_installation(token) or (
+                bool(origin) and self.auth.authenticate_session(token, origin=origin)
+            )
+            if not authenticated:
+                return 401, {"ok": False, "message": "Pareamento local obrigatório."}
             if method == "GET" and path in {"/capture/status", "/capture/context-summary"}:
                 return 200, self.service.context_summary().model_dump(mode="json")
-            payload = json.loads(body.decode("utf-8") or "{}")
             if method == "POST" and path == "/handshake":
                 response = self.service.handshake(CompanionHandshakeRequest.model_validate(payload))
             elif method == "POST" and path == "/capture/job":
@@ -702,10 +740,19 @@ class LocalCompanionApp:
             else:
                 return 404, {"ok": False, "message": "Endpoint não encontrado."}
             return 200, response.model_dump(mode="json")
+        except PairingError as exc:
+            return 401, {"ok": False, "message": str(exc)}
         except (ValidationError, ValueError, json.JSONDecodeError) as exc:
             return 422, {"ok": False, "message": str(exc)}
         except KeyError as exc:
             return 404, {"ok": False, "message": str(exc)}
+
+
+def _pairing_origin_allowed(origin: str) -> bool:
+    return origin.startswith("chrome-extension://") or origin in {
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+    }
 
 
 def _merge_extension_ai_report(

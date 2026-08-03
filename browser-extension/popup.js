@@ -1,6 +1,5 @@
 const API = "http://127.0.0.1:8765";
 const result = document.querySelector("#result");
-const localToken = document.querySelector("#local-token");
 const deepProjectAnalysis = document.querySelector("#deep-project-analysis");
 const aiProvider = document.querySelector("#ai-provider");
 const aiModel = document.querySelector("#ai-model");
@@ -23,10 +22,8 @@ async function initialize() {
   const saved = await chrome.storage.local.get([
     "aiProvider",
     "aiModels",
-    "localToken",
     "deepProjectAnalysis",
   ]);
-  localToken.value = saved.localToken || "";
   deepProjectAnalysis.checked = Boolean(saved.deepProjectAnalysis);
   aiProvider.value = saved.aiProvider || "sotuhire";
   const tab = await currentTab();
@@ -53,9 +50,6 @@ document.querySelectorAll(".tab").forEach((tab) => {
   });
 });
 
-localToken.addEventListener("change", () =>
-  chrome.storage.local.set({ localToken: localToken.value }),
-);
 deepProjectAnalysis.addEventListener("change", () => {
   chrome.storage.local.set({
     deepProjectAnalysis: deepProjectAnalysis.checked,
@@ -103,18 +97,11 @@ const backgroundRequest = async (message) => {
 
 const request = async (path, body) => {
   try {
-    const response = await fetch(`${API}${path}`, {
-      method: body ? "POST" : "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "X-SotuHire-Token": localToken.value,
-      },
-      body: body ? JSON.stringify(body) : undefined,
+    return await backgroundRequest({
+      type: "SOTUHIRE_COMPANION_REQUEST",
+      path,
+      body,
     });
-    const payload = await response.json();
-    if (!response.ok || payload.ok === false)
-      throw new Error(payload.message || `HTTP ${response.status}`);
-    return payload;
   } catch (error) {
     throw new Error(
       `Local Companion offline. Inicie o SotuHire local e tente novamente. ${error.message}`,
@@ -124,7 +111,16 @@ const request = async (path, body) => {
 
 async function checkCompanion() {
   try {
-    const payload = await request("/health");
+    const healthResponse = await fetch(`${API}/health`, { credentials: "omit" });
+    const payload = await healthResponse.json();
+    if (!healthResponse.ok) throw new Error(payload.message || `HTTP ${healthResponse.status}`);
+    const pairing = await backgroundRequest({ type: "SOTUHIRE_COMPANION_STATUS" });
+    if (!pairing.paired) {
+      compatibilityStatus.textContent =
+        "Companion online. Autorize uma sessão com o botão Parear extensão.";
+      setCompanionState(false, "Companion online · pareamento necessário");
+      return { ...payload, paired: false };
+    }
     let handshake;
     try {
       handshake = await request("/handshake", {
@@ -152,6 +148,16 @@ async function checkCompanion() {
     setCompanionState(false, "SotuHire offline · modo independente ativo");
     return { ok: false, message: error.message };
   }
+}
+
+async function pairLocalCompanion() {
+  const pairing = await backgroundRequest({ type: "SOTUHIRE_COMPANION_PAIR" });
+  await checkCompanion();
+  return {
+    message: pairing.paired
+      ? "Extensão pareada somente para esta sessão do navegador."
+      : "Não foi possível confirmar o pareamento.",
+  };
 }
 
 function setCompanionState(online, label) {
@@ -413,6 +419,7 @@ const act = async (action) => {
   showResult("Processando…", "Coletando somente os dados necessários.", "…");
   try {
     if (action === "health") return display(await checkCompanion());
+    if (action === "pair-companion") return display(await pairLocalCompanion());
     if (action === "compatibility") return display(await checkCompanion());
     if (action === "context-summary")
       return display(await request("/capture/context-summary"));

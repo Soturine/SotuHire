@@ -239,10 +239,8 @@
         </div>
         <details class="compact-details">
           <summary>Conexão local avançada</summary>
-          <div class="field-group">
-            <label for="local-token">Token opcional do Local Companion</label>
-            <input id="local-token" type="password" autocomplete="off" />
-          </div>
+          <button data-action="pair-companion">Parear extensão nesta sessão</button>
+          <small>O token de sessão fica somente no service worker e expira ao fechar o navegador.</small>
           <button data-action="context-summary">
             Ver contexto seguro recebido
           </button>

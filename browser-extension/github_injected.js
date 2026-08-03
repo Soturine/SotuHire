@@ -1,5 +1,4 @@
 (() => {
-  const API = "http://127.0.0.1:8765";
   const ROOT_ID = "sotuhire-github-companion";
   let lastPath = "";
   let currentProject = null;
@@ -26,7 +25,6 @@
   const settings = async () =>
     chrome.storage.local.get([
       "deepProjectAnalysis",
-      "localToken",
       "aiProvider",
       "aiModels",
     ]);
@@ -105,19 +103,11 @@
   };
 
   const localRequest = async (path, body) => {
-    const saved = await settings();
-    const response = await fetch(`${API}${path}`, {
-      method: body ? "POST" : "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "X-SotuHire-Token": saved.localToken || "",
-      },
-      body: body ? JSON.stringify(body) : undefined,
+    return backgroundRequest({
+      type: "SOTUHIRE_COMPANION_REQUEST",
+      path,
+      body,
     });
-    const payload = await response.json();
-    if (!response.ok)
-      throw new Error(payload.message || `HTTP ${response.status}`);
-    return payload;
   };
 
   const standalone = async (project, provider, model) => {

@@ -8,8 +8,8 @@ def test_local_api_rejects_non_local_clients_and_invalid_tokens():
     app = LocalCompanionApp(token="local-secret")
 
     remote_status, _ = app.handle("GET", "/health", client_host="192.168.1.20")
-    token_status, _ = app.handle("GET", "/health", token="wrong")
-    ok_status, _ = app.handle("GET", "/health", token="local-secret")
+    token_status, _ = app.handle("GET", "/capture/status", token="wrong")
+    ok_status, _ = app.handle("GET", "/capture/status", token="local-secret")
 
     assert remote_status == 403
     assert token_status == 401
@@ -17,15 +17,48 @@ def test_local_api_rejects_non_local_clients_and_invalid_tokens():
 
 
 def test_local_api_rejects_payload_that_is_too_large():
-    app = LocalCompanionApp()
+    app = LocalCompanionApp(token="local-secret")
     payload = {
         "url": "https://jobs.example/large",
         "visible_text": "x" * 200_001,
     }
 
-    status, _ = app.handle("POST", "/capture/job", body=json.dumps(payload).encode())
+    status, _ = app.handle(
+        "POST", "/capture/job", body=json.dumps(payload).encode(), token="local-secret"
+    )
 
     assert status == 422
+
+
+def test_local_api_extension_pairing_is_one_use_and_origin_bound():
+    app = LocalCompanionApp(token="local-secret")
+    origin = "chrome-extension://abcdefghijklmnop"
+    start_status, start = app.handle(
+        "POST", "/pairing/start", body=b"{}", origin=origin
+    )
+    complete_body = json.dumps(
+        {"challenge_id": start["challenge_id"], "proof": start["proof"]}
+    ).encode()
+    complete_status, complete = app.handle(
+        "POST", "/pairing/complete", body=complete_body, origin=origin
+    )
+    replay_status, _ = app.handle(
+        "POST", "/pairing/complete", body=complete_body, origin=origin
+    )
+
+    assert start_status == 200
+    assert complete_status == 200
+    assert replay_status == 401
+    session_token = str(complete["session_token"])
+    assert app.handle(
+        "GET", "/capture/status", token=session_token, origin=origin
+    )[0] == 200
+    assert app.handle(
+        "GET",
+        "/capture/status",
+        token=session_token,
+        origin="chrome-extension://different",
+    )[0] == 401
 
 
 def test_local_api_server_refuses_public_bind():

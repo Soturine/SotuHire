@@ -19,7 +19,10 @@ def test_extension_keeps_provider_keys_out_of_content_scripts():
     assert 'credentials: "omit"' in background
     assert '"x-goog-api-key": key' in background
     assert "Authorization: `Bearer ${key}`" in background
-    assert "body: body ? JSON.stringify(body)" in popup
+    assert "SOTUHIRE_COMPANION_REQUEST" in popup
+    assert "companionSessionToken" in background
+    assert "body: body === undefined ? undefined : JSON.stringify(body)" in background
+    assert "X-SotuHire-Token" not in serialized
     assert "localStorage" not in content
     assert "sessionStorage" not in content
 

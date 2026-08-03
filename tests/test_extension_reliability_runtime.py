@@ -80,10 +80,20 @@ def test_companion_handshake_negotiates_current_and_old_extension(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
-    app = LocalCompanionApp(token="")
+    app = LocalCompanionApp(token="companion-test-token")
 
-    status, current = app.handle("POST", "/handshake", body=b'{"extension_version":"0.9.4"}')
-    old_status, old = app.handle("POST", "/handshake", body=b'{"extension_version":"0.8.9"}')
+    status, current = app.handle(
+        "POST",
+        "/handshake",
+        body=b'{"extension_version":"0.9.4"}',
+        token="companion-test-token",
+    )
+    old_status, old = app.handle(
+        "POST",
+        "/handshake",
+        body=b'{"extension_version":"0.8.9"}',
+        token="companion-test-token",
+    )
 
     assert status == 200
     assert current["extension_version"] == "0.9.4"

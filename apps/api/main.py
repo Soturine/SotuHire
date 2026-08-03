@@ -6,8 +6,10 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from modules.security import LocalAuthManager, RequestPolicy
 
 from apps.api.config import ApiSettings
+from apps.api.middleware import LocalSecurityMiddleware
 from apps.api.routes import (
     ai_quality,
     analysis,
@@ -15,6 +17,7 @@ from apps.api.routes import (
     data,
     extension,
     health,
+    local_security,
     notifications,
     outcomes,
     profile,
@@ -36,14 +39,40 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
         description="Local-first API layer for SotuHire frontend clients.",
     )
     app.state.settings = resolved
+    app.state.local_auth = LocalAuthManager(
+        installation_token=resolved.installation_token,
+        token_path=resolved.auth_path,
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=resolved.allowed_origins,
-        allow_credentials=False,
+        allow_credentials=True,
         allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization"],
+        allow_headers=[
+            "Content-Type",
+            "Authorization",
+            "X-SotuHire-Token",
+            "X-SotuHire-CSRF",
+            "X-Idempotency-Key",
+            "X-Request-ID",
+        ],
+    )
+    app.add_middleware(
+        LocalSecurityMiddleware,
+        auth=app.state.local_auth,
+        policy=RequestPolicy(
+            max_body_bytes=resolved.max_body_bytes,
+            max_batch_items=resolved.max_batch_items,
+            max_json_depth=resolved.max_json_depth,
+            timeout_seconds=resolved.request_timeout_seconds,
+            rate_limit_requests=resolved.rate_limit_requests,
+            rate_limit_window_seconds=resolved.rate_limit_window_seconds,
+        ),
+        allowed_origins=resolved.allowed_origins,
+        allowed_hosts=resolved.allowed_hosts,
     )
     app.include_router(health.router)
+    app.include_router(local_security.router)
     app.include_router(data.router)
     app.include_router(analysis.router)
     app.include_router(application_lab.application_lab_router)

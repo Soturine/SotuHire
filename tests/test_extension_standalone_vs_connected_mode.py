@@ -10,6 +10,8 @@ from modules.portfolio import (
     enhance_project_report,
 )
 
+TOKEN = "companion-test-token"
+
 
 def test_extension_exposes_standalone_and_connected_project_modes():
     popup = Path("browser-extension/popup.js").read_text(encoding="utf-8")
@@ -29,10 +31,10 @@ def test_connected_project_analysis_saves_memory(tmp_path):
         memory=CareerMemory(MemoryStore(tmp_path / "memory.jsonl")),
         project_store=ProjectAnalysisStore(tmp_path / "projects.jsonl"),
     )
-    app = LocalCompanionApp(service)
+    app = LocalCompanionApp(service, token=TOKEN)
     body = b'{"url":"https://github.example/example/repo","page_type":"github_repo","title":"Repo","languages":["Python"]}'
 
-    status, payload = app.handle("POST", "/capture/github-repo", body=body)
+    status, payload = app.handle("POST", "/capture/github-repo", body=body, token=TOKEN)
     response = cast(dict[str, Any], payload)
 
     assert status == 200

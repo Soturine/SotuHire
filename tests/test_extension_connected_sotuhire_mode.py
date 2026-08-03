@@ -4,6 +4,8 @@ from modules.local_api import LocalCompanionApp, LocalCompanionService
 from modules.memory import CareerMemory, MemoryStore
 from modules.portfolio import ProjectAnalysisStore
 
+TOKEN = "companion-test-token"
+
 
 def test_connected_sotuhire_mode_saves_full_report_and_evidence(tmp_path):
     memory = CareerMemory(MemoryStore(tmp_path / "memory.jsonl"))
@@ -11,7 +13,7 @@ def test_connected_sotuhire_mode_saves_full_report_and_evidence(tmp_path):
         memory=memory,
         project_store=ProjectAnalysisStore(tmp_path / "projects.jsonl"),
     )
-    app = LocalCompanionApp(service)
+    app = LocalCompanionApp(service, token=TOKEN)
     body = (
         b'{"url":"https://github.com/example/atlas","owner":"example","repo":"atlas",'
         b'"title":"Atlas","page_type":"github_repo","readme_text":"Install and usage",'
@@ -19,7 +21,7 @@ def test_connected_sotuhire_mode_saves_full_report_and_evidence(tmp_path):
         b'"commit_messages":["feat: add API"],"languages":["Python"]}'
     )
 
-    status, payload = app.handle("POST", "/capture/repo-analysis", body=body)
+    status, payload = app.handle("POST", "/capture/repo-analysis", body=body, token=TOKEN)
     response = cast(dict[str, Any], payload)
 
     assert status == 200
@@ -43,7 +45,7 @@ def test_connected_mode_consumes_extension_ai_report_without_changing_local_scor
         b'"strengths":["Testes publicos"],"stack":["FastAPI"]}}}'
     )
 
-    baseline_status, baseline_payload = LocalCompanionApp(service).handle(
+    baseline_status, baseline_payload = LocalCompanionApp(service, token=TOKEN).handle(
         "POST",
         "/capture/repo-analysis",
         body=(
@@ -51,8 +53,11 @@ def test_connected_mode_consumes_extension_ai_report_without_changing_local_scor
             b'"repo":"baseline","title":"Atlas","page_type":"github_repo",'
             b'"languages":["Python"]}'
         ),
+        token=TOKEN,
     )
-    status, payload = LocalCompanionApp(service).handle("POST", "/capture/repo-analysis", body=body)
+    status, payload = LocalCompanionApp(service, token=TOKEN).handle(
+        "POST", "/capture/repo-analysis", body=body, token=TOKEN
+    )
 
     baseline_report = cast(dict[str, Any], baseline_payload)["report"]
     report = cast(dict[str, Any], payload)["report"]
