@@ -8,13 +8,23 @@ from .formatters import (
     profile_context_from_career_context,
     profile_evidence_candidates_from_github_report,
 )
-from .models import CareerContext, CareerContextEvidence, CareerContextPurpose
+from .models import (
+    CareerContext,
+    CareerContextEvidence,
+    CareerContextPurpose,
+    EvidenceReviewStatus,
+    EvidenceScope,
+    EvidenceSourceLocation,
+)
 
 __all__ = [
     "CareerContext",
     "CareerContextEngine",
     "CareerContextEvidence",
     "CareerContextPurpose",
+    "EvidenceReviewStatus",
+    "EvidenceScope",
+    "EvidenceSourceLocation",
     "context_brief",
     "context_to_memory_evidence",
     "format_context_for_prompt",

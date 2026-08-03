@@ -10,7 +10,7 @@ from modules.memory import CareerEvidence
 from modules.memory.schemas import MemoryKind
 from modules.profile import ProfileContext, ProfileContextItem
 
-from .models import CareerContext, CareerContextEvidence
+from .models import CareerContext, CareerContextEvidence, EvidenceReviewStatus
 
 if TYPE_CHECKING:
     from modules.github_analyzer.schemas import GitHubAnalyzerReport
@@ -21,10 +21,15 @@ def format_context_for_prompt(
     *,
     include_sensitive: bool = False,
     confirmed_only: bool = False,
+    external_ai: bool = False,
     max_evidence: int = 8,
     max_chars: int = 3_000,
 ) -> str:
     """Return compact, evidence-aware text for local or explicitly allowed prompts."""
+    if external_ai and (
+        context.evidence_scope is None or not context.evidence_scope.external_ai_opt_in
+    ):
+        return ""
     has_context = any(
         [
             context.profile_summary,
@@ -55,16 +60,24 @@ def format_context_for_prompt(
         if values:
             lines.append(f"{label}: {', '.join(values[:8])}")
     evidence_lines = []
-    visible = _visible_evidence(context.evidence, include_sensitive=include_sensitive)
+    scoped = (
+        context.evidence_scope.select(context.evidence, for_external_ai=external_ai)
+        if context.evidence_scope is not None
+        else context.evidence
+    )
+    visible = _visible_evidence(scoped, include_sensitive=include_sensitive)
     if confirmed_only:
-        visible = [item for item in visible if item.confirmed_by_user]
+        visible = [
+            item for item in visible if item.review_status == EvidenceReviewStatus.CONFIRMED
+        ]
     for item in visible[:max_evidence]:
-        status = "confirmado" if item.confirmed_by_user else "a confirmar"
+        status = item.review_status.value
         content = f" - {item.content}" if item.content else ""
         source_ref = f"; ref={item.source_ref}" if item.source_ref else ""
         evidence_lines.append(
             f"- {item.title}{content} "
-            f"[{item.kind}; {item.source}{source_ref}; {item.confidence}; {status}]"
+            f"[{item.evidence_id}; {item.kind}; {item.source}{source_ref}; "
+            f"{item.confidence}; {status}]"
         )
     if evidence_lines:
         lines.append("Evidencias:")
@@ -84,9 +97,12 @@ def context_to_memory_evidence(
 ) -> list[CareerEvidence]:
     """Convert context evidence to the memory evidence format used by analysis flows."""
     converted: list[CareerEvidence] = []
-    for item in _visible_evidence(context.evidence, include_sensitive=include_sensitive)[
-        :max_items
-    ]:
+    scoped = (
+        context.evidence_scope.select(context.evidence)
+        if context.evidence_scope is not None
+        else context.evidence
+    )
+    for item in _visible_evidence(scoped, include_sensitive=include_sensitive)[:max_items]:
         converted.append(
             CareerEvidence(
                 memory_id=str(item.metadata.get("memory_id") or f"context-{uuid4().hex}"),
@@ -113,8 +129,13 @@ def context_brief(context: CareerContext, *, max_evidence: int = 3) -> str:
         parts.append("areas: " + ", ".join(context.domains[:3]))
     if context.locations:
         parts.append("locais: " + ", ".join(context.locations[:3]))
-    if context.evidence:
-        evidence = [item.title for item in context.evidence if not item.sensitive][:max_evidence]
+    scoped = (
+        context.evidence_scope.select(context.evidence)
+        if context.evidence_scope is not None
+        else context.evidence
+    )
+    if scoped:
+        evidence = [item.title for item in scoped if not item.sensitive][:max_evidence]
         if evidence:
             parts.append("evidencias: " + ", ".join(evidence))
     return "; ".join(parts)
@@ -122,6 +143,11 @@ def context_brief(context: CareerContext, *, max_evidence: int = 3) -> str:
 
 def profile_context_from_career_context(context: CareerContext) -> ProfileContext:
     """Adapt unified context back to the existing compact profile context contract."""
+    scoped = (
+        context.evidence_scope.select(context.evidence)
+        if context.evidence_scope is not None
+        else context.evidence
+    )
     items = [
         ProfileContextItem(
             type=item.kind,
@@ -134,7 +160,7 @@ def profile_context_from_career_context(context: CareerContext) -> ProfileContex
             confidence=item.confidence,
             confirmed_by_user=item.confirmed_by_user,
         )
-        for item in context.evidence
+        for item in scoped
         if not item.sensitive
     ]
     return ProfileContext(

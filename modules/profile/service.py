@@ -7,6 +7,7 @@ from collections.abc import Iterable
 from modules.core.deduplication import duplicate_groups
 from modules.core.entity_identity import profile_item_identity
 from modules.core.text_utils import normalize_text
+from modules.evidence import EvidenceReviewStatus
 from modules.profile.extraction import extract_profile_items_local
 from modules.profile.models import (
     ProfileDeduplicationSuggestion,
@@ -60,6 +61,11 @@ class UniversalCareerProfileService:
         item = item.model_copy(
             update={
                 "confirmed_by_user": confirmed_by_user,
+                "review_status": (
+                    EvidenceReviewStatus.CONFIRMED
+                    if confirmed_by_user
+                    else item.review_status
+                ),
                 "confidence": "high" if confirmed_by_user else item.confidence,
                 "created_at": item.created_at or now,
                 "updated_at": now,
@@ -84,6 +90,7 @@ class UniversalCareerProfileService:
                     if value is not None and key in data:
                         data[key] = value
                 data["confirmed_by_user"] = True
+                data["review_status"] = EvidenceReviewStatus.CONFIRMED
                 data["updated_at"] = utc_now()
                 updated = ProfileItem.model_validate(data)
                 profile.items = [

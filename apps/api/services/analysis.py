@@ -189,6 +189,7 @@ def analyze_match(request: MatchAnalyzeRequest) -> tuple[MatchAnalyzeResponse, l
     career_context = _build_career_context(
         CareerContextPurpose.MATCH,
         query=" ".join([resume_text, job_text]),
+        external_ai_opt_in=runtime.allow_memory_context,
     )
     external_share = runtime.provider_name != "local" and runtime.allow_memory_context
     memory_evidence = context_to_memory_evidence(
@@ -268,6 +269,7 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
     career_context = _build_career_context(
         CareerContextPurpose.ATS,
         query=" ".join([request.job_text, " ".join(keywords)]),
+        external_ai_opt_in=runtime.allow_memory_context,
     )
     context_keywords = _context_keywords_for_ats(career_context, keywords)
     keywords_without_context = [keyword for keyword in keywords if keyword not in context_keywords]
@@ -288,6 +290,7 @@ def analyze_ats(request: AtsAnalyzeRequest) -> tuple[AtsAnalyzeResponse, list[st
                     career_context,
                     include_sensitive=False,
                     confirmed_only=True,
+                    external_ai=True,
                 )
                 if runtime.allow_memory_context
                 else ""
@@ -361,11 +364,13 @@ def tailor_resume(request: ResumeTailorRequest) -> tuple[ResumeTailorResponse, l
     career_context = _build_career_context(
         CareerContextPurpose.TAILOR,
         query=" ".join([request.target_role, request.job_text, request.evidence_text]),
+        external_ai_opt_in=runtime.allow_memory_context,
     )
     context_text = format_context_for_prompt(
         career_context,
         include_sensitive=False,
         confirmed_only=True,
+        external_ai=runtime.provider_name != "local",
     )
     local_evidence_text = _append_profile_context(request.evidence_text, context_text)
     provider_evidence_text = (
@@ -449,6 +454,7 @@ def analyze_github_repo(
     career_context = _build_career_context(
         CareerContextPurpose.GITHUB,
         query=" ".join([request.repo_url, request.target_role]),
+        external_ai_opt_in=runtime.allow_memory_context,
     )
     analysis_input = request.to_analysis_input()
     if not analysis_input.candidate_profile:
@@ -458,7 +464,14 @@ def analyze_github_repo(
             "domains": career_context.domains[:8],
             "evidence": [
                 item.model_dump(mode="json")
-                for item in career_context.evidence
+                for item in (
+                    career_context.evidence_scope.select(
+                        career_context.evidence,
+                        for_external_ai=runtime.provider_name != "local",
+                    )
+                    if career_context.evidence_scope is not None
+                    else []
+                )
                 if not item.sensitive and item.confirmed_by_user
             ][:8],
         }
@@ -590,8 +603,18 @@ def _append_profile_context(base_text: str, context_text: str) -> str:
     )
 
 
-def _build_career_context(purpose: CareerContextPurpose, *, query: str = "") -> CareerContext:
-    return CareerContextEngine().build(purpose, query=query, max_evidence=12)
+def _build_career_context(
+    purpose: CareerContextPurpose,
+    *,
+    query: str = "",
+    external_ai_opt_in: bool = False,
+) -> CareerContext:
+    return CareerContextEngine().build(
+        purpose,
+        query=query,
+        max_evidence=12,
+        external_ai_opt_in=external_ai_opt_in,
+    )
 
 
 def _context_keywords_for_ats(

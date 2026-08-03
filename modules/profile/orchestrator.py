@@ -320,6 +320,7 @@ def _context_item(item: ProfileItem) -> ProfileContextItem:
         domain=item.domain,
         source=item.source,
         source_ref=item.source_ref,
+        review_status=item.review_status,
         evidence=item.evidence,
         confidence=item.confidence,
         confirmed_by_user=item.confirmed_by_user,

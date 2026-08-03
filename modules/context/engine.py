@@ -9,7 +9,13 @@ from modules.memory import CareerMemoryQuery, MemoryRetriever
 from modules.memory.schemas import CareerEvidence
 from modules.profile import ProfileContext, ProfileContextItem, ProfileContextOrchestrator
 
-from .models import CareerContext, CareerContextEvidence, CareerContextPurpose
+from .models import (
+    CareerContext,
+    CareerContextEvidence,
+    CareerContextPurpose,
+    EvidenceReviewStatus,
+    EvidenceScope,
+)
 
 
 class CareerContextEngine:
@@ -35,6 +41,11 @@ class CareerContextEngine:
         include_github: bool = True,
         max_evidence: int = 12,
         profile_context_override: dict[str, object] | None = None,
+        evidence_scope: EvidenceScope | None = None,
+        selected_evidence_ids: list[str] | None = None,
+        selected_source_refs: list[str] | None = None,
+        external_ai_opt_in: bool = False,
+        sensitive_evidence_opt_in: bool = False,
     ) -> CareerContext:
         """Build a serializable context without inventing facts."""
         resolved_purpose = _purpose(purpose)
@@ -70,6 +81,16 @@ class CareerContextEngine:
             privacy_notes.append(
                 "Ha evidencias sensiveis; nao envie a provider externo sem revisar."
             )
+        if evidence_scope is not None and evidence_scope.purpose != resolved_purpose:
+            raise ValueError("EvidenceScope pertence a outro propósito.")
+        resolved_scope = evidence_scope or EvidenceScope.from_evidence(
+            purpose=resolved_purpose,
+            evidence=evidence,
+            selected_evidence_ids=selected_evidence_ids,
+            selected_source_refs=selected_source_refs,
+            external_ai_opt_in=external_ai_opt_in,
+            sensitive_evidence_opt_in=sensitive_evidence_opt_in,
+        )
 
         return CareerContext(
             purpose=resolved_purpose,
@@ -82,6 +103,7 @@ class CareerContextEngine:
             contract_types=_contract_types(profile_context),
             constraints=_unique(profile_context.constraints),
             evidence=evidence,
+            evidence_scope=resolved_scope,
             warnings=_unique(warnings),
             privacy_notes=_unique(privacy_notes),
         )
@@ -185,6 +207,7 @@ def _evidence_from_profile_item(item: ProfileContextItem, bucket: str) -> Career
         kind=item.type or bucket,
         source=source,
         source_ref=item.source_ref or "",
+        review_status=item.review_status,
         confidence=item.confidence,
         confirmed_by_user=item.confirmed_by_user,
         sensitive=item.sensitive
@@ -391,8 +414,15 @@ def _dedupe_key(item: CareerContextEvidence) -> str:
 
 def _evidence_sort_key(item: CareerContextEvidence) -> tuple[int, int, float, int]:
     confidence = {"low": 1, "medium": 2, "high": 3}[item.confidence]
+    review_rank = {
+        EvidenceReviewStatus.REJECTED: 0,
+        EvidenceReviewStatus.STALE: 1,
+        EvidenceReviewStatus.CANDIDATE: 2,
+        EvidenceReviewStatus.SOURCED: 3,
+        EvidenceReviewStatus.CONFIRMED: 4,
+    }[item.review_status]
     return (
-        int(item.confirmed_by_user),
+        review_rank,
         confidence,
         item.score,
         0 if item.sensitive else 1,

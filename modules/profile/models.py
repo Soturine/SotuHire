@@ -6,7 +6,9 @@ from datetime import UTC, datetime
 from typing import Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from modules.evidence import EvidenceReviewStatus
 
 ProfileConfidence = Literal["low", "medium", "high"]
 
@@ -37,11 +39,24 @@ class ProfileItem(BaseModel):
     evidence: str | None = Field(default=None, max_length=5000)
     source: str = Field(default="manual", max_length=120)
     source_ref: str | None = Field(default=None, max_length=500)
+    review_status: EvidenceReviewStatus = EvidenceReviewStatus.CANDIDATE
     confidence: ProfileConfidence = "medium"
     confirmed_by_user: bool = False
     sensitive: bool = False
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
+
+    @model_validator(mode="after")
+    def normalize_review_status(self) -> ProfileItem:
+        if self.confirmed_by_user:
+            self.review_status = EvidenceReviewStatus.CONFIRMED
+        elif self.review_status == EvidenceReviewStatus.CONFIRMED:
+            self.confirmed_by_user = True
+        elif self.review_status == EvidenceReviewStatus.CANDIDATE and self.source_ref:
+            self.review_status = EvidenceReviewStatus.SOURCED
+        if self.review_status in {EvidenceReviewStatus.REJECTED, EvidenceReviewStatus.STALE}:
+            self.confirmed_by_user = False
+        return self
 
 
 class ProfileSourceSummary(BaseModel):

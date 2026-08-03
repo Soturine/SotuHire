@@ -13,6 +13,7 @@ from modules.academic.lattes_parser import parse_lattes_text
 from modules.ai.prompt_registry import PromptRegistry
 from modules.ai.providers import AIProvider
 from modules.core.entity_identity import profile_item_identity
+from modules.evidence import EvidenceReviewStatus
 from modules.profile.models import ProfileItem, utc_now
 from modules.profile.service import UniversalCareerProfileService
 
@@ -132,12 +133,14 @@ class LattesService:
 def _candidate_for_lattes(item: ProfileItem, payload: LattesImportInput) -> ProfileItem:
     source_ref = item.source_ref or payload.lattes_id or payload.source_url or payload.orcid or None
     source = item.source if item.source and item.source != "manual" else "curriculum_lattes"
-    return item.model_copy(
-        update={
+    return ProfileItem.model_validate(
+        {
+            **item.model_dump(),
             "source": source,
             "source_ref": source_ref,
             "evidence": (item.evidence or item.description or item.title)[:5000],
             "confirmed_by_user": False,
+            "review_status": EvidenceReviewStatus.CANDIDATE,
             "sensitive": bool(item.sensitive),
         }
     )

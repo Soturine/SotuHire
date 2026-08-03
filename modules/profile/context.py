@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+
+from modules.evidence import EvidenceReviewStatus
 
 
 class ProfileContextItem(BaseModel):
@@ -23,10 +25,23 @@ class ProfileContextItem(BaseModel):
     domain: str | None = None
     source: str | None = None
     source_ref: str | None = None
+    review_status: EvidenceReviewStatus = EvidenceReviewStatus.CANDIDATE
     evidence: str | None = None
     confidence: Literal["low", "medium", "high"] = "medium"
     confirmed_by_user: bool = False
     sensitive: bool = False
+
+    @model_validator(mode="after")
+    def normalize_review_status(self) -> ProfileContextItem:
+        if self.confirmed_by_user:
+            self.review_status = EvidenceReviewStatus.CONFIRMED
+        elif self.review_status == EvidenceReviewStatus.CONFIRMED:
+            self.confirmed_by_user = True
+        elif self.review_status == EvidenceReviewStatus.CANDIDATE and self.source_ref:
+            self.review_status = EvidenceReviewStatus.SOURCED
+        if self.review_status in {EvidenceReviewStatus.REJECTED, EvidenceReviewStatus.STALE}:
+            self.confirmed_by_user = False
+        return self
 
 
 class ProfileContext(BaseModel):

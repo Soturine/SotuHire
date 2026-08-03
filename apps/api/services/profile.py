@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from modules.academic import LattesImportInput, LattesService
 from modules.ai.prompt_loader import default_prompt_registry
 from modules.ai.tracing import record_ai_run, runtime_model, runtime_trace_kwargs
+from modules.evidence import EvidenceReviewStatus
 from modules.profile import ProfileContextOrchestrator
 from modules.profile.models import ProfileImportDraft, ProfileItem
 from modules.profile.service import UniversalCareerProfileService
@@ -137,6 +138,7 @@ def profile_import_text(
                         update={
                             "source": item.source or request.source_type,
                             "confirmed_by_user": False,
+                            "review_status": EvidenceReviewStatus.CANDIDATE,
                         }
                     )
                     for item in draft.items
