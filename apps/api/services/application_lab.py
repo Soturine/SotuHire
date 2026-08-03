@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import base64
+import binascii
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import HTTPException
 from modules.application_lab.export import prepare_resume_export
+from modules.application_lab.ingestion_service import ResumeIngestionService
 from modules.application_lab.models import (
     ApplicationLabSession,
     MasterResume,
@@ -22,6 +25,7 @@ from apps.api.schemas.application_lab import (
     MasterResumeResponse,
     PaginationMeta,
     ResumeExportResponse,
+    ResumeIngestionResponse,
     ResumeTemplatesResponse,
     ResumeVariantPage,
     ResumeVariantResponse,
@@ -143,6 +147,18 @@ class ApplicationLabApiService:
         prepared = resume.model_copy(update={"updated_at": datetime.now(UTC)})
         return MasterResumeResponse(resume=self._call(self.repository.save_master_resume, prepared))
 
+    def ingest_resume(self, file_name: str, content_base64: str) -> ResumeIngestionResponse:
+        try:
+            content = base64.b64decode(content_base64, validate=True)
+        except (binascii.Error, ValueError) as exc:
+            raise HTTPException(status_code=422, detail="Conteúdo base64 inválido.") from exc
+        document, draft = self._call(
+            ResumeIngestionService(self.domain.database_path).ingest,
+            file_name,
+            content,
+        )
+        return ResumeIngestionResponse(document=document, master_resume_draft=draft)
+
     def variants(self, *, master_resume_id: str, limit: int, offset: int) -> ResumeVariantPage:
         bounded_limit, bounded_offset = _page(limit, offset)
         items = self.repository.list_variants(
@@ -186,7 +202,12 @@ class ApplicationLabApiService:
         return ResumeTemplatesResponse(items=self.repository.list_templates())
 
     def export_variant(
-        self, variant_id: str, *, export_format: str, template_id: str
+        self,
+        variant_id: str,
+        *,
+        export_format: str,
+        template_id: str,
+        page_size: Literal["A4", "Letter"] = "A4",
     ) -> ResumeExportResponse:
         variant = self.variant(variant_id).variant
         if template_id not in {item.template_id for item in self.repository.list_templates()}:
@@ -196,6 +217,7 @@ class ApplicationLabApiService:
             variant,
             export_format=export_format,
             template_id=template_id,
+            page_size=page_size,
         )
         self._call(self.repository.save_export, export)
         return ResumeExportResponse(export=export, payload=payload)

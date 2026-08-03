@@ -6,6 +6,7 @@ import json
 from pathlib import Path
 from typing import Any
 
+from modules.application_lab.canonical_document import canonical_document
 from modules.application_lab.models import (
     ActionPlanItem,
     ApplicationActionPlan,
@@ -42,6 +43,7 @@ class ApplicationLabRepository:
     def save_master_resume(self, resume: MasterResume) -> MasterResume:
         resume = resume.model_copy(deep=True)
         _normalize_positions(resume.sections)
+        canonical = canonical_document(resume)
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
             if resume.profile_id:
@@ -56,8 +58,8 @@ class ApplicationLabRepository:
                 """INSERT INTO master_resumes
                 (master_resume_id, profile_id, title, target_role, summary, raw_text,
                  source_type, source_refs, source_profile_item_ids, validation_warnings,
-                 created_at, updated_at)
-                VALUES (?, NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 canonical_document, content_hash, document_version, created_at, updated_at)
+                VALUES (?, NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(master_resume_id) DO UPDATE SET
                     profile_id=excluded.profile_id, title=excluded.title,
                     target_role=excluded.target_role, summary=excluded.summary,
@@ -65,6 +67,9 @@ class ApplicationLabRepository:
                     source_refs=excluded.source_refs,
                     source_profile_item_ids=excluded.source_profile_item_ids,
                     validation_warnings=excluded.validation_warnings,
+                    canonical_document=excluded.canonical_document,
+                    content_hash=excluded.content_hash,
+                    document_version=excluded.document_version,
                     updated_at=excluded.updated_at""",
                 (
                     resume.master_resume_id,
@@ -77,6 +82,34 @@ class ApplicationLabRepository:
                     _json(resume.source_refs),
                     _json(resume.source_profile_item_ids),
                     _json(resume.validation_warnings),
+                    _json(canonical.model_dump(mode="json")),
+                    canonical.content_hash,
+                    canonical.version,
+                    resume.created_at.isoformat(),
+                    resume.updated_at.isoformat(),
+                ),
+            )
+            connection.execute(
+                """INSERT INTO professional_documents
+                (document_id, profile_id, document_kind, title, canonical_document,
+                 content_hash, version, source_refs, created_at, updated_at)
+                VALUES (?, NULLIF(?, ''), 'master_resume', ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(document_id) DO UPDATE SET
+                    profile_id=excluded.profile_id,
+                    title=excluded.title,
+                    canonical_document=excluded.canonical_document,
+                    content_hash=excluded.content_hash,
+                    version=professional_documents.version + 1,
+                    source_refs=excluded.source_refs,
+                    updated_at=excluded.updated_at""",
+                (
+                    resume.master_resume_id,
+                    resume.profile_id,
+                    resume.title,
+                    _json(canonical.model_dump(mode="json")),
+                    canonical.content_hash,
+                    canonical.version,
+                    _json(list(canonical.source_refs)),
                     resume.created_at.isoformat(),
                     resume.updated_at.isoformat(),
                 ),
@@ -177,6 +210,7 @@ class ApplicationLabRepository:
     def save_variant(self, variant: ResumeVariant) -> ResumeVariant:
         variant = variant.model_copy(deep=True)
         _normalize_positions(variant.sections)
+        canonical = canonical_document(variant)
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
             connection.execute(
@@ -230,6 +264,35 @@ class ApplicationLabRepository:
                         change.created_at.isoformat(),
                     ),
                 )
+            master_row = connection.execute(
+                "SELECT profile_id FROM master_resumes WHERE master_resume_id = ?",
+                (variant.master_resume_id,),
+            ).fetchone()
+            profile_id = str(master_row["profile_id"] or "") if master_row is not None else ""
+            connection.execute(
+                """INSERT INTO professional_documents
+                (document_id, profile_id, document_kind, title, canonical_document,
+                 content_hash, version, source_refs, created_at, updated_at)
+                VALUES (?, NULLIF(?, ''), 'resume_variant', ?, ?, ?, 1, ?, ?, ?)
+                ON CONFLICT(document_id) DO UPDATE SET
+                    profile_id=excluded.profile_id,
+                    title=excluded.title,
+                    canonical_document=excluded.canonical_document,
+                    content_hash=excluded.content_hash,
+                    version=professional_documents.version + 1,
+                    source_refs=excluded.source_refs,
+                    updated_at=excluded.updated_at""",
+                (
+                    variant.resume_variant_id,
+                    profile_id,
+                    variant.title,
+                    _json(canonical.model_dump(mode="json")),
+                    canonical.content_hash,
+                    _json(list(canonical.source_refs)),
+                    variant.created_at.isoformat(),
+                    variant.updated_at.isoformat(),
+                ),
+            )
         return variant
 
     def get_variant(self, resume_variant_id: str) -> ResumeVariant | None:

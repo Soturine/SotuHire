@@ -1,17 +1,31 @@
-"""Honest, privacy-conscious Resume Studio exports."""
+"""Cross-platform, canonical and privacy-conscious Resume Studio exports."""
 
 from __future__ import annotations
 
+import base64
 import hashlib
+import io
 import json
 import re
+import textwrap
 from typing import Any, Literal
 
-from modules.application_lab.models import MasterResume, ResumeExport, ResumeSection, ResumeVariant
+import fitz
+from docx import Document
+from docx.shared import Inches
+
+from modules.application_lab.canonical_document import (
+    CanonicalDocumentEntry,
+    CanonicalDocumentSection,
+    CanonicalProfessionalDocument,
+    ResumeDocument,
+    canonical_document,
+)
+from modules.application_lab.models import ResumeExport
 from modules.schemas.json_resume import CareerEvidence, JSONResume
 
-ResumeDocument = MasterResume | ResumeVariant
 ExportFormat = Literal["json_resume", "pdf", "docx"]
+PageSize = Literal["A4", "Letter"]
 
 
 def prepare_resume_export(
@@ -19,64 +33,71 @@ def prepare_resume_export(
     *,
     export_format: ExportFormat,
     template_id: str = "classic",
-) -> tuple[ResumeExport, dict[str, Any] | None]:
-    """Build JSON Resume or report an honest pending state for future renderers."""
-    master_resume_id = (
-        resume.master_resume_id if isinstance(resume, MasterResume) else resume.master_resume_id
-    )
-    variant_id = resume.resume_variant_id if isinstance(resume, ResumeVariant) else ""
-    stem = _safe_stem(resume.title or "curriculo")
-    if export_format != "json_resume":
-        pending = ResumeExport(
-            master_resume_id=master_resume_id,
-            resume_variant_id=variant_id,
-            template_id=template_id,
-            format=export_format,
-            status="pending",
-            file_name=f"{stem}.{export_format}",
-            warnings=[
-                f"Exportação {export_format.upper()} ainda não possui renderer maduro; "
-                "use o preview ou JSON Resume nesta versão."
-            ],
-        )
-        return pending, None
-
-    document = _json_resume(resume)
-    payload = document.model_dump(mode="json", exclude_none=True)
-    encoded = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
+    page_size: PageSize = "A4",
+) -> tuple[ResumeExport, dict[str, Any]]:
+    """Render one canonical document to JSON Resume, PDF or DOCX entirely locally."""
+    canonical = canonical_document(resume)
+    stem = _safe_stem(canonical.title or "curriculo")
+    if export_format == "json_resume":
+        payload = _json_resume(canonical).model_dump(mode="json", exclude_none=True)
+        encoded = json.dumps(
+            payload,
+            ensure_ascii=False,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        file_name = f"{stem}.resume.json"
+        media_type = "application/json"
+        response_payload = payload
+    elif export_format == "docx":
+        encoded = _render_docx(canonical)
+        file_name = f"{stem}.docx"
+        media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        response_payload = _binary_payload(encoded, media_type, page_size, canonical)
+    else:
+        encoded = _render_pdf(canonical, page_size=page_size)
+        file_name = f"{stem}.pdf"
+        media_type = "application/pdf"
+        response_payload = _binary_payload(encoded, media_type, page_size, canonical)
     ready = ResumeExport(
-        master_resume_id=master_resume_id,
-        resume_variant_id=variant_id,
+        master_resume_id=canonical.master_resume_id,
+        resume_variant_id=canonical.resume_variant_id,
         template_id=template_id,
-        format="json_resume",
+        format=export_format,
         status="ready",
-        file_name=f"{stem}.resume.json",
-        content_hash=hashlib.sha256(encoded.encode("utf-8")).hexdigest(),
+        file_name=file_name,
+        content_hash=hashlib.sha256(encoded).hexdigest(),
     )
-    return ready, payload
+    return ready, response_payload
 
 
 def resume_plain_text(resume: ResumeDocument) -> str:
-    """Render enabled content for snapshots and the local preview."""
-    lines = [resume.title, resume.target_role]
-    summary = resume.summary if isinstance(resume, MasterResume) else ""
-    if summary:
-        lines.append(summary)
-    for section in sorted(resume.sections, key=lambda item: item.position):
-        if not section.enabled:
-            continue
-        lines.extend([section.title, section.content])
-        for entry in sorted(section.entries, key=lambda item: item.position):
-            if entry.enabled:
-                lines.extend([entry.title, entry.subtitle, entry.content])
-    return "\n".join(item.strip() for item in lines if item.strip())
+    """Render the same canonical content used by snapshots and downloadable files."""
+    return canonical_document(resume).plain_text()
 
 
-def _json_resume(resume: ResumeDocument) -> JSONResume:
-    summary = resume.summary if isinstance(resume, MasterResume) else ""
+def _binary_payload(
+    content: bytes,
+    media_type: str,
+    page_size: PageSize,
+    canonical: CanonicalProfessionalDocument,
+) -> dict[str, Any]:
+    return {
+        "content_base64": base64.b64encode(content).decode("ascii"),
+        "media_type": media_type,
+        "byte_size": len(content),
+        "page_size": page_size,
+        "canonical_content_hash": canonical.content_hash,
+    }
+
+
+def _json_resume(document: CanonicalProfessionalDocument) -> JSONResume:
     basics = {
         key: value
-        for key, value in {"label": resume.target_role, "summary": summary}.items()
+        for key, value in {
+            "label": document.target_role,
+            "summary": document.summary,
+        }.items()
         if value
     }
     buckets: dict[str, list[dict[str, Any]]] = {
@@ -88,16 +109,12 @@ def _json_resume(resume: ResumeDocument) -> JSONResume:
         "languages": [],
     }
     evidence: list[CareerEvidence] = []
-    for section in resume.sections:
-        if not section.enabled:
-            continue
+    for section in document.sections:
         bucket = _section_bucket(section)
         for entry in section.entries:
-            if not entry.enabled or not entry.confirmed_by_user:
+            if not entry.confirmed_by_user:
                 continue
-            item = _entry_payload(
-                entry.title, entry.subtitle, entry.content, entry.start_date, entry.end_date
-            )
+            item = _entry_payload(entry)
             if bucket:
                 buckets[bucket].append(item)
             for source_ref in entry.source_refs[:5]:
@@ -116,10 +133,98 @@ def _json_resume(resume: ResumeDocument) -> JSONResume:
                         can_use_in_resume=True,
                     )
                 )
-    return JSONResume(basics=basics, evidence=evidence, **buckets)
+    return JSONResume(
+        basics=basics,
+        work=buckets["work"],
+        education=buckets["education"],
+        skills=buckets["skills"],
+        projects=buckets["projects"],
+        certificates=buckets["certificates"],
+        languages=buckets["languages"],
+        evidence=evidence,
+    )
 
 
-def _section_bucket(section: ResumeSection) -> str:
+def _render_docx(document: CanonicalProfessionalDocument) -> bytes:
+    output = io.BytesIO()
+    result = Document()
+    section = result.sections[0]
+    section.top_margin = Inches(0.65)
+    section.bottom_margin = Inches(0.65)
+    section.left_margin = Inches(0.75)
+    section.right_margin = Inches(0.75)
+    result.add_heading(document.title, level=0)
+    if document.target_role:
+        result.add_paragraph(document.target_role)
+    if document.summary:
+        result.add_paragraph(document.summary)
+    for canonical_section in document.sections:
+        result.add_heading(canonical_section.title, level=1)
+        if canonical_section.content:
+            result.add_paragraph(canonical_section.content)
+        for entry in canonical_section.entries:
+            heading = " — ".join(value for value in (entry.title, entry.subtitle) if value)
+            if heading:
+                paragraph = result.add_paragraph()
+                paragraph.add_run(heading).bold = True
+            if entry.content:
+                result.add_paragraph(entry.content, style="List Bullet")
+            dates = " – ".join(value for value in (entry.start_date, entry.end_date) if value)
+            if dates:
+                result.add_paragraph(dates)
+    result.save(output)
+    return output.getvalue()
+
+
+def _render_pdf(document: CanonicalProfessionalDocument, *, page_size: PageSize) -> bytes:
+    result = fitz.open()
+    rectangle = fitz.paper_rect("a4" if page_size == "A4" else "letter")
+    lines = _pdf_lines(document)
+    per_page = 49 if page_size == "A4" else 46
+    for offset in range(0, max(1, len(lines)), per_page):
+        page = result.new_page(width=rectangle.width, height=rectangle.height)
+        page_lines = lines[offset : offset + per_page]
+        page.insert_textbox(
+            fitz.Rect(50, 45, rectangle.width - 50, rectangle.height - 45),
+            "\n".join(page_lines),
+            fontname="helv",
+            fontsize=10,
+            lineheight=1.3,
+        )
+    content = result.tobytes(garbage=4, deflate=True)
+    result.close()
+    return content
+
+
+def _pdf_lines(document: CanonicalProfessionalDocument) -> list[str]:
+    values: list[tuple[str, str]] = [(document.title.upper(), "title")]
+    if document.target_role:
+        values.append((document.target_role, "body"))
+    if document.summary:
+        values.append((document.summary, "body"))
+    for section in document.sections:
+        values.append((section.title.upper(), "heading"))
+        if section.content:
+            values.append((section.content, "body"))
+        for entry in section.entries:
+            label = " — ".join(value for value in (entry.title, entry.subtitle) if value)
+            if label:
+                values.append((label, "entry"))
+            if entry.content:
+                values.append((f"• {entry.content}", "body"))
+            dates = " – ".join(value for value in (entry.start_date, entry.end_date) if value)
+            if dates:
+                values.append((dates, "body"))
+    lines: list[str] = []
+    for value, kind in values:
+        width = 72 if kind in {"body", "entry"} else 64
+        lines.extend(textwrap.wrap(value, width=width, replace_whitespace=True) or [""])
+        if kind in {"title", "heading"}:
+            lines.append("")
+    return lines
+
+
+def _section_bucket(section: CanonicalDocumentSection) -> str:
     normalized = re.sub(r"[^a-z_]", "", section.section_type.casefold())
     return {
         "experience": "work",
@@ -135,19 +240,17 @@ def _section_bucket(section: ResumeSection) -> str:
     }.get(normalized, "")
 
 
-def _entry_payload(
-    title: str, subtitle: str, content: str, start_date: str, end_date: str
-) -> dict[str, Any]:
+def _entry_payload(entry: CanonicalDocumentEntry) -> dict[str, Any]:
     return {
         key: value
         for key, value in {
-            "name": title,
-            "position": title,
-            "institution": subtitle,
-            "summary": content,
-            "startDate": start_date,
-            "endDate": end_date,
-            "keywords": [title] if title else [],
+            "name": entry.title,
+            "position": entry.title,
+            "institution": entry.subtitle,
+            "summary": entry.content,
+            "startDate": entry.start_date,
+            "endDate": entry.end_date,
+            "keywords": [entry.title] if entry.title else [],
         }.items()
         if value
     }
@@ -158,4 +261,9 @@ def _safe_stem(value: str) -> str:
     return cleaned[:80] or "curriculo"
 
 
-__all__ = ["ExportFormat", "prepare_resume_export", "resume_plain_text"]
+__all__ = [
+    "ExportFormat",
+    "PageSize",
+    "prepare_resume_export",
+    "resume_plain_text",
+]

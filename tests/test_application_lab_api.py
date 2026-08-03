@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+
 from apps.api.main import create_app
 from apps.api.services.application_lab import (
     ApplicationLabApiService,
@@ -79,6 +81,16 @@ def test_application_lab_and_resume_studio_api_journey(tmp_path) -> None:
     master = _master()
     job = _job(service)
 
+    ingested = client.post(
+        "/api/v1/resume-studio/ingest",
+        json={
+            "file_name": "curriculo.txt",
+            "content_base64": base64.b64encode(
+                "Perfil\n\nExperiência confirmável".encode()
+            ).decode(),
+        },
+    )
+
     master_response = client.put(
         "/api/v1/resume-studio/master",
         json={"resume": master.model_dump(mode="json"), "request_id": "req-master"},
@@ -94,6 +106,10 @@ def test_application_lab_and_resume_studio_api_journey(tmp_path) -> None:
         },
     )
 
+    assert ingested.status_code == 200
+    draft_entry = ingested.json()["data"]["master_resume_draft"]["sections"][0]["entries"][0]
+    assert draft_entry["review_status"] == "sourced"
+    assert draft_entry["confirmed_by_user"] is False
     assert master_response.status_code == 200
     assert master_response.json()["request_id"] == "req-master"
     assert created.status_code == 200
@@ -152,10 +168,16 @@ def test_application_lab_and_resume_studio_api_journey(tmp_path) -> None:
         f"/api/v1/resume-studio/variants/{variant_id}/export",
         json={"format": "pdf", "template_id": "classic"},
     )
+    docx_export = client.post(
+        f"/api/v1/resume-studio/variants/{variant_id}/export",
+        json={"format": "docx", "template_id": "classic", "page_size": "Letter"},
+    )
     assert json_export.json()["data"]["export"]["status"] == "ready"
     assert json_export.json()["data"]["payload"] is not None
-    assert pdf_export.json()["data"]["export"]["status"] == "pending"
-    assert pdf_export.json()["data"]["payload"] is None
+    assert pdf_export.json()["data"]["export"]["status"] == "ready"
+    assert pdf_export.json()["data"]["payload"]["content_base64"].startswith("JVBER")
+    assert docx_export.json()["data"]["export"]["status"] == "ready"
+    assert docx_export.json()["data"]["payload"]["page_size"] == "Letter"
     assert client.get("/api/v1/resume-studio/templates").json()["data"]["items"]
 
 
@@ -199,6 +221,7 @@ def test_openapi_exposes_all_guided_workflow_contracts(tmp_path) -> None:
         "/api/v1/application-lab/sessions/{session_id}/action-plan",
         "/api/v1/application-lab/sessions/{session_id}/tracker",
         "/api/v1/resume-studio/master",
+        "/api/v1/resume-studio/ingest",
         "/api/v1/resume-studio/variants",
         "/api/v1/resume-studio/variants/{variant_id}",
         "/api/v1/resume-studio/variants/{variant_id}/export",

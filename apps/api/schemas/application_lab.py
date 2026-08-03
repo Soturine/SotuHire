@@ -18,6 +18,7 @@ from modules.application_lab.models import (
     ResumeTemplate,
     ResumeVariant,
 )
+from modules.parsers.document_ingestion import IngestedDocument
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -114,6 +115,17 @@ class MasterResumeResponse(LabApiModel):
     resume: MasterResume
 
 
+class ResumeIngestionRequest(LabApiModel):
+    file_name: str = Field(min_length=1, max_length=240)
+    content_base64: str = Field(min_length=1, max_length=14_000_000)
+    request_id: str = Field(default="", max_length=120)
+
+
+class ResumeIngestionResponse(LabApiModel):
+    document: IngestedDocument
+    master_resume_draft: MasterResume
+
+
 class ResumeVariantPage(LabApiModel):
     items: list[ResumeVariant]
     pagination: PaginationMeta
@@ -143,6 +155,7 @@ class ResumeTemplatesResponse(LabApiModel):
 class ResumeExportRequest(LabApiModel):
     format: Literal["json_resume", "pdf", "docx"] = "json_resume"
     template_id: str = Field(default="classic", max_length=100)
+    page_size: Literal["A4", "Letter"] = "A4"
     request_id: str = Field(default="", max_length=120)
 
 
@@ -165,6 +178,8 @@ __all__ = [
     "RequestMetadata",
     "ResumeExportRequest",
     "ResumeExportResponse",
+    "ResumeIngestionRequest",
+    "ResumeIngestionResponse",
     "ResumeTemplatesResponse",
     "ResumeVariantCreateRequest",
     "ResumeVariantPage",

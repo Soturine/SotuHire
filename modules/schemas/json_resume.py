@@ -21,18 +21,22 @@ class CareerEvidence(BaseModel):
 
 
 class JSONResume(BaseModel):
-    """Lightweight JSON Resume-inspired model.
+    """Interoperable JSON Resume document plus SotuHire evidence metadata."""
 
-    This is intentionally partial. The full standard can be imported/exported later.
-    """
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
 
-    model_config = ConfigDict(extra="forbid")
-
+    schema_url: str | None = Field(default=None, alias="$schema")
     basics: dict = Field(default_factory=dict)
     work: list[dict] = Field(default_factory=list)
+    volunteer: list[dict] = Field(default_factory=list)
     education: list[dict] = Field(default_factory=list)
-    skills: list[dict] = Field(default_factory=list)
-    projects: list[dict] = Field(default_factory=list)
+    awards: list[dict] = Field(default_factory=list)
     certificates: list[dict] = Field(default_factory=list)
+    publications: list[dict] = Field(default_factory=list)
+    skills: list[dict] = Field(default_factory=list)
     languages: list[dict] = Field(default_factory=list)
+    interests: list[dict] = Field(default_factory=list)
+    references: list[dict] = Field(default_factory=list)
+    projects: list[dict] = Field(default_factory=list)
+    meta: dict = Field(default_factory=dict)
     evidence: list[CareerEvidence] = Field(default_factory=list)

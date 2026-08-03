@@ -25,6 +25,8 @@ from apps.api.schemas.application_lab import (
     RequestMetadata,
     ResumeExportRequest,
     ResumeExportResponse,
+    ResumeIngestionRequest,
+    ResumeIngestionResponse,
     ResumeTemplatesResponse,
     ResumeVariantCreateRequest,
     ResumeVariantPage,
@@ -252,6 +254,17 @@ def get_master_resume(service: LabDependency) -> ApiEnvelope[MasterResumeRespons
     return ok(service.master())
 
 
+@resume_studio_router.post("/ingest", response_model=ApiEnvelope[ResumeIngestionResponse])
+def ingest_resume(
+    payload: ResumeIngestionRequest,
+    service: LabDependency,
+) -> ApiEnvelope[ResumeIngestionResponse]:
+    return ok(
+        service.ingest_resume(payload.file_name, payload.content_base64),
+        request_id=payload.request_id,
+    )
+
+
 @resume_studio_router.put("/master", response_model=ApiEnvelope[MasterResumeResponse])
 def put_master_resume(
     payload: MasterResumeUpsertRequest, service: LabDependency
@@ -322,6 +335,7 @@ def export_resume_variant(
             variant_id,
             export_format=payload.format,
             template_id=payload.template_id,
+            page_size=payload.page_size,
         ),
         request_id=payload.request_id,
     )

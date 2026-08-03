@@ -1,6 +1,8 @@
 import io
+import json
 
 import fitz
+import pytest
 from docx import Document
 from modules.parsers.document_ingestion import LocalDocumentIngestionPipeline
 
@@ -12,7 +14,8 @@ def test_ingestion_is_deterministic_and_preserves_provenance():
 
     assert first.document_id == second.document_id
     assert first.source_hash == second.source_hash
-    assert first.provenance[0].source_ref == "curriculo.txt"
+    assert first.provenance[0].source_ref.startswith("ingest://")
+    assert first.provenance[0].location == {"file_name": "curriculo.txt", "page": 1}
     assert first.document_type == "txt"
     assert "Python e SQL" in first.text_blocks
 
@@ -59,3 +62,57 @@ def test_ingestion_rejects_invalid_json_and_unknown_format():
         assert "não suportado" in str(exc)
     else:
         raise AssertionError("Formato desconhecido deveria falhar")
+
+
+def test_ingestion_rejects_spoofed_paths_mime_and_encrypted_pdf():
+    pipeline = LocalDocumentIngestionPipeline()
+
+    with pytest.raises(ValueError, match="caminhos"):
+        pipeline.ingest("../resume.txt", b"texto")
+    with pytest.raises(ValueError, match="extensão"):
+        pipeline.ingest("resume.pdf", b"texto comum")
+
+    encrypted = fitz.open()
+    encrypted.new_page().insert_text((72, 72), "privado")
+    payload = encrypted.tobytes(
+        encryption=5,
+        owner_pw="owner-fixture",
+        user_pw="user-fixture",
+    )
+    encrypted.close()
+    with pytest.raises(ValueError, match="criptografado"):
+        pipeline.ingest("resume.pdf", payload)
+
+
+def test_image_only_pdf_is_reviewable_without_hidden_ocr():
+    pdf = fitz.open()
+    page = pdf.new_page()
+    page.draw_rect(fitz.Rect(20, 20, 100, 100), fill=(0, 0, 0))
+    result = LocalDocumentIngestionPipeline().ingest("scan.pdf", pdf.tobytes())
+    pdf.close()
+
+    assert result.status == "needs_review"
+    assert any("OCR não é executado" in warning for warning in result.warnings)
+
+
+def test_json_resume_standard_fields_are_structured_and_active_html_is_removed():
+    payload = {
+        "$schema": "https://raw.githubusercontent.com/jsonresume/resume-schema/master/schema.json",
+        "basics": {"name": "Pessoa Fictícia", "label": "Analista"},
+        "work": [{"name": "Empresa", "position": "Analista", "summary": "Qualidade"}],
+        "volunteer": [{"organization": "Projeto", "position": "Mentoria"}],
+        "publications": [{"name": "Artigo fictício"}],
+    }
+    result = LocalDocumentIngestionPipeline().ingest(
+        "resume.json",
+        json.dumps(payload, ensure_ascii=False).encode("utf-8"),
+    )
+    html = LocalDocumentIngestionPipeline().ingest(
+        "resume.html",
+        b'<h1>Perfil</h1><iframe src="https://example.invalid"></iframe><p>Seguro</p>',
+    )
+
+    assert result.structured_data["basics"]["name"] == "Pessoa Fictícia"
+    assert "Qualidade" in " ".join(result.text_blocks)
+    assert html.status == "needs_review"
+    assert "example.invalid" not in " ".join(html.text_blocks)

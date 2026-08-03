@@ -1,5 +1,10 @@
 from __future__ import annotations
 
+import base64
+import io
+
+import fitz
+from docx import Document
 from modules.application_lab.export import prepare_resume_export
 from modules.application_lab.models import (
     ApplicationLabSession,
@@ -222,15 +227,25 @@ def test_unsupported_claim_cannot_be_accepted_and_session_can_be_cancelled(tmp_p
     assert cancelled.status is ApplicationLabStatus.CANCELLED
 
 
-def test_json_resume_is_functional_and_other_exports_are_explicitly_pending() -> None:
+def test_json_resume_pdf_and_docx_share_canonical_document() -> None:
     master = _master()
 
-    ready, payload = prepare_resume_export(master, export_format="json_resume")
-    pending, no_payload = prepare_resume_export(master, export_format="pdf")
+    json_export, payload = prepare_resume_export(master, export_format="json_resume")
+    pdf_export, pdf_payload = prepare_resume_export(master, export_format="pdf")
+    docx_export, docx_payload = prepare_resume_export(master, export_format="docx")
 
-    assert ready.status == "ready"
-    assert ready.content_hash
+    assert json_export.status == pdf_export.status == docx_export.status == "ready"
+    assert json_export.content_hash and pdf_export.content_hash and docx_export.content_hash
     assert payload is not None and payload["work"]
     assert "Conteúdo ainda sem confirmação." not in str(payload)
-    assert pending.status == "pending"
-    assert pending.warnings and no_payload is None
+    pdf_bytes = base64.b64decode(str(pdf_payload["content_base64"]))
+    docx_bytes = base64.b64decode(str(docx_payload["content_base64"]))
+    assert pdf_bytes.startswith(b"%PDF-")
+    assert docx_bytes.startswith(b"PK")
+    with fitz.open(stream=pdf_bytes, filetype="pdf") as pdf:
+        pdf_text = "\n".join(str(page.get_text()) for page in pdf)
+    docx_text = "\n".join(
+        str(paragraph.text) for paragraph in Document(io.BytesIO(docx_bytes)).paragraphs
+    )
+    assert "protocolos de qualidade" in pdf_text.casefold()
+    assert "protocolos de qualidade" in docx_text.casefold()
