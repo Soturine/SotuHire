@@ -6,6 +6,7 @@ from typing import Any, Literal
 
 from modules.application_lab.models import (
     ApplicationActionPlan,
+    ApplicationAnalysisBundle,
     ApplicationKit,
     ApplicationLabSession,
     ApplicationLabStatus,
@@ -58,6 +59,7 @@ class ApplicationLabSessionPage(LabApiModel):
 
 class ApplicationLabSessionDetail(LabApiModel):
     session: ApplicationLabSession
+    analysis_bundle: ApplicationAnalysisBundle | None = None
     report: ApplicationReadinessReport | None = None
     suggestions: list[ApplicationSuggestion] = Field(default_factory=list)
     variant: ResumeVariant | None = None
@@ -67,6 +69,7 @@ class ApplicationLabSessionDetail(LabApiModel):
 
 class ApplicationLabAnalyzeResponse(ApplicationLabSessionDetail):
     analysis_snapshot_id: str
+    analysis_snapshot_ids: dict[str, str] = Field(default_factory=dict)
     progress_steps: list[str] = Field(default_factory=list)
 
 

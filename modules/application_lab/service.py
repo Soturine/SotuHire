@@ -8,10 +8,15 @@ from pathlib import Path
 from typing import Any, Literal
 from uuid import uuid4
 
+from modules.application_lab.analysis_pipeline import (
+    build_local_analysis_products,
+    match_result_to_job_analysis,
+)
 from modules.application_lab.export import resume_plain_text
 from modules.application_lab.models import (
     ActionPlanItem,
     ApplicationActionPlan,
+    ApplicationAnalysisBundle,
     ApplicationKit,
     ApplicationKitItem,
     ApplicationLabSession,
@@ -24,10 +29,8 @@ from modules.application_lab.models import (
     SuggestionStatus,
     utc_now,
 )
-from modules.application_lab.readiness import build_readiness_report
 from modules.application_lab.repository import ApplicationLabRepository
 from modules.context import CareerContextEngine, CareerContextPurpose
-from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.storage.applications import ApplicationRepository
 from modules.storage.local_store import LocalStore
 from modules.storage.snapshots import AnalysisSnapshot, JobSnapshot, ResumeSnapshot, SnapshotStore
@@ -97,9 +100,16 @@ class ApplicationLabService:
             for key in ("master_resume_id", "job_snapshot_id", "selected_context_refs")
         )
         if inputs_changed:
+            self.repository.mark_analysis_bundle_stale(
+                current.analysis_bundle_id,
+                "master_resume_job_or_evidence_scope_changed",
+            )
             update.update(
                 {
                     "readiness_report_id": "",
+                    "analysis_bundle_id": "",
+                    "dependency_hash": "",
+                    "evidence_scope": {},
                     "resume_variant_id": "",
                     "application_kit_id": "",
                     "action_plan_id": "",
@@ -126,7 +136,7 @@ class ApplicationLabService:
     def analyze(
         self, session_id: str
     ) -> tuple[ApplicationReadinessReport, list[ApplicationSuggestion], AnalysisSnapshot]:
-        """Run deterministic readiness and save its exact evidence snapshot."""
+        """Run Match, ATS, readiness and Tailor directly with independent snapshots."""
         session = self._session(session_id)
         if session.status is ApplicationLabStatus.CANCELLED:
             raise ValueError("Sessão cancelada; reative-a antes de analisar.")
@@ -147,31 +157,125 @@ class ApplicationLabService:
                 include_extension=False,
                 include_github=False,
                 max_evidence=20,
+                selected_evidence_ids=[] if session.selected_context_refs else None,
+                selected_source_refs=session.selected_context_refs,
             )
-            base_report = build_readiness_report(session_id, master, job)
-            resume_snapshot = self._resume_snapshot(master)
-            snapshot = self.snapshots.create_analysis(
+            products = build_local_analysis_products(session, master, job, context)
+            scope = products.scope
+            selected_evidence = products.selected_evidence
+            scoped_master = products.scoped_master
+            match_result = products.match_result
+            ats_result = products.ats_result
+            base_report = products.readiness_report
+            tailor_result = products.tailor_result
+            dependency = products.dependency
+            evidence_scope = scope.model_dump(mode="json")
+            resume_snapshot = self._resume_snapshot(
+                scoped_master,
+                dependency_hash=dependency.digest,
+                evidence_scope=evidence_scope,
+            )
+            source_refs = list(
+                dict.fromkeys(
+                    [
+                        *[item.source_ref for item in selected_evidence if item.source_ref],
+                        *job.source_refs,
+                    ]
+                )
+            )
+            evidence_used: list[str | dict[str, Any]] = [
+                item.source_ref or item.evidence_id for item in selected_evidence
+            ]
+            match_snapshot = self.snapshots.create_analysis(
                 AnalysisSnapshot(
+                    analysis_type="application_match",
+                    job_snapshot_id=job.snapshot_id,
+                    resume_snapshot_id=resume_snapshot.snapshot_id,
+                    prompt_id="match_engine_v2_local",
+                    prompt_version="2.0.0",
+                    result=match_result.model_dump(mode="json"),
+                    evidence_used=evidence_used,
+                    source_refs=source_refs,
+                    dependency_hash=dependency.digest,
+                    dependency_inputs=dependency.inputs,
+                )
+            )
+            ats_snapshot = self.snapshots.create_analysis(
+                AnalysisSnapshot(
+                    analysis_type="application_ats",
+                    job_snapshot_id=job.snapshot_id,
+                    resume_snapshot_id=resume_snapshot.snapshot_id,
+                    prompt_id="ats_rules_local_v1",
+                    prompt_version="1.0.0",
+                    result=ats_result.model_dump(mode="json"),
+                    evidence_used=evidence_used,
+                    source_refs=source_refs,
+                    dependency_hash=dependency.digest,
+                    dependency_inputs=dependency.inputs,
+                )
+            )
+            tailor_snapshot = self.snapshots.create_analysis(
+                AnalysisSnapshot(
+                    analysis_type="application_tailor",
+                    job_snapshot_id=job.snapshot_id,
+                    resume_snapshot_id=resume_snapshot.snapshot_id,
+                    prompt_id="safe_tailor_rules_local_v1",
+                    prompt_version="1.0.0",
+                    result=tailor_result.model_dump(mode="json"),
+                    evidence_used=evidence_used,
+                    source_refs=source_refs,
+                    dependency_hash=dependency.digest,
+                    dependency_inputs=dependency.inputs,
+                )
+            )
+            bundle_id = uuid4().hex
+            readiness_snapshot_id = uuid4().hex
+            report = base_report.model_copy(
+                update={
+                    "dependency_hash": dependency.digest,
+                    "provider_metadata": {
+                        **base_report.provider_metadata,
+                        "analysis_bundle_id": bundle_id,
+                        "match_snapshot_id": match_snapshot.snapshot_id,
+                        "ats_snapshot_id": ats_snapshot.snapshot_id,
+                        "readiness_snapshot_id": readiness_snapshot_id,
+                        "tailor_snapshot_id": tailor_snapshot.snapshot_id,
+                        "context_evidence_count": len(context.evidence),
+                        "selected_evidence_count": len(selected_evidence),
+                        "context_warnings": context.warnings,
+                    },
+                }
+            )
+            readiness_snapshot = self.snapshots.create_analysis(
+                AnalysisSnapshot(
+                    snapshot_id=readiness_snapshot_id,
                     analysis_type="application_readiness",
                     job_snapshot_id=job.snapshot_id,
                     resume_snapshot_id=resume_snapshot.snapshot_id,
-                    prompt_id="application_readiness_rules_v1",
-                    prompt_version="1.0.0",
-                    result=base_report.model_dump(mode="json"),
-                    evidence_used=base_report.evidence_used,
-                    source_refs=list(dict.fromkeys([*master.source_refs, *job.source_refs])),
+                    prompt_id="application_readiness_rules_v2",
+                    prompt_version="2.0.0",
+                    result=report.model_dump(mode="json"),
+                    evidence_used=evidence_used,
+                    source_refs=source_refs,
+                    dependency_hash=dependency.digest,
+                    dependency_inputs=dependency.inputs,
                 )
             )
-            report = base_report.model_copy(
-                update={
-                    "provider_metadata": {
-                        **base_report.provider_metadata,
-                        "analysis_snapshot_id": snapshot.snapshot_id,
-                        "context_evidence_count": len(context.evidence),
-                        "context_warnings": context.warnings,
-                    }
-                }
+            bundle = ApplicationAnalysisBundle(
+                bundle_id=bundle_id,
+                session_id=session_id,
+                evidence_scope=evidence_scope,
+                dependency_hash=dependency.digest,
+                match_result=match_result,
+                ats_result=ats_result,
+                readiness_result=report,
+                tailor_result=tailor_result,
+                match_snapshot_id=match_snapshot.snapshot_id,
+                ats_snapshot_id=ats_snapshot.snapshot_id,
+                readiness_snapshot_id=readiness_snapshot.snapshot_id,
+                tailor_snapshot_id=tailor_snapshot.snapshot_id,
             )
+            self.repository.save_analysis_bundle(bundle)
             self.repository.save_report(report)
             suggestions = self._suggestions(session, master, report)
             self.repository.replace_pending_suggestions(session_id, suggestions)
@@ -181,9 +285,15 @@ class ApplicationLabService:
                     "status": ApplicationLabStatus.REVIEW,
                     "current_step": 6,
                     "readiness_report_id": report.report_id,
+                    "evidence_scope": evidence_scope,
+                    "dependency_hash": dependency.digest,
+                    "analysis_bundle_id": bundle.bundle_id,
                     "analysis_run_ids": [
                         *refreshed.analysis_run_ids,
-                        snapshot.snapshot_id,
+                        match_snapshot.snapshot_id,
+                        ats_snapshot.snapshot_id,
+                        readiness_snapshot.snapshot_id,
+                        tailor_snapshot.snapshot_id,
                     ],
                     "invalidated_steps": [step for step in refreshed.invalidated_steps if step < 5],
                     "warnings": list(dict.fromkeys([*refreshed.warnings, *context.warnings])),
@@ -191,7 +301,7 @@ class ApplicationLabService:
                 }
             )
             self.repository.save_session(completed)
-            return report, self.repository.list_suggestions(session_id), snapshot
+            return report, self.repository.list_suggestions(session_id), readiness_snapshot
         except Exception as exc:
             failed = self._session(session_id).model_copy(
                 update={
@@ -257,6 +367,8 @@ class ApplicationLabService:
                 warnings.append(
                     f"Sugestão {suggestion.suggestion_id} preservada no diff, mas o texto-base mudou."
                 )
+            if not applied:
+                continue
             changes.append(
                 ResumeVariantChange(
                     change_type="edited" if suggestion.before else "added",
@@ -423,38 +535,12 @@ class ApplicationLabService:
         )
         resume = variant or master
         resume_snapshot = self._resume_snapshot(resume)
-        requirements = _job_requirements(job.structured_data)
-        missing = [
-            item.removeprefix("Requisito sem evidência: ")
-            for item in report.top_blockers
-            if item.startswith("Requisito sem evidência: ")
-        ]
-        matched = [item for item in requirements if item not in missing]
-        resume_dimension = report.source_dimensions.get("resume")
-        resume_coverage = resume_dimension.coverage if resume_dimension is not None else 0
-        analysis = JobAnalysisSchema(
-            match_score=round(report.requirement_coverage * 100),
-            ats_score=round((resume_coverage or 0) * 100),
-            opportunity_fit_score=round(report.evidence_coverage * 100),
-            risk_score=min(100, len(report.unsupported_claim_risks) * 20),
-            recommendation=(
-                "apply_with_adjustments" if report.requirement_coverage >= 0.6 else "save_for_later"
-            ),
-            strengths=report.strengths,
-            gaps=report.top_blockers,
-            missing_keywords=missing,
-            analysis_version="match_engine_v2",
-            confidence_score=report.evidence_coverage,
-            evidence_score=round(report.evidence_coverage * 100),
-            matched_requirements=matched,
-            missing_requirements=missing,
-            critical_gaps=report.top_blockers,
-            evidence_used=[str(item) for item in report.evidence_used],
-            safe_actions=report.action_plan_preview,
-            resume_improvements=report.recommended_edits,
-            ats_present_keywords=matched,
-            ats_missing_without_evidence=missing,
-            score_reasoning=[report.score_explanation],
+        bundle = self.repository.get_analysis_bundle(session.analysis_bundle_id)
+        if bundle is None:
+            raise ValueError("Bundle de análise ausente; execute a análise novamente.")
+        requirements = [item.requirement_text for item in bundle.match_result.requirements]
+        analysis = match_result_to_job_analysis(bundle.match_result).model_copy(
+            update={"ats_score": bundle.ats_result.ats_score}
         )
         stored = self.tracker.add_analysis(
             analysis,
@@ -482,7 +568,7 @@ class ApplicationLabService:
         application = self.applications.get(stored.id)
         if application is None:
             raise RuntimeError("Tracker não persistiu o vínculo relacional esperado.")
-        lab_snapshot_id = str(report.provider_metadata.get("analysis_snapshot_id", ""))
+        lab_snapshot_id = bundle.readiness_snapshot_id
         kit_snapshot_id = _kit_snapshot_id(session.analysis_run_ids, self.snapshots)
         self.applications.save(
             application.model_copy(
@@ -493,13 +579,28 @@ class ApplicationLabService:
                     "application_kit_id": session.application_kit_id,
                     "action_plan_id": session.action_plan_id,
                     "lab_analysis_snapshot_id": lab_snapshot_id,
+                    "match_analysis_snapshot_id": bundle.match_snapshot_id,
+                    "ats_analysis_snapshot_id": bundle.ats_snapshot_id,
+                    "readiness_analysis_snapshot_id": bundle.readiness_snapshot_id,
+                    "tailor_analysis_snapshot_id": bundle.tailor_snapshot_id,
+                    "analysis_bundle_id": bundle.bundle_id,
                     "application_kit_snapshot_id": kit_snapshot_id,
+                    "dependency_hash": bundle.dependency_hash,
                     "payload": {
                         **application.payload,
                         "application_lab": {
                             "session_id": session_id,
                             "readiness_score": report.readiness_score,
                             "readiness_is_probability": False,
+                            "match_score": bundle.match_result.score_breakdown.match_score,
+                            "ats_score": bundle.ats_result.ats_score,
+                            "opportunity_fit_score": (
+                                bundle.match_result.score_breakdown.opportunity_fit_score
+                            ),
+                            "confidence_score": (
+                                bundle.match_result.score_breakdown.confidence_score
+                            ),
+                            "risk_score": bundle.match_result.score_breakdown.risk_score,
                         },
                     },
                 }
@@ -518,21 +619,29 @@ class ApplicationLabService:
         )
         return stored.id
 
-    def _resume_snapshot(self, resume: MasterResume | ResumeVariant) -> ResumeSnapshot:
+    def _resume_snapshot(
+        self,
+        resume: MasterResume | ResumeVariant,
+        *,
+        dependency_hash: str = "",
+        evidence_scope: dict[str, Any] | None = None,
+    ) -> ResumeSnapshot:
         return self.snapshots.create_resume(
             ResumeSnapshot(
                 profile_id=(resume.profile_id if isinstance(resume, MasterResume) else ""),
+                master_resume_id=resume.master_resume_id,
                 resume_variant_id=(
-                    resume.master_resume_id
-                    if isinstance(resume, MasterResume)
-                    else resume.resume_variant_id
+                    resume.resume_variant_id if isinstance(resume, ResumeVariant) else ""
                 ),
+                document_kind="variant" if isinstance(resume, ResumeVariant) else "master",
                 title=resume.title,
                 content=resume_plain_text(resume),
                 structured_sections={
                     "sections": [item.model_dump(mode="json") for item in resume.sections]
                 },
                 source_profile_item_ids=resume.source_profile_item_ids,
+                dependency_hash=dependency_hash,
+                evidence_scope=evidence_scope or {},
             )
         )
 

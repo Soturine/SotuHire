@@ -97,6 +97,27 @@ def test_full_application_lab_journey_links_snapshots_and_tracker(tmp_path) -> N
     assert report.readiness_score >= 0
     assert analysis_snapshot.analysis_type == "application_readiness"
     assert suggestions
+    analyzed_session = service.repository.get_session(session.session_id)
+    assert analyzed_session is not None
+    bundle = service.repository.get_analysis_bundle(analyzed_session.analysis_bundle_id)
+    assert bundle is not None
+    assert bundle.dependency_hash == analyzed_session.dependency_hash
+    domain_snapshots = [
+        service.snapshots.get_analysis(bundle.match_snapshot_id),
+        service.snapshots.get_analysis(bundle.ats_snapshot_id),
+        service.snapshots.get_analysis(bundle.readiness_snapshot_id),
+        service.snapshots.get_analysis(bundle.tailor_snapshot_id),
+    ]
+    assert all(item is not None for item in domain_snapshots)
+    assert {item.analysis_type for item in domain_snapshots if item is not None} == {
+        "application_match",
+        "application_ats",
+        "application_readiness",
+        "application_tailor",
+    }
+    assert bundle.ats_result.ats_score >= 0
+    assert bundle.match_result.provider_used == "local"
+    assert "Conteúdo ainda sem confirmação" not in str(bundle.tailor_result.model_dump())
 
     evidence_suggestion = next(item for item in suggestions if item.evidence_used)
     reviewed = service.review_suggestion(
@@ -129,6 +150,12 @@ def test_full_application_lab_journey_links_snapshots_and_tracker(tmp_path) -> N
     assert application.application_kit_id == kit.application_kit_id
     assert application.action_plan_id == plan.action_plan_id
     assert application.lab_analysis_snapshot_id == analysis_snapshot.snapshot_id
+    assert application.match_analysis_snapshot_id == bundle.match_snapshot_id
+    assert application.ats_analysis_snapshot_id == bundle.ats_snapshot_id
+    assert application.readiness_analysis_snapshot_id == bundle.readiness_snapshot_id
+    assert application.tailor_analysis_snapshot_id == bundle.tailor_snapshot_id
+    assert application.analysis_bundle_id == bundle.bundle_id
+    assert application.dependency_hash == bundle.dependency_hash
     assert application.application_kit_snapshot_id == kit_snapshot.snapshot_id
     assert service.snapshots.get_job(application.job_snapshot_id) == job
 
@@ -145,6 +172,9 @@ def test_input_change_invalidates_dependents_but_keeps_review_decisions(tmp_path
         )
     )
     _, suggestions, _ = service.analyze(session.session_id)
+    analyzed = service.repository.get_session(session.session_id)
+    assert analyzed is not None and analyzed.analysis_bundle_id
+    previous_bundle_id = analyzed.analysis_bundle_id
     accepted = next(item for item in suggestions if item.evidence_used)
     service.review_suggestion(session.session_id, accepted.suggestion_id, "accepted")
     service.create_variant(session.session_id)
@@ -156,6 +186,9 @@ def test_input_change_invalidates_dependents_but_keeps_review_decisions(tmp_path
     assert updated.invalidated_steps == list(range(5, 11))
     assert not updated.readiness_report_id
     assert not updated.resume_variant_id
+    stale_bundle = service.repository.get_analysis_bundle(previous_bundle_id)
+    assert stale_bundle is not None and stale_bundle.status == "stale"
+    assert stale_bundle.stale_reason == "master_resume_job_or_evidence_scope_changed"
     preserved = service.repository.get_suggestion(accepted.suggestion_id)
     assert preserved is not None and preserved.status == "accepted"
 

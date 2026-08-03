@@ -117,6 +117,23 @@ def extract_structured_job(
         )
 
 
+def extract_structured_job_local(
+    job_text: str,
+    *,
+    source: dict[str, object] | None = None,
+) -> StructuredJobExtractionResult:
+    """Run the real deterministic extraction path without provider routing or mock AI."""
+    local_job = parse_job_description(job_text)
+    output = _job_output_from_local(local_job, source or {})
+    return StructuredJobExtractionResult(
+        output=output,
+        local_job=local_job,
+        provider="local",
+        requested_provider="local",
+        low_confidence_fields=collect_low_confidence_fields(output.model_dump(mode="json")),
+    )
+
+
 def _coerce_job_output(payload: Any) -> JsonGuardResult[JobExtractionOutput]:
     if isinstance(payload, JobExtractionOutput):
         return JsonGuardResult(

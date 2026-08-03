@@ -124,6 +124,23 @@ def extract_structured_resume(
         )
 
 
+def extract_structured_resume_local(
+    resume_text: str,
+    *,
+    file_type: str = "text",
+) -> StructuredResumeExtractionResult:
+    """Run the real deterministic extraction path without provider routing or mock AI."""
+    local_profile = parse_resume_text(resume_text, source_type=file_type)
+    output = _resume_output_from_local(local_profile)
+    return StructuredResumeExtractionResult(
+        output=output,
+        local_profile=local_profile,
+        provider="local",
+        requested_provider="local",
+        low_confidence_fields=collect_low_confidence_fields(output.model_dump(mode="json")),
+    )
+
+
 def _coerce_resume_output(payload: Any) -> JsonGuardResult[ResumeExtractionOutput]:
     if isinstance(payload, ResumeExtractionOutput):
         return JsonGuardResult(

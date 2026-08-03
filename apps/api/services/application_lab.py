@@ -79,6 +79,11 @@ class ApplicationLabApiService:
             raise HTTPException(status_code=404, detail="Sessão do Application Lab não encontrada.")
         return ApplicationLabSessionDetail(
             session=session,
+            analysis_bundle=(
+                self.repository.get_analysis_bundle(session.analysis_bundle_id)
+                if session.analysis_bundle_id
+                else None
+            ),
             report=self.repository.get_report(session_id=session_id),
             suggestions=self.repository.list_suggestions(session_id),
             variant=(
@@ -110,9 +115,21 @@ class ApplicationLabApiService:
 
     def analyze(self, session_id: str) -> ApplicationLabAnalyzeResponse:
         _, _, snapshot = self._call(self.domain.analyze, session_id)
+        detail = self.detail(session_id)
+        bundle = detail.analysis_bundle
         return ApplicationLabAnalyzeResponse(
-            **self.detail(session_id).model_dump(),
+            **detail.model_dump(),
             analysis_snapshot_id=snapshot.snapshot_id,
+            analysis_snapshot_ids=(
+                {
+                    "match": bundle.match_snapshot_id,
+                    "ats": bundle.ats_snapshot_id,
+                    "readiness": bundle.readiness_snapshot_id,
+                    "tailor": bundle.tailor_snapshot_id,
+                }
+                if bundle is not None
+                else {}
+            ),
             progress_steps=ANALYSIS_PROGRESS,
         )
 

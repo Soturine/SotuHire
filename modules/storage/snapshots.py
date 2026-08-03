@@ -46,11 +46,15 @@ class ResumeSnapshot(BaseModel):
 
     snapshot_id: str = Field(default_factory=lambda: uuid4().hex)
     profile_id: str = ""
+    master_resume_id: str = ""
     resume_variant_id: str = ""
+    document_kind: str = "master"
     title: str = "Currículo"
     content: str = ""
     structured_sections: dict[str, Any] = Field(default_factory=dict)
     source_profile_item_ids: list[str] = Field(default_factory=list)
+    dependency_hash: str = ""
+    evidence_scope: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
     content_hash: str = ""
 
@@ -74,6 +78,8 @@ class AnalysisSnapshot(BaseModel):
     result: dict[str, Any] = Field(default_factory=dict)
     evidence_used: list[dict[str, Any] | str] = Field(default_factory=list)
     source_refs: list[str] = Field(default_factory=list)
+    dependency_hash: str = ""
+    dependency_inputs: dict[str, str] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
     content_hash: str = ""
 
@@ -187,17 +193,22 @@ class SnapshotStore:
                 return _resume_from_row(existing)
             connection.execute(
                 """INSERT INTO resume_snapshots
-                (snapshot_id, profile_id, resume_variant_id, title, content,
-                 structured_sections, source_profile_item_ids, created_at, content_hash)
-                VALUES (?, NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?)""",
+                (snapshot_id, profile_id, master_resume_id, resume_variant_id, document_kind,
+                 title, content, structured_sections, source_profile_item_ids, dependency_hash,
+                 evidence_scope, created_at, content_hash)
+                VALUES (?, NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     prepared.snapshot_id,
                     prepared.profile_id,
+                    prepared.master_resume_id,
                     prepared.resume_variant_id,
+                    prepared.document_kind,
                     prepared.title,
                     prepared.content,
                     _json(prepared.structured_sections),
                     _json(prepared.source_profile_item_ids),
+                    prepared.dependency_hash,
+                    _json(prepared.evidence_scope),
                     prepared.created_at.isoformat(),
                     prepared.content_hash,
                 ),
@@ -228,8 +239,9 @@ class SnapshotStore:
                 (snapshot_id, analysis_type, job_snapshot_id, resume_snapshot_id,
                  provider_requested, provider_used, model_requested, model_used,
                  prompt_id, prompt_version, fallback_used, result, evidence_used,
-                 source_refs, created_at, content_hash)
-                VALUES (?, ?, NULLIF(?, ''), NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                 source_refs, dependency_hash, dependency_inputs, created_at, content_hash)
+                VALUES (?, ?, NULLIF(?, ''), NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                        ?, ?, ?)""",
                 (
                     prepared.snapshot_id,
                     prepared.analysis_type,
@@ -245,6 +257,8 @@ class SnapshotStore:
                     _json(prepared.result),
                     _json(prepared.evidence_used),
                     _json(prepared.source_refs),
+                    prepared.dependency_hash,
+                    _json(prepared.dependency_inputs),
                     prepared.created_at.isoformat(),
                     prepared.content_hash,
                 ),
@@ -386,11 +400,15 @@ def _resume_from_row(row: Any) -> ResumeSnapshot:
     return ResumeSnapshot(
         snapshot_id=row["snapshot_id"],
         profile_id=row["profile_id"] or "",
+        master_resume_id=row["master_resume_id"],
         resume_variant_id=row["resume_variant_id"],
+        document_kind=row["document_kind"],
         title=row["title"],
         content=row["content"],
         structured_sections=_loads(row["structured_sections"], {}),
         source_profile_item_ids=_loads(row["source_profile_item_ids"], []),
+        dependency_hash=row["dependency_hash"],
+        evidence_scope=_loads(row["evidence_scope"], {}),
         created_at=row["created_at"],
         content_hash=row["content_hash"],
     )
@@ -412,6 +430,8 @@ def _analysis_from_row(row: Any) -> AnalysisSnapshot:
         result=_loads(row["result"], {}),
         evidence_used=_loads(row["evidence_used"], []),
         source_refs=_loads(row["source_refs"], []),
+        dependency_hash=row["dependency_hash"],
+        dependency_inputs=_loads(row["dependency_inputs"], {}),
         created_at=row["created_at"],
         content_hash=row["content_hash"],
     )

@@ -47,7 +47,11 @@ class ApplicationRecord(BaseModel):
     application_kit_id: str = ""
     action_plan_id: str = ""
     lab_analysis_snapshot_id: str = ""
+    readiness_analysis_snapshot_id: str = ""
+    tailor_analysis_snapshot_id: str = ""
+    analysis_bundle_id: str = ""
     application_kit_snapshot_id: str = ""
+    dependency_hash: str = ""
     payload: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
@@ -88,11 +92,14 @@ class ApplicationRepository:
                  contact_history, interview_notes, follow_up_at, outcome, outcome_reason,
                  application_lab_session_id, readiness_report_id, resume_variant_id,
                  application_kit_id, action_plan_id, lab_analysis_snapshot_id,
-                 application_kit_snapshot_id, payload, created_at, updated_at)
+                 readiness_analysis_snapshot_id, tailor_analysis_snapshot_id,
+                 analysis_bundle_id, application_kit_snapshot_id, dependency_hash,
+                 payload, created_at, updated_at)
                 VALUES (?, NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''),
                         NULLIF(?, ''), NULLIF(?, ''), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
                         NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''),
-                        NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), ?, ?, ?)
+                        NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''),
+                        NULLIF(?, ''), NULLIF(?, ''), ?, ?, ?, ?)
                 ON CONFLICT(id) DO UPDATE SET
                     job_snapshot_id=excluded.job_snapshot_id,
                     resume_snapshot_id=excluded.resume_snapshot_id,
@@ -117,7 +124,11 @@ class ApplicationRepository:
                     application_kit_id=excluded.application_kit_id,
                     action_plan_id=excluded.action_plan_id,
                     lab_analysis_snapshot_id=excluded.lab_analysis_snapshot_id,
+                    readiness_analysis_snapshot_id=excluded.readiness_analysis_snapshot_id,
+                    tailor_analysis_snapshot_id=excluded.tailor_analysis_snapshot_id,
+                    analysis_bundle_id=excluded.analysis_bundle_id,
                     application_kit_snapshot_id=excluded.application_kit_snapshot_id,
+                    dependency_hash=excluded.dependency_hash,
                     payload=excluded.payload,
                     updated_at=excluded.updated_at""",
                 (
@@ -145,7 +156,11 @@ class ApplicationRepository:
                     record.application_kit_id,
                     record.action_plan_id,
                     record.lab_analysis_snapshot_id,
+                    record.readiness_analysis_snapshot_id,
+                    record.tailor_analysis_snapshot_id,
+                    record.analysis_bundle_id,
                     record.application_kit_snapshot_id,
+                    record.dependency_hash,
                     _json(record.payload),
                     record.created_at.isoformat(),
                     record.updated_at.isoformat(),
@@ -213,7 +228,11 @@ def _from_row(row: Any) -> ApplicationRecord:
         application_kit_id=row["application_kit_id"] or "",
         action_plan_id=row["action_plan_id"] or "",
         lab_analysis_snapshot_id=row["lab_analysis_snapshot_id"] or "",
+        readiness_analysis_snapshot_id=row["readiness_analysis_snapshot_id"] or "",
+        tailor_analysis_snapshot_id=row["tailor_analysis_snapshot_id"] or "",
+        analysis_bundle_id=row["analysis_bundle_id"] or "",
         application_kit_snapshot_id=row["application_kit_snapshot_id"] or "",
+        dependency_hash=row["dependency_hash"],
         payload=_load(row["payload"], {}),
         created_at=row["created_at"],
         updated_at=row["updated_at"],

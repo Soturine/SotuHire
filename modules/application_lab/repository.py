@@ -9,6 +9,7 @@ from typing import Any
 from modules.application_lab.models import (
     ActionPlanItem,
     ApplicationActionPlan,
+    ApplicationAnalysisBundle,
     ApplicationKit,
     ApplicationKitItem,
     ApplicationLabSession,
@@ -107,8 +108,8 @@ class ApplicationLabRepository:
                         """INSERT INTO resume_entries
                         (entry_id, section_id, entry_type, title, subtitle, content,
                          start_date, end_date, position, enabled, source_profile_item_ids,
-                         source_refs, confirmed_by_user, created_at, updated_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                         source_refs, review_status, confirmed_by_user, created_at, updated_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                         (
                             entry.entry_id,
                             section.section_id,
@@ -122,6 +123,7 @@ class ApplicationLabRepository:
                             int(entry.enabled),
                             _json(entry.source_profile_item_ids),
                             _json(entry.source_refs),
+                            entry.review_status,
                             int(entry.confirmed_by_user),
                             entry.created_at.isoformat(),
                             entry.updated_at.isoformat(),
@@ -320,11 +322,13 @@ class ApplicationLabRepository:
             connection.execute(
                 """INSERT INTO application_lab_sessions
                 (session_id, profile_id, master_resume_id, job_id, job_snapshot_id,
-                 current_step, status, selected_context_refs, analysis_run_ids,
+                 current_step, status, selected_context_refs, evidence_scope,
+                 dependency_hash, analysis_bundle_id, analysis_run_ids,
                  readiness_report_id, resume_variant_id, application_kit_id,
                  action_plan_id, tracker_application_id, invalidated_steps, warnings,
                  created_at, updated_at, completed_at)
-                VALUES (?, NULLIF(?, ''), NULLIF(?, ''), ?, NULLIF(?, ''), ?, ?, ?, ?,
+                VALUES (?, NULLIF(?, ''), NULLIF(?, ''), ?, NULLIF(?, ''), ?, ?, ?, ?, ?,
+                        NULLIF(?, ''), ?,
                         NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''),
                         NULLIF(?, ''), ?, ?, ?, ?, ?)
                 ON CONFLICT(session_id) DO UPDATE SET
@@ -335,6 +339,9 @@ class ApplicationLabRepository:
                     current_step=excluded.current_step,
                     status=excluded.status,
                     selected_context_refs=excluded.selected_context_refs,
+                    evidence_scope=excluded.evidence_scope,
+                    dependency_hash=excluded.dependency_hash,
+                    analysis_bundle_id=excluded.analysis_bundle_id,
                     analysis_run_ids=excluded.analysis_run_ids,
                     readiness_report_id=excluded.readiness_report_id,
                     resume_variant_id=excluded.resume_variant_id,
@@ -354,6 +361,9 @@ class ApplicationLabRepository:
                     session.current_step,
                     session.status,
                     _json(session.selected_context_refs),
+                    _json(session.evidence_scope),
+                    session.dependency_hash,
+                    session.analysis_bundle_id,
                     _json(session.analysis_run_ids),
                     session.readiness_report_id,
                     session.resume_variant_id,
@@ -396,6 +406,83 @@ class ApplicationLabRepository:
                 "SELECT COUNT(*) AS total FROM application_lab_sessions"
             ).fetchone()
         return int(row["total"]) if row is not None else 0
+
+    def save_analysis_bundle(
+        self, bundle: ApplicationAnalysisBundle
+    ) -> ApplicationAnalysisBundle:
+        """Persist the four independent analysis products as one immutable run record."""
+        ensure_database(self.database_path)
+        with connect_database(self.database_path) as connection:
+            connection.execute(
+                """INSERT INTO application_analysis_bundles
+                (bundle_id, session_id, evidence_scope, dependency_hash, match_result,
+                 ats_result, readiness_result, tailor_result, match_snapshot_id,
+                 ats_snapshot_id, readiness_snapshot_id, tailor_snapshot_id, status,
+                 stale_reason, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(bundle_id) DO NOTHING""",
+                (
+                    bundle.bundle_id,
+                    bundle.session_id,
+                    _json(bundle.evidence_scope),
+                    bundle.dependency_hash,
+                    _json(bundle.match_result.model_dump(mode="json")),
+                    _json(bundle.ats_result.model_dump(mode="json")),
+                    _json(bundle.readiness_result.model_dump(mode="json")),
+                    _json(bundle.tailor_result.model_dump(mode="json")),
+                    bundle.match_snapshot_id,
+                    bundle.ats_snapshot_id,
+                    bundle.readiness_snapshot_id,
+                    bundle.tailor_snapshot_id,
+                    bundle.status,
+                    bundle.stale_reason,
+                    bundle.created_at.isoformat(),
+                ),
+            )
+        return bundle
+
+    def get_analysis_bundle(self, bundle_id: str) -> ApplicationAnalysisBundle | None:
+        ensure_database(self.database_path)
+        with connect_database(self.database_path) as connection:
+            row = connection.execute(
+                "SELECT * FROM application_analysis_bundles WHERE bundle_id = ?",
+                (bundle_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return ApplicationAnalysisBundle.model_validate(
+            {
+                "bundle_id": row["bundle_id"],
+                "session_id": row["session_id"],
+                "evidence_scope": _load(row["evidence_scope"], {}),
+                "dependency_hash": row["dependency_hash"],
+                "match_result": _load(row["match_result"], {}),
+                "ats_result": _load(row["ats_result"], {}),
+                "readiness_result": _load(row["readiness_result"], {}),
+                "tailor_result": _load(row["tailor_result"], {}),
+                "match_snapshot_id": row["match_snapshot_id"] or "",
+                "ats_snapshot_id": row["ats_snapshot_id"] or "",
+                "readiness_snapshot_id": row["readiness_snapshot_id"] or "",
+                "tailor_snapshot_id": row["tailor_snapshot_id"] or "",
+                "status": row["status"],
+                "stale_reason": row["stale_reason"],
+                "created_at": row["created_at"],
+            }
+        )
+
+    def mark_analysis_bundle_stale(self, bundle_id: str, reason: str) -> bool:
+        """Invalidate a derived bundle without changing its immutable result snapshots."""
+        if not bundle_id:
+            return False
+        ensure_database(self.database_path)
+        with connect_database(self.database_path) as connection:
+            cursor = connection.execute(
+                """UPDATE application_analysis_bundles
+                SET status = 'stale', stale_reason = ?
+                WHERE bundle_id = ? AND status = 'current'""",
+                (reason.strip() or "upstream_dependency_changed", bundle_id),
+            )
+        return cursor.rowcount > 0
 
     def save_report(self, report: ApplicationReadinessReport) -> ApplicationReadinessReport:
         ensure_database(self.database_path)
@@ -764,6 +851,7 @@ def _section_from_rows(section: Any, entries: list[Any]) -> ResumeSection:
                 enabled=bool(row["enabled"]),
                 source_profile_item_ids=_load(row["source_profile_item_ids"], []),
                 source_refs=_load(row["source_refs"], []),
+                review_status=row["review_status"],
                 confirmed_by_user=bool(row["confirmed_by_user"]),
                 created_at=row["created_at"],
                 updated_at=row["updated_at"],
@@ -810,6 +898,9 @@ def _session_from_row(row: Any) -> ApplicationLabSession:
         current_step=row["current_step"],
         status=row["status"],
         selected_context_refs=_load(row["selected_context_refs"], []),
+        evidence_scope=_load(row["evidence_scope"], {}),
+        dependency_hash=row["dependency_hash"],
+        analysis_bundle_id=row["analysis_bundle_id"] or "",
         analysis_run_ids=_load(row["analysis_run_ids"], []),
         readiness_report_id=row["readiness_report_id"] or "",
         resume_variant_id=row["resume_variant_id"] or "",

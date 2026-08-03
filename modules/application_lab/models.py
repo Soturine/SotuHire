@@ -10,6 +10,8 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from modules.evidence import EvidenceReviewStatus
+from modules.matching.models import MatchResultV2
+from modules.schemas.resume_tailor import ResumeTailorOutput
 
 
 def utc_now() -> datetime:
@@ -155,6 +157,9 @@ class ApplicationLabSession(LabModel):
     current_step: int = Field(default=1, ge=1, le=10)
     status: ApplicationLabStatus = ApplicationLabStatus.DRAFT
     selected_context_refs: list[str] = Field(default_factory=list)
+    evidence_scope: dict[str, Any] = Field(default_factory=dict)
+    dependency_hash: str = ""
+    analysis_bundle_id: str = ""
     analysis_run_ids: list[str] = Field(default_factory=list)
     readiness_report_id: str = ""
     resume_variant_id: str = ""
@@ -220,6 +225,36 @@ class ApplicationReadinessReport(LabModel):
     evidence_used: list[str | dict[str, Any]] = Field(default_factory=list)
     perspectives: dict[str, ReadinessPerspective] = Field(default_factory=dict)
     dependency_hash: str = ""
+    stale_reason: str = ""
+    created_at: datetime = Field(default_factory=utc_now)
+
+
+class ApplicationAtsAnalysis(LabModel):
+    """ATS result kept separate from fit and readiness metrics."""
+
+    ats_score: int = Field(ge=0, le=100)
+    issues: list[str] = Field(default_factory=list)
+    present_keywords: list[str] = Field(default_factory=list)
+    missing_keywords: list[str] = Field(default_factory=list)
+    assessment_status: Literal["sufficient", "insufficient"] = "insufficient"
+
+
+class ApplicationAnalysisBundle(LabModel):
+    """Independent, traceable outputs produced by one Application Lab run."""
+
+    bundle_id: str = Field(default_factory=lambda: uuid4().hex)
+    session_id: str
+    evidence_scope: dict[str, Any] = Field(default_factory=dict)
+    dependency_hash: str
+    match_result: MatchResultV2
+    ats_result: ApplicationAtsAnalysis
+    readiness_result: ApplicationReadinessReport
+    tailor_result: ResumeTailorOutput
+    match_snapshot_id: str
+    ats_snapshot_id: str
+    readiness_snapshot_id: str
+    tailor_snapshot_id: str
+    status: Literal["current", "stale", "failed"] = "current"
     stale_reason: str = ""
     created_at: datetime = Field(default_factory=utc_now)
 
@@ -305,6 +340,8 @@ class ApplicationActionPlan(LabModel):
 __all__ = [
     "ActionPlanItem",
     "ApplicationActionPlan",
+    "ApplicationAnalysisBundle",
+    "ApplicationAtsAnalysis",
     "ApplicationKit",
     "ApplicationKitItem",
     "ApplicationLabSession",

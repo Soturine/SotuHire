@@ -105,6 +105,13 @@ def test_application_lab_and_resume_studio_api_journey(tmp_path) -> None:
     assert analyzed.status_code == 200
     analysis_data = analyzed.json()["data"]
     assert len(analysis_data["progress_steps"]) == 8
+    assert set(analysis_data["analysis_snapshot_ids"]) == {
+        "match",
+        "ats",
+        "readiness",
+        "tailor",
+    }
+    assert analysis_data["analysis_bundle"]["match_result"]["provider_used"] == "local"
     suggestion = next(item for item in analysis_data["suggestions"] if item["evidence_used"])
     accepted = client.post(
         f"/api/v1/application-lab/sessions/{session_id}/suggestions/"
