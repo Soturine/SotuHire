@@ -1,7 +1,6 @@
 # Mapa de integração de módulos
 
-Estado atual da `main`, validado em 12 de julho de 2026. O commit inicial da auditoria foi
-`309f9662f1da410349d85fefdcacff8778cea51e`; a referência verificável por capacidade está na
+Estado da v1.9.9 validado em 3 de agosto de 2026. O commit-base verificável de cada capacidade está na
 [matriz de integração atual](integration-capability-matrix.md).
 
 Este mapa registra como `apps/web`, FastAPI, Local Companion, extensão e `modules/` se conectam
@@ -43,6 +42,9 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Captura assistida autenticada | `/sources` | `POST /api/v1/sources/authenticated-captures` | `apps.api.services.sources` | `modules/sources`, `modules/profile` | Real |
 | Streamlit | legado/dev | Não é API web | `app.py`, `modules/ui` | core antigo | Legado |
 | Editais / Concursos | `/public-exams` | `/api/v1/public-exams/*` | `apps.api.services.public_exams` | `modules/public_exams`, `modules/context`, `modules/profile` | Fundação real com IA/fallback v1.9.4 |
+| Application Lab | `/application-lab` | `/api/v1/application-lab/*` | `apps.api.services.application_lab` | `modules/application_lab` + motores Match/ATS/Tailor | Real v1.9.9 |
+| Resume Studio e ingestão | `/resume-studio` | `/api/v1/resume-studio/*` | `apps.api.services.application_lab` | documento canônico, ingestion e export | Real v1.9.9 |
+| Professional Assets | `/application-lab` | `/api/v1/professional-assets/*` | `apps.api.services.professional_assets` | `modules/professional_assets` | Real v1.9.9 |
 
 ## Editais e concursos v1.9.3
 

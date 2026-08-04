@@ -45,10 +45,12 @@ Nunca commitar:
 
 ## Chaves de API
 
-Use variável de ambiente:
+Chaves de uso normal ficam no backend local. Suites externas usam exclusivamente variáveis
+opt-in temporárias:
 
 ```text
-GEMINI_API_KEY=...
+SOTUHIRE_TEST_GEMINI_API_KEY=...
+SOTUHIRE_TEST_OPENAI_API_KEY=...
 ```
 
 Ou `st.secrets` no Streamlit Cloud. Referência: [Streamlit Secrets Management](https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app/secrets-management)
@@ -133,7 +135,10 @@ Ao usar APIs de IA, lembre que o currículo será enviado para um serviço exter
 
 Conteúdo importado é delimitado como não confiável. Prompt injection não pode solicitar chave, revelar system prompt, promover afirmação sem evidência ou alterar uma decisão determinística. Benchmarks externos usam apenas fixtures fictícias e variáveis temporárias; chaves não entram em frontend, SQLite, logs, screenshots ou pacote da extensão.
 
-Application Lab persiste referências e snapshots necessários, não envia candidatura nem Perfil completo pela extensão. JSON Resume exporta somente entradas confirmadas e não inclui trace. PDF/DOCX não são gerados enquanto não houver renderer e validação de metadados. Relatórios externos guardam erro sanitizado/request ID, nunca chave ou corpo pessoal integral.
+Application Lab persiste referências e snapshots necessários, não envia candidatura nem Perfil
+completo pela extensão. JSON Resume, PDF e DOCX são gerados localmente da mesma árvore canônica,
+somente com entradas habilitadas, e não incluem trace, chave ou caminho pessoal. Relatórios
+externos guardam erro sanitizado/request ID, nunca chave ou corpo pessoal integral.
 
 ## Mensagens geradas
 

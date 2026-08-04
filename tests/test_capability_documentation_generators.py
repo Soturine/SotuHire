@@ -70,8 +70,11 @@ def test_integration_matrix_is_deterministic_and_current() -> None:
         "tests",
         "docs",
         "status",
-        "gaps",
-        "last_verified_commit",
+        "verification_ref",
+        "verification_base_commit",
+        "verification_date",
+        "verification_command",
+        "known_gaps",
     ):
         assert f"`{required_field}`" in expected
 

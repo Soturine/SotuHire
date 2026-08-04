@@ -2,7 +2,7 @@
 
 Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o OpenAPI real, as rotas TanStack e os arquivos de testes e documentação.
 
-**Commit-base da última verificação:** `7d90a46`
+Cada capacidade registra um commit-base ancestral verificável; o manifesto não tenta autorreferenciar o SHA do commit que o contém.
 
 ## Resumo
 
@@ -23,9 +23,10 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | ai_settings | Configuração de IA | `/settings` | 7 | sem contexto dedicado | não | A configuração do site não lê nem persiste a chave própria da extensão. | AiRunStore registra metadados seguros; segredos não entram em snapshots. | complete | nenhuma registrada |
 | notifications | Notificações locais | `/dashboard` | 4 | sem contexto dedicado | não | A extensão não recebe notificações do site. | A notificação referencia a origem; não é um snapshot de conteúdo. | complete | Não existe rota exclusiva; o resumo é exibido no Dashboard e no Radar. |
 | data_reliability | Persistência, migração, backup e saúde dos dados | `/privacy` | 5 | sem contexto dedicado | não | Backups não incluem chrome.storage, IndexedDB, chaves, tokens ou cookies. | Tabelas e triggers impedem UPDATE/DELETE de snapshots imutáveis. | complete | nenhuma registrada |
-| ai_quality_outcomes | Qualidade de IA, feedback humano e resultados profissionais | `/ai-quality` | 10 | dashboard | resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1 | A extensão 0.9.4 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. | complete | Métricas externas dependem de execução opt-in com chaves temporárias. |
-| application_lab | Preparar candidatura | `/application-lab` | 9 | match | match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1 | A extensão 0.9.4 abre o Lab somente com capture_id e job_snapshot_id; o Perfil completo permanece local. | Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker. | complete | Notificações do plano permanecem locais; nenhum calendário externo é criado automaticamente. |
-| resume_studio | Resume Studio | `/resume-studio` | 8 | sem contexto dedicado | não | A extensão encaminha a vaga ao Application Lab; não lê nem envia o currículo. | O Tracker preserva snapshots distintos do mestre e da variante usada. | partial | PDF e DOCX permanecem explicitamente pendentes para a v1.9.9; preview e JSON Resume estão funcionais. |
+| ai_quality_outcomes | Qualidade de IA, feedback humano e resultados profissionais | `/ai-quality` | 10 | dashboard | resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1 | A extensão 0.9.5 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. | complete | Métricas externas dependem de execução opt-in com chaves temporárias. |
+| application_lab | Preparar candidatura | `/application-lab` | 9 | match | match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1 | A extensão 0.9.5 abre o Lab ou o Resume Studio somente com capture_id e job_snapshot_id; o Perfil completo e documentos locais permanecem fora da extensão. | Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker. | complete | Notificações do plano permanecem locais; nenhum calendário externo é criado automaticamente. |
+| resume_studio | Resume Studio | `/resume-studio` | 9 | sem contexto dedicado | não | A extensão encaminha a vaga ao Application Lab; não lê nem envia o currículo. | O Tracker preserva snapshots distintos do mestre e da variante usada. | complete | OCR de documentos somente-imagem permanece fora do fluxo padrão e é sinalizado para revisão manual. |
+| professional_assets | Professional Assets | `/application-lab` | 5 | sem contexto dedicado | não | A extensão abre o Resume Studio por IDs e nunca lê documentos ou assets locais. | Revisões e dependency_hash preservam o estado usado pelo Application Kit. | complete | Envio por e-mail, calendário externo e submissão automática permanecem fora do produto. |
 
 ## Contratos por capacidade
 
@@ -48,8 +49,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_resume.py`<br>`tests/test_structured_resume_extractor.py` |
 | `docs` | `docs/02-architecture/parsers.md`<br>`docs/04-ai/prompts/resume-extraction-v1.md` |
 | `status` | `complete` |
-| `gaps` | A extração isolada não persiste automaticamente uma variante de currículo. |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:resume_extraction` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | A extração isolada não persiste automaticamente uma variante de currículo. |
 
 ### Leitura de vaga (`job_extraction`)
 
@@ -70,8 +74,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_job.py`<br>`tests/test_structured_job_extractor.py` |
 | `docs` | `docs/02-architecture/parsers.md`<br>`docs/04-ai/prompts/job-extraction-multi-domain-v1.md` |
 | `status` | `complete` |
-| `gaps` | nenhuma registrada |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:job_extraction` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | nenhuma registrada |
 
 ### Compatibilidade (`match`)
 
@@ -92,8 +99,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_match.py`<br>`tests/test_match_engine_v2.py` |
 | `docs` | `docs/03-business-rules/matching-rules.md`<br>`docs/04-ai/prompts/match-analysis-evidence-based-v1.md` |
 | `status` | `complete` |
-| `gaps` | nenhuma registrada |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:match` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | nenhuma registrada |
 
 ### Análise ATS (`ats`)
 
@@ -114,8 +124,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_ats.py`<br>`tests/test_ats_score.py` |
 | `docs` | `docs/03-business-rules/ats-rules.md`<br>`docs/04-ai/prompts/ats-analysis-v1.md` |
 | `status` | `complete` |
-| `gaps` | nenhuma registrada |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:ats` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | nenhuma registrada |
 
 ### Adaptação segura de currículo (`resume_tailor`)
 
@@ -136,8 +149,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_tailor.py`<br>`tests/test_resume_tailor_rules.py` |
 | `docs` | `docs/03-business-rules/resume-tailor-rules.md`<br>`docs/04-ai/prompts/resume-tailor-v1.md` |
 | `status` | `complete` |
-| `gaps` | Exportação avançada de variantes permanece no roadmap de Resume Studio. |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:resume_tailor` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Exportação avançada de variantes permanece no roadmap de Resume Studio. |
 
 ### Perfil Profissional Universal (`universal_profile`)
 
@@ -158,8 +174,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_profile.py`<br>`tests/test_academic_lattes.py` |
 | `docs` | `docs/02-architecture/career-context-engine.md`<br>`docs/02-architecture/data-lineage-and-deduplication.md` |
 | `status` | `complete` |
-| `gaps` | Alguns módulos legados ainda mantêm stores próprios e são tratados pela migração gradual. |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:universal_profile` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Alguns módulos legados ainda mantêm stores próprios e são tratados pela migração gradual. |
 
 ### Editais e concursos (`public_exams`)
 
@@ -180,8 +199,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_public_exams.py`<br>`tests/test_api_extension_bridge.py` |
 | `docs` | `docs/03-business-rules/public-exam-rules.md`<br>`docs/02-architecture/public-exams-foundation.md` |
 | `status` | `complete` |
-| `gaps` | nenhuma registrada |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:public_exams` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | nenhuma registrada |
 
 ### Radar, wishlist e agendamentos (`radar`)
 
@@ -202,8 +224,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_radar.py`<br>`tests/test_api_radar_scheduler.py` |
 | `docs` | `docs/03-business-rules/job-radar-rules.md`<br>`docs/02-architecture/background-jobs.md` |
 | `status` | `complete` |
-| `gaps` | Conectores oficiais adicionais permanecem fora desta capacidade atual. |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:radar` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Conectores oficiais adicionais permanecem fora desta capacidade atual. |
 
 ### Tracker e histórico de candidaturas (`tracker`)
 
@@ -224,8 +249,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_tracker.py`<br>`tests/test_job_tracker.py`<br>`tests/test_storage_snapshots.py` |
 | `docs` | `docs/07-development/job-tracker-kanban.md`<br>`docs/02-architecture/storage-and-history.md` |
 | `status` | `complete` |
-| `gaps` | Registros legados sem texto original permanecem sem snapshot inventado. |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:tracker` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Registros legados sem texto original permanecem sem snapshot inventado. |
 
 ### GitHub e portfólio (`github_portfolio`)
 
@@ -246,8 +274,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_github.py`<br>`tests/test_github_analyzer_service.py`<br>`tests/test_extension_github_repo_sampling.py` |
 | `docs` | `docs/05-data-sources/github-portfolio-analyzer.md`<br>`docs/04-ai/prompts/github-repo-analysis-v2.md` |
 | `status` | `partial` |
-| `gaps` | Análise agregada do perfil GitHub ainda não possui prompt consumido pelo runtime principal.; O relatório de projeto legado ainda não possui snapshot imutável dedicado. |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:github_portfolio` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Análise agregada do perfil GitHub ainda não possui prompt consumido pelo runtime principal.; O relatório de projeto legado ainda não possui snapshot imutável dedicado. |
 
 ### Fontes e captura assistida (`sources_capture`)
 
@@ -268,8 +299,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_source_imports.py`<br>`tests/test_opportunity_cross_portal_identity.py` |
 | `docs` | `docs/05-data-sources/public-source-importers.md`<br>`docs/02-architecture/opportunity-collection-pipeline.md` |
 | `status` | `complete` |
-| `gaps` | nenhuma registrada |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:sources_capture` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | nenhuma registrada |
 
 ### Extensão e Local Companion (`extension_bridge`)
 
@@ -290,8 +324,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_extension_bridge.py`<br>`tests/test_extension_capture_flow.py`<br>`tests/test_extension_connected_sotuhire_mode.py` |
 | `docs` | `docs/02-architecture/local-companion-api.md`<br>`docs/02-architecture/extension-profile-bridge.md` |
 | `status` | `complete` |
-| `gaps` | Compatibilidade depende de manter manifesto, extensão e companion versionados em conjunto. |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:extension_bridge` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Compatibilidade depende de manter manifesto, extensão e companion versionados em conjunto. |
 
 ### Configuração de IA (`ai_settings`)
 
@@ -312,8 +349,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_ai_settings.py`<br>`tests/test_ai_provider_routing.py` |
 | `docs` | `docs/02-architecture/ai-provider-model-catalog.md`<br>`docs/04-ai/provider-strategy.md` |
 | `status` | `complete` |
-| `gaps` | nenhuma registrada |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:ai_settings` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | nenhuma registrada |
 
 ### Notificações locais (`notifications`)
 
@@ -334,8 +374,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_radar_scheduler.py` |
 | `docs` | `docs/02-architecture/background-jobs.md`<br>`docs/07-development/alerts-roadmap.md` |
 | `status` | `complete` |
-| `gaps` | Não existe rota exclusiva; o resumo é exibido no Dashboard e no Radar. |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:notifications` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Não existe rota exclusiva; o resumo é exibido no Dashboard e no Radar. |
 
 ### Persistência, migração, backup e saúde dos dados (`data_reliability`)
 
@@ -356,8 +399,11 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `tests` | `tests/test_api_data_reliability.py`<br>`tests/test_storage_migrations.py`<br>`tests/test_storage_backup_restore.py`<br>`tests/test_legacy_data_migration.py`<br>`apps/web/tests/e2e/data-reliability.spec.ts` |
 | `docs` | `docs/02-architecture/storage-and-history.md`<br>`docs/02-architecture/data-lineage-and-deduplication.md` |
 | `status` | `complete` |
-| `gaps` | nenhuma registrada |
-| `last_verified_commit` | `8cd82f026a762752fd042ce3f39c8f1d1885ba32` |
+| `verification_ref` | `capability:data_reliability` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | nenhuma registrada |
 
 ### Qualidade de IA, feedback humano e resultados profissionais (`ai_quality_outcomes`)
 
@@ -372,14 +418,17 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `profile_integration` | Usa somente contexto necessário e confirmado; itens não confirmados permanecem sinalizados e não viram fatos. |
 | `context_purpose` | `dashboard` |
 | `ai_support` | enabled=true; prompts=resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1; providers=local, gemini, openai; fallback=Determinístico local, explícito e mensurado |
-| `extension_support` | A extensão 0.9.4 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. |
+| `extension_support` | A extensão 0.9.5 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. |
 | `dedupe_strategy` | Eventos e feedback usam IDs únicos; métricas de deduplicação são avaliadas separadamente. |
 | `snapshot_support` | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. |
 | `tests` | `tests/test_ai_task_registry.py`<br>`tests/test_ai_evaluation_metrics.py`<br>`tests/test_ai_golden_datasets.py`<br>`tests/test_ai_feedback_outcomes.py`<br>`tests/test_ai_quality_api.py`<br>`tests/test_prompt_injection_defense.py` |
 | `docs` | `docs/04-ai/ai-evaluation-architecture.md`<br>`docs/04-ai/prompt-governance.md`<br>`docs/02-architecture/outcome-learning.md`<br>`docs/09-testing/ai-benchmarking.md` |
 | `status` | `complete` |
-| `gaps` | Métricas externas dependem de execução opt-in com chaves temporárias. |
-| `last_verified_commit` | `7d90a46` |
+| `verification_ref` | `capability:ai_quality_outcomes` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Métricas externas dependem de execução opt-in com chaves temporárias. |
 
 ### Preparar candidatura (`application_lab`)
 
@@ -394,14 +443,17 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 | `profile_integration` | Seleciona referências confirmadas do Perfil e preserva a origem; candidatos não viram fatos automaticamente. |
 | `context_purpose` | `match` |
 | `ai_support` | enabled=true; prompts=match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1; providers=local, gemini, openai; fallback=Relatório de prontidão determinístico e fallback local explícito |
-| `extension_support` | A extensão 0.9.4 abre o Lab somente com capture_id e job_snapshot_id; o Perfil completo permanece local. |
+| `extension_support` | A extensão 0.9.5 abre o Lab ou o Resume Studio somente com capture_id e job_snapshot_id; o Perfil completo e documentos locais permanecem fora da extensão. |
 | `dedupe_strategy` | Reutiliza identidade da captura, job_snapshot_id e snapshots existentes em vez de duplicar a vaga. |
 | `snapshot_support` | Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker. |
 | `tests` | `tests/test_application_lab_service.py`<br>`tests/test_application_lab_api.py`<br>`tests/test_application_lab_repository.py`<br>`apps/web/tests/e2e/application-lab.spec.ts` |
 | `docs` | `docs/02-architecture/application-lab.md`<br>`docs/03-business-rules/application-readiness.md` |
 | `status` | `complete` |
-| `gaps` | Notificações do plano permanecem locais; nenhum calendário externo é criado automaticamente. |
-| `last_verified_commit` | `7d90a46` |
+| `verification_ref` | `capability:application_lab` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Notificações do plano permanecem locais; nenhum calendário externo é criado automaticamente. |
 
 ### Resume Studio (`resume_studio`)
 
@@ -409,21 +461,49 @@ Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com o
 |---|---|
 | `capability_id` | `resume_studio` |
 | `frontend_route` | `/resume-studio` |
-| `api_endpoints` | `GET /api/v1/resume-studio/master`<br>`PUT /api/v1/resume-studio/master`<br>`GET /api/v1/resume-studio/variants`<br>`POST /api/v1/resume-studio/variants`<br>`GET /api/v1/resume-studio/variants/{variant_id}`<br>`PATCH /api/v1/resume-studio/variants/{variant_id}`<br>`GET /api/v1/resume-studio/templates`<br>`POST /api/v1/resume-studio/variants/{variant_id}/export` |
+| `api_endpoints` | `POST /api/v1/resume-studio/ingest`<br>`GET /api/v1/resume-studio/master`<br>`PUT /api/v1/resume-studio/master`<br>`GET /api/v1/resume-studio/variants`<br>`POST /api/v1/resume-studio/variants`<br>`GET /api/v1/resume-studio/variants/{variant_id}`<br>`PATCH /api/v1/resume-studio/variants/{variant_id}`<br>`GET /api/v1/resume-studio/templates`<br>`POST /api/v1/resume-studio/variants/{variant_id}/export` |
 | `backend_services` | `apps/api/services/application_lab.py` |
-| `core_modules` | `modules/application_lab/models.py`<br>`modules/application_lab/export.py` |
+| `core_modules` | `modules/application_lab/canonical_document.py`<br>`modules/application_lab/ingestion_service.py`<br>`modules/application_lab/export.py`<br>`modules/parsers/document_ingestion.py` |
 | `stores` | `modules/application_lab/repository.py` |
 | `profile_integration` | O Currículo Mestre usa itens confirmados e mantém source_profile_item_ids em variantes. |
 | `context_purpose` | — |
-| `ai_support` | enabled=false; prompts=nenhum; providers=local; fallback=Editor, diff, preview e export JSON Resume são determinísticos |
+| `ai_support` | enabled=false; prompts=nenhum; providers=local; fallback=Ingestão, editor, diff, preview e exports PDF/DOCX/JSON Resume determinísticos |
 | `extension_support` | A extensão encaminha a vaga ao Application Lab; não lê nem envia o currículo. |
 | `dedupe_strategy` | Variantes têm ID próprio, master_resume_id e job_snapshot_id; o mestre nunca é alterado pela variante. |
 | `snapshot_support` | O Tracker preserva snapshots distintos do mestre e da variante usada. |
-| `tests` | `tests/test_application_lab_api.py`<br>`tests/test_application_lab_service.py`<br>`apps/web/src/components/resume-editor-state.test.ts`<br>`apps/web/tests/e2e/application-lab.spec.ts` |
-| `docs` | `docs/02-architecture/resume-studio.md`<br>`docs/03-business-rules/resume-variants-and-suggestions.md` |
-| `status` | `partial` |
-| `gaps` | PDF e DOCX permanecem explicitamente pendentes para a v1.9.9; preview e JSON Resume estão funcionais. |
-| `last_verified_commit` | `7d90a46` |
+| `tests` | `tests/test_application_lab_api.py`<br>`tests/test_application_lab_service.py`<br>`tests/test_document_ingestion.py` |
+| `docs` | `docs/02-architecture/document-ingestion-and-provenance.md`<br>`docs/02-architecture/resume-document-rendering.md` |
+| `status` | `complete` |
+| `verification_ref` | `capability:resume_studio` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | OCR de documentos somente-imagem permanece fora do fluxo padrão e é sinalizado para revisão manual. |
+
+### Professional Assets (`professional_assets`)
+
+| Campo | Valor verificado |
+|---|---|
+| `capability_id` | `professional_assets` |
+| `frontend_route` | `/application-lab` |
+| `api_endpoints` | `POST /api/v1/professional-assets`<br>`GET /api/v1/professional-assets`<br>`GET /api/v1/professional-assets/{asset_id}`<br>`PATCH /api/v1/professional-assets/{asset_id}`<br>`POST /api/v1/professional-assets/{asset_id}/status` |
+| `backend_services` | `apps/api/services/professional_assets.py` |
+| `core_modules` | `modules/professional_assets/models.py`<br>`modules/professional_assets/repository.py` |
+| `stores` | `modules/professional_assets/repository.py` |
+| `profile_integration` | Assets preservam proveniência e dependem de evidência confirmada antes de uso em candidatura. |
+| `context_purpose` | — |
+| `ai_support` | enabled=false; prompts=nenhum; providers=local; fallback=CRUD, lifecycle, kit e validação de stale são determinísticos |
+| `extension_support` | A extensão abre o Resume Studio por IDs e nunca lê documentos ou assets locais. |
+| `dedupe_strategy` | Fingerprint de tipo, conteúdo normalizado e escopo; duplicação explícita cria nova identidade. |
+| `snapshot_support` | Revisões e dependency_hash preservam o estado usado pelo Application Kit. |
+| `tests` | `tests/test_professional_assets.py`<br>`tests/test_application_lab_service.py` |
+| `docs` | `docs/02-architecture/professional-assets.md`<br>`docs/03-business-rules/resume-assets-and-exports.md` |
+| `status` | `complete` |
+| `verification_ref` | `capability:professional_assets` |
+| `verification_base_commit` | `ec87ce6575e8d6ddc3cde9acb520d539cc6b7cef` |
+| `verification_date` | `2026-08-03` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Envio por e-mail, calendário externo e submissão automática permanecem fora do produto. |
 
 ## Como validar
 

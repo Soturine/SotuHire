@@ -218,3 +218,22 @@ flowchart LR
 ```
 
 O Lab persiste apenas IDs, referências e artefatos necessários. Alterar uma entrada invalida os descendentes, não o histórico anterior. A extensão entra pelo `capture_id`/`job_snapshot_id` e nunca anexa o Perfil ao URL.
+
+## Fluxo documento→candidatura v1.9.9
+
+```mermaid
+flowchart LR
+    D[PDF/DOCX/HTML/TXT/JSON] --> I[Ingestão segura]
+    I --> R[Review + proveniência]
+    R --> M[Currículo Mestre]
+    M --> L[Application Lab]
+    J[JobSnapshot] --> L
+    L --> B[Match + ATS + readiness + Tailor]
+    B --> V[Variante + diff]
+    V --> E[PDF/DOCX/JSON Resume]
+    B --> A[Professional Assets + Kit]
+    A --> T[Tracker + snapshots]
+```
+
+SQLite é a verdade operacional. JSON legado entra por reconciliação/quarantine; a extensão
+transporta somente IDs de captura/snapshot para abrir o Studio e nunca recebe o documento.

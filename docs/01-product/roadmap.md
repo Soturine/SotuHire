@@ -1,36 +1,34 @@
 # Roadmap do SotuHire
 
-## Estado atual — v1.9.8
+## Estado atual — v1.9.9
 
-O produto conecta Perfil Universal, Currículo Mestre, vaga e engines existentes em um Application Lab guiado. Resume Studio já entrega variantes, diff, editor, preview e JSON Resume. A camada de IA possui taxonomia de erros, structured output, retry/reparo limitados, fallback explícito e benchmarks externos opt-in. O histórico detalhado permanece no [CHANGELOG](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md), nos [documentos de desenvolvimento](../07-development/v1.9.8-guided-application-lab-resume-studio.md) e nas [release notes](../releases/v1.9.8.md).
+O produto conecta Perfil Universal, ingestão documental, Currículo Mestre, vaga e motores
+reais em um Application Lab guiado. Resume Studio entrega review de PDF/DOCX/HTML/TXT/JSON,
+variantes, diff, editor, preview e exports PDF/DOCX/JSON Resume. Professional Assets e o
+Application Kit preservam lifecycle, aprovação por item e stale. O histórico detalhado fica no
+[CHANGELOG](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md), na
+[implementação](../07-development/v1.9.9-implementation.md) e nas
+[release notes](../releases/v1.9.9.md).
 
 As prioridades continuam local-first, multiárea, evidence-first e sob aprovação humana. Nenhuma próxima etapa inclui auto-apply, login automático, captura de sessão ou decisão crítica autônoma.
 
 ## Próximas versões
 
-### v1.9.9 — Document Ingestion, Professional Assets & Resume Studio Completion
-
-- ingestão avançada PDF/DOCX/HTML, Lattes HTML/XML e edital PDF/HTML;
-- certificados e proveniência por página/bloco;
-- export PDF/DOCX maduro e validação visual dos arquivos;
-- templates ATS-safe adicionais e currículo acadêmico;
-- carta e demais assets profissionais revisáveis.
-
-### v1.10.0 — Official Connectors, Taxonomies & Opportunity Intelligence
+### v1.10.0 — Official Connectors, CBO/QBQ/ESCO/O*NET
 
 - Greenhouse, Lever, `schema.org/JobPosting` e RSS/Atom;
-- CBO, ESCO e O*NET;
+- CBO, QBQ, ESCO e O*NET com versão, licença e proveniência;
 - normalização de competências e fontes oficiais;
 - top-K local antes da IA e monitoramento responsável.
 
-### v1.10.1 — Interview, Follow-up & Career Action Plans
+### v1.10.1 — Interview, STAR, Follow-up & Career Actions
 
 - preparação para entrevista e banco de histórias STAR;
 - follow-up revisável e lembretes;
 - plano de carreira, certificações e projetos para gaps;
 - calendário/ICS opcional, nunca criado sem confirmação.
 
-### v2.0 — Human-Approved Career Assistant
+### v2.0 — Agentic assistive workflows with approval
 
 - workflows compostos e agente assistivo;
 - MCP somente leitura ou rascunho;

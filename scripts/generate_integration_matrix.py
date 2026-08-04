@@ -28,7 +28,8 @@ def render_matrix(manifest: dict[str, Any]) -> str:
         "Esta matriz é gerada a partir de `config/capabilities.json` e confrontada com "
         "o OpenAPI real, as rotas TanStack e os arquivos de testes e documentação.",
         "",
-        f"**Commit-base da última verificação:** `{manifest['last_verified_commit']}`",
+        "Cada capacidade registra um commit-base ancestral verificável; o manifesto não "
+        "tenta autorreferenciar o SHA do commit que o contém.",
         "",
         "## Resumo",
         "",
@@ -51,7 +52,7 @@ def render_matrix(manifest: dict[str, Any]) -> str:
                     _cell(capability["extension_support"]),
                     _cell(capability["snapshot_support"]),
                     _cell(capability["status"]),
-                    _cell("; ".join(capability["gaps"]) or "nenhuma registrada"),
+                    _cell("; ".join(capability["known_gaps"]) or "nenhuma registrada"),
                 ]
             )
             + " |"
@@ -88,8 +89,17 @@ def render_matrix(manifest: dict[str, Any]) -> str:
                 _row("tests", _code_list(capability["tests"])),
                 _row("docs", _code_list(capability["docs"])),
                 _row("status", f"`{capability['status']}`"),
-                _row("gaps", _cell("; ".join(capability["gaps"]) or "nenhuma registrada")),
-                _row("last_verified_commit", f"`{capability['last_verified_commit']}`"),
+                _row("verification_ref", f"`{capability['verification_ref']}`"),
+                _row(
+                    "verification_base_commit",
+                    f"`{capability['verification_base_commit']}`",
+                ),
+                _row("verification_date", f"`{capability['verification_date']}`"),
+                _row("verification_command", f"`{capability['verification_command']}`"),
+                _row(
+                    "known_gaps",
+                    _cell("; ".join(capability["known_gaps"]) or "nenhuma registrada"),
+                ),
                 "",
             ]
         )

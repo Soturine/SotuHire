@@ -18,7 +18,9 @@ A suíte pytest com mocks/fixtures roda em:
 - Windows + Python 3.11;
 - Windows + Python 3.12.
 
-Um job Ubuntu/Python 3.12 executa adicionalmente Ruff, format check, compileall, Pyright, validators, dry-run da migração, data health, clean install e cobertura. O baseline local inicial é 86%; o relatório remoto é publicado como artefato, sem threshold arbitrário antes de comparar ambientes de forma estável.
+Um job Ubuntu/Python 3.12 executa adicionalmente Ruff, format check, compileall, Pyright,
+validators, dry-run da migração, data health, clean install, cobertura, `pip-audit`, secret scan
+amplo e SBOM CycloneDX. O relatório de cobertura é publicado como artefato.
 
 ## Frontend
 
@@ -37,14 +39,18 @@ Vitest/Testing Library/MSW cobrem contratos rápidos; Playwright valida o navega
 
 ## Extensão
 
-`scripts/package_extension.py` valida Manifest V3, arquivos obrigatórios e padrões de segredo antes de criar o ZIP. O artefato é enviado pelo workflow para inspeção, não publicado automaticamente como release.
+`scripts/package_extension.py` valida Manifest V3, arquivos obrigatórios e padrões de segredo
+antes de criar o ZIP. `scripts/verify_extension_package.py` reabre o artefato, rejeita path
+traversal/entradas extras e confere o manifest 0.9.5. O workflow apenas publica o artefato de CI;
+a GitHub Release é criada manualmente depois dos gates verdes.
 
 ## Segurança e supply chain
 
 - secret scan falha se uma credencial com padrão conhecido estiver rastreada;
 - CodeQL analisa Python e JavaScript/TypeScript;
 - Dependabot propõe atualizações pequenas e revisáveis;
-- `npm audit` gera relatório e não bloqueia sozinho sem triagem;
+- `pip-audit` bloqueia vulnerabilidade Python não triada e `npm audit` exige triagem contextual;
+- o SBOM CycloneDX inventaria dependências diretas Python/web e acompanha os assets de release;
 - chamadas reais de IA e scraping de sites reais não rodam no CI;
 - nenhum secret é necessário no workflow padrão.
 

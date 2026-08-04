@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -29,9 +30,12 @@ REQUIRED_FIELDS = {
     "snapshot_support",
     "tests",
     "docs",
+    "verification_ref",
+    "verification_base_commit",
+    "verification_date",
+    "verification_command",
     "status",
-    "gaps",
-    "last_verified_commit",
+    "known_gaps",
 }
 ALLOWED_STATUSES = {"complete", "partial", "legacy"}
 
@@ -97,8 +101,8 @@ def validate_manifest(
 ) -> list[str]:
     """Return deterministic validation errors; an empty list means valid."""
     errors: list[str] = []
-    if manifest.get("schema_version") != 1:
-        errors.append("schema_version deve ser 1")
+    if manifest.get("schema_version") != 2:
+        errors.append("schema_version deve ser 2")
     capabilities = manifest.get("capabilities")
     if not isinstance(capabilities, list) or not capabilities:
         return [*errors, "capabilities deve ser uma lista não vazia"]
@@ -170,12 +174,35 @@ def validate_manifest(
         status = capability.get("status")
         if status not in ALLOWED_STATUSES:
             errors.append(f"{capability_id}: status inválido: {status}")
-        if not str(capability.get("last_verified_commit", "")).strip():
-            errors.append(f"{capability_id}: last_verified_commit vazio")
-        if not isinstance(capability.get("gaps"), list):
-            errors.append(f"{capability_id}: gaps deve ser uma lista")
+        verification_ref = str(capability.get("verification_ref", "")).strip()
+        if not verification_ref:
+            errors.append(f"{capability_id}: verification_ref vazio")
+        base_commit = str(capability.get("verification_base_commit", "")).strip()
+        if not re.fullmatch(r"[0-9a-f]{40}", base_commit):
+            errors.append(f"{capability_id}: verification_base_commit inválido")
+        elif not _is_ancestor(base_commit, root):
+            errors.append(f"{capability_id}: verification_base_commit não é ancestral do HEAD")
+        verification_date = str(capability.get("verification_date", "")).strip()
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", verification_date):
+            errors.append(f"{capability_id}: verification_date inválida")
+        if not str(capability.get("verification_command", "")).strip():
+            errors.append(f"{capability_id}: verification_command vazio")
+        if not isinstance(capability.get("known_gaps"), list):
+            errors.append(f"{capability_id}: known_gaps deve ser uma lista")
 
     return sorted(set(errors))
+
+
+def _is_ancestor(commit: str, root: Path) -> bool:
+    """Return whether commit is reachable from HEAD; fail closed outside Git."""
+    result = subprocess.run(
+        ["git", "merge-base", "--is-ancestor", commit, "HEAD"],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
 
 
 def _validate_paths(

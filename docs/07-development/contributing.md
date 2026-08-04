@@ -9,7 +9,7 @@ Contribuições devem melhorar o produto sem adicionar complexidade desnecessár
 Leia:
 
 - [Visão do produto](../01-product/vision.md)
-- [Escopo dos MVPs](../01-product/mvp-scope.md)
+- [Escopo atual](../01-product/current-product-scope.md)
 - [Clean Code e SOLID](../06-engineering/clean-code-solid.md)
 - [Evitando overengineering](../06-engineering/avoid-overengineering.md)
 

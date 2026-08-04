@@ -48,6 +48,9 @@ nav:
   - Início: index.md
   - Documentação: documentation-index.md
   - Auditoria:
+      - Baseline e riscos v1.9.9: 00-audit/v1.9.9-baseline-and-risk-register.md
+      - Auditoria de implementação v1.9.9: 00-audit/v1.9.9-hardening-ingestion-resume-studio-audit.md
+      - Auditoria final v1.9.9: 00-audit/v1.9.9-final-integration-audit.md
       - Repositório e fluxo v1.9.8: 00-audit/v1.9.8-repository-product-flow-audit.md
       - Sistema de IA v1.9.7: 00-audit/v1.9.7-ai-system-audit.md
       - Dados e integração v1.9.6: 00-audit/v1.9.6-data-and-integration-audit.md
@@ -60,11 +63,12 @@ nav:
       - Atualização pós-v0.9.0: 00-audit/v0.9-roadmap-docs-update-summary.md
   - Produto:
       - Visão: 01-product/vision.md
+      - Escopo atual: 01-product/current-product-scope.md
       - Galeria de telas: 01-product/visual-preview.md
       - Demo v1.0: 01-product/v1-demo.md
       - GitHub Pages vs app local: 01-product/github-pages-site.md
       - Estratégia multiárea: 01-product/multi-domain-product-strategy.md
-      - MVP: 01-product/mvp-scope.md
+      - MVP histórico: history/mvp-scope.md
       - Roadmap: 01-product/roadmap.md
       - Histórico do roadmap: 01-product/roadmap-history.md
       - Arquivo do roadmap até v1.9.5: 01-product/roadmap-archive-through-v1.9.5.md
@@ -100,6 +104,12 @@ nav:
       - Application Lab: 02-architecture/application-lab.md
       - Professional Assets e Application Kit: 02-architecture/professional-assets.md
       - Resume Studio: 02-architecture/resume-studio.md
+      - Ingestão documental e proveniência: 02-architecture/document-ingestion-and-provenance.md
+      - Documento canônico e exports: 02-architecture/canonical-document-ingestion-and-exports.md
+      - Renderização PDF/DOCX/JSON: 02-architecture/resume-document-rendering.md
+      - Segurança e pairing local: 02-architecture/local-api-security-and-pairing.md
+      - Evidência e escopo: 02-architecture/evidence-state-and-scope.md
+      - Bundle de análise: 02-architecture/application-analysis-bundle.md
       - Application Readiness Report: 02-architecture/application-readiness-report.md
       - Confiabilidade de providers: 02-architecture/provider-reliability.md
   - Dados e persistência:
@@ -110,6 +120,11 @@ nav:
       - Linhagem e deduplicação: 02-architecture/data-lineage-and-deduplication.md
       - Storage e histórico legado: 02-architecture/storage-and-history.md
   - Regras de negócio:
+      - Semântica de scores: 03-business-rules/score-semantics.md
+      - Scores, confiança e requisitos: 03-business-rules/scores-confidence-and-requirements.md
+      - Estado de revisão de evidência: 03-business-rules/evidence-review-state.md
+      - Assets e exports: 03-business-rules/resume-assets-and-exports.md
+      - Profissões reguladas: 03-business-rules/regulated-professions.md
       - ATS rules: 03-business-rules/ats-rules.md
       - Matching rules: 03-business-rules/matching-rules.md
       - Regras multiárea: 03-business-rules/multi-domain-career-rules.md
@@ -186,6 +201,7 @@ nav:
       - GitHub portfolio analyzer: 05-data-sources/github-portfolio-analyzer.md
       - JobSpy experimental reference: 05-data-sources/jobspy-experimental-reference.md
   - Engenharia:
+      - Threat model: 06-engineering/threat-model.md
       - Clean Code e SOLID: 06-engineering/clean-code-solid.md
       - QA Testing: 06-engineering/qa-testing.md
       - Ruff: 06-engineering/ruff.md
@@ -194,6 +210,9 @@ nav:
       - Recuperação e quarantine JSON: 06-engineering/data-recovery-and-json-quarantine.md
       - Avoid overengineering: 06-engineering/avoid-overengineering.md
   - Testes:
+      - Matriz de aceite v1.9.9: 09-testing/v1.9.9-acceptance-matrix.md
+      - Fixtures de ingestão: 09-testing/document-ingestion-fixtures.md
+      - Fidelidade dos exports: 09-testing/export-fidelity.md
       - Benchmarking de IA: 09-testing/ai-benchmarking.md
       - Golden datasets: 09-testing/golden-datasets.md
       - Fixtures realistas: 09-testing/realistic-fixtures.md
@@ -204,6 +223,10 @@ nav:
       - Application Lab: 09-testing/application-lab-testing.md
       - Resume Studio: 09-testing/resume-studio-testing.md
   - Desenvolvimento:
+      - Implementação v1.9.9: 07-development/v1.9.9-implementation.md
+      - Clean install v1.9.9: 07-development/v1.9.9-clean-install.md
+      - Migração v1.9.9: 07-development/v1.9.9-migration.md
+      - Providers externos v1.9.9: 07-development/v1.9.9-external-provider-validation.md
       - Setup: 07-development/setup.md
       - Commands: 07-development/commands.md
       - Contributing: 07-development/contributing.md
@@ -270,6 +293,7 @@ nav:
       - Release notes v1.9.6: releases/v1.9.6.md
       - Release notes v1.9.7: releases/v1.9.7.md
       - Release notes v1.9.8: releases/v1.9.8.md
+      - Release notes v1.9.9: releases/v1.9.9.md
   - Portfólio:
       - Roteiro de demonstração: 09-portfolio/demo-script.md
       - Case study: 09-portfolio/portfolio-case-study.md

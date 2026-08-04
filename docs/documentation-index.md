@@ -15,7 +15,8 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 - [Estratégia multiárea](01-product/multi-domain-product-strategy.md)
 - [Histórias de usuário e casos de uso](01-product/user-stories.md)
-- [Escopo do MVP](01-product/mvp-scope.md)
+- [Escopo atual](01-product/current-product-scope.md)
+- [Escopo do MVP histórico](history/mvp-scope.md)
 - [GitHub Pages](01-product/github-pages-site.md)
 - [Arquivo histórico do roadmap](01-product/roadmap-archive-through-v1.9.5.md)
 
