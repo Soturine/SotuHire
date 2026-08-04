@@ -1,6 +1,7 @@
 import json
 
 import pytest
+from modules.storage.json_recovery import JsonStoreCorruptionError
 from modules.storage.migrations import MigrationRunner
 from modules.storage.repositories import JsonlRepository, JsonRepository, SqliteRepository
 
@@ -37,5 +38,8 @@ def test_jsonl_repository_surfaces_corruption(tmp_path):
     path = tmp_path / "records.jsonl"
     path.write_text(json.dumps({"id": "one"}) + "\n{invalid", encoding="utf-8")
 
-    with pytest.raises(json.JSONDecodeError):
+    with pytest.raises(JsonStoreCorruptionError):
         JsonlRepository(path).list()
+
+    assert not path.exists()
+    assert list((tmp_path / ".quarantine").glob("records.jsonl.*.corrupt"))

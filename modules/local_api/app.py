@@ -64,6 +64,7 @@ from modules.storage import (
     ResumeSnapshot,
     SnapshotStore,
 )
+from modules.storage.json_recovery import atomic_write_jsonl, load_jsonl
 from modules.storage.local_store import LocalStore
 from modules.tracker.job_tracker import JobTracker
 
@@ -126,16 +127,10 @@ class CompanionCaptureStore:
         self.path = Path(path) if path is not None else base / "companion" / "captures.jsonl"
 
     def list(self) -> list[CompanionCaptureRecord]:
-        if not self.path.exists():
-            return []
-        try:
-            records = [
-                CompanionCaptureRecord.model_validate_json(line)
-                for line in self.path.read_text(encoding="utf-8").splitlines()
-                if line.strip()
-            ]
-        except (OSError, ValueError):
-            return []
+        records = load_jsonl(
+            self.path,
+            validator=CompanionCaptureRecord.model_validate,
+        )
         return sorted(records, key=lambda record: record.updated_at, reverse=True)
 
     def get(self, capture_id: str) -> CompanionCaptureRecord | None:
@@ -157,13 +152,10 @@ class CompanionCaptureStore:
         self.path.unlink(missing_ok=True)
 
     def _write(self, records: list[CompanionCaptureRecord]) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_suffix(".tmp")
-        temporary.write_text(
-            "\n".join(record.model_dump_json() for record in records) + "\n",
-            encoding="utf-8",
+        atomic_write_jsonl(
+            self.path,
+            [record.model_dump(mode="json") for record in records],
         )
-        temporary.replace(self.path)
 
 
 class LocalCompanionService:

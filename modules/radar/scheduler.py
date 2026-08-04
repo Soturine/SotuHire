@@ -380,7 +380,7 @@ def _in_quiet_hours(schedule: RadarSchedule, now: datetime) -> bool:
     if start == end:
         return True
     if start < end:
-        return start <= current < end
+        return start <= current <= end
     return current >= start or current < end
 
 

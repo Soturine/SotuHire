@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Mapping
 from pathlib import Path
+
+from modules.storage.json_recovery import (
+    atomic_write_json,
+    atomic_write_jsonl,
+    load_json,
+    load_jsonl,
+)
 
 from .base import Entity
 
@@ -59,44 +65,30 @@ class JsonRepository:
         return self.get(entity_id) is not None
 
     def _read(self) -> list[Entity]:
-        if not self.path.exists():
-            return []
-        payload = json.loads(self.path.read_text(encoding="utf-8"))
-        if not isinstance(payload, list):
-            raise ValueError(f"O store JSON deve conter uma lista: {self.path}")
+        payload = load_json(self.path, validator=_entity_list, default_factory=list)
         return [dict(item) for item in payload if isinstance(item, dict)]
 
     def _write(self, records: list[Entity]) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_suffix(f"{self.path.suffix}.tmp")
-        temporary.write_text(
-            json.dumps(records, ensure_ascii=False, indent=2, default=str),
-            encoding="utf-8",
-        )
-        temporary.replace(self.path)
+        atomic_write_json(self.path, records)
 
 
 class JsonlRepository(JsonRepository):
     """Atomic line-delimited JSON repository used by legacy stores."""
 
     def _read(self) -> list[Entity]:
-        if not self.path.exists():
-            return []
-        records: list[Entity] = []
-        for line_number, line in enumerate(
-            self.path.read_text(encoding="utf-8").splitlines(), start=1
-        ):
-            if not line.strip():
-                continue
-            payload = json.loads(line)
-            if not isinstance(payload, dict):
-                raise ValueError(f"Linha JSONL inválida em {self.path}:{line_number}")
-            records.append(dict(payload))
-        return records
+        return load_jsonl(self.path, validator=_entity)
 
     def _write(self, records: list[Entity]) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_suffix(f"{self.path.suffix}.tmp")
-        content = "\n".join(json.dumps(item, ensure_ascii=False, default=str) for item in records)
-        temporary.write_text(content + ("\n" if content else ""), encoding="utf-8")
-        temporary.replace(self.path)
+        atomic_write_jsonl(self.path, records)
+
+
+def _entity(payload: object) -> Entity:
+    if not isinstance(payload, dict):
+        raise ValueError("Registro JSONL deve ser um objeto.")
+    return dict(payload)
+
+
+def _entity_list(payload: object) -> list[object]:
+    if not isinstance(payload, list):
+        raise ValueError("Store JSON deve conter uma lista.")
+    return payload

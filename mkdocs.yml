@@ -191,6 +191,7 @@ nav:
       - Ruff: 06-engineering/ruff.md
       - CI/CD: 06-engineering/ci-cd.md
       - Security Privacy: 06-engineering/security-privacy.md
+      - Recuperação e quarantine JSON: 06-engineering/data-recovery-and-json-quarantine.md
       - Avoid overengineering: 06-engineering/avoid-overengineering.md
   - Testes:
       - Benchmarking de IA: 09-testing/ai-benchmarking.md

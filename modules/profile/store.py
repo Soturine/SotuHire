@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 
 from modules.profile.models import UniversalCareerProfile, UniversalCareerProfileState
+from modules.storage.json_recovery import atomic_write_json, load_json
 
 
 class UniversalCareerProfileStore:
@@ -17,27 +18,21 @@ class UniversalCareerProfileStore:
 
     def load_state(self) -> UniversalCareerProfileState:
         """Load all profile state, returning a default profile when missing."""
-        if not self.path.exists():
-            return UniversalCareerProfileState(
+        state = load_json(
+            self.path,
+            validator=UniversalCareerProfileState.model_validate,
+            default_factory=lambda: UniversalCareerProfileState(
                 active_profile_id="default",
                 profiles=[UniversalCareerProfile(profile_id="default")],
-            )
-        try:
-            state = UniversalCareerProfileState.model_validate_json(
-                self.path.read_text(encoding="utf-8")
-            )
-        except (OSError, ValueError):
-            state = UniversalCareerProfileState()
+            ),
+        )
         if not state.profiles:
             state.profiles.append(UniversalCareerProfile(profile_id=state.active_profile_id))
         return state
 
     def save_state(self, state: UniversalCareerProfileState) -> UniversalCareerProfileState:
         """Persist state atomically."""
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_suffix(".tmp")
-        temporary.write_text(state.model_dump_json(indent=2), encoding="utf-8")
-        temporary.replace(self.path)
+        atomic_write_json(self.path, state.model_dump(mode="json"))
         return state
 
     def load_active(self) -> UniversalCareerProfile:

@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import json
 from pathlib import Path
 
+from modules.storage.json_recovery import atomic_write_json, load_json
 from modules.storage.models import StoredAnalysis
 
 
@@ -35,18 +35,16 @@ class LocalStore:
 
     def list_analyses(self) -> list[StoredAnalysis]:
         """Return records from newest to oldest."""
-        if not self.path.exists():
-            return []
-        try:
-            payload = json.loads(self.path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
-            return []
+        payload = load_json(self.path, validator=_list_payload, default_factory=list)
         records = [StoredAnalysis.model_validate(item) for item in payload]
         return sorted(records, key=lambda item: item.updated_at, reverse=True)
 
     def _write(self, records: list[StoredAnalysis]) -> None:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_suffix(f"{self.path.suffix}.tmp")
         payload = [record.model_dump(mode="json") for record in records]
-        temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-        temporary.replace(self.path)
+        atomic_write_json(self.path, payload)
+
+
+def _list_payload(payload: object) -> list[object]:
+    if not isinstance(payload, list):
+        raise ValueError("Histórico local deve conter uma lista JSON.")
+    return payload

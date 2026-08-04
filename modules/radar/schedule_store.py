@@ -8,6 +8,7 @@ from pathlib import Path
 from pydantic import BaseModel, ConfigDict, Field
 
 from modules.radar.schedule_models import LocalNotification, RadarSchedule, RadarScheduledRun
+from modules.storage.json_recovery import atomic_write_json, load_json
 
 MAX_SCHEDULED_RUNS = 100
 MAX_NOTIFICATIONS = 200
@@ -32,13 +33,12 @@ class RadarScheduleStore:
         self.path = Path(path) if path is not None else base / "radar" / "schedules.json"
 
     def load(self) -> RadarScheduleState:
-        """Read scheduler state; corrupted files return an empty state with warning."""
-        if not self.path.exists():
-            return RadarScheduleState()
-        try:
-            return RadarScheduleState.model_validate_json(self.path.read_text(encoding="utf-8"))
-        except (OSError, ValueError) as exc:
-            return RadarScheduleState(warnings=[f"Estado de agendamento reiniciado: {exc}"])
+        """Read scheduler state or fail explicitly after quarantine."""
+        return load_json(
+            self.path,
+            validator=RadarScheduleState.model_validate,
+            default_factory=RadarScheduleState,
+        )
 
     def save(self, state: RadarScheduleState) -> RadarScheduleState:
         """Persist state with atomic replace and retention."""
@@ -52,8 +52,5 @@ class RadarScheduleStore:
             key=lambda item: item.created_at,
             reverse=True,
         )[:MAX_NOTIFICATIONS]
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_suffix(".tmp")
-        temporary.write_text(state.model_dump_json(indent=2), encoding="utf-8")
-        temporary.replace(self.path)
+        atomic_write_json(self.path, state.model_dump(mode="json"))
         return state

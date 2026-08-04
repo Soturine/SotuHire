@@ -12,6 +12,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from modules.storage.database import connect_readonly_database, default_data_dir
+from modules.storage.json_recovery import json_store_health
 from modules.storage.migrations import LATEST_SCHEMA_VERSION, MigrationRunner
 
 
@@ -87,6 +88,20 @@ def _check_legacy_files(report: DataHealthReport) -> None:
     ]
     for relative in candidates:
         path = report.data_dir / relative
+        recovery_health = json_store_health(path)
+        if recovery_health.status == "degraded":
+            report.issues.append(
+                DataHealthIssue(
+                    code="json_store_degraded",
+                    severity="error",
+                    message=(
+                        "Store em quarantine; restauração explícita necessária. "
+                        f"Erro: {recovery_health.error_type or 'desconhecido'}."
+                    ),
+                    store=relative,
+                )
+            )
+            continue
         if not path.exists():
             continue
         try:

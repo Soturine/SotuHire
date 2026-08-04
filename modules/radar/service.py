@@ -36,6 +36,7 @@ from modules.scraping.connectors.manual_url import ManualUrlConnector
 from modules.scraping.connectors.rss_feed import RssFeedConnector
 from modules.scraping.schemas import CollectionResult, ScrapedOpportunity, ScrapingSource
 from modules.sources.imports import SourceImportService, SourceOrigin
+from modules.storage.json_recovery import atomic_write_json, load_json
 from modules.storage.local_store import LocalStore
 from modules.tracker.job_tracker import JobTracker
 
@@ -66,19 +67,15 @@ class RadarStore:
 
     def load(self) -> RadarState:
         """Read persisted radar state."""
-        if not self.path.exists():
-            return RadarState()
-        try:
-            return RadarState.model_validate_json(self.path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            return RadarState()
+        return load_json(
+            self.path,
+            validator=RadarState.model_validate,
+            default_factory=RadarState,
+        )
 
     def save(self, state: RadarState) -> RadarState:
         """Write radar state atomically."""
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_suffix(".tmp")
-        temporary.write_text(state.model_dump_json(indent=2), encoding="utf-8")
-        temporary.replace(self.path)
+        atomic_write_json(self.path, state.model_dump(mode="json"))
         return state
 
 
