@@ -90,7 +90,18 @@ jobs:
           path: coverage.json
 
       - name: Secret pattern scan
-        run: python scripts/scan_secrets.py --paths . data dist
+        run: python scripts/scan_secrets.py --paths . data dist site outputs benchmarks
+
+      - name: Dependency audit and CycloneDX SBOM
+        run: |
+          pip-audit
+          python scripts/build_sbom.py
+
+      - name: Upload CycloneDX SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sotuhire-sbom
+          path: dist/sotuhire-sbom-v1.9.9.cdx.json
 
   ai-quality:
     name: AI golden, injection and local regression
@@ -180,7 +191,9 @@ jobs:
           python-version: "3.12"
 
       - name: Package and scan extension
-        run: python scripts/package_extension.py
+        run: |
+          python scripts/package_extension.py
+          python scripts/verify_extension_package.py
 
       - name: Upload extension artifact
         uses: actions/upload-artifact@v4
