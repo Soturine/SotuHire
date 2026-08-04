@@ -295,9 +295,19 @@ def radar_run(request: RadarRunRequest) -> tuple[RadarRunResponse, list[str]]:
     )
 
 
-def radar_runs() -> RadarRunsResponse:
+def radar_runs(*, limit: int = 50, offset: int = 0) -> RadarRunsResponse:
     """List radar runs."""
-    return RadarRunsResponse(runs=JobRadarService().list_runs())
+    service = JobRadarService()
+    bounded_limit = max(1, min(limit, 200))
+    bounded_offset = max(0, offset)
+    total = service.count_runs()
+    return RadarRunsResponse(
+        runs=service.list_runs(limit=bounded_limit, offset=bounded_offset),
+        total=total,
+        limit=bounded_limit,
+        offset=bounded_offset,
+        has_more=bounded_offset + bounded_limit < total,
+    )
 
 
 def radar_schedules() -> RadarSchedulesResponse:
@@ -364,9 +374,19 @@ def radar_run_schedule_now(schedule_id: str) -> RadarScheduledRunResponse:
     )
 
 
-def radar_scheduled_runs() -> RadarScheduledRunsResponse:
+def radar_scheduled_runs(*, limit: int = 50, offset: int = 0) -> RadarScheduledRunsResponse:
     """List scheduled run history."""
-    return RadarScheduledRunsResponse(scheduled_runs=ScheduledRadarService().list_scheduled_runs())
+    runs = ScheduledRadarService().list_scheduled_runs()
+    bounded_limit = max(1, min(limit, 200))
+    bounded_offset = max(0, offset)
+    total = len(runs)
+    return RadarScheduledRunsResponse(
+        scheduled_runs=runs[bounded_offset : bounded_offset + bounded_limit],
+        total=total,
+        limit=bounded_limit,
+        offset=bounded_offset,
+        has_more=bounded_offset + bounded_limit < total,
+    )
 
 
 def radar_scheduler_status() -> RadarSchedulerStatusResponse:
@@ -386,10 +406,25 @@ def radar_scheduler_stop() -> RadarSchedulerStatusResponse:
     return RadarSchedulerStatusResponse.model_validate(_runtime().stop().model_dump())
 
 
-def radar_results(status: str = "", source_id: str = "") -> RadarResultsResponse:
+def radar_results(
+    status: str = "", source_id: str = "", *, limit: int = 50, offset: int = 0
+) -> RadarResultsResponse:
     """List radar results."""
+    service = JobRadarService()
+    bounded_limit = max(1, min(limit, 200))
+    bounded_offset = max(0, offset)
+    total = service.count_results(status=status, source_id=source_id)
     return RadarResultsResponse(
-        results=JobRadarService().list_results(status=status, source_id=source_id)
+        results=service.list_results(
+            status=status,
+            source_id=source_id,
+            limit=bounded_limit,
+            offset=bounded_offset,
+        ),
+        total=total,
+        limit=bounded_limit,
+        offset=bounded_offset,
+        has_more=bounded_offset + bounded_limit < total,
     )
 
 
@@ -428,9 +463,25 @@ def radar_save_tracker(result_id: str) -> RadarSaveTrackerResponse:
     )
 
 
-def radar_alerts(unread_only: bool = False) -> RadarAlertsResponse:
+def radar_alerts(
+    unread_only: bool = False, *, limit: int = 50, offset: int = 0
+) -> RadarAlertsResponse:
     """List local radar alerts."""
-    return RadarAlertsResponse(alerts=JobRadarService().list_alerts(unread_only=unread_only))
+    service = JobRadarService()
+    bounded_limit = max(1, min(limit, 200))
+    bounded_offset = max(0, offset)
+    total = service.count_alerts(unread_only=unread_only)
+    return RadarAlertsResponse(
+        alerts=service.list_alerts(
+            unread_only=unread_only,
+            limit=bounded_limit,
+            offset=bounded_offset,
+        ),
+        total=total,
+        limit=bounded_limit,
+        offset=bounded_offset,
+        has_more=bounded_offset + bounded_limit < total,
+    )
 
 
 def radar_patch_alert(alert_id: str, request: RadarAlertPatchRequest) -> RadarAlertResponse:

@@ -6,6 +6,7 @@ import threading
 from collections.abc import Callable
 from datetime import datetime, timedelta
 from time import monotonic
+from uuid import uuid4
 
 from modules.context import (
     CareerContextEngine,
@@ -22,7 +23,9 @@ from modules.radar.schedule_models import (
     RadarSchedulerStatus,
 )
 from modules.radar.schedule_store import RadarScheduleStore
+from modules.radar.scheduler_lease import SchedulerLeaseStore
 from modules.radar.service import JobRadarService
+from modules.storage.ai_runs import sanitize_error_message
 
 SchedulerAiEnricher = Callable[[RadarResult, JobWishlist], dict[str, object]]
 
@@ -36,10 +39,13 @@ class ScheduledRadarService:
         store: RadarScheduleStore | None = None,
         radar_service: JobRadarService | None = None,
         notifications: LocalNotificationService | None = None,
+        lease_store: SchedulerLeaseStore | None = None,
     ) -> None:
         self.store = store or RadarScheduleStore()
         self.radar_service = radar_service or JobRadarService()
         self.notifications = notifications or LocalNotificationService(self.store)
+        self.lease_store = lease_store or SchedulerLeaseStore(_scheduler_database_path(self.store))
+        self._owner_id = uuid4().hex
         self._running_schedule_ids: set[str] = set()
         self._lock = threading.Lock()
 
@@ -126,7 +132,12 @@ class ScheduledRadarService:
         runs: list[RadarScheduledRun] = []
         for schedule in due:
             runs.append(
-                self.run_schedule(schedule.schedule_id, manual=False, ai_enricher=ai_enricher)
+                self.run_schedule(
+                    schedule.schedule_id,
+                    manual=False,
+                    ai_enricher=ai_enricher,
+                    scheduled_for=schedule.next_run_at,
+                )
             )
         return runs
 
@@ -136,6 +147,7 @@ class ScheduledRadarService:
         *,
         manual: bool = True,
         ai_enricher: SchedulerAiEnricher | None = None,
+        scheduled_for: datetime | None = None,
     ) -> RadarScheduledRun:
         """Run one schedule. Manual runs are allowed outside quiet hours."""
         schedule = self.get_schedule(schedule_id)
@@ -147,6 +159,20 @@ class ScheduledRadarService:
             if schedule.schedule_id in self._running_schedule_ids:
                 return self._record_skipped(schedule, "Agendamento ja esta em execucao.")
             self._running_schedule_ids.add(schedule.schedule_id)
+        lock_name = f"radar_schedule:{schedule.schedule_id}"
+        operation_key = (
+            f"radar_scheduled_run:{schedule.schedule_id}:{scheduled_for.isoformat()}"
+            if scheduled_for is not None
+            else ""
+        )
+        if operation_key and self.lease_store.completed(operation_key):
+            with self._lock:
+                self._running_schedule_ids.discard(schedule.schedule_id)
+            return _ephemeral_skip(schedule, "Execução agendada já processada.")
+        if not self.lease_store.acquire(lock_name, self._owner_id):
+            with self._lock:
+                self._running_schedule_ids.discard(schedule.schedule_id)
+            return _ephemeral_skip(schedule, "Lease local já está em uso.")
         started = monotonic()
         scheduled_run = RadarScheduledRun(
             schedule_id=schedule.schedule_id,
@@ -164,6 +190,7 @@ class ScheduledRadarService:
         warnings: list[str] = []
         profile_text = ""
         context_summary = ""
+        persisted_run = False
         try:
             if schedule.use_profile_context:
                 context = _career_context_for_schedule(schedule)
@@ -261,19 +288,21 @@ class ScheduledRadarService:
                 }
             )
             self._persist_run(schedule, scheduled_run)
+            persisted_run = True
             return scheduled_run
         except Exception as exc:
+            safe_error = sanitize_error_message(str(exc))
             scheduled_run = scheduled_run.model_copy(
                 update={
                     "finished_at": utc_now(),
                     "status": "error",
-                    "error": str(exc),
+                    "error": safe_error,
                     "warnings": warnings,
                 }
             )
             self.notifications.create(
                 title="Radar agendado falhou",
-                message=str(exc)[:500],
+                message=safe_error[:500],
                 severity="error",
                 related_entity_type="radar_schedule",
                 related_entity_id=schedule.schedule_id,
@@ -282,8 +311,12 @@ class ScheduledRadarService:
                 cooldown_minutes=schedule.cooldown_minutes,
             )
             self._persist_run(schedule, scheduled_run)
+            persisted_run = True
             return scheduled_run
         finally:
+            if operation_key and persisted_run:
+                self.lease_store.mark_completed(operation_key, scheduled_run.run_id)
+            self.lease_store.release(lock_name, self._owner_id)
             with self._lock:
                 self._running_schedule_ids.discard(schedule.schedule_id)
 
@@ -382,6 +415,22 @@ def _in_quiet_hours(schedule: RadarSchedule, now: datetime) -> bool:
     if start < end:
         return start <= current <= end
     return current >= start or current < end
+
+
+def _scheduler_database_path(store: RadarScheduleStore):
+    parent = store.path.parent
+    data_dir = parent.parent if parent.name.casefold() == "radar" else parent
+    return data_dir / "sotuhire.db"
+
+
+def _ephemeral_skip(schedule: RadarSchedule, reason: str) -> RadarScheduledRun:
+    return RadarScheduledRun(
+        schedule_id=schedule.schedule_id,
+        status="skipped",
+        finished_at=utc_now(),
+        warnings=[reason],
+        metadata={"review_required": True, "persisted": False},
+    )
 
 
 def _minutes(value: str) -> int:

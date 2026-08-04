@@ -64,3 +64,21 @@ O usuário decide quando:
 - abrir a fonte;
 - rodar compatibilidade;
 - candidatar-se fora do SotuHire.
+
+## Retenção, paginação e scheduler local
+
+Runs, resultados, alertas, execuções agendadas e notificações têm retenção
+configurável por variáveis `SOTUHIRE_RADAR_MAX_*`, com limites defensivos. As
+APIs de histórico aceitam `limit` e `offset` e retornam `total` e `has_more`.
+Uma duplicata é devolvida ao run atual como referência compacta, mas sua
+descrição completa não é gravada novamente.
+
+O scheduler continua estritamente local e em processo. Uma lease curta em
+SQLite impede duas instâncias locais de executar o mesmo schedule ao mesmo
+tempo; uma chave por schedule e horário planejado torna retry idempotente.
+Erros persistidos passam por sanitização e corrupção do JSON leva a quarantine
+e estado degraded.
+
+Migração futura: runs e resultados crescentes deverão sair do documento JSON e
+ir para tabelas SQLite pagináveis. A v1.9.9 não introduz fila distribuída,
+coordenador remoto nem execução automática de candidatura.

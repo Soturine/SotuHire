@@ -10,8 +10,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from modules.radar.schedule_models import LocalNotification, RadarSchedule, RadarScheduledRun
 from modules.storage.json_recovery import atomic_write_json, load_json
 
-MAX_SCHEDULED_RUNS = 100
-MAX_NOTIFICATIONS = 200
+DEFAULT_MAX_SCHEDULED_RUNS = 100
+DEFAULT_MAX_NOTIFICATIONS = 200
 
 
 class RadarScheduleState(BaseModel):
@@ -46,11 +46,18 @@ class RadarScheduleStore:
             state.scheduled_runs,
             key=lambda item: item.started_at,
             reverse=True,
-        )[:MAX_SCHEDULED_RUNS]
+        )[: _retention("SOTUHIRE_RADAR_MAX_SCHEDULED_RUNS", DEFAULT_MAX_SCHEDULED_RUNS)]
         state.notifications = sorted(
             state.notifications,
             key=lambda item: item.created_at,
             reverse=True,
-        )[:MAX_NOTIFICATIONS]
+        )[: _retention("SOTUHIRE_RADAR_MAX_NOTIFICATIONS", DEFAULT_MAX_NOTIFICATIONS)]
         atomic_write_json(self.path, state.model_dump(mode="json"))
         return state
+
+
+def _retention(variable: str, default: int) -> int:
+    try:
+        return max(10, min(int(os.getenv(variable, str(default))), 10_000))
+    except ValueError:
+        return default

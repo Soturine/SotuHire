@@ -3,10 +3,29 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from modules.radar import RadarResult, RadarStore
+from modules.radar.service import RadarState
 from modules.scraping.schemas import FetchResult
 from tests.api_test_helpers import RESUME_TEXT, api_client
 
 FAKE_KEY = "AIza-fake-radar-key"
+
+
+def test_radar_retention_and_api_pagination_are_bounded(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    monkeypatch.setenv("SOTUHIRE_RADAR_MAX_RESULTS", "10")
+    store = RadarStore()
+    store.save(
+        RadarState(results=[RadarResult(title=f"Vaga fictícia {index}") for index in range(14)])
+    )
+
+    page = api_client().get("/api/v1/radar/results?limit=3&offset=3").json()["data"]
+
+    assert page["total"] == 10
+    assert page["limit"] == 3
+    assert page["offset"] == 3
+    assert len(page["results"]) == 3
+    assert page["has_more"] is True
 
 
 RSS_XML = """<?xml version="1.0" encoding="UTF-8"?>
@@ -153,6 +172,10 @@ def test_radar_dedupes_repeated_results_and_guides_planned_sources(
     assert second_payload["data"]["run"]["total_deduped"] >= 1
     assert second_payload["data"]["run"]["total_errors"] >= 1
     assert second_payload["data"]["results"][0]["radar_status"] == "duplicate"
+    persisted = client.get("/api/v1/radar/results?limit=1&offset=0").json()["data"]
+    assert persisted["total"] == 1
+    assert persisted["has_more"] is False
+    assert second_payload["data"]["results"][0]["description"] == ""
 
 
 def test_radar_ai_explanation_uses_provider_without_returning_secret(

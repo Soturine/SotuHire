@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from modules.storage.database import default_data_dir
 from modules.storage.json_recovery import atomic_write_json, load_json
 from modules.storage.models import StoredAnalysis
 
@@ -11,8 +12,10 @@ from modules.storage.models import StoredAnalysis
 class LocalStore:
     """Persist reviewed analysis records in one local JSON file."""
 
-    def __init__(self, path: str | Path = "data/sotuhire-history.json") -> None:
-        self.path = Path(path)
+    def __init__(self, path: str | Path | None = None) -> None:
+        self.path = (
+            Path(path) if path is not None else default_data_dir() / "sotuhire-history.json"
+        )
 
     def save(self, record: StoredAnalysis) -> StoredAnalysis:
         """Insert or replace a record after explicit privacy acknowledgement."""

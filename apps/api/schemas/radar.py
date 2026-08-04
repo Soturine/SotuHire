@@ -278,6 +278,10 @@ class RadarRunsResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     runs: list[RadarRun] = Field(default_factory=list)
+    total: int = 0
+    limit: int = 50
+    offset: int = 0
+    has_more: bool = False
 
 
 class RadarSchedulesResponse(BaseModel):
@@ -313,6 +317,10 @@ class RadarScheduledRunsResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     scheduled_runs: list[RadarScheduledRun] = Field(default_factory=list)
+    total: int = 0
+    limit: int = 50
+    offset: int = 0
+    has_more: bool = False
 
 
 class RadarSchedulerStatusResponse(RadarSchedulerStatus):
@@ -325,6 +333,10 @@ class RadarResultsResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     results: list[RadarResult] = Field(default_factory=list)
+    total: int = 0
+    limit: int = 50
+    offset: int = 0
+    has_more: bool = False
 
 
 class RadarResultResponse(BaseModel):
@@ -362,6 +374,10 @@ class RadarAlertsResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     alerts: list[RadarAlert] = Field(default_factory=list)
+    total: int = 0
+    limit: int = 50
+    offset: int = 0
+    has_more: bool = False
 
 
 class RadarAlertResponse(BaseModel):

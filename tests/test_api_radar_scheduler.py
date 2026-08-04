@@ -7,6 +7,7 @@ from pathlib import Path
 from apps.api.main import app
 from modules.radar import RadarSchedule, RadarScheduleStore, ScheduledRadarService
 from modules.radar.models import utc_now
+from modules.radar.scheduler_lease import SchedulerLeaseStore
 from modules.scraping.schemas import FetchResult
 from tests.api_test_helpers import api_client
 
@@ -163,6 +164,35 @@ def test_scheduler_quiet_hours_skips_due_schedule(tmp_path: Path, monkeypatch) -
     assert runs
     assert runs[0].status == "skipped"
     assert "Horario silencioso" in runs[0].warnings[0]
+
+
+def test_scheduler_uses_persistent_lease_and_run_idempotency(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    store = RadarScheduleStore(tmp_path / "radar" / "schedules.json")
+    lease = SchedulerLeaseStore(tmp_path / "sotuhire.db")
+    service = ScheduledRadarService(store=store, lease_store=lease)
+    schedule = service.create_schedule(RadarSchedule(name="Lease fictício", source_ids=[]))
+    scheduled_for = schedule.next_run_at
+    assert scheduled_for is not None
+
+    first = service.run_schedule(
+        schedule.schedule_id,
+        manual=False,
+        scheduled_for=scheduled_for,
+    )
+    second = service.run_schedule(
+        schedule.schedule_id,
+        manual=False,
+        scheduled_for=scheduled_for,
+    )
+
+    assert first.status in {"success", "warning"}
+    assert second.status == "skipped"
+    assert second.metadata["persisted"] is False
+    assert len(store.load().scheduled_runs) == 1
+    assert lease.completed(
+        f"radar_scheduled_run:{schedule.schedule_id}:{scheduled_for.isoformat()}"
+    )
 
 
 def test_scheduler_handles_no_active_source_with_warning(tmp_path: Path, monkeypatch) -> None:

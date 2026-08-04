@@ -142,9 +142,9 @@ def run(payload: RadarRunRequest) -> ApiEnvelope[RadarRunResponse]:
 
 
 @router.get("/runs", response_model=ApiEnvelope[RadarRunsResponse])
-def runs() -> ApiEnvelope[RadarRunsResponse]:
+def runs(limit: int = 50, offset: int = 0) -> ApiEnvelope[RadarRunsResponse]:
     """List radar run history."""
-    return ok(radar_runs())
+    return ok(radar_runs(limit=limit, offset=offset))
 
 
 @router.get("/schedules", response_model=ApiEnvelope[RadarSchedulesResponse])
@@ -190,9 +190,9 @@ def run_schedule_now(schedule_id: str) -> ApiEnvelope[RadarScheduledRunResponse]
 
 
 @router.get("/scheduled-runs", response_model=ApiEnvelope[RadarScheduledRunsResponse])
-def scheduled_runs() -> ApiEnvelope[RadarScheduledRunsResponse]:
+def scheduled_runs(limit: int = 50, offset: int = 0) -> ApiEnvelope[RadarScheduledRunsResponse]:
     """List scheduled Radar run history."""
-    return ok(radar_scheduled_runs())
+    return ok(radar_scheduled_runs(limit=limit, offset=offset))
 
 
 @router.get("/scheduler/status", response_model=ApiEnvelope[RadarSchedulerStatusResponse])
@@ -214,9 +214,11 @@ def scheduler_stop() -> ApiEnvelope[RadarSchedulerStatusResponse]:
 
 
 @router.get("/results", response_model=ApiEnvelope[RadarResultsResponse])
-def results(status: str = "", source_id: str = "") -> ApiEnvelope[RadarResultsResponse]:
+def results(
+    status: str = "", source_id: str = "", limit: int = 50, offset: int = 0
+) -> ApiEnvelope[RadarResultsResponse]:
     """List radar results."""
-    return ok(radar_results(status=status, source_id=source_id))
+    return ok(radar_results(status=status, source_id=source_id, limit=limit, offset=offset))
 
 
 @router.patch("/results/{result_id}", response_model=ApiEnvelope[RadarResultResponse])
@@ -244,9 +246,11 @@ def save_tracker(result_id: str) -> ApiEnvelope[RadarSaveTrackerResponse]:
 
 
 @router.get("/alerts", response_model=ApiEnvelope[RadarAlertsResponse])
-def alerts(unread_only: bool = False) -> ApiEnvelope[RadarAlertsResponse]:
+def alerts(
+    unread_only: bool = False, limit: int = 50, offset: int = 0
+) -> ApiEnvelope[RadarAlertsResponse]:
     """List local radar alerts."""
-    return ok(radar_alerts(unread_only=unread_only))
+    return ok(radar_alerts(unread_only=unread_only, limit=limit, offset=offset))
 
 
 @router.patch("/alerts/{alert_id}", response_model=ApiEnvelope[RadarAlertResponse])

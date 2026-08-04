@@ -36,6 +36,7 @@ from modules.scraping.connectors.manual_url import ManualUrlConnector
 from modules.scraping.connectors.rss_feed import RssFeedConnector
 from modules.scraping.schemas import CollectionResult, ScrapedOpportunity, ScrapingSource
 from modules.sources.imports import SourceImportService, SourceOrigin
+from modules.storage.ai_runs import sanitize_error_message
 from modules.storage.json_recovery import atomic_write_json, load_json
 from modules.storage.local_store import LocalStore
 from modules.tracker.job_tracker import JobTracker
@@ -43,6 +44,9 @@ from modules.tracker.job_tracker import JobTracker
 MAX_SOURCES_PER_RUN = 10
 MAX_RESULTS_PER_SOURCE = 50
 MAX_DESCRIPTION_CHARS = 20_000
+DEFAULT_MAX_RUNS = 200
+DEFAULT_MAX_RESULTS = 2_000
+DEFAULT_MAX_ALERTS = 1_000
 
 
 class RadarState(BaseModel):
@@ -74,7 +78,16 @@ class RadarStore:
         )
 
     def save(self, state: RadarState) -> RadarState:
-        """Write radar state atomically."""
+        """Write bounded radar state atomically."""
+        state.runs = sorted(state.runs, key=lambda item: item.started_at, reverse=True)[
+            : _retention("SOTUHIRE_RADAR_MAX_RUNS", DEFAULT_MAX_RUNS)
+        ]
+        state.results = sorted(state.results, key=lambda item: item.captured_at, reverse=True)[
+            : _retention("SOTUHIRE_RADAR_MAX_RESULTS", DEFAULT_MAX_RESULTS)
+        ]
+        state.alerts = sorted(state.alerts, key=lambda item: item.created_at, reverse=True)[
+            : _retention("SOTUHIRE_RADAR_MAX_ALERTS", DEFAULT_MAX_ALERTS)
+        ]
         atomic_write_json(self.path, state.model_dump(mode="json"))
         return state
 
@@ -250,7 +263,7 @@ class JobRadarService:
                 updated_source = source.model_copy(
                     update={
                         "last_checked_at": utc_now(),
-                        "last_error": "; ".join(result.failures[:2]),
+                        "last_error": sanitize_error_message("; ".join(result.failures[:2])),
                         "status": "error" if result.failures else source.status,
                         "updated_at": utc_now(),
                     }
@@ -258,7 +271,12 @@ class JobRadarService:
                 state.sources[source_index] = updated_source
             if result.failures:
                 run.total_errors += len(result.failures)
-                errors.extend([f"{source.name}: {failure}" for failure in result.failures])
+                errors.extend(
+                    [
+                        sanitize_error_message(f"{source.name}: {failure}")
+                        for failure in result.failures
+                    ]
+                )
             for opportunity in result.opportunities[
                 : min(source.max_results, MAX_RESULTS_PER_SOURCE)
             ]:
@@ -291,6 +309,21 @@ class JobRadarService:
                         }
                     )
                     run.total_deduped += 1
+                    run.total_found += 1
+                    new_results.append(
+                        radar_result.model_copy(
+                            update={
+                                "description": "",
+                                "normalized_text": "",
+                                "evidence": [],
+                                "metadata": {
+                                    "duplicate_reference_only": True,
+                                    "canonical_result_id": duplicate.id if duplicate else "",
+                                },
+                            }
+                        )
+                    )
+                    continue
                 seen_keys.add(radar_result.dedupe_key)
                 if use_ai and ai_enricher:
                     radar_result = self._apply_ai_explanation(
@@ -323,18 +356,39 @@ class JobRadarService:
         self.store.save(state)
         return run, new_results, new_alerts, warnings
 
-    def list_runs(self) -> list[RadarRun]:
+    def list_runs(self, *, limit: int = 50, offset: int = 0) -> list[RadarRun]:
         """List radar run history."""
-        return sorted(self.store.load().runs, key=lambda item: item.started_at, reverse=True)
+        runs = sorted(self.store.load().runs, key=lambda item: item.started_at, reverse=True)
+        return runs[max(0, offset) : max(0, offset) + max(1, min(limit, 200))]
 
-    def list_results(self, *, status: str = "", source_id: str = "") -> list[RadarResult]:
+    def count_runs(self) -> int:
+        return len(self.store.load().runs)
+
+    def list_results(
+        self,
+        *,
+        status: str = "",
+        source_id: str = "",
+        limit: int = 50,
+        offset: int = 0,
+    ) -> list[RadarResult]:
         """List radar results newest first."""
         results = self.store.load().results
         if status:
             results = [item for item in results if item.radar_status == status]
         if source_id:
             results = [item for item in results if item.source_id == source_id]
-        return sorted(results, key=lambda item: item.captured_at, reverse=True)
+        results = sorted(results, key=lambda item: item.captured_at, reverse=True)
+        return results[max(0, offset) : max(0, offset) + max(1, min(limit, 200))]
+
+    def count_results(self, *, status: str = "", source_id: str = "") -> int:
+        results = self.store.load().results
+        return sum(
+            1
+            for item in results
+            if (not status or item.radar_status == status)
+            and (not source_id or item.source_id == source_id)
+        )
 
     def update_result(
         self,
@@ -411,12 +465,19 @@ class JobRadarService:
         updated = self.update_result(result_id, status="saved_to_tracker")
         return saved.id, updated
 
-    def list_alerts(self, *, unread_only: bool = False) -> list[RadarAlert]:
+    def list_alerts(
+        self, *, unread_only: bool = False, limit: int = 50, offset: int = 0
+    ) -> list[RadarAlert]:
         """List local radar alerts."""
         alerts = self.store.load().alerts
         if unread_only:
             alerts = [item for item in alerts if item.status == "unread"]
-        return sorted(alerts, key=lambda item: item.created_at, reverse=True)
+        alerts = sorted(alerts, key=lambda item: item.created_at, reverse=True)
+        return alerts[max(0, offset) : max(0, offset) + max(1, min(limit, 200))]
+
+    def count_alerts(self, *, unread_only: bool = False) -> int:
+        alerts = self.store.load().alerts
+        return sum(1 for item in alerts if not unread_only or item.status == "unread")
 
     def update_alert(
         self,
@@ -885,6 +946,13 @@ def _token_overlap(candidates: list[str], text: str) -> int:
 
 def _tokens(text: str) -> set[str]:
     return {token for token in normalize_text(text).replace("/", " ").split() if len(token) >= 3}
+
+
+def _retention(variable: str, default: int) -> int:
+    try:
+        return max(10, min(int(os.getenv(variable, str(default))), 20_000))
+    except ValueError:
+        return default
 
 
 def _merge_unique(primary: list[str], secondary: list[str]) -> list[str]:
