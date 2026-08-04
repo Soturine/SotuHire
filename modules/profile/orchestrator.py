@@ -8,7 +8,12 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from modules.profile.career_profile import CareerProfileStore
-from modules.profile.context import ProfileContext, ProfileContextItem
+from modules.profile.context import (
+    ProfileBucketReconciliation,
+    ProfileContext,
+    ProfileContextItem,
+    ProfileReconciliationReport,
+)
 from modules.profile.models import ProfileItem, UniversalCareerProfile
 from modules.profile.schemas import CareerProfile
 from modules.profile.store import UniversalCareerProfileStore
@@ -94,37 +99,16 @@ class ProfileContextOrchestrator:
             except ValidationError as exc:
                 raise ValueError("Contexto de perfil invalido.") from exc
 
-        universal_profile = self.universal_store.load_active()
-        if _has_universal_profile_data(universal_profile):
-            return _context_from_universal_profile(universal_profile, purpose=purpose)
-
-        profile = self.legacy_store.load()
-        return _context_from_legacy_profile(profile, purpose=purpose)
+        universal = _context_from_universal_profile(
+            self.universal_store.load_active(), purpose=purpose
+        )
+        legacy = _context_from_legacy_profile(self.legacy_store.load(), purpose=purpose)
+        return _reconcile_contexts(universal, legacy)
 
 
 def _default_legacy_profile_path() -> Path:
     base = Path(os.getenv("SOTUHIRE_DATA_DIR", "data"))
     return base / "memory" / "career-profile.json"
-
-
-def _has_universal_profile_data(profile: UniversalCareerProfile) -> bool:
-    return any(
-        [
-            profile.display_name,
-            profile.headline,
-            profile.summary,
-            profile.primary_domains,
-            profile.secondary_domains,
-            profile.career_moments,
-            profile.target_roles,
-            profile.target_seniority,
-            profile.preferred_locations,
-            profile.preferred_work_models,
-            profile.preferred_contract_types,
-            profile.items,
-            profile.constraints,
-        ]
-    )
 
 
 def _context_from_universal_profile(
@@ -282,6 +266,133 @@ def _context_from_legacy_profile(profile: CareerProfile, *, purpose: str) -> Pro
             f"Contexto montado para: {purpose}.",
         ],
     )
+
+
+def _reconcile_contexts(
+    universal: ProfileContext,
+    legacy: ProfileContext,
+) -> ProfileContext:
+    decisions: list[ProfileBucketReconciliation] = []
+    updates: dict[str, object] = {}
+    string_buckets = {
+        "goals": "career_goals",
+        "preferences": "preferences",
+        "constraints": "constraints",
+    }
+    item_buckets = {
+        "education": "education",
+        "experiences": "experiences",
+        "academic": "academic_experiences",
+        "projects": "projects",
+        "certifications": "certifications_and_registries",
+        "registries": "certifications_and_registries",
+        "skills": "skills",
+        "languages": "languages",
+    }
+    identity = universal.identity or legacy.identity
+    decisions.append(
+        _bucket_decision(
+            "identity",
+            list(universal.identity),
+            list(legacy.identity),
+            universal_wins=bool(universal.identity),
+        )
+    )
+    updates["identity"] = identity
+    for bucket, field in string_buckets.items():
+        universal_values = list(getattr(universal, field))
+        legacy_values = list(getattr(legacy, field))
+        updates[field] = universal_values or legacy_values
+        decisions.append(
+            _bucket_decision(
+                bucket,
+                universal_values,
+                legacy_values,
+                universal_wins=bool(universal_values),
+            )
+        )
+    for bucket, field in item_buckets.items():
+        universal_items = list(getattr(universal, field))
+        legacy_items = list(getattr(legacy, field))
+        has_confirmed = any(item.confirmed_by_user for item in universal_items)
+        if has_confirmed:
+            merged_items = universal_items
+        elif universal_items:
+            merged_items = _merge_context_items(universal_items, legacy_items)
+        else:
+            merged_items = legacy_items
+        updates[field] = merged_items
+        decisions.append(
+            _bucket_decision(
+                bucket,
+                [item.title for item in universal_items],
+                [item.title for item in legacy_items],
+                universal_wins=has_confirmed,
+                merged=bool(universal_items and legacy_items and not has_confirmed),
+            )
+        )
+    updates["locations"] = universal.locations or legacy.locations
+    updates["constraint_items"] = universal.constraint_items or legacy.constraint_items
+    updates["application_history_signals"] = list(
+        dict.fromkeys([*universal.application_history_signals, *legacy.application_history_signals])
+    )
+    updates["reconciliation"] = ProfileReconciliationReport(
+        buckets=decisions,
+        requires_review=any(item.conflict for item in decisions),
+    )
+    return universal.model_copy(update=updates)
+
+
+def _bucket_decision(
+    bucket: str,
+    universal_values: list[str],
+    legacy_values: list[str],
+    *,
+    universal_wins: bool,
+    merged: bool = False,
+) -> ProfileBucketReconciliation:
+    normalized_universal = {item.casefold().strip() for item in universal_values if item.strip()}
+    normalized_legacy = {item.casefold().strip() for item in legacy_values if item.strip()}
+    conflict = bool(
+        universal_wins
+        and normalized_universal
+        and normalized_legacy
+        and normalized_universal != normalized_legacy
+    )
+    if merged:
+        source = "merged_for_review"
+    elif universal_wins:
+        source = "universal"
+    elif legacy_values:
+        source = "legacy_fallback"
+    else:
+        source = "empty"
+    return ProfileBucketReconciliation(
+        bucket=bucket,
+        source=source,
+        universal_count=len(universal_values),
+        legacy_count=len(legacy_values),
+        conflict=conflict,
+        note=(
+            "Conflito preservado para revisão; Universal confirmado mantém prioridade."
+            if conflict
+            else ""
+        ),
+    )
+
+
+def _merge_context_items(
+    universal: list[ProfileContextItem],
+    legacy: list[ProfileContextItem],
+) -> list[ProfileContextItem]:
+    merged: list[ProfileContextItem] = []
+    seen: set[str] = set()
+    for item in [*universal, *legacy]:
+        key = item.title.casefold().strip()
+        if key and key not in seen:
+            seen.add(key)
+            merged.append(item)
+    return merged
 
 
 def _item(

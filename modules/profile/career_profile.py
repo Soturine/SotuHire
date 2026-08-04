@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from modules.profile.schemas import CareerProfile
+from modules.storage.json_recovery import atomic_write_json, load_json
 
 
 class CareerProfileStore:
@@ -14,19 +15,15 @@ class CareerProfileStore:
         self.path = Path(path)
 
     def save(self, profile: CareerProfile) -> CareerProfile:
-        self.path.parent.mkdir(parents=True, exist_ok=True)
-        temporary = self.path.with_suffix(".tmp")
-        temporary.write_text(profile.model_dump_json(indent=2), encoding="utf-8")
-        temporary.replace(self.path)
+        atomic_write_json(self.path, profile.model_dump(mode="json"))
         return profile
 
     def load(self) -> CareerProfile:
-        if not self.path.exists():
-            return CareerProfile()
-        try:
-            return CareerProfile.model_validate_json(self.path.read_text(encoding="utf-8"))
-        except (OSError, ValueError):
-            return CareerProfile()
+        return load_json(
+            self.path,
+            validator=CareerProfile.model_validate,
+            default_factory=CareerProfile,
+        )
 
     def clear(self) -> None:
         if self.path.exists():

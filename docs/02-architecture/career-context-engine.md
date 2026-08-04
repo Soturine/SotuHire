@@ -113,6 +113,23 @@ Regras importantes:
 - registro profissional não é presumido;
 - o score usa linguagem condicional e não substitui a leitura oficial do edital.
 
+## Reconciliação Universal e legado
+
+A leitura não usa fallback tudo-ou-nada. O orquestrador compara os buckets
+`identity`, `goals`, `education`, `experiences`, `academic`, `projects`,
+`certifications`, `registries`, `skills`, `languages`, `preferences` e
+`constraints`:
+
+- dado Universal confirmado tem prioridade no bucket;
+- bucket Universal ausente recebe fallback legado;
+- candidato Universal sem confirmação pode coexistir com fallback legado;
+- divergência entre Universal confirmado e legado é preservada como conflito
+  revisável no `ProfileReconciliationReport`.
+
+O relatório informa fonte e contagem por bucket, sem apagar nem regravar o
+perfil legado. A corrupção de qualquer arquivo de perfil é tratada pela política
+de quarantine, nunca como perfil vazio silencioso.
+
 ## Arquivos
 
 ```txt

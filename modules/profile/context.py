@@ -44,6 +44,28 @@ class ProfileContextItem(BaseModel):
         return self
 
 
+class ProfileBucketReconciliation(BaseModel):
+    """Source decision for one Universal/legacy profile bucket."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    bucket: str
+    source: Literal["universal", "legacy_fallback", "merged_for_review", "empty"]
+    universal_count: int = 0
+    legacy_count: int = 0
+    conflict: bool = False
+    note: str = ""
+
+
+class ProfileReconciliationReport(BaseModel):
+    """Reviewable bucket-level reconciliation without deleting either store."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    buckets: list[ProfileBucketReconciliation] = Field(default_factory=list)
+    requires_review: bool = False
+
+
 class ProfileContext(BaseModel):
     """Safe, compact context assembled from local profile evidence."""
 
@@ -63,3 +85,4 @@ class ProfileContext(BaseModel):
     constraints: list[str] = Field(default_factory=list)
     constraint_items: list[ProfileContextItem] = Field(default_factory=list)
     application_history_signals: list[str] = Field(default_factory=list)
+    reconciliation: ProfileReconciliationReport = Field(default_factory=ProfileReconciliationReport)
