@@ -74,6 +74,7 @@ class CompanionRequestHandler(BaseHTTPRequestHandler):
             client_host=self.client_address[0],
             token=self.headers.get("X-SotuHire-Token", ""),
             origin=self.headers.get("Origin", ""),
+            idempotency_key=self.headers.get("X-SotuHire-Idempotency-Key", ""),
         )
         self._send_json(status, payload)
 
@@ -110,7 +111,10 @@ class CompanionRequestHandler(BaseHTTPRequestHandler):
         if origin and _origin_allowed(origin):
             self.send_header("Access-Control-Allow-Origin", origin)
             self.send_header("Vary", "Origin")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, X-SotuHire-Token")
+        self.send_header(
+            "Access-Control-Allow-Headers",
+            "Content-Type, X-SotuHire-Token, X-SotuHire-Idempotency-Key",
+        )
         self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         self.send_header("Cache-Control", "no-store")
 

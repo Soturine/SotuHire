@@ -57,7 +57,7 @@ async function handleMessage(message) {
   if (message.type === "SOTUHIRE_COMPANION_PAIR") return pairCompanion();
   if (message.type === "SOTUHIRE_COMPANION_STATUS") return companionStatus();
   if (message.type === "SOTUHIRE_COMPANION_REQUEST") {
-    return companionRequest(message.path, message.body);
+    return companionRequest(message.path, message.body, message.idempotencyKey);
   }
   if (message.type === "SOTUHIRE_AI_STATUS") return aiStatus();
   if (message.type === "SOTUHIRE_AI_SAVE_KEY") {
@@ -116,7 +116,7 @@ async function companionStatus() {
   return { paired };
 }
 
-async function companionRequest(path, body) {
+async function companionRequest(path, body, idempotencyKey = "") {
   const saved = await chrome.storage.session.get([
     "companionSessionToken",
     "companionSessionExpiresAt",
@@ -131,15 +131,21 @@ async function companionRequest(path, body) {
     ]);
     throw new Error("Pareie a extensão com o Local Companion.");
   }
-  return companionFetch(path, body, saved.companionSessionToken);
+  return companionFetch(path, body, saved.companionSessionToken, idempotencyKey);
 }
 
-async function companionFetch(path, body, sessionToken) {
+async function companionFetch(path, body, sessionToken, idempotencyKey = "") {
+  const safeIdempotencyKey = /^[a-z0-9-]{12,120}$/i.test(idempotencyKey)
+    ? idempotencyKey
+    : "";
   const response = await fetch(`${COMPANION_API}${path}`, {
     method: body === undefined ? "GET" : "POST",
     headers: {
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       ...(sessionToken ? { "X-SotuHire-Token": sessionToken } : {}),
+      ...(safeIdempotencyKey
+        ? { "X-SotuHire-Idempotency-Key": safeIdempotencyKey }
+        : {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
     credentials: "omit",

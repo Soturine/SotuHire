@@ -60,7 +60,7 @@ CHROME_STUB = r"""
       get: async () => ({}), set: async () => {}, remove: async () => {}
     }},
     runtime: {
-      getManifest: () => ({ version: "0.9.4" }),
+      getManifest: () => ({ version: "0.9.5" }),
       sendMessage: async (message) => {
         if (message.type === "SOTUHIRE_AI_STATUS") return {
           ok: true,
@@ -121,7 +121,7 @@ CHROME_STUB = r"""
     let payload = { ok: true, message: "Ação concluída no Companion local." };
     if (path.endsWith("/health")) payload = { ok: true, message: "SotuHire Local Companion conectado." };
     if (path.endsWith("/handshake")) payload = {
-      extension_version: "0.9.4",
+      extension_version: "0.9.5",
       companion_version: "1.9.8",
       api_version: "v1",
       app_version: "1.9.8",
@@ -133,7 +133,7 @@ CHROME_STUB = r"""
       compatible: true,
       warnings: [],
       min_supported_extension_version: "0.9.1",
-      max_tested_extension_version: "0.9.4",
+      max_tested_extension_version: "0.9.5",
       min_supported_companion_version: "1.9.5"
     };
     if (path.includes("context-summary")) payload = {

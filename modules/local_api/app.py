@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import re
+import threading
+from copy import deepcopy
 from pathlib import Path
 from typing import cast
 
@@ -282,6 +286,9 @@ class LocalCompanionService:
                 captured_at=clean.captured_at,
             )
         )
+        previous_artifacts_stale = bool(
+            current and current.content_hash and current.content_hash != snapshot.content_hash
+        )
         record = self.capture_store.save(
             (
                 current
@@ -341,6 +348,12 @@ class LocalCompanionService:
             message="Vaga capturada localmente.",
             capture_id=record.id,
             snapshot_id=snapshot.snapshot_id,
+            artifact_status="stale" if previous_artifacts_stale else "current",
+            stale_reason=(
+                "A vaga mudou; análises, variante e kit anteriores devem ser recalculados."
+                if previous_artifacts_stale
+                else ""
+            ),
         )
 
     def capture_public_exam(self, payload: BrowserCapturePayload) -> CompanionResponse:
@@ -651,6 +664,8 @@ class LocalCompanionApp:
             installation_token=self.token,
             token_path=base / "security" / "companion-auth.json",
         )
+        self._idempotency_lock = threading.Lock()
+        self._idempotency_responses: dict[tuple[str, str], tuple[str, dict[str, object]]] = {}
 
     def handle(
         self,
@@ -661,6 +676,7 @@ class LocalCompanionApp:
         client_host: str = "127.0.0.1",
         token: str = "",
         origin: str = "",
+        idempotency_key: str = "",
     ) -> tuple[int, dict[str, object]]:
         if not is_local_client(client_host):
             return 403, {"ok": False, "message": "A Local API aceita somente localhost."}
@@ -698,6 +714,9 @@ class LocalCompanionApp:
             )
             if not authenticated:
                 return 401, {"ok": False, "message": "Pareamento local obrigatório."}
+            replay = self._idempotency_replay(path, body, idempotency_key)
+            if replay is not None:
+                return replay
             if method == "GET" and path in {"/capture/status", "/capture/context-summary"}:
                 return 200, self.service.context_summary().model_dump(mode="json")
             if method == "POST" and path == "/handshake":
@@ -731,13 +750,52 @@ class LocalCompanionApp:
                 )
             else:
                 return 404, {"ok": False, "message": "Endpoint não encontrado."}
-            return 200, response.model_dump(mode="json")
+            result = cast(dict[str, object], response.model_dump(mode="json"))
+            self._remember_idempotent_response(path, body, idempotency_key, result)
+            return 200, result
         except PairingError as exc:
             return 401, {"ok": False, "message": str(exc)}
         except (ValidationError, ValueError, json.JSONDecodeError) as exc:
             return 422, {"ok": False, "message": str(exc)}
         except KeyError as exc:
             return 404, {"ok": False, "message": str(exc)}
+
+    def _idempotency_replay(
+        self, path: str, body: bytes, idempotency_key: str
+    ) -> tuple[int, dict[str, object]] | None:
+        if not idempotency_key or not path.startswith("/capture/"):
+            return None
+        if not re.fullmatch(r"[A-Za-z0-9-]{12,120}", idempotency_key):
+            return 400, {"ok": False, "message": "Idempotency key inválida."}
+        fingerprint = hashlib.sha256(body).hexdigest()
+        with self._idempotency_lock:
+            cached = self._idempotency_responses.get((path, idempotency_key))
+        if cached is None:
+            return None
+        cached_fingerprint, payload = cached
+        if cached_fingerprint != fingerprint:
+            return 409, {
+                "ok": False,
+                "message": "Idempotency key já usada com outro payload.",
+            }
+        return 200, deepcopy(payload)
+
+    def _remember_idempotent_response(
+        self,
+        path: str,
+        body: bytes,
+        idempotency_key: str,
+        payload: dict[str, object],
+    ) -> None:
+        if not idempotency_key or not path.startswith("/capture/"):
+            return
+        with self._idempotency_lock:
+            self._idempotency_responses[(path, idempotency_key)] = (
+                hashlib.sha256(body).hexdigest(),
+                deepcopy(payload),
+            )
+            while len(self._idempotency_responses) > 500:
+                self._idempotency_responses.pop(next(iter(self._idempotency_responses)))
 
 
 def _pairing_origin_allowed(origin: str) -> bool:

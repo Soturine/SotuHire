@@ -37,7 +37,17 @@ import type {
 import { toast } from "@/lib/notify";
 import { cn } from "@/lib/utils";
 
+type ResumeStudioSearch = {
+  capture_id?: string;
+  job_snapshot_id?: string;
+};
+
 export const Route = createFileRoute("/resume-studio")({
+  validateSearch: (search: Record<string, unknown>): ResumeStudioSearch => ({
+    capture_id: typeof search.capture_id === "string" ? search.capture_id : undefined,
+    job_snapshot_id:
+      typeof search.job_snapshot_id === "string" ? search.job_snapshot_id : undefined,
+  }),
   head: () => ({ meta: [{ title: "Resume Studio — SotuHire" }] }),
   component: ResumeStudioPage,
 });
@@ -48,6 +58,7 @@ function ResumeStudioPage() {
   const api = useApi();
   const { mode } = useApiMode();
   const queryClient = useQueryClient();
+  const search = Route.useSearch();
   const masterQ = useQuery({
     queryKey: ["resume-studio-master", mode],
     queryFn: () => api.resumeStudioMaster(),
@@ -164,6 +175,19 @@ function ResumeStudioPage() {
         />
       ) : (
         <div className="space-y-5" data-testid="resume-studio">
+          {search.capture_id && (
+            <div className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-xs">
+              <strong>Vaga vinculada pela extensão.</strong> Somente identificadores seguros foram
+              recebidos: captura <code>{search.capture_id}</code>
+              {search.job_snapshot_id && (
+                <>
+                  {" "}
+                  · snapshot <code>{search.job_snapshot_id}</code>
+                </>
+              )}
+              . Importe o currículo diretamente aqui; a extensão nunca lê documentos locais.
+            </div>
+          )}
           <ResumeImport
             onImported={(resume) => {
               queryClient.setQueryData(["resume-studio-master", mode], { resume });

@@ -6,7 +6,7 @@ APP_VERSION = "1.9.8"
 COMPANION_VERSION = "1.9.8"
 API_VERSION = "v1"
 MIN_SUPPORTED_EXTENSION_VERSION = "0.9.1"
-MAX_TESTED_EXTENSION_VERSION = "0.9.4"
+MAX_TESTED_EXTENSION_VERSION = "0.9.5"
 MIN_SUPPORTED_COMPANION_VERSION = "1.9.5"
 EXTENSION_CAPABILITIES = [
     "capture.job",
@@ -20,6 +20,9 @@ EXTENSION_CAPABILITIES = [
     "ai.sotuhire_provider",
     "profile.review_candidates",
     "application_lab.open",
+    "resume_studio.open",
+    "capture.idempotency",
+    "artifacts.stale_warning",
 ]
 
 

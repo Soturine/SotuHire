@@ -499,7 +499,7 @@
         "providers": ["local", "gemini", "openai"],
         "fallback": "Determinístico local, explícito e mensurado"
       },
-      "extension_support": "A extensão 0.9.4 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo.",
+      "extension_support": "A extensão 0.9.5 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo.",
       "dedupe_strategy": "Eventos e feedback usam IDs únicos; métricas de deduplicação são avaliadas separadamente.",
       "snapshot_support": "Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas.",
       "tests": [
@@ -550,7 +550,7 @@
         "providers": ["local", "gemini", "openai"],
         "fallback": "Relatório de prontidão determinístico e fallback local explícito"
       },
-      "extension_support": "A extensão 0.9.4 abre o Lab somente com capture_id e job_snapshot_id; o Perfil completo permanece local.",
+      "extension_support": "A extensão 0.9.5 abre o Lab ou o Resume Studio somente com capture_id e job_snapshot_id; o Perfil completo e documentos locais permanecem fora da extensão.",
       "dedupe_strategy": "Reutiliza identidade da captura, job_snapshot_id e snapshots existentes em vez de duplicar a vaga.",
       "snapshot_support": "Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker.",
       "tests": [

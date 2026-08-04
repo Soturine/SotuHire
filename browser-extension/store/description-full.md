@@ -17,5 +17,9 @@ visíveis de candidaturas sem duplicar registros já conhecidos. JSON-LD `JobPos
 e o modo conectado preserva snapshots. Se a Companion estiver offline, a fila registra retry e pode
 ser exportada/importada sem credenciais.
 
+A versão 0.9.5 abre o Application Lab ou o Resume Studio somente com identificadores seguros, usa
+idempotência nos retries e avisa quando uma mudança na vaga deixa artefatos anteriores desatualizados.
+A extensão nunca lê ou envia um currículo local.
+
 Privacidade por padrão: sem cookies, tokens, senhas, headers autenticados, armazenamento da página
 ou automação de login.

@@ -30,6 +30,7 @@ def test_queue_runtime_deduplicates_retries_and_exports_safely() -> None:
         "state": "failed",
         "safeExport": True,
         "safeImport": True,
+        "stableIdempotency": True,
     }
 
 
@@ -69,7 +70,7 @@ def test_popup_uses_versioned_handshake_contract() -> None:
     popup = Path("browser-extension/popup.js").read_text(encoding="utf-8")
     manifest = json.loads(Path("browser-extension/manifest.json").read_text(encoding="utf-8"))
 
-    assert manifest["version"] == "0.9.4"
+    assert manifest["version"] == "0.9.5"
     assert 'request("/handshake"' in popup
     assert "chrome.runtime.getManifest().version" in popup
     assert "handshake.compatible" in popup
@@ -85,7 +86,7 @@ def test_companion_handshake_negotiates_current_and_old_extension(
     status, current = app.handle(
         "POST",
         "/handshake",
-        body=b'{"extension_version":"0.9.4"}',
+        body=b'{"extension_version":"0.9.5"}',
         token="companion-test-token",
     )
     old_status, old = app.handle(
@@ -96,7 +97,7 @@ def test_companion_handshake_negotiates_current_and_old_extension(
     )
 
     assert status == 200
-    assert current["extension_version"] == "0.9.4"
+    assert current["extension_version"] == "0.9.5"
     assert current["companion_version"] == "1.9.8"
     assert current["compatible"] is True
     capabilities = cast(list[str], current["capabilities"])
@@ -106,6 +107,49 @@ def test_companion_handshake_negotiates_current_and_old_extension(
     assert old_status == 200
     assert old["compatible"] is False
     assert old["warnings"]
+
+
+def test_companion_replays_idempotent_capture_and_rejects_key_reuse(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    app = LocalCompanionApp(token="companion-test-token")
+    body = json.dumps(
+        {
+            "url": "https://jobs.example/idempotent",
+            "job_title": "Pessoa Engenheira",
+            "company": "Empresa Exemplo",
+            "description": "Python",
+        }
+    ).encode()
+
+    first_status, first = app.handle(
+        "POST",
+        "/capture/job",
+        body=body,
+        token="companion-test-token",
+        idempotency_key="sotuhire-ext-v1-deadbeef",
+    )
+    replay_status, replay = app.handle(
+        "POST",
+        "/capture/job",
+        body=body,
+        token="companion-test-token",
+        idempotency_key="sotuhire-ext-v1-deadbeef",
+    )
+    conflict_status, conflict = app.handle(
+        "POST",
+        "/capture/job",
+        body=body.replace(b"Python", b"Python SQL"),
+        token="companion-test-token",
+        idempotency_key="sotuhire-ext-v1-deadbeef",
+    )
+
+    assert first_status == replay_status == 200
+    assert first == replay
+    assert conflict_status == 409
+    assert conflict["ok"] is False
+    assert len(app.service.capture_store.list()) == 1
 
 
 def test_sotuhire_provider_fallback_is_explicit() -> None:

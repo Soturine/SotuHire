@@ -128,6 +128,21 @@ const queue = globalThis.SotuHireQueue;
   );
   assert(!Object.hasOwn(imported[0].body, "api_key"));
 
+  const firstKey = queue.idempotencyKey("/capture/job", {
+    url: "https://jobs.example/vaga/42",
+    description: "Python",
+  });
+  const repeatedKey = queue.idempotencyKey("/capture/job", {
+    url: "https://jobs.example/vaga/42",
+    description: "Python",
+  });
+  const changedKey = queue.idempotencyKey("/capture/job", {
+    url: "https://jobs.example/vaga/42",
+    description: "Python e SQL",
+  });
+  assert.strictEqual(firstKey, repeatedKey);
+  assert.notStrictEqual(firstKey, changedKey);
+
   process.stdout.write(
     JSON.stringify({
       deduplicated: pending.length,
@@ -135,6 +150,7 @@ const queue = globalThis.SotuHireQueue;
       state: current[0].state,
       safeExport: true,
       safeImport: true,
+      stableIdempotency: true,
     }),
   );
 })().catch((error) => {

@@ -59,6 +59,9 @@
     return `${path}|${identity}`;
   };
 
+  const idempotencyKey = (path, body) =>
+    `sotuhire-ext-v1-${stableHash({ path, body: sanitize(body || {}) })}`;
+
   const upsert = (pending, { path, body, label }, now = new Date()) => {
     const safeBody = sanitize(body);
     const identity = identityFor(path, safeBody);
@@ -193,6 +196,7 @@
     BACKOFF_MS,
     normalizeUrl,
     identityFor,
+    idempotencyKey,
     upsert,
     retry,
     sanitize,

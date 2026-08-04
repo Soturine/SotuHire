@@ -130,6 +130,8 @@ class CompanionResponse(BaseModel):
     provider: str = ""
     tracker_id: str = ""
     snapshot_id: str = ""
+    artifact_status: Literal["current", "stale"] = "current"
+    stale_reason: str = ""
     app_url: str = "http://127.0.0.1:5173"
 
 

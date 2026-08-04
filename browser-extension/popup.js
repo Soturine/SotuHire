@@ -101,6 +101,8 @@ const request = async (path, body) => {
       type: "SOTUHIRE_COMPANION_REQUEST",
       path,
       body,
+      idempotencyKey:
+        body === undefined ? "" : queueRuntime.idempotencyKey(path, body),
     });
   } catch (error) {
     throw new Error(
@@ -215,7 +217,11 @@ const display = (payload) => {
     payload.match_score == null
       ? ""
       : `\nMatch: ${payload.match_score} · ATS: ${payload.ats_score}`;
-  showResult("Ação concluída", `${payload.message || "Concluído."}${scores}`);
+  const stale =
+    payload.artifact_status === "stale"
+      ? `\nArtefato desatualizado: ${payload.stale_reason || "recalcule antes de reutilizar."}`
+      : "";
+  showResult("Ação concluída", `${payload.message || "Concluído."}${scores}${stale}`);
 };
 
 async function refreshAiStatus() {
@@ -415,6 +421,26 @@ async function prepareApplication() {
   };
 }
 
+async function openResumeStudio() {
+  const { capture } = await extract();
+  const saved = await sendOrQueue("/capture/job", capture, "Vaga para o Resume Studio");
+  if (!saved.capture_id || !saved.snapshot_id) {
+    throw new Error("O Companion não devolveu os identificadores seguros da vaga.");
+  }
+  const target = new URL("/resume-studio", saved.app_url || "http://127.0.0.1:5173");
+  target.searchParams.set("capture_id", saved.capture_id);
+  target.searchParams.set("job_snapshot_id", saved.snapshot_id);
+  await chrome.tabs.create({ url: target.toString() });
+  return {
+    message: [
+      "Resume Studio aberto somente com capture_id e job_snapshot_id.",
+      saved.artifact_status === "stale" ? saved.stale_reason : "Snapshot atual confirmado.",
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
 const act = async (action) => {
   showResult("Processando…", "Coletando somente os dados necessários.", "…");
   try {
@@ -519,6 +545,7 @@ const act = async (action) => {
       );
     }
     if (action === "prepare-application") return display(await prepareApplication());
+    if (action === "resume-studio") return display(await openResumeStudio());
     const { capture } = await extract();
     if (action === "copy") {
       await navigator.clipboard.writeText(capture.visible_text);

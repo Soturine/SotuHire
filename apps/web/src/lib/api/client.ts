@@ -1202,7 +1202,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           profile_summary: "Resumo seguro demo do Perfil Universal.",
           enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
           ai_provider_status: "local",
-          extension_version: "0.9.4",
+          extension_version: "0.9.5",
           companion_version: "1.9.8",
           api_version: "v1",
           compatible: true,
@@ -1211,7 +1211,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeExtensionStatus,
       ),
 
-    extensionHandshake: (extension_version = "0.9.4") =>
+    extensionHandshake: (extension_version = "0.9.5") =>
       call<ExtensionHandshake>(
         mode,
         baseUrl,
@@ -1226,7 +1226,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           compatible: true,
           warnings: [],
           min_supported_extension_version: "0.9.1",
-          max_tested_extension_version: "0.9.4",
+          max_tested_extension_version: "0.9.5",
           min_supported_companion_version: "1.9.5",
         },
         normalizeExtensionHandshake,
