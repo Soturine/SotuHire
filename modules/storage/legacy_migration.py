@@ -407,22 +407,37 @@ def _insert_generic(connection: Any, entity: LegacyEntity) -> None:
 
 
 def _insert_profile_item(connection: Any, entity: LegacyEntity) -> None:
-    now = _timestamp(entity.payload)
+    payload = dict(entity.payload)
+    now = _timestamp(payload)
+    confirmed = bool(payload.get("confirmed_by_user"))
+    declared_status = str(payload.get("review_status", ""))
+    allowed_statuses = {"candidate", "sourced", "confirmed", "rejected", "stale"}
+    review_status = (
+        declared_status
+        if declared_status in allowed_statuses
+        else "confirmed"
+        if confirmed
+        else "sourced"
+        if entity.source_ref
+        else "candidate"
+    )
+    payload["review_status"] = review_status
     connection.execute(
         """INSERT INTO profile_items
         (id, profile_id, payload, source_ref, content_hash, confirmed_by_user,
-         created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         review_status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET payload=excluded.payload, source_ref=excluded.source_ref,
         content_hash=excluded.content_hash, confirmed_by_user=excluded.confirmed_by_user,
-        updated_at=excluded.updated_at""",
+        review_status=excluded.review_status, updated_at=excluded.updated_at""",
         (
             entity.entity_id,
             entity.parent_id,
-            _json(entity.payload),
+            _json(payload),
             entity.source_ref,
-            entity.content_hash,
-            int(bool(entity.payload.get("confirmed_by_user"))),
+            _payload_hash(payload),
+            int(confirmed),
+            review_status,
             now,
             now,
         ),

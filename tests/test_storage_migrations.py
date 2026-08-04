@@ -5,6 +5,7 @@ import sqlite3
 import pytest
 from modules.storage.database import connect_database
 from modules.storage.migrations import LATEST_SCHEMA_VERSION, MigrationRunner
+from modules.storage.migrations.versions import MIGRATIONS
 
 
 def test_migrations_create_versioned_schema_and_are_idempotent(tmp_path):
@@ -64,6 +65,55 @@ def test_migrations_create_versioned_schema_and_are_idempotent(tmp_path):
         } <= tables
         assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
         assert connection.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
+
+
+def test_v6_backfills_legacy_evidence_review_status(tmp_path):
+    database = tmp_path / "sotuhire.db"
+    with connect_database(database) as connection:
+        MigrationRunner._bootstrap_history(connection)
+        for migration in MIGRATIONS[:5]:
+            migration.up(connection)
+            assert migration.validation(connection) == []
+            connection.execute(
+                """INSERT INTO migration_history
+                (version, description, applied_at, success, validation_errors,
+                 rollback_strategy, created_at)
+                VALUES (?, ?, '2026-08-03T00:00:00Z', 1, '[]', ?, ?)""",
+                (
+                    migration.version,
+                    migration.description,
+                    migration.rollback_strategy,
+                    migration.created_at,
+                ),
+            )
+            connection.commit()
+        connection.execute(
+            """INSERT INTO profiles
+            (id, payload, source_ref, content_hash, created_at, updated_at)
+            VALUES ('profile-legacy', '{}', '', 'hash', '2026-08-03', '2026-08-03')"""
+        )
+        connection.executemany(
+            """INSERT INTO profile_items
+            (id, profile_id, payload, source_ref, content_hash, confirmed_by_user,
+             created_at, updated_at)
+            VALUES (?, 'profile-legacy', '{}', ?, 'hash', ?, '2026-08-03', '2026-08-03')""",
+            [
+                ("confirmed", "resume:item:1", 1),
+                ("sourced", "github:repo:1", 0),
+                ("candidate", "", 0),
+            ],
+        )
+        connection.commit()
+
+    assert MigrationRunner(database).apply(create_backup=False) == [6]
+    with connect_database(database) as connection:
+        statuses = dict(connection.execute("SELECT id, review_status FROM profile_items"))
+
+    assert statuses == {
+        "candidate": "candidate",
+        "confirmed": "confirmed",
+        "sourced": "sourced",
+    }
 
 
 def test_snapshot_tables_reject_mutation_at_database_level(tmp_path):

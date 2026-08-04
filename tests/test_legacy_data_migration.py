@@ -83,7 +83,8 @@ def test_dry_run_is_read_only_and_apply_preserves_ids_counts_and_sources(tmp_pat
 
     with connect_database(data_dir / "sotuhire.db") as connection:
         assert connection.execute("SELECT id FROM profiles").fetchone()[0] == "default"
-        assert connection.execute("SELECT id FROM profile_items").fetchone()[0] == "skill-1"
+        profile_item = connection.execute("SELECT id, review_status FROM profile_items").fetchone()
+        assert tuple(profile_item) == ("skill-1", "confirmed")
         assert connection.execute("SELECT id FROM memories").fetchone()[0] == "memory-1"
         application = connection.execute("SELECT id, job_snapshot_id FROM applications").fetchone()
         assert tuple(application) == ("application-1", None)

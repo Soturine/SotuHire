@@ -528,6 +528,7 @@ def _migration_005(connection: sqlite3.Connection) -> None:
         for name, definition in columns.items():
             if name not in existing:
                 connection.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
+
     _execute_script(
         connection,
         """
@@ -894,6 +895,25 @@ def _migration_006(connection: sqlite3.Connection) -> None:
         for name, definition in columns.items():
             if name not in existing:
                 connection.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
+
+    connection.execute(
+        """UPDATE profile_items
+        SET review_status = CASE
+            WHEN confirmed_by_user = 1 THEN 'confirmed'
+            WHEN TRIM(source_ref) != '' THEN 'sourced'
+            ELSE 'candidate'
+        END
+        WHERE review_status = 'candidate'"""
+    )
+    connection.execute(
+        """UPDATE resume_entries
+        SET review_status = CASE
+            WHEN confirmed_by_user = 1 THEN 'confirmed'
+            WHEN source_refs NOT IN ('', '[]') THEN 'sourced'
+            ELSE 'candidate'
+        END
+        WHERE review_status = 'candidate'"""
+    )
 
     connection.execute(
         """CREATE TABLE application_kit_items_v6 (

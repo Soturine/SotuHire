@@ -11,6 +11,7 @@ def test_data_cli_entrypoints_run_from_outside_repository(tmp_path):
         "restore_data.py",
         "check_data_health.py",
         "migrate_local_data.py",
+        "migrate_v199.py",
     ):
         result = subprocess.run(
             [sys.executable, str(ROOT / "scripts" / name), "--help"],
@@ -43,3 +44,24 @@ def test_migration_cli_dry_run_does_not_create_database(tmp_path):
     assert result.returncode == 0, result.stderr
     assert '"mode": "dry-run"' in result.stdout
     assert not (data_dir / "sotuhire.db").exists()
+
+
+def test_v199_migration_cli_defaults_to_read_only(tmp_path):
+    data_dir = tmp_path / "data"
+    result = subprocess.run(
+        [
+            sys.executable,
+            str(ROOT / "scripts" / "migrate_v199.py"),
+            "--data-dir",
+            str(data_dir),
+        ],
+        cwd=tmp_path,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert '"mode": "dry-run"' in result.stdout
+    assert not (data_dir / "sotuhire.db").exists()
+    assert not (data_dir / "backups").exists()
