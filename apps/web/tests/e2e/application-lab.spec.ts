@@ -70,8 +70,12 @@ test("Resume Studio edits, reorders, previews and exports without changing the m
   const download = page.waitForEvent("download");
   await page.getByRole("button", { name: "JSON Resume" }).click();
   expect((await download).suggestedFilename()).toBe("curriculo-demo.resume.json");
-  await page.getByRole("button", { name: /PDF · pendente/ }).click();
-  await expect(page.getByText(/permanece pendente para a v1.9.9/i)).toBeVisible();
+  const pdfDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "PDF", exact: true }).click();
+  expect((await pdfDownload).suggestedFilename()).toBe("curriculo-demo.pdf");
+  const docxDownload = page.waitForEvent("download");
+  await page.getByRole("button", { name: "DOCX", exact: true }).click();
+  expect((await docxDownload).suggestedFilename()).toBe("curriculo-demo.docx");
 });
 
 test("new workflow remains usable on mobile and at 200% zoom", async ({ page }) => {

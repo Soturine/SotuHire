@@ -345,9 +345,18 @@ function StudioToolbar({
         <button
           type="button"
           onClick={() => onExport("pdf")}
+          disabled={exporting}
           className="inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold"
         >
-          <Download className="h-3.5 w-3.5" /> PDF · pendente
+          <Download className="h-3.5 w-3.5" /> PDF
+        </button>
+        <button
+          type="button"
+          onClick={() => onExport("docx")}
+          disabled={exporting}
+          className="inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold"
+        >
+          <Download className="h-3.5 w-3.5" /> DOCX
         </button>
       </div>
     </div>

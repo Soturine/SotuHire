@@ -984,14 +984,11 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
             resume_variant_id: variantId,
             template_id: templateId,
             format,
-            status: format === "json_resume" ? "ready" : "pending",
+            status: "ready",
             file_name:
               format === "json_resume" ? "curriculo-demo.resume.json" : `curriculo-demo.${format}`,
-            content_hash: format === "json_resume" ? "demo-content-hash" : "",
-            warnings:
-              format === "json_resume"
-                ? []
-                : [`DEMO: ${format.toUpperCase()} real exige o modo API REAL.`],
+            content_hash: `demo-content-hash-${format}`,
+            warnings: ["DEMO: artefato fictício; nenhum documento real foi lido ou persistido."],
             created_at: new Date().toISOString(),
           },
           payload:
@@ -1008,7 +1005,19 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
                     },
                   ],
                 }
-              : null,
+              : {
+                  content_base64:
+                    format === "pdf"
+                      ? "JVBERi0xLjQKJSBTb3R1SGlyZSBkZW1vIGZpY3RpY2lvCiUlRU9GCg=="
+                      : "UEsDBAoAAAAAAFNvdHVIaXJlIGRlbW8gZmljdGljaW8=",
+                  media_type:
+                    format === "pdf"
+                      ? "application/pdf"
+                      : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                  byte_size: 34,
+                  page_size: pageSize,
+                  canonical_content_hash: "demo-canonical-content-hash",
+                },
         },
       ),
 
