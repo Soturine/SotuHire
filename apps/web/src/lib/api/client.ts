@@ -17,6 +17,7 @@ import type {
   AiSettingsTestResult,
   ApplicationActionPlan,
   ApplicationKit,
+  ApplicationKitItem,
   ApplicationLabAnalyzeResult,
   ApplicationLabDetail,
   ApplicationLabSessionsResult,
@@ -57,6 +58,9 @@ import type {
   NotificationResult,
   NotificationsResult,
   OutcomeSummary,
+  ProfessionalAsset,
+  ProfessionalAssetsResult,
+  ProfessionalAssetStatus,
   ProfileDeduplicateResult,
   ProfileImportResult,
   ProfileItem,
@@ -95,6 +99,7 @@ import type {
   ResumeExtractResult,
   ResumeExportFormat,
   ResumeExportResult,
+  ResumeIngestionResult,
   MasterResume,
   ResumeProfile,
   ResumeTailor,
@@ -813,6 +818,40 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         { method: "POST", body: "{}" },
         { kit: mockKit, snapshot_id: "kit-snapshot-demo" },
       ),
+    applicationLabReviewKitItem: (
+      sessionId: string,
+      itemId: string,
+      status: ApplicationKitItem["status"],
+      editedContent = "",
+    ) => {
+      const item =
+        mockKit.items.find((candidate) => candidate.item_id === itemId) ?? mockKit.items[0]!;
+      return call<{ item: ApplicationKitItem }>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}/kit/items/${encodeURIComponent(itemId)}/review`,
+        {
+          method: "POST",
+          body: JSON.stringify({ status, edited_content: editedContent }),
+        },
+        { item: { ...item, status, edited_content: editedContent } },
+      );
+    },
+    applicationLabExportKit: (sessionId: string) =>
+      call<{ application_kit_id: string; items: Record<string, string> }>(
+        mode,
+        baseUrl,
+        `/application-lab/sessions/${encodeURIComponent(sessionId)}/kit/export`,
+        undefined,
+        {
+          application_kit_id: mockKit.application_kit_id,
+          items: Object.fromEntries(
+            mockKit.items
+              .filter((item) => item.status === "accepted" || item.status === "edited")
+              .map((item) => [item.type, item.edited_content || item.content]),
+          ),
+        },
+      ),
     applicationLabCreatePlan: (sessionId: string, periodDays: 7 | 14 | 30) =>
       call<ApplicationActionPlan>(
         mode,
@@ -853,6 +892,38 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         { method: "PUT", body: JSON.stringify({ resume }) },
         { resume },
       ),
+    resumeStudioIngest: (fileName: string, contentBase64: string) =>
+      call<ResumeIngestionResult>(
+        mode,
+        baseUrl,
+        "/resume-studio/ingest",
+        {
+          method: "POST",
+          body: JSON.stringify({ file_name: fileName, content_base64: contentBase64 }),
+        },
+        {
+          document: {
+            document_id: "document-demo",
+            document_type: "txt",
+            media_type: "text/plain",
+            byte_size: Math.floor((contentBase64.length * 3) / 4),
+            status: "needs_review",
+            text_blocks: ["Conteúdo fictício para demonstrar a revisão da importação."],
+            pages: [{ number: 1, text: "Conteúdo fictício do modo DEMO." }],
+            sections: [],
+            structured_data: {},
+            source_hash: "demo-source-hash",
+            warnings: ["DEMO: o arquivo não foi enviado nem persistido."],
+            provenance: [],
+          },
+          master_resume_draft: {
+            ...mockMasterResume,
+            title: `Rascunho DEMO · ${fileName}`,
+            source_type: "txt",
+            source_refs: ["fixture://resume-import/demo"],
+          },
+        },
+      ),
     resumeStudioVariants: (masterResumeId = "", limit = 25, offset = 0) =>
       call<ResumeVariantsResult>(
         mode,
@@ -892,12 +963,20 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
       call<{ items: ResumeTemplate[] }>(mode, baseUrl, "/resume-studio/templates", undefined, {
         items: mockTemplates,
       }),
-    resumeStudioExport: (variantId: string, format: ResumeExportFormat, templateId: string) =>
+    resumeStudioExport: (
+      variantId: string,
+      format: ResumeExportFormat,
+      templateId: string,
+      pageSize: "A4" | "Letter" = "A4",
+    ) =>
       call<ResumeExportResult>(
         mode,
         baseUrl,
         `/resume-studio/variants/${encodeURIComponent(variantId)}/export`,
-        { method: "POST", body: JSON.stringify({ format, template_id: templateId }) },
+        {
+          method: "POST",
+          body: JSON.stringify({ format, template_id: templateId, page_size: pageSize }),
+        },
         {
           export: {
             export_id: `export-demo-${format}`,
@@ -912,7 +991,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
             warnings:
               format === "json_resume"
                 ? []
-                : [`Exportação ${format.toUpperCase()} permanece pendente para a v1.9.9.`],
+                : [`DEMO: ${format.toUpperCase()} real exige o modo API REAL.`],
             created_at: new Date().toISOString(),
           },
           payload:
@@ -932,6 +1011,66 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
               : null,
         },
       ),
+
+    professionalAssets: (assetType = "", sessionId = "", limit = 50, offset = 0) =>
+      call<ProfessionalAssetsResult>(
+        mode,
+        baseUrl,
+        `/professional-assets?asset_type=${encodeURIComponent(assetType)}&session_id=${encodeURIComponent(sessionId)}&limit=${limit}&offset=${offset}`,
+        undefined,
+        {
+          items: mockProfessionalAssets().filter(
+            (asset) =>
+              (!assetType || asset.asset_type === assetType) &&
+              (!sessionId || asset.application_lab_session_id === sessionId),
+          ),
+          limit,
+          offset,
+        },
+      ),
+    professionalAssetCreate: (asset: ProfessionalAsset) =>
+      call<{ asset: ProfessionalAsset }>(
+        mode,
+        baseUrl,
+        "/professional-assets",
+        { method: "POST", body: JSON.stringify({ asset }) },
+        { asset },
+      ),
+    professionalAssetUpdate: (assetId: string, patch: { title?: string; content?: string }) => {
+      const asset =
+        mockProfessionalAssets().find((item) => item.asset_id === assetId) ??
+        mockProfessionalAssets()[0]!;
+      return call<{ asset: ProfessionalAsset }>(
+        mode,
+        baseUrl,
+        `/professional-assets/${encodeURIComponent(assetId)}`,
+        { method: "PATCH", body: JSON.stringify(patch) },
+        { asset: { ...asset, ...patch, updated_at: new Date().toISOString() } },
+      );
+    },
+    professionalAssetChangeStatus: (
+      assetId: string,
+      status: ProfessionalAssetStatus,
+      content?: string,
+    ) => {
+      const asset =
+        mockProfessionalAssets().find((item) => item.asset_id === assetId) ??
+        mockProfessionalAssets()[0]!;
+      return call<{ asset: ProfessionalAsset }>(
+        mode,
+        baseUrl,
+        `/professional-assets/${encodeURIComponent(assetId)}/status`,
+        { method: "POST", body: JSON.stringify({ status, content }) },
+        {
+          asset: {
+            ...asset,
+            status,
+            content: content ?? asset.content,
+            updated_at: new Date().toISOString(),
+          },
+        },
+      );
+    },
 
     aiQualitySummary: () =>
       call<AiQualitySummary>(mode, baseUrl, "/ai/quality/summary", undefined, mockAiQualitySummary),
@@ -5228,6 +5367,56 @@ function asBoolean(value: unknown, fallback: boolean): boolean {
 
 function firstSentence(value: string): string {
   return value.split(/[.!?]/)[0]?.trim() ?? "";
+}
+
+function mockProfessionalAssets(): ProfessionalAsset[] {
+  const timestamp = "2026-08-03T12:00:00Z";
+  return [
+    {
+      asset_id: "asset-demo-bio",
+      asset_type: "professional_bio",
+      title: "Bio profissional fictícia",
+      status: "review",
+      content: mockMasterResume.summary,
+      structured_content: {},
+      profile_id: "profile-demo",
+      target_opportunity_id: "",
+      application_lab_session_id: "session-demo",
+      evidence_scope_id: "scope-demo",
+      evidence_scope: { fixture: true },
+      source_refs: ["fixture://profile/demo"],
+      evidence_ids: ["profile-demo-quality"],
+      document_snapshot_ids: [],
+      dependency_hash: "demo-dependency-hash",
+      review_status: "sourced",
+      created_at: timestamp,
+      updated_at: timestamp,
+      stale_at: null,
+      stale_reason: "",
+    },
+    {
+      asset_id: "asset-demo-message",
+      asset_type: "recruiter_message",
+      title: "Mensagem para recrutador · exemplo",
+      status: "stale",
+      content: "Olá! Este é um texto fictício, disponível apenas para demonstrar a revisão.",
+      structured_content: {},
+      profile_id: "profile-demo",
+      target_opportunity_id: "opportunity-demo",
+      application_lab_session_id: "session-demo",
+      evidence_scope_id: "scope-demo-old",
+      evidence_scope: { fixture: true },
+      source_refs: ["fixture://job/demo"],
+      evidence_ids: [],
+      document_snapshot_ids: [],
+      dependency_hash: "demo-stale-hash",
+      review_status: "stale",
+      created_at: timestamp,
+      updated_at: timestamp,
+      stale_at: timestamp,
+      stale_reason: "A vaga fictícia de origem foi atualizada.",
+    },
+  ];
 }
 
 export type Api = ReturnType<typeof makeApi>;

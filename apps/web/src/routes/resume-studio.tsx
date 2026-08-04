@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   ArrowDown,
   ArrowUp,
@@ -23,6 +23,9 @@ import {
   resumeEditorReducer,
 } from "@/components/resume-editor-state";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { ResumeImport } from "@/features/document-ingestion/resume-import";
+import { ProfessionalAssetsPanel } from "@/features/professional-assets/professional-assets-panel";
+import { downloadResumeExport } from "@/features/resume-studio/resume-download";
 import { useApi } from "@/lib/api/hooks";
 import { useApiMode } from "@/lib/api/mode";
 import type {
@@ -44,6 +47,7 @@ type StudioView = "editor" | "preview" | "diff";
 function ResumeStudioPage() {
   const api = useApi();
   const { mode } = useApiMode();
+  const queryClient = useQueryClient();
   const masterQ = useQuery({
     queryKey: ["resume-studio-master", mode],
     queryFn: () => api.resumeStudioMaster(),
@@ -108,22 +112,18 @@ function ResumeStudioPage() {
 
   const exportMutation = useMutation({
     mutationFn: (format: ResumeExportFormat) =>
-      api.resumeStudioExport(state.present.resume_variant_id, format, templateId),
+      api.resumeStudioExport(state.present.resume_variant_id, format, templateId, pageSize),
     onSuccess: (result) => {
-      if (result.export.status !== "ready" || !result.payload) {
-        toast.warning(result.export.warnings[0] ?? "Exportação ainda pendente.");
-        return;
+      try {
+        downloadResumeExport(result);
+        toast.success(
+          mode === "demo"
+            ? "DEMO: artefato fictício exportado; nenhum dado real foi alterado."
+            : `${result.export.format.toUpperCase()} exportado com o conteúdo renderizado.`,
+        );
+      } catch (error) {
+        toast.warning(error instanceof Error ? error.message : String(error));
       }
-      const blob = new Blob([JSON.stringify(result.payload, null, 2)], {
-        type: "application/json",
-      });
-      const href = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = href;
-      link.download = result.export.file_name;
-      link.click();
-      URL.revokeObjectURL(href);
-      toast.success("JSON Resume validado e exportado.");
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -164,6 +164,12 @@ function ResumeStudioPage() {
         />
       ) : (
         <div className="space-y-5" data-testid="resume-studio">
+          <ResumeImport
+            onImported={(resume) => {
+              queryClient.setQueryData(["resume-studio-master", mode], { resume });
+              dispatch({ type: "replace", variant: variantFromMaster(resume) });
+            }}
+          />
           <StudioToolbar
             view={view}
             onView={setView}
@@ -197,6 +203,7 @@ function ResumeStudioPage() {
               <ResumePreview variant={state.present} pageSize={pageSize} pages={pages} />
             </div>
           </div>
+          <ProfessionalAssetsPanel />
         </div>
       )}
     </AppShell>

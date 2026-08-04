@@ -21,11 +21,13 @@ import {
 import { useEffect, useMemo, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { ApplicationKitReview } from "@/features/application-lab/application-kit-review";
 import { Progress } from "@/components/ui/progress";
 import { useApi } from "@/lib/api/hooks";
 import { useApiMode } from "@/lib/api/mode";
 import type {
   ApplicationLabDetail,
+  ApplicationKitItem,
   ApplicationSuggestion,
   SuggestionStatus,
 } from "@/lib/api/types";
@@ -217,6 +219,59 @@ function ApplicationLabPage() {
     onError: (error: Error) => toast.error(error.message),
   });
 
+  const kitReview = useMutation({
+    mutationFn: ({
+      item,
+      status,
+      editedContent,
+    }: {
+      item: ApplicationKitItem;
+      status: ApplicationKitItem["status"];
+      editedContent?: string;
+    }) => api.applicationLabReviewKitItem(sessionId!, item.item_id, status, editedContent ?? ""),
+    onSuccess: ({ item }) => {
+      const current = qc.getQueryData<ApplicationLabDetail>(detailKey);
+      if (current?.kit) {
+        setDetail({
+          ...current,
+          kit: {
+            ...current.kit,
+            items: current.kit.items.map((candidate) =>
+              candidate.item_id === item.item_id ? item : candidate,
+            ),
+          },
+        });
+      }
+      toast.success(
+        mode === "demo"
+          ? "DEMO: decisão simulada; nenhum dado real foi alterado."
+          : "Decisão do item registrada.",
+      );
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const kitExport = useMutation({
+    mutationFn: () => api.applicationLabExportKit(sessionId!),
+    onSuccess: (result) => {
+      const content = Object.entries(result.items)
+        .map(([type, value]) => `${type.replaceAll("_", " ")}\n${value}`)
+        .join("\n\n");
+      const href = URL.createObjectURL(new Blob([content], { type: "text/plain;charset=utf-8" }));
+      const link = document.createElement("a");
+      link.href = href;
+      link.download = `application-kit-${result.application_kit_id.slice(0, 8)}.txt`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(href), 0);
+      toast.success(
+        mode === "demo"
+          ? "DEMO: exportação fictícia; nenhum dado real foi alterado."
+          : "Kit revisado exportado.",
+      );
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   const plan = useMutation({
     mutationFn: () => api.applicationLabCreatePlan(sessionId!, 7),
     onSuccess: (createdPlan) => {
@@ -252,7 +307,13 @@ function ApplicationLabPage() {
 
   const detail = detailQ.data;
   const operationPending =
-    analyze.isPending || variant.isPending || kit.isPending || plan.isPending || tracker.isPending;
+    analyze.isPending ||
+    variant.isPending ||
+    kit.isPending ||
+    kitReview.isPending ||
+    kitExport.isPending ||
+    plan.isPending ||
+    tracker.isPending;
 
   return (
     <AppShell
@@ -334,11 +395,16 @@ function ApplicationLabPage() {
                 onAnalyze={() => analyze.mutate()}
                 onVariant={() => variant.mutate()}
                 onKit={() => kit.mutate()}
+                onKitReview={(item, status, editedContent) =>
+                  kitReview.mutate({ item, status, editedContent })
+                }
+                onKitExport={() => kitExport.mutate()}
                 onPlan={() => plan.mutate()}
                 onTracker={() => tracker.mutate()}
                 privacyAcknowledged={privacyAcknowledged}
                 onPrivacyAcknowledged={setPrivacyAcknowledged}
                 pending={operationPending || review.isPending}
+                demo={mode === "demo"}
               />
             )}
             <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4">
@@ -663,11 +729,14 @@ function StepPanel({
   onAnalyze,
   onVariant,
   onKit,
+  onKitReview,
+  onKitExport,
   onPlan,
   onTracker,
   privacyAcknowledged,
   onPrivacyAcknowledged,
   pending,
+  demo,
 }: {
   step: number;
   detail: ApplicationLabDetail;
@@ -684,11 +753,18 @@ function StepPanel({
   onAnalyze: () => void;
   onVariant: () => void;
   onKit: () => void;
+  onKitReview: (
+    item: ApplicationKitItem,
+    status: ApplicationKitItem["status"],
+    editedContent?: string,
+  ) => void;
+  onKitExport: () => void;
   onPlan: () => void;
   onTracker: () => void;
   privacyAcknowledged: boolean;
   onPrivacyAcknowledged: (value: boolean) => void;
   pending: boolean;
+  demo: boolean;
 }) {
   const report = detail.report;
   if (step === 1)
@@ -857,19 +933,14 @@ function StepPanel({
             <PrimaryAction onClick={onKit} pending={pending} label="Criar kit" />
           </div>
         ) : (
-          <div className="grid gap-3 md:grid-cols-2">
-            {detail.kit.items.map((item) => (
-              <article key={item.item_id} className="rounded-xl border bg-background p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  {item.type.replaceAll("_", " ")}
-                </p>
-                <p className="mt-3 text-sm leading-6">{item.content}</p>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  {item.evidence_used.length} evidência(s) · revisão pendente
-                </p>
-              </article>
-            ))}
-          </div>
+          <ApplicationKitReview
+            kit={detail.kit}
+            demo={demo}
+            pending={pending}
+            onRegenerate={onKit}
+            onExport={onKitExport}
+            onReview={onKitReview}
+          />
         )}
       </Panel>
     );

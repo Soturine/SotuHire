@@ -1514,6 +1514,7 @@ export type ApplicationLabStatus =
   | "cancelled"
   | "failed";
 export type SuggestionStatus = "pending" | "accepted" | "edited" | "rejected";
+export type KitItemStatus = SuggestionStatus | "stale";
 export type ResumeExportFormat = "json_resume" | "pdf" | "docx";
 export type ResumeEvidence = string | Record<string, unknown>;
 
@@ -1653,7 +1654,7 @@ export interface ApplicationKitItem {
   evidence_used: ResumeEvidence[];
   warnings: string[];
   provider_run_id: string;
-  status: SuggestionStatus;
+  status: KitItemStatus;
   edited_content: string;
   created_at: string;
   updated_at: string;
@@ -1665,6 +1666,8 @@ export interface ApplicationKit {
   title: string;
   items: ApplicationKitItem[];
   warnings: string[];
+  dependency_hash: string;
+  stale_reason: string;
   created_at: string;
   updated_at: string;
 }
@@ -1773,4 +1776,83 @@ export interface ResumeExport {
 export interface ResumeExportResult {
   export: ResumeExport;
   payload: Record<string, unknown> | null;
+}
+
+export interface DocumentPage {
+  number: number;
+  text: string;
+}
+
+export interface DocumentSection {
+  title: string;
+  content: string;
+}
+
+export interface DocumentProvenance {
+  source: string;
+  source_ref: string;
+  extraction_method: string;
+  location: Record<string, string | number>;
+}
+
+export interface IngestedDocument {
+  document_id: string;
+  document_type: "pdf" | "docx" | "html" | "txt" | "json";
+  media_type: string;
+  byte_size: number;
+  status: "accepted" | "needs_review";
+  text_blocks: string[];
+  pages: DocumentPage[];
+  sections: DocumentSection[];
+  structured_data: Record<string, unknown>;
+  source_hash: string;
+  warnings: string[];
+  provenance: DocumentProvenance[];
+}
+
+export interface ResumeIngestionResult {
+  document: IngestedDocument;
+  master_resume_draft: MasterResume;
+}
+
+export type ProfessionalAssetType =
+  | "resume_master"
+  | "resume_variant"
+  | "cover_letter"
+  | "recruiter_message"
+  | "professional_bio"
+  | "about_section"
+  | "portfolio_summary"
+  | "project_highlight"
+  | "application_kit";
+
+export type ProfessionalAssetStatus = "draft" | "review" | "confirmed" | "archived" | "stale";
+
+export interface ProfessionalAsset {
+  asset_id: string;
+  asset_type: ProfessionalAssetType;
+  title: string;
+  status: ProfessionalAssetStatus;
+  content: string;
+  structured_content: Record<string, unknown>;
+  profile_id: string;
+  target_opportunity_id: string;
+  application_lab_session_id: string;
+  evidence_scope_id: string;
+  evidence_scope: Record<string, unknown>;
+  source_refs: string[];
+  evidence_ids: string[];
+  document_snapshot_ids: string[];
+  dependency_hash: string;
+  review_status: "candidate" | "sourced" | "confirmed" | "rejected" | "stale";
+  created_at: string;
+  updated_at: string;
+  stale_at: string | null;
+  stale_reason: string;
+}
+
+export interface ProfessionalAssetsResult {
+  items: ProfessionalAsset[];
+  limit: number;
+  offset: number;
 }

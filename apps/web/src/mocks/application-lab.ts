@@ -259,6 +259,8 @@ export const mockKit: ApplicationKit = {
     },
   ],
   warnings: ["Nenhum item é enviado automaticamente."],
+  dependency_hash: "demo-kit-dependency-hash",
+  stale_reason: "",
   created_at: now,
   updated_at: now,
 };

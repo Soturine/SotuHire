@@ -42,27 +42,27 @@ export function ApiModeBadge({ className }: { className?: string }) {
   const config = {
     demo: {
       icon: Beaker,
-      label: "Modo Demo",
+      label: "DEMO",
       cls: "border-warning/40 bg-warning/15 text-warning-foreground hover:bg-warning/25",
     },
     checking: {
       icon: Loader2,
-      label: "Verificando…",
+      label: "API REAL · VERIFICANDO",
       cls: "border-border bg-muted text-muted-foreground",
     },
     online: {
       icon: Radio,
-      label: "API Online",
+      label: "API REAL · ONLINE",
       cls: "border-success/40 bg-success/15 text-success-foreground hover:bg-success/25",
     },
     offline: {
       icon: WifiOff,
-      label: "API Offline",
+      label: "API REAL · OFFLINE",
       cls: "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20",
     },
     error: {
       icon: WifiOff,
-      label: "Erro API",
+      label: "API REAL · ERRO",
       cls: "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20",
     },
   }[status];
