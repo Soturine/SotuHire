@@ -21,6 +21,8 @@ class JobTracker:
 
     def __init__(self, store: LocalStore | None = None) -> None:
         self.store = store or LocalStore()
+        self.database_path = self.store.path.parent / "sotuhire.db"
+        self.applications = ApplicationRepository(self.database_path)
         memory_path = self.store.path.parent / "memory" / "career-memory.jsonl"
         self.memory = CareerMemory(MemoryStore(memory_path))
 
@@ -50,43 +52,38 @@ class JobTracker:
         existing = self._find_duplicate(job_title, company, source_url)
         if existing is not None:
             previous_status = existing.status
-            saved = self.store.save(
-                existing.model_copy(
-                    update={
-                        "job_title": job_title or existing.job_title,
-                        "company": company or existing.company,
-                        "modality": modality or existing.modality,
-                        "seniority": seniority or existing.seniority,
-                        "source_url": source_url or existing.source_url,
-                        "source_urls": _merge_sources(
-                            existing.source_urls or [existing.source_url], source_url
-                        ),
-                        "source_domains": _merge_domains(
-                            existing.source_domains, existing.source_url, source_url
-                        ),
-                        "collection_method": collection_method,
-                        "requirements": requirements
-                        or list(analysis.missing_keywords)
-                        or existing.requirements,
-                        "analysis": analysis,
-                        "tailor": tailor or existing.tailor,
-                        "notes": notes or existing.notes,
-                        "privacy_acknowledged": privacy_acknowledged
-                        or existing.privacy_acknowledged,
-                        "status": (
-                            JobStatus.APPLIED
-                            if existing.status == JobStatus.APPLIED
-                            else (
-                                JobStatus.GOOD_FIT
-                                if analysis.should_apply()
-                                else JobStatus.ANALYZED
-                            )
-                        ),
-                        "updated_at": utc_now(),
-                        "source_capture_id": source_capture_id or existing.source_capture_id,
-                    }
-                )
+            candidate = existing.model_copy(
+                update={
+                    "job_title": job_title or existing.job_title,
+                    "company": company or existing.company,
+                    "modality": modality or existing.modality,
+                    "seniority": seniority or existing.seniority,
+                    "source_url": source_url or existing.source_url,
+                    "source_urls": _merge_sources(
+                        existing.source_urls or [existing.source_url], source_url
+                    ),
+                    "source_domains": _merge_domains(
+                        existing.source_domains, existing.source_url, source_url
+                    ),
+                    "collection_method": collection_method,
+                    "requirements": requirements
+                    or list(analysis.missing_keywords)
+                    or existing.requirements,
+                    "analysis": analysis,
+                    "tailor": tailor or existing.tailor,
+                    "notes": notes or existing.notes,
+                    "privacy_acknowledged": privacy_acknowledged or existing.privacy_acknowledged,
+                    "status": (
+                        JobStatus.APPLIED
+                        if existing.status == JobStatus.APPLIED
+                        else (JobStatus.GOOD_FIT if analysis.should_apply() else JobStatus.ANALYZED)
+                    ),
+                    "updated_at": utc_now(),
+                    "source_capture_id": source_capture_id or existing.source_capture_id,
+                },
             )
+            _require_privacy(candidate)
+            saved = candidate
             saved = self._persist_reliable_state(
                 saved,
                 job_text=job_text,
@@ -128,7 +125,8 @@ class JobTracker:
             requirements=requirements or list(analysis.missing_keywords),
             source_capture_id=source_capture_id,
         )
-        saved = self.store.save(record)
+        _require_privacy(record)
+        saved = record
         saved = self._persist_reliable_state(
             saved,
             job_text=job_text,
@@ -162,7 +160,7 @@ class JobTracker:
 
     def change_status(self, record_id: str, status: JobStatus | str) -> StoredAnalysis:
         """Change a record status after validating the target state."""
-        record = self.store.get(record_id)
+        record = self._get_record(record_id)
         if record is None:
             raise KeyError(f"Analise nao encontrada: {record_id}")
         record.status = JobStatus(status)
@@ -171,8 +169,8 @@ class JobTracker:
             *record.stage_history,
             {"status": record.status.value, "at": record.updated_at.isoformat()},
         ]
-        saved = self.store.save(record)
-        self._persist_application(saved)
+        self._persist_application(record)
+        saved = record
         self.memory.remember_tracker_event(
             record_id=saved.id,
             status=saved.status.value,
@@ -206,29 +204,27 @@ class JobTracker:
         if existing is not None:
             status_changed = existing.status != JobStatus.APPLIED
             applied_at = existing.applied_at or utc_now()
-            saved = self.store.save(
-                existing.model_copy(
-                    update={
-                        "status": JobStatus.APPLIED,
-                        "source_url": existing.source_url or source_url,
-                        "source_urls": _merge_sources(
-                            existing.source_urls or [existing.source_url], source_url
-                        ),
-                        "source_domains": _merge_domains(
-                            existing.source_domains, existing.source_url, source_url
-                        ),
-                        "requirements": _merge_unique(existing.requirements, requirements or []),
-                        "modality": existing.modality or modality,
-                        "seniority": existing.seniority or seniority,
-                        "updated_at": utc_now(),
-                        "applied_at": applied_at,
-                        "source_capture_id": source_capture_id or existing.source_capture_id,
-                        "stage_history": [
-                            *existing.stage_history,
-                            {"status": JobStatus.APPLIED.value, "at": applied_at.isoformat()},
-                        ],
-                    }
-                )
+            saved = existing.model_copy(
+                update={
+                    "status": JobStatus.APPLIED,
+                    "source_url": existing.source_url or source_url,
+                    "source_urls": _merge_sources(
+                        existing.source_urls or [existing.source_url], source_url
+                    ),
+                    "source_domains": _merge_domains(
+                        existing.source_domains, existing.source_url, source_url
+                    ),
+                    "requirements": _merge_unique(existing.requirements, requirements or []),
+                    "modality": existing.modality or modality,
+                    "seniority": existing.seniority or seniority,
+                    "updated_at": utc_now(),
+                    "applied_at": applied_at,
+                    "source_capture_id": source_capture_id or existing.source_capture_id,
+                    "stage_history": [
+                        *existing.stage_history,
+                        {"status": JobStatus.APPLIED.value, "at": applied_at.isoformat()},
+                    ],
+                },
             )
             saved = self._persist_reliable_state(saved)
             if status_changed:
@@ -258,7 +254,7 @@ class JobTracker:
             applied_at=applied_at,
             stage_history=[{"status": JobStatus.APPLIED.value, "at": applied_at.isoformat()}],
         )
-        saved = self.store.save(record)
+        saved = record
         saved = self._persist_reliable_state(saved)
         self.memory.remember_opportunity(
             title=job_title,
@@ -277,8 +273,20 @@ class JobTracker:
         return saved
 
     def list_analyses(self) -> list[StoredAnalysis]:
-        """Return the stored history."""
-        return self.store.list_analyses()
+        """Return SQLite truth, with read-only legacy fallback before migration."""
+        records = [
+            _stored_from_application(item) for item in self.applications.list() if item.payload
+        ]
+        validated = [item for item in records if item is not None]
+        return validated if validated else self.store.list_analyses()
+
+    def update_notes(self, record_id: str, notes: str) -> StoredAnalysis:
+        record = self._get_record(record_id)
+        if record is None:
+            raise KeyError(f"Analise nao encontrada: {record_id}")
+        updated = record.model_copy(update={"notes": notes, "updated_at": utc_now()})
+        self._persist_application(updated)
+        return updated
 
     def _persist_reliable_state(
         self,
@@ -293,8 +301,7 @@ class JobTracker:
         existing_resume_snapshot_id: str = "",
     ) -> StoredAnalysis:
         """Link the mutable tracker card to immutable evidence snapshots."""
-        database = self.store.path.parent / "sotuhire.db"
-        snapshots = SnapshotStore(database)
+        snapshots = SnapshotStore(self.database_path)
         job_snapshot = (
             snapshots.get_job(existing_job_snapshot_id) if existing_job_snapshot_id else None
         )
@@ -326,7 +333,8 @@ class JobTracker:
             resume_snapshot = snapshots.create_resume(
                 ResumeSnapshot(
                     profile_id=profile_id,
-                    resume_variant_id=resume_variant_id,
+                    resume_variant_id=(resume_variant_id if resume_variant_id != "master" else ""),
+                    document_kind="variant" if resume_variant_id != "master" else "legacy",
                     title="Currículo usado na análise",
                     content=resume_text,
                 )
@@ -376,6 +384,7 @@ class JobTracker:
                 ResumeSnapshot(
                     profile_id=profile_id,
                     resume_variant_id=f"tailored-{record.id}",
+                    document_kind="variant",
                     title=f"Currículo ajustado para {record.job_title or 'oportunidade'}",
                     content=record.tailor.model_dump_json(indent=2),
                     structured_sections=record.tailor.model_dump(mode="json"),
@@ -397,13 +406,11 @@ class JobTracker:
                 "stage_history": stage_history,
             }
         )
-        saved = self.store.save(linked)
-        self._persist_application(saved)
-        return saved
+        self._persist_application(linked)
+        return linked
 
     def _persist_application(self, record: StoredAnalysis) -> None:
-        database = self.store.path.parent / "sotuhire.db"
-        ApplicationRepository(database).save(
+        self.applications.save(
             ApplicationRecord(
                 id=record.id,
                 job_snapshot_id=record.job_snapshot_id,
@@ -435,7 +442,7 @@ class JobTracker:
         company: str,
         source_url: str,
     ) -> StoredAnalysis | None:
-        for record in self.store.list_analyses():
+        for record in self.list_analyses():
             record_urls = record.source_urls or ([record.source_url] if record.source_url else [])
             if same_opportunity(
                 left_title=record.job_title,
@@ -446,6 +453,32 @@ class JobTracker:
                 right_url=source_url,
             ):
                 return record
+        return None
+
+    def _get_record(self, record_id: str) -> StoredAnalysis | None:
+        application = self.applications.get(record_id)
+        if application is not None and application.payload:
+            stored = _stored_from_application(application)
+            if stored is not None:
+                return stored
+        return self.store.get(record_id)
+
+
+def _require_privacy(record: StoredAnalysis) -> None:
+    if not record.privacy_acknowledged:
+        raise ValueError("Confirme o aviso de privacidade antes de salvar.")
+
+
+def _stored_from_application(record: ApplicationRecord) -> StoredAnalysis | None:
+    try:
+        return StoredAnalysis.model_validate(
+            {
+                key: value
+                for key, value in record.payload.items()
+                if key in StoredAnalysis.model_fields
+            }
+        )
+    except ValueError:
         return None
 
 

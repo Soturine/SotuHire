@@ -197,3 +197,16 @@ A migration 5 adiciona `application_lab_sessions`, `application_readiness_report
 Há foreign keys, índices de sessão/mestre/vaga/status, timestamps e checks de estado. Quatro templates ATS-safe são semeados idempotentemente. O runner continua transacional e registra schema version 5.
 
 Para validar esta migration, use sempre diretório e banco temporários explícitos; nunca omita `--data-dir` em um ambiente que contenha dados pessoais.
+
+## Migration 6 — hardening semântico e documentos
+
+A migration 6 é o único incremento da v1.9.9. Ela acrescenta estados de
+evidência, `EvidenceScope`, hashes de dependência e staleness, bundle de análise,
+campos canônicos de snapshots, ingestão documental, Professional Assets,
+idempotência e locks locais. Em `applications`, uma captura ainda não conciliada
+usa `source_capture_external_reference` e `link_state=pending_link`; nenhuma linha
+fictícia é criada em `captures`.
+
+O schema alvo permanece exatamente 6. Upgrade suportado parte do schema 5 e é
+validado por `MigrationRunner.verify()`, `foreign_key_check` e teste de execução
+repetida.

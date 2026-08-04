@@ -32,6 +32,7 @@ from modules.application_lab.models import (
 )
 from modules.application_lab.repository import ApplicationLabRepository
 from modules.context import CareerContextEngine, CareerContextPurpose
+from modules.core.dependency_graph import fingerprint_dependencies
 from modules.evidence import EvidenceReviewStatus
 from modules.professional_assets import (
     AssetStatus,
@@ -39,10 +40,12 @@ from modules.professional_assets import (
     ProfessionalAsset,
     ProfessionalAssetRepository,
 )
-from modules.storage.applications import ApplicationRepository
+from modules.storage.applications import ApplicationRecord, ApplicationRepository
 from modules.storage.local_store import LocalStore
+from modules.storage.models import StoredAnalysis
 from modules.storage.snapshots import AnalysisSnapshot, JobSnapshot, ResumeSnapshot, SnapshotStore
 from modules.tracker.job_tracker import JobTracker
+from modules.tracker.status import JobStatus
 
 ReviewAction = Literal["accepted", "edited", "rejected", "pending"]
 
@@ -738,82 +741,95 @@ class ApplicationLabService:
         analysis = match_result_to_job_analysis(bundle.match_result).model_copy(
             update={"ats_score": bundle.ats_result.ats_score}
         )
-        stored = self.tracker.add_analysis(
-            analysis,
+        operation = fingerprint_dependencies(
+            profile=master.profile_id or "default",
+            opportunity_identity=job.opportunity_id or job.content_hash,
+            job_snapshot=job.snapshot_id,
+            resume_snapshot=resume_snapshot.snapshot_id,
+            application_lab_session=session_id,
+            action_type="save_to_tracker",
+        )
+        now = utc_now()
+        stored = StoredAnalysis(
+            id=f"application-{operation.digest[:28]}",
             job_title=job.title,
             company=job.organization,
             modality=job.location,
+            status=(JobStatus.GOOD_FIT if analysis.should_apply() else JobStatus.ANALYZED),
+            analysis=analysis,
             notes="Criado pelo Application Lab; revisar antes de qualquer candidatura.",
             privacy_acknowledged=True,
             source_url=job.source_url,
+            source_urls=list(job.source_refs),
             collection_method="browser_assisted_capture" if source_capture_id else "manual_url",
             requirements=requirements,
-            profile_id=master.profile_id or "default",
-            resume_variant_id=variant.resume_variant_id if variant else master.master_resume_id,
             source_capture_id=source_capture_id,
-            trace={
-                "provider_requested": "local",
-                "provider_used": "local",
-                "prompt_id": "application_readiness_rules_v1",
-                "prompt_version": "1.0.0",
-                "fallback_used": False,
-            },
-            existing_job_snapshot_id=job.snapshot_id,
-            existing_resume_snapshot_id=resume_snapshot.snapshot_id,
+            job_snapshot_id=job.snapshot_id,
+            resume_snapshot_id=resume_snapshot.snapshot_id,
+            match_analysis_snapshot_id=bundle.match_snapshot_id,
+            ats_analysis_snapshot_id=bundle.ats_snapshot_id,
+            stage_history=[
+                {
+                    "status": (
+                        JobStatus.GOOD_FIT.value
+                        if analysis.should_apply()
+                        else JobStatus.ANALYZED.value
+                    ),
+                    "at": now.isoformat(),
+                }
+            ],
+            created_at=now,
+            updated_at=now,
         )
-        application = self.applications.get(stored.id)
-        if application is None:
-            raise RuntimeError("Tracker não persistiu o vínculo relacional esperado.")
         lab_snapshot_id = bundle.readiness_snapshot_id
         kit_snapshot_id = _kit_snapshot_id(session.analysis_run_ids, self.snapshots)
-        self.applications.save(
-            application.model_copy(
-                update={
-                    "application_lab_session_id": session_id,
-                    "readiness_report_id": report.report_id,
-                    "resume_variant_id": session.resume_variant_id,
-                    "application_kit_id": session.application_kit_id,
-                    "action_plan_id": session.action_plan_id,
-                    "lab_analysis_snapshot_id": lab_snapshot_id,
-                    "match_analysis_snapshot_id": bundle.match_snapshot_id,
-                    "ats_analysis_snapshot_id": bundle.ats_snapshot_id,
-                    "readiness_analysis_snapshot_id": bundle.readiness_snapshot_id,
-                    "tailor_analysis_snapshot_id": bundle.tailor_snapshot_id,
-                    "analysis_bundle_id": bundle.bundle_id,
-                    "application_kit_snapshot_id": kit_snapshot_id,
-                    "dependency_hash": bundle.dependency_hash,
-                    "payload": {
-                        **application.payload,
-                        "application_lab": {
-                            "session_id": session_id,
-                            "readiness_score": report.readiness_score,
-                            "readiness_is_probability": False,
-                            "match_score": bundle.match_result.score_breakdown.match_score,
-                            "ats_score": bundle.ats_result.ats_score,
-                            "opportunity_fit_score": (
-                                bundle.match_result.score_breakdown.opportunity_fit_score
-                            ),
-                            "confidence_score": (
-                                bundle.match_result.score_breakdown.confidence_score
-                            ),
-                            "risk_score": bundle.match_result.score_breakdown.risk_score,
-                        },
-                    },
-                }
-            )
+        application_payload = {
+            **stored.model_dump(mode="json"),
+            "application_lab": {
+                "session_id": session_id,
+                "readiness_score": report.readiness_score,
+                "readiness_is_probability": False,
+                "match_score": bundle.match_result.score_breakdown.match_score,
+                "ats_score": bundle.ats_result.ats_score,
+                "opportunity_fit_score": (
+                    bundle.match_result.score_breakdown.opportunity_fit_score
+                ),
+                "confidence_score": bundle.match_result.score_breakdown.confidence_score,
+                "risk_score": bundle.match_result.score_breakdown.risk_score,
+            },
+        }
+        application = self.applications.complete_lab_transaction(
+            ApplicationRecord(
+                id=stored.id,
+                job_snapshot_id=job.snapshot_id,
+                resume_snapshot_id=resume_snapshot.snapshot_id,
+                match_analysis_snapshot_id=bundle.match_snapshot_id,
+                ats_analysis_snapshot_id=bundle.ats_snapshot_id,
+                source_capture_id=source_capture_id,
+                job_title=job.title,
+                organization=job.organization,
+                source_url=job.source_url,
+                status=stored.status.value,
+                stage_history=stored.stage_history,
+                application_lab_session_id=session_id,
+                readiness_report_id=report.report_id,
+                resume_variant_id=session.resume_variant_id,
+                application_kit_id=session.application_kit_id,
+                action_plan_id=session.action_plan_id,
+                lab_analysis_snapshot_id=lab_snapshot_id,
+                readiness_analysis_snapshot_id=bundle.readiness_snapshot_id,
+                tailor_analysis_snapshot_id=bundle.tailor_snapshot_id,
+                analysis_bundle_id=bundle.bundle_id,
+                application_kit_snapshot_id=kit_snapshot_id,
+                dependency_hash=bundle.dependency_hash,
+                payload=application_payload,
+                created_at=now,
+                updated_at=now,
+            ),
+            session_id=session_id,
+            idempotency_key=operation.digest,
         )
-        self.repository.save_session(
-            session.model_copy(
-                update={
-                    "tracker_application_id": stored.id,
-                    "status": ApplicationLabStatus.COMPLETED,
-                    "current_step": 10,
-                    "completed_at": utc_now(),
-                    "updated_at": utc_now(),
-                }
-            )
-        )
-        return stored.id
+        return application.id
 
     def _resume_snapshot(
         self,

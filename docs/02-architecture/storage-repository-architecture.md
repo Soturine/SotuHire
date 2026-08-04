@@ -100,13 +100,16 @@ Health check e verificação de migrações usam `connect_readonly_database()`, 
 
 A migração não troca todos os stores de uma vez:
 
-- `LocalStore` e stores de domínio existentes continuam atendendo fluxos legados;
-- o Tracker mantém o cartão mutável no JSON e também persiste vínculos confiáveis em SQLite;
+- `LocalStore` é somente compatibilidade de import/export e fallback de leitura antes da
+  primeira gravação canônica;
+- o Tracker lê e grava novos cartões em `applications` no SQLite; não faz dual-write JSON;
 - Editais continuam com estado revisável em JSON e criam histórico imutável no SQLite;
 - a Local Companion mantém sua fila/capturas e cria snapshots no banco local;
 - scripts de migração importam cópias dos stores conhecidos, sem apagá-los.
 
-Essa duplicidade é deliberada enquanto a transição está em andamento. O SQLite é a fonte dos vínculos e snapshots novos; os JSON/JSONL continuam sendo fontes legadas compatíveis até que cada módulo seja migrado de forma explícita.
+SQLite é a fonte de verdade de candidaturas, eventos, links e snapshots. Os
+JSON/JSONL continuam como fontes legadas preservadas até migração explícita, mas
+não recebem novas gravações do Tracker.
 
 ## Transações e atomicidade
 
@@ -114,6 +117,11 @@ Essa duplicidade é deliberada enquanto a transição está em andamento. O SQLi
 - a importação dos registros legados ocorre dentro de `BEGIN IMMEDIATE`;
 - inserts repetidos são controlados por `legacy_migration_history`;
 - adapters JSON/JSONL usam troca de arquivo, mas não oferecem transação entre vários stores;
+- a conclusão do Application Lab usa `BEGIN IMMEDIATE` para cartão, links,
+  `application_created`, status da sessão e chave idempotente;
+- a chave estável combina perfil, identidade da oportunidade, snapshots, sessão e ação;
+- referências de captura inexistentes ficam em `pending_link` com referência externa,
+  sem criar entidade fictícia para satisfazer FK;
 - backup e restore possuem suas próprias garantias, descritas em [Backup, restauração e saúde dos dados](backup-restore-and-data-health.md).
 
 ## Segurança

@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from modules.context import CareerContext, CareerContextEngine, CareerContextPurpose, context_brief
 from modules.core.text_utils import normalize_text
 from modules.schemas.job_analysis import JobAnalysisSchema
-from modules.storage.models import StoredAnalysis, utc_now
+from modules.storage.models import StoredAnalysis
 from modules.tracker.dashboard import (
     calculate_application_funnel,
     calculate_dashboard_metrics,
@@ -103,9 +103,7 @@ class TrackerService:
         except (KeyError, ValueError) as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         if notes is not None and notes != record.notes:
-            record.notes = notes
-            record.updated_at = utc_now()
-            record = self.tracker.store.save(record)
+            record = self.tracker.update_notes(record.id, notes)
         context = _tracker_context([record])
         return TrackerJobResponse(job=record, **_job_context(record, context).model_dump())
 

@@ -883,6 +883,8 @@ def _migration_006(connection: sqlite3.Connection) -> None:
             "tailor_analysis_snapshot_id": "TEXT",
             "analysis_bundle_id": "TEXT",
             "dependency_hash": "TEXT NOT NULL DEFAULT ''",
+            "source_capture_external_reference": "TEXT NOT NULL DEFAULT ''",
+            "link_state": "TEXT NOT NULL DEFAULT 'not_applicable'",
         },
     }
     for table, columns in additions.items():

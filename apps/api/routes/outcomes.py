@@ -22,6 +22,8 @@ def create_event(payload: OutcomeEvent) -> ApiEnvelope[OutcomeEvent]:
         return ok(OutcomeStore().save(payload))
     except LookupError as exc:
         raise HTTPException(status_code=404, detail="Application not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/applications/{application_id}", response_model=ApiEnvelope[list[OutcomeEvent]])

@@ -18,6 +18,7 @@ from modules.application_lab.service import ApplicationLabService
 from modules.context.models import CareerContext, CareerContextPurpose
 from modules.professional_assets import ProfessionalAssetRepository
 from modules.storage.applications import ApplicationRepository
+from modules.storage.database import connect_database
 from modules.storage.snapshots import JobSnapshot, SnapshotStore
 
 
@@ -158,7 +159,10 @@ def test_full_application_lab_journey_links_snapshots_and_tracker(tmp_path) -> N
     assert kit_id == kit.application_kit_id
     assert exported_items[reviewable.type] == accepted_item.content
     regenerated, regenerated_snapshot = service.create_kit(session.session_id)
-    assert next(item for item in regenerated.items if item.type == reviewable.type).status == "accepted"
+    assert (
+        next(item for item in regenerated.items if item.type == reviewable.type).status
+        == "accepted"
+    )
     assets = ProfessionalAssetRepository(tmp_path / "sotuhire.db").list(
         session_id=session.session_id
     )
@@ -175,9 +179,15 @@ def test_full_application_lab_journey_links_snapshots_and_tracker(tmp_path) -> N
         privacy_acknowledged=True,
         source_capture_id="capture-fixture",
     )
+    retried_tracker_id = service.save_to_tracker(
+        session.session_id,
+        privacy_acknowledged=True,
+        source_capture_id="capture-fixture",
+    )
     completed = service.repository.get_session(session.session_id)
     application = ApplicationRepository(tmp_path / "sotuhire.db").get(tracker_id)
     assert completed is not None and completed.status is ApplicationLabStatus.COMPLETED
+    assert retried_tracker_id == tracker_id
     assert application is not None
     assert application.application_lab_session_id == session.session_id
     assert application.readiness_report_id == report.report_id
@@ -192,6 +202,14 @@ def test_full_application_lab_journey_links_snapshots_and_tracker(tmp_path) -> N
     assert application.analysis_bundle_id == bundle.bundle_id
     assert application.dependency_hash == bundle.dependency_hash
     assert application.application_kit_snapshot_id == regenerated_snapshot.snapshot_id
+    assert application.source_capture_id == ""
+    assert application.source_capture_external_reference == "capture-fixture"
+    assert application.link_state == "pending_link"
+    with connect_database(tmp_path / "sotuhire.db") as connection:
+        assert connection.execute("SELECT COUNT(*) FROM captures").fetchone()[0] == 0
+        assert connection.execute("SELECT COUNT(*) FROM applications").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM outcome_events").fetchone()[0] == 1
+        assert connection.execute("SELECT COUNT(*) FROM idempotency_records").fetchone()[0] == 1
     assert service.snapshots.get_job(application.job_snapshot_id) == job
 
 

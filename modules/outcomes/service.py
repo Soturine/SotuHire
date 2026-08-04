@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import json
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from statistics import mean
 from typing import Any, Literal
@@ -29,10 +29,16 @@ def sample_confidence(sample_size: int) -> SampleConfidence:
 class OutcomeStore:
     """Persist explicit events and calculate non-causal, sample-labelled signals."""
 
-    def __init__(self, database_path: str | Path | None = None) -> None:
+    def __init__(
+        self,
+        database_path: str | Path | None = None,
+        *,
+        no_response_window_days: int = 14,
+    ) -> None:
         self.database_path = (
             Path(database_path) if database_path is not None else default_database_path()
         )
+        self.no_response_window_days = max(1, no_response_window_days)
 
     def save(self, event: OutcomeEvent) -> OutcomeEvent:
         ensure_database(self.database_path)
@@ -49,6 +55,12 @@ class OutcomeStore:
             ).fetchone()
             if application is None:
                 raise LookupError("Application not found")
+            if safe.event_type == "no_response":
+                _validate_no_response_window(
+                    connection,
+                    safe,
+                    window_days=self.no_response_window_days,
+                )
             connection.execute(
                 """INSERT INTO outcome_events
                 (event_id, application_id, event_type, occurred_at, source, resume_variant_id,
@@ -92,27 +104,30 @@ class OutcomeStore:
         by_application: dict[str, list[OutcomeEvent]] = defaultdict(list)
         for event in events:
             by_application[event.application_id].append(event)
-        sample_size = len(by_application)
-        responses = _applications_with(by_application, {"response_received"})
-        interviews = _applications_with(
-            by_application, {"interview_scheduled", "interview_completed"}
-        )
-        offers = _applications_with(by_application, {"offer_received"})
+        submitted_ids = _applications_with(by_application, {"application_submitted_manually"})
+        eligible = {
+            application_id: by_application[application_id] for application_id in submitted_ids
+        }
+        sample_size = len(eligible)
+        responses = _applications_with(eligible, {"response_received"})
+        interviews = _applications_with(eligible, {"interview_scheduled", "interview_completed"})
+        offers = _applications_with(eligible, {"offer_received"})
+        eligible_events = [event for event in events if event.application_id in submitted_ids]
         summary = OutcomeSummary(
             sample_size=sample_size,
             confidence=sample_confidence(sample_size),
             response_rate=_rate(len(responses), sample_size, "resposta"),
             interview_rate=_rate(len(interviews), sample_size, "entrevista"),
             offer_rate=_rate(len(offers), sample_size, "oferta"),
-            average_time_to_response_hours=_average_time_to_response(by_application),
-            average_time_in_stage_hours=_average_stage_time(by_application),
-            source_effectiveness=_groups(by_application, "source"),
-            resume_variant_effectiveness=_groups(by_application, "resume_variant_id"),
+            average_time_to_response_hours=_average_time_to_response(eligible),
+            average_time_in_stage_hours=_average_stage_time(eligible),
+            source_effectiveness=_groups(eligible, "source"),
+            resume_variant_effectiveness=_groups(eligible, "resume_variant_id"),
             match_score_vs_outcome=_score_signal(
-                events, "match_score", responses | interviews | offers
+                eligible_events, "match_score", responses | interviews | offers
             ),
             ats_score_vs_outcome=_score_signal(
-                events, "ats_score", responses | interviews | offers
+                eligible_events, "ats_score", responses | interviews | offers
             ),
         )
         self._cache_summary(summary)
@@ -253,6 +268,27 @@ def _safe_metadata(metadata: dict[str, Any]) -> dict[str, Any]:
         for key, value in metadata.items()
         if key in allowed and isinstance(value, (str, bool, int, float, type(None)))
     }
+
+
+def _validate_no_response_window(
+    connection: Any,
+    event: OutcomeEvent,
+    *,
+    window_days: int,
+) -> None:
+    row = connection.execute(
+        """SELECT occurred_at FROM outcome_events
+        WHERE application_id = ? AND event_type = 'application_submitted_manually'
+        ORDER BY occurred_at LIMIT 1""",
+        (event.application_id,),
+    ).fetchone()
+    if row is None:
+        raise ValueError("no_response exige candidatura submetida manualmente.")
+    submitted_at = datetime.fromisoformat(str(row["occurred_at"]).replace("Z", "+00:00"))
+    if event.occurred_at < submitted_at + timedelta(days=window_days):
+        raise ValueError(
+            f"no_response só pode ser registrado após {window_days} dias configurados."
+        )
 
 
 def _from_row(row: Any) -> OutcomeEvent:

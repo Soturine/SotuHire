@@ -1,5 +1,6 @@
 from datetime import UTC, datetime, timedelta
 
+import pytest
 from modules.ai.feedback import AiFeedback, AiFeedbackStore
 from modules.outcomes import OutcomeEvent, OutcomeStore
 from modules.storage.ai_runs import AiRun, AiRunStore
@@ -68,3 +69,49 @@ def test_outcomes_show_small_sample_and_non_causal_signals(tmp_path) -> None:
     assert summary.average_time_to_response_hours == 48
     assert "causalidade" in summary.note
     assert "Amostra pequena" in summary.response_rate.note
+
+
+def test_outcome_denominator_uses_only_manual_submissions_and_keeps_no_reply(tmp_path) -> None:
+    database = tmp_path / "sotuhire.db"
+    draft = ApplicationRepository(database).save(ApplicationRecord(id="draft"))
+    submitted = ApplicationRepository(database).save(ApplicationRecord(id="submitted"))
+    store = OutcomeStore(database, no_response_window_days=7)
+    started = datetime(2026, 1, 1, tzinfo=UTC)
+    store.save(
+        OutcomeEvent(
+            application_id=draft.id,
+            event_type="application_created",
+            occurred_at=started,
+        )
+    )
+    store.save(
+        OutcomeEvent(
+            application_id=submitted.id,
+            event_type="application_submitted_manually",
+            occurred_at=started,
+        )
+    )
+
+    summary = store.summary()
+
+    assert summary.sample_size == 1
+    assert summary.response_rate.denominator == 1
+    assert summary.response_rate.numerator == 0
+
+    with pytest.raises(ValueError, match="7 dias"):
+        store.save(
+            OutcomeEvent(
+                application_id=submitted.id,
+                event_type="no_response",
+                occurred_at=started + timedelta(days=6),
+            )
+        )
+
+    store.save(
+        OutcomeEvent(
+            application_id=submitted.id,
+            event_type="no_response",
+            occurred_at=started + timedelta(days=8),
+        )
+    )
+    assert store.summary().response_rate.denominator == 1
