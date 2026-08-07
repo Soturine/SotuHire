@@ -281,42 +281,51 @@ def _nested_score(payload: dict[str, Any], name: str) -> float | None:
     return float(value) if isinstance(value, int | float) else None
 
 
+def _row_value(row: Any, key: str, default: Any = "") -> Any:
+    """Read columns added by explicit migrations without mutating legacy databases."""
+    try:
+        return row[key]
+    except (IndexError, KeyError):
+        return default
+
+
 def _from_row(row: Any) -> ApplicationRecord:
     return ApplicationRecord(
-        id=row["id"],
-        job_snapshot_id=row["job_snapshot_id"] or "",
-        resume_snapshot_id=row["resume_snapshot_id"] or "",
-        tailored_resume_snapshot_id=row["tailored_resume_snapshot_id"] or "",
-        match_analysis_snapshot_id=row["match_analysis_snapshot_id"] or "",
-        ats_analysis_snapshot_id=row["ats_analysis_snapshot_id"] or "",
-        source_capture_id=row["source_capture_id"] or "",
-        source_capture_external_reference=row["source_capture_external_reference"] or "",
-        link_state=row["link_state"],
-        job_title=row["job_title"],
-        organization=row["organization"],
-        source_url=row["source_url"],
-        status=row["status"],
-        applied_at=row["applied_at"],
-        stage_history=_load(row["stage_history"], []),
-        contact_history=_load(row["contact_history"], []),
-        interview_notes=row["interview_notes"],
-        follow_up_at=row["follow_up_at"],
-        outcome=row["outcome"],
-        outcome_reason=row["outcome_reason"],
-        application_lab_session_id=row["application_lab_session_id"] or "",
-        readiness_report_id=row["readiness_report_id"] or "",
-        resume_variant_id=row["resume_variant_id"] or "",
-        application_kit_id=row["application_kit_id"] or "",
-        action_plan_id=row["action_plan_id"] or "",
-        lab_analysis_snapshot_id=row["lab_analysis_snapshot_id"] or "",
-        readiness_analysis_snapshot_id=row["readiness_analysis_snapshot_id"] or "",
-        tailor_analysis_snapshot_id=row["tailor_analysis_snapshot_id"] or "",
-        analysis_bundle_id=row["analysis_bundle_id"] or "",
-        application_kit_snapshot_id=row["application_kit_snapshot_id"] or "",
-        dependency_hash=row["dependency_hash"],
-        payload=_load(row["payload"], {}),
-        created_at=row["created_at"],
-        updated_at=row["updated_at"],
+        id=_row_value(row, "id"),
+        job_snapshot_id=_row_value(row, "job_snapshot_id") or "",
+        resume_snapshot_id=_row_value(row, "resume_snapshot_id") or "",
+        tailored_resume_snapshot_id=_row_value(row, "tailored_resume_snapshot_id") or "",
+        match_analysis_snapshot_id=_row_value(row, "match_analysis_snapshot_id") or "",
+        ats_analysis_snapshot_id=_row_value(row, "ats_analysis_snapshot_id") or "",
+        source_capture_id=_row_value(row, "source_capture_id") or "",
+        source_capture_external_reference=_row_value(row, "source_capture_external_reference")
+        or "",
+        link_state=_row_value(row, "link_state", "not_applicable"),
+        job_title=_row_value(row, "job_title"),
+        organization=_row_value(row, "organization"),
+        source_url=_row_value(row, "source_url"),
+        status=_row_value(row, "status", "found"),
+        applied_at=_row_value(row, "applied_at", None),
+        stage_history=_load(_row_value(row, "stage_history", "[]"), []),
+        contact_history=_load(_row_value(row, "contact_history", "[]"), []),
+        interview_notes=_row_value(row, "interview_notes"),
+        follow_up_at=_row_value(row, "follow_up_at", None),
+        outcome=_row_value(row, "outcome"),
+        outcome_reason=_row_value(row, "outcome_reason"),
+        application_lab_session_id=_row_value(row, "application_lab_session_id") or "",
+        readiness_report_id=_row_value(row, "readiness_report_id") or "",
+        resume_variant_id=_row_value(row, "resume_variant_id") or "",
+        application_kit_id=_row_value(row, "application_kit_id") or "",
+        action_plan_id=_row_value(row, "action_plan_id") or "",
+        lab_analysis_snapshot_id=_row_value(row, "lab_analysis_snapshot_id") or "",
+        readiness_analysis_snapshot_id=_row_value(row, "readiness_analysis_snapshot_id") or "",
+        tailor_analysis_snapshot_id=_row_value(row, "tailor_analysis_snapshot_id") or "",
+        analysis_bundle_id=_row_value(row, "analysis_bundle_id") or "",
+        application_kit_snapshot_id=_row_value(row, "application_kit_snapshot_id") or "",
+        dependency_hash=_row_value(row, "dependency_hash"),
+        payload=_load(_row_value(row, "payload", "{}"), {}),
+        created_at=_row_value(row, "created_at", utc_now()),
+        updated_at=_row_value(row, "updated_at", utc_now()),
     )
 
 
