@@ -10,13 +10,14 @@ ROOT = Path(__file__).resolve().parents[1]
 SCREENSHOTS = ROOT / "docs" / "assets" / "screenshots"
 TARGET = SCREENSHOTS / "sotuhire-v1.9.9-document-to-application-walkthrough.gif"
 FRAMES = [
-    "sotuhire-v1.9.9-api-real.png",
     "sotuhire-v1.9.9-import-pdf.png",
     "sotuhire-v1.9.9-block-review.png",
     "sotuhire-v1.9.9-provenance.png",
     "sotuhire-v1.9.9-master-resume.png",
     "sotuhire-v1.9.9-application-analysis-bundle.png",
+    "sotuhire-v1.9.9-requirement-unknown.png",
     "sotuhire-v1.9.9-application-variant-diff.png",
+    "sotuhire-v1.9.9-professional-assets.png",
     "sotuhire-v1.9.9-application-kit-review.png",
     "sotuhire-v1.9.9-resume-preview.png",
     "sotuhire-v1.9.9-pdf-export.png",
@@ -37,7 +38,7 @@ def main() -> None:
         TARGET,
         save_all=True,
         append_images=rest,
-        duration=1200,
+        duration=1400,
         loop=0,
         optimize=True,
         disposal=2,

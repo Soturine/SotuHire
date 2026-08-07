@@ -108,7 +108,9 @@ Cada fluxo recebe apenas o contexto necessário. Evidências sensíveis são omi
 | --- | --- |
 | ![Revisão de blocos de um PDF fictício](docs/assets/screenshots/sotuhire-v1.9.9-block-review.png) | ![Match, ATS, readiness e Tailor separados](docs/assets/screenshots/sotuhire-v1.9.9-application-analysis-bundle.png) |
 
-[Ver GIF da jornada documento → candidatura](docs/assets/screenshots/sotuhire-v1.9.9-document-to-application-walkthrough.gif) e [galeria de telas da v1.9.9](docs/releases/v1.9.9.md).
+Veja também a [galeria completa de telas da v1.9.9](docs/releases/v1.9.9.md).
+
+![Jornada SotuHire v1.9.9: documento, revisão, candidatura e exportação](docs/assets/screenshots/sotuhire-v1.9.9-document-to-application-walkthrough.gif)
 
 | Resume Studio e preview | Application Kit revisável |
 | --- | --- |
@@ -117,8 +119,6 @@ Cada fluxo recebe apenas o contexto necessário. Evidências sensíveis são omi
 | API Real e pareamento local | Estados da extensão |
 | --- | --- |
 | ![API Real com pareamento protegido](docs/assets/screenshots/sotuhire-v1.9.9-api-real.png) | ![Extensão conectada](docs/assets/screenshots/extension/sotuhire-v1.9.9-extension-connected.png) |
-
-![Visão geral do produto SotuHire](docs/assets/screenshots/sotuhire-web-product-walkthrough.gif)
 
 | Perfil Profissional Universal | Match |
 | --- | --- |
