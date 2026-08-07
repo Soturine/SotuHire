@@ -4,6 +4,25 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.9.9] - 2026-08-07
+
+### Adicionado
+
+- Ingestão revisável de PDF, DOCX, HTML, TXT e JSON Resume, com documento canônico, proveniência por bloco e adoção explícita no Currículo Mestre.
+- Resume Studio com variantes rastreáveis, Professional Assets, Application Kit de oito itens e exports reais em PDF, DOCX e JSON Resume.
+- `EvidenceScope`, estados de revisão e `ApplicationAnalysisBundle` com Match, ATS, readiness e Tailor independentes.
+
+### Segurança e integridade
+
+- APIs loopback protegidas por pairing/sessão, CSRF, Host/Origin/CORS e limites de recursos; scanner/redactor cobre credenciais Gemini `AQ.` contextualizadas.
+- Tracker e Application Lab transacionais/idempotentes, artefatos dependentes marcados como `stale`, stores JSON corrompidos enviados a quarantine e Perfil Universal reconciliado com o legado.
+- Schema SQLite 6, migração 5→6 explícita com dry-run/backup/verify e extensão MV3 0.9.5 com handoff somente por IDs.
+
+### Limitações conhecidas
+
+- PDF somente-imagem requer revisão manual; não há OCR automático.
+- Providers externos continuam opt-in e dependem de credencial, quota e rede; o caminho local não depende deles.
+
 ## [1.9.8] - 2026-07-28
 
 ### Adicionado

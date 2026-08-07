@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.9.8-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.8)
+[![Release](https://img.shields.io/badge/release-v1.9.9-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.9)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -35,11 +35,11 @@ Centraliza objetivos, formação, experiências, projetos, competências, idioma
 
 ### Currículo Mestre
 
-Extrai e organiza currículos TXT, PDF e DOCX e mantém uma base reutilizável. O **Resume Studio** cria variantes por vaga com diff, editor, reordenação, undo/redo, autosave, preview ATS-safe e export JSON Resume. PDF/DOCX finais permanecem explicitamente pendentes.
+Importa PDF, DOCX, HTML, TXT e JSON Resume com revisão de blocos e proveniência antes da adoção. O **Resume Studio** mantém o Currículo Mestre, cria variantes rastreáveis com diff, editor, reordenação, undo/redo, autosave e preview ATS-safe, e exporta JSON Resume, DOCX e PDF reais. A biblioteca **Professional Assets** preserva origem, estado de revisão e dependências dos textos reutilizáveis.
 
 ### Preparar candidatura
 
-O **Application Lab** conecta Perfil/evidências, Currículo Mestre, vaga, readiness determinístico, sugestões revisáveis, variante, kit, plano, snapshots e Tracker em dez etapas. Cada mudança depende de aprovação humana, sessões podem ser retomadas e trocar uma entrada invalida apenas os artefatos dependentes.
+O **Application Lab** conecta Perfil/evidências, Currículo Mestre, vaga, Match, ATS, readiness, sugestões Tailor revisáveis, variante, Application Kit, plano, snapshots e Tracker em dez etapas. Os resultados permanecem separados no Application Analysis Bundle; cada mudança depende de aprovação humana e trocar uma entrada marca somente os artefatos dependentes como `stale`.
 
 ### Vaga, Match, ATS e Tailor
 
@@ -104,11 +104,19 @@ Cada fluxo recebe apenas o contexto necessário. Evidências sensíveis são omi
 
 ## Preview
 
-| Application Lab | Resume Studio |
+| Ingestão e revisão | Application Analysis Bundle |
 | --- | --- |
-| ![Início da preparação guiada](docs/assets/screenshots/sotuhire-v1.9.8-application-lab-start.png) | ![Editor e preview de variante](docs/assets/screenshots/sotuhire-v1.9.8-resume-studio.png) |
+| ![Revisão de blocos de um PDF fictício](docs/assets/screenshots/sotuhire-v1.9.9-block-review.png) | ![Match, ATS, readiness e Tailor separados](docs/assets/screenshots/sotuhire-v1.9.9-application-analysis-bundle.png) |
 
-[Ver GIF da jornada completa](docs/assets/screenshots/sotuhire-v1.9.8-guided-application-walkthrough.gif) e [galeria de telas da v1.9.8](docs/releases/v1.9.8.md).
+[Ver GIF da jornada documento → candidatura](docs/assets/screenshots/sotuhire-v1.9.9-document-to-application-walkthrough.gif) e [galeria de telas da v1.9.9](docs/releases/v1.9.9.md).
+
+| Resume Studio e preview | Application Kit revisável |
+| --- | --- |
+| ![Resume Studio com preview fiel](docs/assets/screenshots/sotuhire-v1.9.9-resume-preview.png) | ![Application Kit com oito itens](docs/assets/screenshots/sotuhire-v1.9.9-application-kit-review.png) |
+
+| API Real e pareamento local | Estados da extensão |
+| --- | --- |
+| ![API Real com pareamento protegido](docs/assets/screenshots/sotuhire-v1.9.9-api-real.png) | ![Extensão conectada](docs/assets/screenshots/extension/sotuhire-v1.9.9-extension-connected.png) |
 
 ![Visão geral do produto SotuHire](docs/assets/screenshots/sotuhire-web-product-walkthrough.gif)
 
@@ -362,4 +370,4 @@ Distribuído sob a [Apache License 2.0](LICENSE).
 
 ---
 
-Release atual: [v1.9.8](https://github.com/Soturine/SotuHire/releases/tag/v1.9.8) · [Notas da release](docs/releases/v1.9.8.md) · [Tag](https://github.com/Soturine/SotuHire/tree/v1.9.8)
+Release atual: [v1.9.9](https://github.com/Soturine/SotuHire/releases/tag/v1.9.9) · [Notas da release](docs/releases/v1.9.9.md) · [Tag](https://github.com/Soturine/SotuHire/tree/v1.9.9)
