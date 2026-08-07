@@ -29,9 +29,7 @@ def test_unknown_reduces_confidence_without_changing_known_fit_or_coverage() -> 
         [],
     )
 
-    known_only = calculate_match_scores(
-        matches=[met], evidence=[evidence], transferable_skills=[]
-    )
+    known_only = calculate_match_scores(matches=[met], evidence=[evidence], transferable_skills=[])
     with_unknown = calculate_match_scores(
         matches=[met, unknown], evidence=[evidence], transferable_skills=[]
     )

@@ -28,9 +28,7 @@ def test_health_is_public_and_does_not_serialize_authentication_material() -> No
 def test_unknown_origin_invalid_host_and_missing_token_are_rejected() -> None:
     client = _client()
 
-    bad_origin = client.get(
-        "/api/v1/profile", headers={"Origin": "https://attacker.example"}
-    )
+    bad_origin = client.get("/api/v1/profile", headers={"Origin": "https://attacker.example"})
     bad_host = client.get(
         "/api/v1/profile",
         headers={"Host": "attacker.example", "X-SotuHire-Token": TOKEN},
@@ -81,11 +79,14 @@ def test_web_pairing_sets_httponly_cookie_requires_csrf_and_rejects_replay() -> 
         client.post("/api/v1/profile/deduplicate", headers={"Origin": ORIGIN}, json={}).status_code
         == 401
     )
-    assert client.post(
-        "/api/v1/profile/deduplicate",
-        headers={"Origin": ORIGIN, "X-SotuHire-CSRF": csrf},
-        json={},
-    ).status_code != 401
+    assert (
+        client.post(
+            "/api/v1/profile/deduplicate",
+            headers={"Origin": ORIGIN, "X-SotuHire-CSRF": csrf},
+            json={},
+        ).status_code
+        != 401
+    )
     replay = client.post(
         "/api/v1/security/pairing/complete",
         headers={"Origin": ORIGIN},
@@ -133,12 +134,8 @@ def test_body_content_type_batch_and_depth_limits_are_enforced() -> None:
         headers={**headers, "Content-Type": "text/plain"},
         content="plain",
     )
-    batch = client.post(
-        "/api/v1/profile/import-text", headers=headers, json={"items": [1, 2, 3]}
-    )
-    deep = client.post(
-        "/api/v1/profile/import-text", headers=headers, json={"a": {"b": {"c": 1}}}
-    )
+    batch = client.post("/api/v1/profile/import-text", headers=headers, json={"items": [1, 2, 3]})
+    deep = client.post("/api/v1/profile/import-text", headers=headers, json={"a": {"b": {"c": 1}}})
 
     assert too_large.status_code == 413
     assert wrong_type.status_code == 415

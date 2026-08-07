@@ -65,9 +65,7 @@ def test_local_api_capture_public_exam_does_not_become_private_job(tmp_path):
         body=capture.model_dump_json().encode(),
         token=TOKEN,
     )
-    context_status, context_payload = app.handle(
-        "GET", "/capture/context-summary", token=TOKEN
-    )
+    context_status, context_payload = app.handle("GET", "/capture/context-summary", token=TOKEN)
 
     assert status == 200
     assert payload["capture_id"]

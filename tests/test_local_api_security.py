@@ -33,32 +33,29 @@ def test_local_api_rejects_payload_that_is_too_large():
 def test_local_api_extension_pairing_is_one_use_and_origin_bound():
     app = LocalCompanionApp(token="local-secret")
     origin = "chrome-extension://abcdefghijklmnop"
-    start_status, start = app.handle(
-        "POST", "/pairing/start", body=b"{}", origin=origin
-    )
+    start_status, start = app.handle("POST", "/pairing/start", body=b"{}", origin=origin)
     complete_body = json.dumps(
         {"challenge_id": start["challenge_id"], "proof": start["proof"]}
     ).encode()
     complete_status, complete = app.handle(
         "POST", "/pairing/complete", body=complete_body, origin=origin
     )
-    replay_status, _ = app.handle(
-        "POST", "/pairing/complete", body=complete_body, origin=origin
-    )
+    replay_status, _ = app.handle("POST", "/pairing/complete", body=complete_body, origin=origin)
 
     assert start_status == 200
     assert complete_status == 200
     assert replay_status == 401
     session_token = str(complete["session_token"])
-    assert app.handle(
-        "GET", "/capture/status", token=session_token, origin=origin
-    )[0] == 200
-    assert app.handle(
-        "GET",
-        "/capture/status",
-        token=session_token,
-        origin="chrome-extension://different",
-    )[0] == 401
+    assert app.handle("GET", "/capture/status", token=session_token, origin=origin)[0] == 200
+    assert (
+        app.handle(
+            "GET",
+            "/capture/status",
+            token=session_token,
+            origin="chrome-extension://different",
+        )[0]
+        == 401
+    )
 
 
 def test_local_api_server_refuses_public_bind():
