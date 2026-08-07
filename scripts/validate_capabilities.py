@@ -101,6 +101,7 @@ def validate_manifest(
 ) -> list[str]:
     """Return deterministic validation errors; an empty list means valid."""
     errors: list[str] = []
+    git_history_available = _git_history_available(root)
     if manifest.get("schema_version") != 2:
         errors.append("schema_version deve ser 2")
     capabilities = manifest.get("capabilities")
@@ -180,7 +181,7 @@ def validate_manifest(
         base_commit = str(capability.get("verification_base_commit", "")).strip()
         if not re.fullmatch(r"[0-9a-f]{40}", base_commit):
             errors.append(f"{capability_id}: verification_base_commit inválido")
-        elif not _is_ancestor(base_commit, root):
+        elif git_history_available and not _is_ancestor(base_commit, root):
             errors.append(f"{capability_id}: verification_base_commit não é ancestral do HEAD")
         verification_date = str(capability.get("verification_date", "")).strip()
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", verification_date):
@@ -194,7 +195,7 @@ def validate_manifest(
 
 
 def _is_ancestor(commit: str, root: Path) -> bool:
-    """Return whether commit is reachable from HEAD; fail closed outside Git."""
+    """Return whether commit is reachable from HEAD in a Git worktree."""
     result = subprocess.run(
         ["git", "merge-base", "--is-ancestor", commit, "HEAD"],
         cwd=root,
@@ -203,6 +204,18 @@ def _is_ancestor(commit: str, root: Path) -> bool:
         text=True,
     )
     return result.returncode == 0
+
+
+def _git_history_available(root: Path) -> bool:
+    """Return whether ancestry can be checked; source archives have no Git metadata."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--is-inside-work-tree"],
+        cwd=root,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0 and result.stdout.strip() == "true"
 
 
 def _validate_paths(
