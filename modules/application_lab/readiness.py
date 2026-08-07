@@ -102,9 +102,7 @@ def build_readiness_report(
     section_map = _sections(master_resume)
     requirements = _requirements(job_snapshot)
     requirement_hits = [item for item in requirements if _requirement_present(item, resume_text)]
-    requirement_coverage_value = (
-        len(requirement_hits) / len(requirements) if requirements else None
-    )
+    requirement_coverage_value = len(requirement_hits) / len(requirements) if requirements else None
     requirement_coverage = requirement_coverage_value or 0.0
     evidence_total, evidence_confirmed = _evidence_counts(master_resume)
     evidence_coverage_value = evidence_confirmed / evidence_total if evidence_total else None
@@ -166,8 +164,7 @@ def build_readiness_report(
         dimension.status == "unknown" for dimension in dimensions.values()
     )
     known_dimension_count = sum(
-        dimension.status not in {"unknown", "not_applicable"}
-        for dimension in dimensions.values()
+        dimension.status not in {"unknown", "not_applicable"} for dimension in dimensions.values()
     )
     confidence_score = min(
         1.0,
@@ -182,8 +179,7 @@ def build_readiness_report(
         + sum(
             25.0
             for dimension in dimensions.values()
-            if dimension.dimension == "professional_registrations"
-            and dimension.status == "missing"
+            if dimension.dimension == "professional_registrations" and dimension.status == "missing"
         ),
     )
     warnings = [
@@ -223,9 +219,7 @@ def build_readiness_report(
             round(evidence_coverage_value, 3) if evidence_coverage_value is not None else None
         ),
         requirement_coverage_value=(
-            round(requirement_coverage_value, 3)
-            if requirement_coverage_value is not None
-            else None
+            round(requirement_coverage_value, 3) if requirement_coverage_value is not None else None
         ),
         confidence_score=round(confidence_score, 3),
         risk_score=round(risk_score, 1),
@@ -428,8 +422,7 @@ def _recommended_edits(dimensions: dict[str, ReadinessDimension], blockers: list
     edits = [
         f"Completar a seção {item.label} com fatos confirmados."
         for item in dimensions.values()
-        if item.status in {"missing", "partial", "unknown"}
-        and item.dimension != "requirements"
+        if item.status in {"missing", "partial", "unknown"} and item.dimension != "requirements"
     ]
     edits.extend(
         f"Revisar evidência para {item}." for item in blockers if item.startswith("Requisito")

@@ -62,9 +62,7 @@ class UniversalCareerProfileService:
             update={
                 "confirmed_by_user": confirmed_by_user,
                 "review_status": (
-                    EvidenceReviewStatus.CONFIRMED
-                    if confirmed_by_user
-                    else item.review_status
+                    EvidenceReviewStatus.CONFIRMED if confirmed_by_user else item.review_status
                 ),
                 "confidence": "high" if confirmed_by_user else item.confidence,
                 "created_at": item.created_at or now,

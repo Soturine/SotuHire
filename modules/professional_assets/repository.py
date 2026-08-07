@@ -142,9 +142,7 @@ class ProfessionalAssetRepository:
                 "review_status": review_status,
                 "updated_at": utc_now(),
                 "stale_at": utc_now() if status is AssetStatus.STALE else None,
-                "stale_reason": (
-                    current.stale_reason if status is AssetStatus.STALE else ""
-                ),
+                "stale_reason": (current.stale_reason if status is AssetStatus.STALE else ""),
             }
         )
         return self.save(ProfessionalAsset.model_validate(updated.model_dump()))

@@ -13,9 +13,7 @@ class LocalStore:
     """Persist reviewed analysis records in one local JSON file."""
 
     def __init__(self, path: str | Path | None = None) -> None:
-        self.path = (
-            Path(path) if path is not None else default_data_dir() / "sotuhire-history.json"
-        )
+        self.path = Path(path) if path is not None else default_data_dir() / "sotuhire-history.json"
 
     def save(self, record: StoredAnalysis) -> StoredAnalysis:
         """Insert or replace a record after explicit privacy acknowledgement."""

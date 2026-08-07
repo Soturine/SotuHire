@@ -100,9 +100,7 @@ class LocalSecurityMiddleware:
                 "rate_limit", "Muitas requisições locais; tente novamente.", status_code=429
             )
 
-    def _authenticate(
-        self, method: str, path: str, origin: str, headers: dict[str, str]
-    ) -> None:
+    def _authenticate(self, method: str, path: str, origin: str, headers: dict[str, str]) -> None:
         if path in PUBLIC_PATHS:
             if path.startswith("/api/v1/security/") and not origin:
                 raise RequestLimitError(

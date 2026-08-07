@@ -24,10 +24,7 @@ class DependencyFingerprint(BaseModel):
 
 def fingerprint_dependencies(**inputs: Any) -> DependencyFingerprint:
     """Hash stable JSON representations without recording secret values in logs."""
-    normalized = {
-        name: _value_digest(value)
-        for name, value in sorted(inputs.items())
-    }
+    normalized = {name: _value_digest(value) for name, value in sorted(inputs.items())}
     digest = hashlib.sha256(_canonical_json(normalized).encode("utf-8")).hexdigest()
     return DependencyFingerprint(digest=digest, inputs=normalized)
 

@@ -94,12 +94,8 @@ def atomic_write_json(path: str | Path, payload: object, *, backups: int = 3) ->
     )
 
 
-def atomic_write_jsonl(
-    path: str | Path, payloads: Sequence[object], *, backups: int = 3
-) -> Path:
-    content = "\n".join(
-        json.dumps(item, ensure_ascii=False, default=str) for item in payloads
-    )
+def atomic_write_jsonl(path: str | Path, payloads: Sequence[object], *, backups: int = 3) -> Path:
+    content = "\n".join(json.dumps(item, ensure_ascii=False, default=str) for item in payloads)
     return atomic_write_text(path, content + ("\n" if content else ""), backups=backups)
 
 
@@ -175,9 +171,7 @@ def _quarantine(path: Path, error: BaseException) -> JsonStoreCorruptionError:
     if path.exists():
         quarantine_dir = path.parent / ".quarantine"
         quarantine_dir.mkdir(parents=True, exist_ok=True)
-        quarantine_path = quarantine_dir / (
-            f"{path.name}.{_timestamp()}.{uuid4().hex}.corrupt"
-        )
+        quarantine_path = quarantine_dir / (f"{path.name}.{_timestamp()}.{uuid4().hex}.corrupt")
         try:
             os.replace(path, quarantine_path)
         except OSError:

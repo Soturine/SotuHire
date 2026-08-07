@@ -471,9 +471,7 @@ class ApplicationLabRepository:
             ).fetchone()
         return int(row["total"]) if row is not None else 0
 
-    def save_analysis_bundle(
-        self, bundle: ApplicationAnalysisBundle
-    ) -> ApplicationAnalysisBundle:
+    def save_analysis_bundle(self, bundle: ApplicationAnalysisBundle) -> ApplicationAnalysisBundle:
         """Persist the four independent analysis products as one immutable run record."""
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
@@ -837,7 +835,9 @@ class ApplicationLabRepository:
         item = next((value for value in kit.items if value.item_id == item_id), None)
         if item is None:
             return None
-        selected_content = edited_content.strip() if status is KitItemStatus.EDITED else item.content
+        selected_content = (
+            edited_content.strip() if status is KitItemStatus.EDITED else item.content
+        )
         if status in {KitItemStatus.ACCEPTED, KitItemStatus.EDITED}:
             if not selected_content.strip():
                 raise ValueError("Item vazio não pode ser aceito.")

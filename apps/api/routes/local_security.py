@@ -35,15 +35,11 @@ def _manager(request: Request) -> LocalAuthManager:
 
 
 @router.post("/pairing/start", response_model=ApiEnvelope[dict[str, object]])
-def start_pairing(
-    payload: PairingStartRequest, request: Request
-) -> ApiEnvelope[dict[str, object]]:
+def start_pairing(payload: PairingStartRequest, request: Request) -> ApiEnvelope[dict[str, object]]:
     del payload.client_name
     origin = request.headers.get("origin", "")
     try:
-        challenge = _manager(request).start_pairing(
-            origin=origin, client_kind=payload.client_kind
-        )
+        challenge = _manager(request).start_pairing(origin=origin, client_kind=payload.client_kind)
     except PairingError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from None
     return ok(

@@ -191,9 +191,7 @@ def _scoped_master(
             for profile_item_id in entry.source_profile_item_ids
         )
     )
-    selected_text = "\n".join(
-        item.content for item in selected_evidence if item.content.strip()
-    )
+    selected_text = "\n".join(item.content for item in selected_evidence if item.content.strip())
     return master.model_copy(
         update={
             "summary": "",

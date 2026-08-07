@@ -64,9 +64,7 @@ class ProfessionalAsset(BaseModel):
     def enforce_review_boundary(self) -> ProfessionalAsset:
         self.source_refs = list(dict.fromkeys(filter(None, self.source_refs)))
         self.evidence_ids = list(dict.fromkeys(filter(None, self.evidence_ids)))
-        self.document_snapshot_ids = list(
-            dict.fromkeys(filter(None, self.document_snapshot_ids))
-        )
+        self.document_snapshot_ids = list(dict.fromkeys(filter(None, self.document_snapshot_ids)))
         if self.status is AssetStatus.CONFIRMED:
             if self.content.strip() and not (self.source_refs or self.evidence_ids):
                 raise ValueError("Asset com afirmações exige evidência antes da confirmação.")

@@ -67,9 +67,7 @@ def format_context_for_prompt(
     )
     visible = _visible_evidence(scoped, include_sensitive=include_sensitive)
     if confirmed_only:
-        visible = [
-            item for item in visible if item.review_status == EvidenceReviewStatus.CONFIRMED
-        ]
+        visible = [item for item in visible if item.review_status == EvidenceReviewStatus.CONFIRMED]
     for item in visible[:max_evidence]:
         status = item.review_status.value
         content = f" - {item.content}" if item.content else ""

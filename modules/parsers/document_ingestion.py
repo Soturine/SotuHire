@@ -97,9 +97,9 @@ class LocalDocumentIngestionPipeline:
             raise ValueError("Documento excede o limite local de 10 MiB.")
         resolved_type = document_type or _type_from_filename(safe_name)
         detected_type = _sniff_type(content)
-        if (
-            resolved_type in {"pdf", "docx"} and detected_type != resolved_type
-        ) or (detected_type is not None and detected_type != resolved_type):
+        if (resolved_type in {"pdf", "docx"} and detected_type != resolved_type) or (
+            detected_type is not None and detected_type != resolved_type
+        ):
             raise ValueError("Conteúdo do arquivo não corresponde à extensão declarada.")
         digest = hashlib.sha256(content).hexdigest()
         pages, method, warnings, structured_data = _extract(content, resolved_type)
@@ -225,12 +225,17 @@ def _validate_docx_container(content: bytes) -> list[str]:
             for item in entries:
                 if item.file_size and item.compress_size == 0:
                     raise ValueError("DOCX contém entrada comprimida inválida.")
-                if item.compress_size and item.file_size / item.compress_size > MAX_COMPRESSION_RATIO:
+                if (
+                    item.compress_size
+                    and item.file_size / item.compress_size > MAX_COMPRESSION_RATIO
+                ):
                     raise ValueError("DOCX apresenta razão de compressão insegura.")
             warnings: list[str] = []
             relation_names = [name for name in archive.namelist() if name.endswith(".rels")]
             if any(b'TargetMode="External"' in archive.read(name) for name in relation_names):
-                warnings.append("Relações externas do DOCX foram ignoradas; nenhuma rede foi acessada.")
+                warnings.append(
+                    "Relações externas do DOCX foram ignoradas; nenhuma rede foi acessada."
+                )
             return warnings
     except zipfile.BadZipFile as exc:
         raise ValueError("DOCX inválido.") from exc
@@ -332,7 +337,8 @@ class _VisibleTextParser(HTMLParser):
         self.active_content_count += sum(
             1
             for name, value in attrs
-            if name.casefold().startswith("on") or (value or "").casefold().startswith("javascript:")
+            if name.casefold().startswith("on")
+            or (value or "").casefold().startswith("javascript:")
         )
 
     def handle_endtag(self, tag: str) -> None:

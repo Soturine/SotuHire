@@ -198,8 +198,7 @@ class LocalAuthManager:
             if session is None or not hmac.compare_digest(session.origin, origin):
                 return False
             return not require_csrf or (
-                bool(csrf_token)
-                and hmac.compare_digest(session.csrf_digest, _digest(csrf_token))
+                bool(csrf_token) and hmac.compare_digest(session.csrf_digest, _digest(csrf_token))
             )
 
     def revoke_session(self, session_token: str) -> None:
@@ -231,7 +230,9 @@ class LocalAuthManager:
         self._sessions = {
             key: value for key, value in self._sessions.items() if value.expires_at >= now
         }
-        self._used = {key: expires_at for key, expires_at in self._used.items() if expires_at >= now}
+        self._used = {
+            key: expires_at for key, expires_at in self._used.items() if expires_at >= now
+        }
 
 
 def _digest(value: str) -> str:

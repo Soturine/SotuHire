@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import io
+from typing import cast
 
 import fitz
 from docx import Document
@@ -50,11 +51,11 @@ def test_pdf_docx_and_json_resume_preserve_enabled_canonical_content() -> None:
     pdf_export, pdf_payload = prepare_resume_export(resume, export_format="pdf")
     docx_export, docx_payload = prepare_resume_export(resume, export_format="docx")
 
-    pdf_bytes = base64.b64decode(pdf_payload["content_base64"])
-    docx_bytes = base64.b64decode(docx_payload["content_base64"])
+    pdf_bytes = base64.b64decode(cast(str, pdf_payload["content_base64"]))
+    docx_bytes = base64.b64decode(cast(str, docx_payload["content_base64"]))
     with fitz.open(stream=pdf_bytes, filetype="pdf") as pdf:
-        pdf_text = "\n".join(page.get_text() for page in pdf)
-        assert pdf.metadata.get("author", "") == ""
+        pdf_text = "\n".join(cast(str, page.get_text()) for page in pdf)
+        assert (pdf.metadata or {}).get("author", "") == ""
     document = Document(io.BytesIO(docx_bytes))
     docx_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
 
@@ -77,10 +78,12 @@ def test_pdf_page_size_matches_a4_and_letter_contracts() -> None:
     _, a4_payload = prepare_resume_export(resume, export_format="pdf", page_size="A4")
     _, letter_payload = prepare_resume_export(resume, export_format="pdf", page_size="Letter")
 
-    with fitz.open(stream=base64.b64decode(a4_payload["content_base64"]), filetype="pdf") as a4:
+    with fitz.open(
+        stream=base64.b64decode(cast(str, a4_payload["content_base64"])), filetype="pdf"
+    ) as a4:
         a4_rect = a4[0].rect
     with fitz.open(
-        stream=base64.b64decode(letter_payload["content_base64"]), filetype="pdf"
+        stream=base64.b64decode(cast(str, letter_payload["content_base64"])), filetype="pdf"
     ) as letter:
         letter_rect = letter[0].rect
 
