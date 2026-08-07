@@ -1,8 +1,12 @@
+from pathlib import Path
+
 from streamlit.testing.v1 import AppTest
+
+APP = Path(__file__).resolve().parents[1] / "app.py"
 
 
 def test_advanced_collection_ui_is_available_without_network_call():
-    app = AppTest.from_file("app.py").run(timeout=30)
+    app = AppTest.from_file(APP).run(timeout=30)
     app = app.radio[0].set_value("Modo avançado").run(timeout=30)
 
     assert not app.exception

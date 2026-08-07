@@ -1,8 +1,12 @@
+from pathlib import Path
+
 from streamlit.testing.v1 import AppTest
+
+APP = Path(__file__).resolve().parents[1] / "app.py"
 
 
 def test_user_assisted_capture_ui_has_explicit_current_page_actions():
-    app = AppTest.from_file("app.py").run(timeout=30)
+    app = AppTest.from_file(APP).run(timeout=30)
     app = app.radio[0].set_value("Modo avançado").run(timeout=30)
     collection_mode = next(radio for radio in app.radio if radio.label == "Modo de coleta")
     app = collection_mode.set_value("Captura assistida pelo usuário").run(timeout=30)

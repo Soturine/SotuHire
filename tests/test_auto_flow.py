@@ -1,8 +1,12 @@
+from pathlib import Path
+
 from streamlit.testing.v1 import AppTest
+
+APP = Path(__file__).resolve().parents[1] / "app.py"
 
 
 def test_quick_mode_runs_the_complete_example_without_preferences():
-    app = AppTest.from_file("app.py").run(timeout=30)
+    app = AppTest.from_file(APP).run(timeout=30)
     example_button = next(
         button for button in app.button if button.label == "Rodar análise de exemplo"
     )

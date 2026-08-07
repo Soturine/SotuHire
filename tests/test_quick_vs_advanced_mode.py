@@ -1,8 +1,12 @@
+from pathlib import Path
+
 from streamlit.testing.v1 import AppTest
+
+APP = Path(__file__).resolve().parents[1] / "app.py"
 
 
 def test_quick_mode_is_single_page_without_preferences_or_history_tabs():
-    app = AppTest.from_file("app.py").run(timeout=30)
+    app = AppTest.from_file(APP).run(timeout=30)
 
     assert not app.exception
     assert app.tabs == []
@@ -11,7 +15,7 @@ def test_quick_mode_is_single_page_without_preferences_or_history_tabs():
 
 
 def test_advanced_mode_shows_complete_tool_tabs():
-    app = AppTest.from_file("app.py").run(timeout=30)
+    app = AppTest.from_file(APP).run(timeout=30)
     app = app.radio[0].set_value("Modo avançado").run(timeout=30)
     labels = [tab.label for tab in app.tabs]
 
