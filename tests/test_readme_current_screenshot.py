@@ -11,7 +11,6 @@ def test_readme_is_atemporal_and_references_current_product_screenshots():
         Path("docs/assets/screenshots/sotuhire-v1.9.9-application-kit-review.png"),
         Path("docs/assets/screenshots/sotuhire-v1.9.9-api-real.png"),
         Path("docs/assets/screenshots/extension/sotuhire-v1.9.9-extension-connected.png"),
-        Path("docs/assets/screenshots/sotuhire-web-product-walkthrough.gif"),
         Path("docs/assets/screenshots/sotuhire-web-profile.png"),
         Path("docs/assets/screenshots/sotuhire-web-match.png"),
         Path("docs/assets/screenshots/sotuhire-web-radar-schedules.png"),
@@ -29,6 +28,7 @@ def test_readme_is_atemporal_and_references_current_product_screenshots():
         assert screenshot.exists()
         assert 10_000 < screenshot.stat().st_size < 2_000_000
     assert readme.count("docs/assets/screenshots/") == len(screenshots)
+    assert "docs/assets/screenshots/sotuhire-web-product-walkthrough.gif" not in readme
     assert "[CHANGELOG](CHANGELOG.md)" in readme
     assert "release-v1.9.9" in readme
     assert "Frontend moderno v1.9.0" not in readme
