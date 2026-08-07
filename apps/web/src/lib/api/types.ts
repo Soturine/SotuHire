@@ -1530,6 +1530,7 @@ export interface ResumeEntry {
   enabled: boolean;
   source_profile_item_ids: string[];
   source_refs: string[];
+  review_status?: "candidate" | "sourced" | "confirmed" | "rejected" | "stale";
   confirmed_by_user: boolean;
   created_at: string;
   updated_at: string;
@@ -1593,7 +1594,7 @@ export interface ResumeVariant {
 export interface ReadinessDimension {
   dimension: string;
   label: string;
-  status: "met" | "partial" | "missing" | "not_applicable";
+  status: "met" | "partial" | "missing" | "unknown" | "not_applicable";
   coverage: number | null;
   weight: number;
   evidence_count: number;
@@ -1614,6 +1615,12 @@ export interface ApplicationReadinessReport {
   score_explanation: string;
   evidence_coverage: number;
   requirement_coverage: number;
+  evidence_coverage_value?: number | null;
+  requirement_coverage_value?: number | null;
+  confidence_score?: number;
+  risk_score?: number;
+  assessment_status?: "sufficient" | "insufficient";
+  unknown_dimension_count?: number;
   source_dimensions: Record<string, ReadinessDimension>;
   strengths: string[];
   top_blockers: string[];
@@ -1626,6 +1633,59 @@ export interface ApplicationReadinessReport {
   provider_metadata: Record<string, unknown>;
   evidence_used: ResumeEvidence[];
   perspectives: Record<string, ReadinessPerspective>;
+  dependency_hash?: string;
+  stale_reason?: string;
+  created_at: string;
+}
+
+export interface ApplicationAnalysisBundle {
+  bundle_id: string;
+  session_id: string;
+  evidence_scope: Record<string, unknown>;
+  dependency_hash: string;
+  match_result: {
+    score_breakdown: {
+      match_score: number;
+      assessed_match_score: number | null;
+      requirement_coverage: number | null;
+      confidence_score: number;
+      risk_score: number;
+      applicable_requirement_count: number;
+      unknown_requirement_count: number;
+      not_applicable_requirement_count: number;
+    };
+    explanation: {
+      summary: string;
+      unknown_requirements: string[];
+      not_applicable_requirements: string[];
+    };
+    recommendation: string;
+    fallback_used: boolean;
+    provider_used: string;
+  };
+  ats_result: {
+    ats_score: number;
+    issues: string[];
+    present_keywords: string[];
+    missing_keywords: string[];
+    assessment_status: "sufficient" | "insufficient";
+  };
+  readiness_result: ApplicationReadinessReport;
+  tailor_result: {
+    target_role: string;
+    target_company: string | null;
+    professional_summary: string;
+    improved_bullets: string[];
+    keywords_added: string[];
+    evidence_used: string[];
+    warnings: string[];
+  };
+  match_snapshot_id: string;
+  ats_snapshot_id: string;
+  readiness_snapshot_id: string;
+  tailor_snapshot_id: string;
+  status: "current" | "stale" | "failed";
+  stale_reason: string;
   created_at: string;
 }
 
@@ -1705,6 +1765,9 @@ export interface ApplicationLabSession {
   current_step: number;
   status: ApplicationLabStatus;
   selected_context_refs: string[];
+  evidence_scope?: Record<string, unknown>;
+  dependency_hash?: string;
+  analysis_bundle_id?: string;
   analysis_run_ids: string[];
   readiness_report_id: string;
   resume_variant_id: string;
@@ -1720,6 +1783,7 @@ export interface ApplicationLabSession {
 
 export interface ApplicationLabDetail {
   session: ApplicationLabSession;
+  analysis_bundle: ApplicationAnalysisBundle | null;
   report: ApplicationReadinessReport | null;
   suggestions: ApplicationSuggestion[];
   variant: ResumeVariant | null;
@@ -1729,6 +1793,7 @@ export interface ApplicationLabDetail {
 
 export interface ApplicationLabAnalyzeResult extends ApplicationLabDetail {
   analysis_snapshot_id: string;
+  analysis_snapshot_ids?: Record<string, string>;
   progress_steps: string[];
 }
 

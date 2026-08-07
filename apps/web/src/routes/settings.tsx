@@ -98,6 +98,16 @@ function SettingsPage() {
             <p className="mt-2 text-xs text-muted-foreground">
               Padrão: <code className="rounded bg-muted px-1 py-0.5">{DEFAULT_API_URL}</code>
             </p>
+            {mode === "real" && (
+              <p
+                className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3 text-xs"
+                data-testid="local-pairing-status"
+              >
+                <strong>Pareamento local protegido:</strong> a sessão HttpOnly é negociada
+                automaticamente e mutações usam CSRF mantido apenas em memória. Tokens nunca são
+                exibidos nesta tela.
+              </p>
+            )}
           </div>
         </SectionCard>
 

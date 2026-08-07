@@ -11,6 +11,10 @@ test("Application Lab completes the guided human-approved journey", async ({ pag
   await expect(page.getByText(/Sessão/).first()).toBeVisible();
   await page.getByRole("button", { name: "Análise", exact: true }).click();
   await expect(page.getByTestId("readiness-report")).toBeVisible();
+  await expect(page.getByTestId("application-analysis-bundle")).toBeVisible();
+  await expect(page.getByText("Match", { exact: true })).toBeVisible();
+  await expect(page.getByText("ATS", { exact: true })).toBeVisible();
+  await expect(page.getByText(/requisito\(s\) unknown/)).toBeVisible();
   await expect(page.getByText("Uma análise consolidada em três perspectivas")).toBeVisible();
   await expect(page.getByText(/não é probabilidade de entrevista/i).first()).toBeVisible();
 
@@ -30,6 +34,7 @@ test("Application Lab completes the guided human-approved journey", async ({ pag
   await page.getByRole("button", { name: /Kit de candidatura$/ }).click();
   await page.getByRole("button", { name: "Criar kit" }).click();
   await expect(page.getByText("professional summary")).toBeVisible();
+  await expect(page.getByTestId("application-kit-review")).toContainText("8 item(ns)");
 
   await page.getByRole("button", { name: /Plano de ação$/ }).click();
   await page.getByRole("button", { name: "Criar plano de 7 dias" }).click();

@@ -1,5 +1,6 @@
 import type {
   ApplicationActionPlan,
+  ApplicationAnalysisBundle,
   ApplicationKit,
   ApplicationLabAnalyzeResult,
   ApplicationLabDetail,
@@ -12,6 +13,16 @@ import type {
 } from "@/lib/api/types";
 
 const now = "2026-07-28T12:00:00Z";
+const kitFixtures = [
+  ["headline", "Analista de Qualidade com foco em processos e indicadores."],
+  ["professional_summary", "Resumo profissional sustentado por evidência confirmada."],
+  ["about_section", "Sobre fictício para revisão manual."],
+  ["recruiter_message", "Mensagem curta e revisável para a pessoa recrutadora."],
+  ["cover_letter", "Carta curta baseada somente em fatos confirmados."],
+  ["job_rationale", "A vaga se conecta à experiência confirmada em qualidade."],
+  ["project_highlight", "Projeto de qualidade com checklist e indicadores."],
+  ["manual_checklist", "Revisar requisitos, documentos e canal oficial antes de enviar."],
+] as const;
 
 const entry = {
   entry_id: "entry-demo-quality",
@@ -78,6 +89,9 @@ export const mockLabSession: ApplicationLabSession = {
   current_step: 6,
   status: "review",
   selected_context_refs: ["fixture://profile/quality", "fixture://job/demo"],
+  evidence_scope: { purpose: "match", external_provider_allowed: false },
+  dependency_hash: "demo-dependency-hash",
+  analysis_bundle_id: "bundle-demo",
   analysis_run_ids: ["analysis-snapshot-demo"],
   readiness_report_id: "readiness-demo",
   resume_variant_id: "",
@@ -138,6 +152,12 @@ export const mockReadinessReport: ApplicationReadinessReport = {
     "Média ponderada das dimensões aplicáveis. É cobertura de prontidão, não probabilidade de entrevista.",
   evidence_coverage: 0.76,
   requirement_coverage: 0.67,
+  evidence_coverage_value: 0.76,
+  requirement_coverage_value: 0.67,
+  confidence_score: 0.82,
+  risk_score: 24,
+  assessment_status: "sufficient",
+  unknown_dimension_count: 1,
   source_dimensions: dimensions,
   strengths: ["Experiência confirmada", "Resumo claro"],
   top_blockers: ["Requisito sem evidência: ISO 9001", "Certificações: informação ausente"],
@@ -173,6 +193,59 @@ export const mockReadinessReport: ApplicationReadinessReport = {
       findings: ["Não adicionar métricas sem fonte."],
     },
   },
+  dependency_hash: "demo-dependency-hash",
+  stale_reason: "",
+  created_at: now,
+};
+
+export const mockAnalysisBundle: ApplicationAnalysisBundle = {
+  bundle_id: "bundle-demo",
+  session_id: mockLabSession.session_id,
+  evidence_scope: { purpose: "match", external_provider_allowed: false },
+  dependency_hash: "demo-dependency-hash",
+  match_result: {
+    score_breakdown: {
+      match_score: 72,
+      assessed_match_score: 72,
+      requirement_coverage: 0.67,
+      confidence_score: 0.82,
+      risk_score: 24,
+      applicable_requirement_count: 3,
+      unknown_requirement_count: 1,
+      not_applicable_requirement_count: 1,
+    },
+    explanation: {
+      summary: "Aderência sustentada por evidência confirmada, com um requisito desconhecido.",
+      unknown_requirements: ["Certificação ISO 9001"],
+      not_applicable_requirements: ["Portfólio GitHub"],
+    },
+    recommendation: "consider",
+    fallback_used: false,
+    provider_used: "local",
+  },
+  ats_result: {
+    ats_score: 76,
+    issues: ["ISO 9001 não aparece no currículo confirmado."],
+    present_keywords: ["qualidade", "indicadores"],
+    missing_keywords: ["ISO 9001"],
+    assessment_status: "sufficient",
+  },
+  readiness_result: mockReadinessReport,
+  tailor_result: {
+    target_role: "Analista de Qualidade",
+    target_company: "Empresa Fictícia Horizonte",
+    professional_summary: mockMasterResume.summary,
+    improved_bullets: ["Projeto de qualidade com evidência confirmada."],
+    keywords_added: ["indicadores"],
+    evidence_used: ["fixture://profile/quality"],
+    warnings: ["Revisão humana obrigatória antes de exportar."],
+  },
+  match_snapshot_id: "match-snapshot-demo",
+  ats_snapshot_id: "ats-snapshot-demo",
+  readiness_snapshot_id: "readiness-snapshot-demo",
+  tailor_snapshot_id: "tailor-snapshot-demo",
+  status: "current",
+  stale_reason: "",
   created_at: now,
 };
 
@@ -244,20 +317,18 @@ export const mockKit: ApplicationKit = {
   application_kit_id: "kit-demo",
   session_id: mockLabSession.session_id,
   title: "Kit de candidatura",
-  items: [
-    {
-      item_id: "kit-item-demo",
-      type: "professional_summary",
-      content: mockMasterResume.summary,
-      evidence_used: mockMasterResume.source_refs,
-      warnings: [],
-      provider_run_id: "",
-      status: "pending",
-      edited_content: "",
-      created_at: now,
-      updated_at: now,
-    },
-  ],
+  items: kitFixtures.map(([type, content], index) => ({
+    item_id: `kit-item-demo-${index + 1}`,
+    type,
+    content,
+    evidence_used: mockMasterResume.source_refs,
+    warnings: [],
+    provider_run_id: "",
+    status: "pending",
+    edited_content: "",
+    created_at: now,
+    updated_at: now,
+  })),
   warnings: ["Nenhum item é enviado automaticamente."],
   dependency_hash: "demo-kit-dependency-hash",
   stale_reason: "",
@@ -291,6 +362,7 @@ export const mockPlan: ApplicationActionPlan = {
 
 export const mockLabDetail: ApplicationLabDetail = {
   session: mockLabSession,
+  analysis_bundle: mockAnalysisBundle,
   report: mockReadinessReport,
   suggestions: mockSuggestions,
   variant: null,
@@ -301,6 +373,12 @@ export const mockLabDetail: ApplicationLabDetail = {
 export const mockLabAnalyze: ApplicationLabAnalyzeResult = {
   ...mockLabDetail,
   analysis_snapshot_id: "analysis-snapshot-demo",
+  analysis_snapshot_ids: {
+    match: "match-snapshot-demo",
+    ats: "ats-snapshot-demo",
+    readiness: "readiness-snapshot-demo",
+    tailor: "tailor-snapshot-demo",
+  },
   progress_steps: [
     "Extraindo currículo",
     "Carregando evidências",

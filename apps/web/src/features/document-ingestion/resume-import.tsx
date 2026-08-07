@@ -21,6 +21,8 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
   const { mode } = useApiMode();
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<ResumeIngestionResult | null>(null);
+  const [includedEntryIds, setIncludedEntryIds] = useState<Set<string>>(new Set());
+  const [reviewConfirmed, setReviewConfirmed] = useState(false);
   const [busy, setBusy] = useState<"ingest" | "save" | null>(null);
 
   async function inspect(): Promise<void> {
@@ -33,6 +35,14 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
     try {
       const imported = await api.resumeStudioIngest(file.name, await fileToBase64(file));
       setResult(imported);
+      setIncludedEntryIds(
+        new Set(
+          imported.master_resume_draft.sections.flatMap((section) =>
+            section.entries.map((entry) => entry.entry_id),
+          ),
+        ),
+      );
+      setReviewConfirmed(false);
       toast.success(
         mode === "demo"
           ? "DEMO: prévia fictícia criada; nenhum dado real foi alterado."
@@ -47,9 +57,38 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
 
   async function adopt(): Promise<void> {
     if (!result) return;
+    if (!reviewConfirmed) {
+      toast.warning("Confirme a revisão dos blocos antes de criar o Currículo Mestre.");
+      return;
+    }
+    if (includedEntryIds.size === 0) {
+      toast.warning("Selecione ao menos um bloco para o Currículo Mestre.");
+      return;
+    }
     setBusy("save");
     try {
-      const saved = await api.resumeStudioSaveMaster(result.master_resume_draft);
+      const reviewedResume: MasterResume = {
+        ...result.master_resume_draft,
+        raw_text: result.master_resume_draft.sections
+          .flatMap((section) => section.entries)
+          .filter((entry) => includedEntryIds.has(entry.entry_id))
+          .map((entry) => entry.content)
+          .filter(Boolean)
+          .join("\n\n"),
+        sections: result.master_resume_draft.sections.map((section) => ({
+          ...section,
+          entries: section.entries.map((entry) => {
+            const accepted = includedEntryIds.has(entry.entry_id);
+            return {
+              ...entry,
+              enabled: accepted,
+              confirmed_by_user: accepted,
+              review_status: accepted ? ("confirmed" as const) : ("rejected" as const),
+            };
+          }),
+        })),
+      };
+      const saved = await api.resumeStudioSaveMaster(reviewedResume);
       onImported(saved.resume);
       toast.success(
         mode === "demo"
@@ -128,18 +167,71 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
               SHA-256 {result.document.source_hash.slice(0, 12)}…
             </code>
           </div>
-          <div className="max-h-40 overflow-auto whitespace-pre-wrap rounded-lg bg-muted/40 p-3 text-xs leading-5">
-            {result.document.text_blocks.slice(0, 4).join("\n\n") || "Nenhum texto extraído."}
+          <div className="space-y-2" data-testid="ingestion-block-review">
+            <p className="text-xs font-semibold">Revisão de blocos</p>
+            {result.master_resume_draft.sections.flatMap((section) =>
+              section.entries.map((entry) => (
+                <label
+                  key={entry.entry_id}
+                  className="flex items-start gap-3 rounded-lg bg-muted/40 p-3 text-xs leading-5"
+                >
+                  <input
+                    type="checkbox"
+                    checked={includedEntryIds.has(entry.entry_id)}
+                    onChange={() => {
+                      setIncludedEntryIds((current) => {
+                        const next = new Set(current);
+                        if (next.has(entry.entry_id)) next.delete(entry.entry_id);
+                        else next.add(entry.entry_id);
+                        return next;
+                      });
+                      setReviewConfirmed(false);
+                    }}
+                  />
+                  <span>
+                    <strong>{entry.title || section.title}</strong>
+                    <span className="ml-2 rounded bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent">
+                      sourced · confirmar ou rejeitar
+                    </span>
+                    <span className="mt-1 block whitespace-pre-wrap">{entry.content}</span>
+                  </span>
+                </label>
+              )),
+            )}
+          </div>
+          <div className="rounded-lg border p-3 text-xs" data-testid="ingestion-provenance">
+            <strong>Proveniência preservada</strong>
+            <ul className="mt-2 space-y-1 text-muted-foreground">
+              {result.document.provenance.slice(0, 6).map((item) => (
+                <li key={`${item.source_ref}-${JSON.stringify(item.location)}`}>
+                  {item.extraction_method} · {item.source} · {item.source_ref}
+                  {Object.keys(item.location).length > 0
+                    ? ` · ${Object.entries(item.location)
+                        .map(([key, value]) => `${key}=${value}`)
+                        .join(", ")}`
+                    : ""}
+                </li>
+              ))}
+            </ul>
           </div>
           {result.document.warnings.map((warning) => (
             <p key={warning} className="text-xs text-warning-foreground">
               {warning}
             </p>
           ))}
+          <label className="flex items-start gap-2 text-xs">
+            <input
+              type="checkbox"
+              checked={reviewConfirmed}
+              onChange={(event) => setReviewConfirmed(event.target.checked)}
+            />
+            Revisei os blocos selecionados; eles podem entrar como evidência confirmada no Currículo
+            Mestre.
+          </label>
           <button
             type="button"
             onClick={adopt}
-            disabled={Boolean(busy)}
+            disabled={Boolean(busy) || !reviewConfirmed || includedEntryIds.size === 0}
             className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold hover:bg-muted disabled:opacity-50"
           >
             {busy === "save" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}

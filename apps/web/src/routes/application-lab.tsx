@@ -802,6 +802,26 @@ function StepPanel({
             description="A análise continuará em modo parcial e mostrará essa limitação."
           />
         )}
+        <div className="mt-4 grid gap-3 sm:grid-cols-3" data-testid="evidence-review-states">
+          <div className="rounded-lg border border-success/30 bg-success/5 p-3 text-xs">
+            <strong>Confirmed · incluída</strong>
+            <p className="mt-1 text-muted-foreground">
+              Revisada pela pessoa e selecionada no EvidenceScope desta sessão.
+            </p>
+          </div>
+          <div className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs">
+            <strong>Potential / sourced · fora</strong>
+            <p className="mt-1 text-muted-foreground">
+              Mantida para revisão; não conta como experiência confirmada.
+            </p>
+          </div>
+          <div className="rounded-lg border p-3 text-xs">
+            <strong>Rejected / stale · bloqueada</strong>
+            <p className="mt-1 text-muted-foreground">
+              Preservada para auditoria e excluída das análises atuais.
+            </p>
+          </div>
+        </div>
       </Panel>
     );
   if (step === 3)
@@ -1057,6 +1077,7 @@ function ReadinessReport({
   const dimensions = Object.values(report.source_dimensions);
   return (
     <div className="space-y-6" data-testid="readiness-report">
+      {detail.analysis_bundle && <AnalysisBundleSummary bundle={detail.analysis_bundle} />}
       <div className="grid gap-4 lg:grid-cols-[180px_1fr]">
         <div className="grid place-items-center rounded-2xl bg-[image:var(--gradient-ink)] p-5 text-primary-foreground">
           <span className="text-display text-5xl tabular-nums">{report.readiness_score}</span>
@@ -1134,6 +1155,84 @@ function ReadinessReport({
         <RotateCcw className="h-3.5 w-3.5" /> Reexecutar somente a análise
       </button>
     </div>
+  );
+}
+
+function AnalysisBundleSummary({
+  bundle,
+}: {
+  bundle: NonNullable<ApplicationLabDetail["analysis_bundle"]>;
+}) {
+  const match = bundle.match_result.score_breakdown;
+  return (
+    <section className="space-y-3" data-testid="application-analysis-bundle">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
+            Application Analysis Bundle
+          </p>
+          <h3 className="text-sm font-semibold">Quatro produtos independentes e rastreáveis</h3>
+        </div>
+        <span
+          className={cn(
+            "rounded-full px-2 py-1 text-[10px] font-semibold",
+            bundle.status === "current"
+              ? "bg-success/15 text-success"
+              : "bg-warning/15 text-warning-foreground",
+          )}
+        >
+          {bundle.status === "current" ? "Atual" : "Desatualizado"}
+        </span>
+      </div>
+      {bundle.stale_reason && (
+        <p className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs">
+          Artefato stale: {bundle.stale_reason}
+        </p>
+      )}
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <BundleCard title="Match" score={match.assessed_match_score ?? match.match_score}>
+          <span>Cobertura {Math.round((match.requirement_coverage ?? 0) * 100)}%</span>
+          <span>Confiança {Math.round(match.confidence_score * 100)}%</span>
+          <span>Risco {match.risk_score}/100</span>
+          <span>{match.unknown_requirement_count} requisito(s) unknown</span>
+        </BundleCard>
+        <BundleCard title="ATS" score={bundle.ats_result.ats_score}>
+          <span>{bundle.ats_result.present_keywords.length} termo(s) sustentado(s)</span>
+          <span>{bundle.ats_result.missing_keywords.length} termo(s) ausente(s)</span>
+          <span>{bundle.ats_result.assessment_status}</span>
+        </BundleCard>
+        <BundleCard title="Readiness" score={bundle.readiness_result.readiness_score}>
+          <span>Evidência {Math.round(bundle.readiness_result.evidence_coverage * 100)}%</span>
+          <span>Requisitos {Math.round(bundle.readiness_result.requirement_coverage * 100)}%</span>
+          <span>Não é probabilidade de entrevista</span>
+        </BundleCard>
+        <BundleCard title="Tailor" score={null}>
+          <span>{bundle.tailor_result.improved_bullets.length} bullet(s) revisável(is)</span>
+          <span>{bundle.tailor_result.evidence_used.length} evidência(s) usada(s)</span>
+          <span>0 afirmações inventadas</span>
+        </BundleCard>
+      </div>
+    </section>
+  );
+}
+
+function BundleCard({
+  title,
+  score,
+  children,
+}: {
+  title: string;
+  score: number | null;
+  children: React.ReactNode;
+}) {
+  return (
+    <article className="rounded-xl border bg-muted/20 p-4">
+      <div className="flex items-baseline justify-between gap-2">
+        <h4 className="text-sm font-semibold">{title}</h4>
+        {score !== null && <strong className="text-display text-2xl tabular-nums">{score}</strong>}
+      </div>
+      <div className="mt-3 grid gap-1 text-[11px] text-muted-foreground">{children}</div>
+    </article>
   );
 }
 

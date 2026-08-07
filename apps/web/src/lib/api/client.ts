@@ -44,6 +44,7 @@ import type {
   GithubAnalyzeResult,
   GithubReport,
   Health,
+  IngestedDocument,
   ImportBatch,
   JobExtractResult,
   JobPosting,
@@ -148,6 +149,7 @@ import {
   mockProviderComparison,
 } from "@/mocks/ai-quality";
 import {
+  mockAnalysisBundle,
   mockKit,
   mockLabAnalyze,
   mockLabDetail,
@@ -759,7 +761,25 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         baseUrl,
         `/application-lab/sessions/${encodeURIComponent(sessionId)}`,
         { method: "PATCH", body: JSON.stringify(payload) },
-        { ...mockLabDetail, session: { ...mockLabSession, ...payload } },
+        {
+          ...mockLabDetail,
+          session: {
+            ...mockLabSession,
+            ...payload,
+            invalidated_steps:
+              payload.job_snapshot_id && payload.job_snapshot_id !== mockLabSession.job_snapshot_id
+                ? [5, 6, 7, 8, 9, 10]
+                : mockLabSession.invalidated_steps,
+          },
+          analysis_bundle:
+            payload.job_snapshot_id && payload.job_snapshot_id !== mockLabSession.job_snapshot_id
+              ? {
+                  ...mockAnalysisBundle,
+                  status: "stale",
+                  stale_reason: "job_snapshot_changed",
+                }
+              : mockAnalysisBundle,
+        },
       ),
     applicationLabCancel: (sessionId: string) =>
       call<ApplicationLabDetail>(
@@ -904,8 +924,8 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         {
           document: {
             document_id: "document-demo",
-            document_type: "txt",
-            media_type: "text/plain",
+            document_type: demoDocumentType(fileName),
+            media_type: demoDocumentMediaType(fileName),
             byte_size: Math.floor((contentBase64.length * 3) / 4),
             status: "needs_review",
             text_blocks: ["Conteúdo fictício para demonstrar a revisão da importação."],
@@ -914,12 +934,20 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
             structured_data: {},
             source_hash: "demo-source-hash",
             warnings: ["DEMO: o arquivo não foi enviado nem persistido."],
-            provenance: [],
+            provenance: [
+              {
+                source: "local_upload",
+                source_ref: `fixture://document/${fileName}`,
+                extraction_method:
+                  demoDocumentType(fileName) === "pdf" ? "pymupdf_text" : "local_parser",
+                location: { file_name: fileName, page: 1 },
+              },
+            ],
           },
           master_resume_draft: {
             ...mockMasterResume,
             title: `Rascunho DEMO · ${fileName}`,
-            source_type: "txt",
+            source_type: demoResumeSourceType(fileName),
             source_refs: ["fixture://resume-import/demo"],
           },
         },
@@ -5372,6 +5400,32 @@ function asNumber(value: unknown, fallback: number): number {
 
 function asBoolean(value: unknown, fallback: boolean): boolean {
   return typeof value === "boolean" ? value : fallback;
+}
+
+function demoDocumentType(fileName: string): IngestedDocument["document_type"] {
+  const extension = fileName.toLowerCase().split(".").pop();
+  if (extension === "pdf" || extension === "docx" || extension === "html" || extension === "json") {
+    return extension;
+  }
+  if (extension === "htm") return "html";
+  return "txt";
+}
+
+function demoDocumentMediaType(fileName: string): string {
+  return {
+    pdf: "application/pdf",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    html: "text/html",
+    json: "application/json",
+    txt: "text/plain",
+  }[demoDocumentType(fileName)];
+}
+
+function demoResumeSourceType(fileName: string): MasterResume["source_type"] {
+  const documentType = demoDocumentType(fileName);
+  if (documentType === "json") return "json_resume";
+  if (documentType === "html") return "txt";
+  return documentType;
 }
 
 function firstSentence(value: string): string {
