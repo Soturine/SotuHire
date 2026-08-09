@@ -6,6 +6,7 @@ import json
 
 from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
+from modules.ai.provider_errors import sanitize_provider_message
 from modules.ai.schemas.analysis_insights import RadarMatchExplanationOutput, WishlistDraftOutput
 from modules.ai.tracing import record_ai_run
 from modules.context import (
@@ -176,7 +177,7 @@ def radar_draft_wishlist(
             warnings=[
                 *warnings,
                 "IA indisponivel ou resposta invalida; usei rascunho local.",
-                str(exc)[:160],
+                sanitize_provider_message(exc, limit=160),
             ],
         )
         record_ai_run(

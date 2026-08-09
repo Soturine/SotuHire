@@ -8,6 +8,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict
 
+from modules.security.credentials import redact_provider_secrets
+
 GeminiTestType = Literal["simple", "structured", "analysis"]
 
 
@@ -46,7 +48,7 @@ def diagnose_gemini_error(
     call_type: str,
 ) -> GeminiDiagnostic:
     """Classify a Gemini failure into an actionable, sanitized diagnostic."""
-    raw = " ".join(str(exc).split())[:600] or exc.__class__.__name__
+    raw = redact_provider_secrets(" ".join(str(exc).split()))[:600] or exc.__class__.__name__
     upper = raw.upper()
     code_match = re.search(r"\b(\d{3}\s+[A-Z][A-Z_]+)\b", upper)
     code = code_match.group(1) if code_match else ""

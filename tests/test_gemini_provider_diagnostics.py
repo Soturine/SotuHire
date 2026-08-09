@@ -23,6 +23,21 @@ def test_invalid_argument_generates_actionable_diagnostic():
     assert "secret" not in diagnostic.model
 
 
+def test_diagnostic_redacts_modern_gemini_key_from_raw_error():
+    synthetic_secret = "AQ." + "Ab3dEf6hJk9mNp2Qr5St8VwXyZ0_"
+
+    diagnostic = diagnose_gemini_error(
+        RuntimeError(f"provider rejected {synthetic_secret}"),
+        test_type="simple",
+        model="gemini-2.5-flash",
+        key_source="GEMINI_API_KEY",
+        call_type="generate_content",
+    )
+
+    assert synthetic_secret not in diagnostic.raw_error
+    assert "[REDACTED]" in diagnostic.raw_error
+
+
 def test_simple_and_structured_tests_call_different_provider_paths(monkeypatch):
     calls: list[str] = []
     monkeypatch.setattr("modules.ai.setup.gemini_sdk_installed", lambda: True)

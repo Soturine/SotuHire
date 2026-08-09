@@ -250,6 +250,43 @@ def test_wishlist_draft_invalid_ai_json_falls_back_to_local(
     assert "Direito" in data["detected_domains"]
 
 
+def test_wishlist_draft_redacts_provider_error_credentials(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    synthetic_secret = "AQ." + "Ab3dEf6hJk9mNp2Qr5St8VwXyZ0_"
+
+    class FailingProvider:
+        name = "gemini"
+
+        def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+            self.model = model or "gemini-error-test"
+
+        def generate_structured(self, prompt, payload):  # noqa: ANN001, ARG002
+            raise RuntimeError(f"provider rejected {synthetic_secret}")
+
+    monkeypatch.setattr("apps.api.services.ai_settings.GeminiProvider", FailingProvider)
+    client = api_client()
+    client.post(
+        "/api/v1/settings/ai",
+        json={
+            "provider": "gemini",
+            "model": "gemini-error-test",
+            "api_key": FAKE_KEY,
+            "use_ai": True,
+            "allow_radar": True,
+        },
+    )
+
+    response = client.post(
+        "/api/v1/radar/wishlists/draft",
+        json={"free_text": "Busco pesquisa junior."},
+    )
+
+    serialized = json.dumps(response.json())
+    assert response.status_code == 200
+    assert synthetic_secret not in serialized
+    assert "REDACTED" in serialized
+
+
 def test_wishlist_draft_radar_toggle_off_uses_local(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
     client = api_client()

@@ -99,6 +99,7 @@ const queue = globalThis.SotuHireQueue;
   assert(!serialized.includes(modernGeminiLike));
   assert(!serialized.includes(openAiLike));
   assert(serialized.includes("AQ. aparece"));
+  assert.strictEqual(queue.sanitize(modernGeminiLike), "[secret]");
   assert(!Object.hasOwn(exported.items[0].body, "apiKey"));
   assert.deepStrictEqual(exported.items[0].body.nested, {});
 

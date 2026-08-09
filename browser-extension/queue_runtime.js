@@ -19,8 +19,6 @@
     /sk-(?:proj-)?[0-9A-Za-z_-]{20,}/g,
   ];
   const MODERN_GEMINI_CANDIDATE = /AQ\.[0-9A-Za-z_-]{24,128}/g;
-  const CREDENTIAL_CONTEXT =
-    /(gemini|google|api[ _.-]?key|authorization|bearer|credential|secret|token)/i;
 
   const normalizeUrl = (value) => {
     try {
@@ -139,13 +137,8 @@
       );
       return legacyRedacted.replace(
         MODERN_GEMINI_CANDIDATE,
-        (candidate, offset, source) => {
-          const start = Math.max(0, offset - 96);
-          const end = Math.min(source.length, offset + candidate.length + 96);
-          return looksLikeModernGeminiSecret(candidate) &&
-            CREDENTIAL_CONTEXT.test(source.slice(start, end))
-            ? "[secret]"
-            : candidate;
+        (candidate) => {
+          return looksLikeModernGeminiSecret(candidate) ? "[secret]" : candidate;
         },
       );
     }
