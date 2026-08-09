@@ -5,10 +5,14 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import sys
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 EXTENSION_DIR = ROOT / "browser-extension"
 DIST_DIR = ROOT / "dist"
 RUNTIME_FILES = (
@@ -36,7 +40,6 @@ ALLOWED_HOSTS = {
 }
 SECRET_PATTERNS = (
     re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
-    re.compile(r"AQ\.[0-9A-Za-z_-]{20,}"),
     re.compile(r"sk-(?:proj-)?[0-9A-Za-z_-]{20,}"),
     re.compile(r"gh[oprsu]_[0-9A-Za-z]{30,}"),
     re.compile(r"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
@@ -64,12 +67,16 @@ def validate_extension(extension_dir: Path = EXTENSION_DIR) -> dict[str, object]
 
 def scan_for_secrets(extension_dir: Path = EXTENSION_DIR) -> None:
     """Reject real secret values while allowing configuration field names."""
+    from modules.security.credentials import contains_provider_secret
+
     for relative in RUNTIME_FILES:
         path = extension_dir / relative
         if path.suffix.lower() in {".png", ".jpg", ".jpeg", ".gif", ".webp"}:
             continue
         content = path.read_text(encoding="utf-8")
-        if any(pattern.search(content) for pattern in SECRET_PATTERNS):
+        if any(pattern.search(content) for pattern in SECRET_PATTERNS) or contains_provider_secret(
+            content, require_context_for_modern_gemini=True
+        ):
             raise ValueError(f"Possivel segredo encontrado em {relative}.")
 
 

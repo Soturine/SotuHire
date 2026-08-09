@@ -39,6 +39,18 @@ def test_ai_run_store_sanitizes_secret_like_error_values(tmp_path):
     assert "REDACTED" in saved.model_dump_json()
 
 
+def test_ai_run_store_redacts_modern_gemini_credentials(tmp_path):
+    store = AiRunStore(tmp_path / "sotuhire.db")
+    synthetic_secret = "AQ." + "Ab3dEf6hJk9mNp2Qr5St8VwXyZ0_"
+
+    saved = store.save(
+        AiRun(feature="match", warnings=[f"Gemini API key inválida: {synthetic_secret}"])
+    )
+
+    assert synthetic_secret not in saved.model_dump_json()
+    assert "REDACTED" in saved.model_dump_json()
+
+
 def test_ai_run_store_rejects_secret_in_identity_metadata(tmp_path):
     store = AiRunStore(tmp_path / "sotuhire.db")
     synthetic_secret = "s" + "k-" + ("x" * 24)

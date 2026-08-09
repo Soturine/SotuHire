@@ -16,9 +16,11 @@
     /(api.?key|authorization|access.?token|refresh.?token|token|cookie|secret|password|passphrase|private.?key|credential)/i;
   const SECRET_VALUE_PATTERNS = [
     /AIza[0-9A-Za-z_-]{20,}/g,
-    /AQ\.[0-9A-Za-z_-]{20,}/g,
     /sk-(?:proj-)?[0-9A-Za-z_-]{20,}/g,
   ];
+  const MODERN_GEMINI_CANDIDATE = /AQ\.[0-9A-Za-z_-]{24,128}/g;
+  const CREDENTIAL_CONTEXT =
+    /(gemini|google|api[ _.-]?key|authorization|bearer|credential|secret|token)/i;
 
   const normalizeUrl = (value) => {
     try {
@@ -131,9 +133,20 @@
   const sanitize = (value) => {
     if (Array.isArray(value)) return value.map(sanitize);
     if (typeof value === "string") {
-      return SECRET_VALUE_PATTERNS.reduce(
+      const legacyRedacted = SECRET_VALUE_PATTERNS.reduce(
         (result, pattern) => result.replace(pattern, "[secret]"),
         value,
+      );
+      return legacyRedacted.replace(
+        MODERN_GEMINI_CANDIDATE,
+        (candidate, offset, source) => {
+          const start = Math.max(0, offset - 96);
+          const end = Math.min(source.length, offset + candidate.length + 96);
+          return looksLikeModernGeminiSecret(candidate) &&
+            CREDENTIAL_CONTEXT.test(source.slice(start, end))
+            ? "[secret]"
+            : candidate;
+        },
       );
     }
     if (!value || typeof value !== "object") return value;
@@ -142,6 +155,22 @@
         .filter(([key]) => !SECRET_FIELD.test(key))
         .map(([key, item]) => [key, sanitize(item)]),
     );
+  };
+
+  const looksLikeModernGeminiSecret = (candidate) => {
+    const payload = String(candidate || "").slice(3);
+    const unique = new Set(payload);
+    if (payload.length < 24 || payload.length > 128 || unique.size < 12) return false;
+    if (!/[A-Za-z]/.test(payload) || !/[0-9]/.test(payload)) return false;
+    const counts = new Map();
+    for (const character of payload) {
+      counts.set(character, (counts.get(character) || 0) + 1);
+    }
+    const entropy = [...counts.values()].reduce((total, count) => {
+      const probability = count / payload.length;
+      return total - probability * Math.log2(probability);
+    }, 0);
+    return entropy >= 3.25;
   };
 
   const exportPayload = (items, now = new Date()) => ({
@@ -200,6 +229,7 @@
     upsert,
     retry,
     sanitize,
+    looksLikeModernGeminiSecret,
     exportPayload,
     importPayload,
   };

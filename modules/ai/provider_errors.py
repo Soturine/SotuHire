@@ -14,6 +14,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field
 
 from modules.ai.exceptions import ProviderUnavailableError
+from modules.security.credentials import redact_provider_secrets
 
 
 class ProviderErrorCategory(StrEnum):
@@ -113,7 +114,6 @@ _SECRET_PATTERNS = (
     re.compile(r"(?i)(authorization\s*[:=]\s*bearer\s+)[^\s,;]+"),
     re.compile(r"(?i)((?:api[_-]?key|token|secret)\s*[:=]\s*)[^\s,;]+"),
     re.compile(r"\bsk-[A-Za-z0-9_-]{8,}\b"),
-    re.compile(r"\bAIza[A-Za-z0-9_-]{12,}\b"),
 )
 
 
@@ -125,6 +125,7 @@ def sanitize_provider_message(value: object, *, limit: int = 500) -> str:
             lambda match: (match.group(1) if match.lastindex else "") + "[REDACTED]",
             message,
         )
+    message = redact_provider_secrets(message)
     return message[:limit]
 
 

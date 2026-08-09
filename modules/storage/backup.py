@@ -15,6 +15,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from modules.security.credentials import contains_provider_secret
 from modules.storage.database import default_data_dir
 from modules.storage.migrations import MigrationRunner
 from modules.storage.migrations.versions import LATEST_SCHEMA_VERSION
@@ -329,9 +330,7 @@ def _contains_secret_material(path: Path) -> bool:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
         return True
-    if re.search(r"\bAIza[0-9A-Za-z_-]{20,}\b", text):
-        return True
-    if re.search(r"\bsk-(?:proj-)?[0-9A-Za-z_-]{20,}\b", text):
+    if contains_provider_secret(text, require_context_for_modern_gemini=True):
         return True
     return bool(
         re.search(

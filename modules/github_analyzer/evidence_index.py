@@ -14,11 +14,11 @@ from modules.github_analyzer.repository_models import (
     RepositoryMetadata,
     SelectedRepositoryFile,
 )
+from modules.security.credentials import contains_provider_secret
 
 SECRET_PATTERNS = (
     re.compile(r"(?i)(api[_-]?key|secret|token|password)\s*=\s*['\"][^'\"]{12,}['\"]"),
     re.compile(r"ghp_[A-Za-z0-9_]{20,}"),
-    re.compile(r"AIza[0-9A-Za-z_-]{20,}"),
 )
 
 
@@ -153,6 +153,18 @@ def _secret_evidence(files: list[SelectedRepositoryFile]) -> list[EvidenceItem]:
                     )
                 )
                 break
+        else:
+            if contains_provider_secret(
+                file.content, require_context_for_modern_gemini=True
+            ):
+                items.append(
+                    EvidenceItem(
+                        claim="Possible exposed secret detected in sampled content.",
+                        source_file=file.path,
+                        evidence_type="code_content",
+                        confidence=0.88,
+                    )
+                )
     return items
 
 

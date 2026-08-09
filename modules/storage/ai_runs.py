@@ -13,6 +13,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
+from modules.security.credentials import contains_provider_secret, redact_provider_secrets
 from modules.storage.database import connect_database, default_database_path
 from modules.storage.migrations import ensure_database
 
@@ -255,8 +256,7 @@ class AiRunStore:
 def sanitize_error_message(value: str) -> str:
     """Redact credentials, headers and long opaque values from stored diagnostics."""
     text = str(value or "")[:1000]
-    text = re.sub(r"AIza[0-9A-Za-z_-]{12,}", "[REDACTED]", text)
-    text = re.sub(r"sk-(?:proj-)?[0-9A-Za-z_-]{12,}", "[REDACTED]", text)
+    text = redact_provider_secrets(text)
     text = re.sub(r"(?i)(authorization\s*[:=]\s*)([^\s,;]+)", r"\1[REDACTED]", text)
     text = re.sub(r"(?i)(api[_ -]?key\s*[:=]\s*)([^\s,;]+)", r"\1[REDACTED]", text)
     text = re.sub(r"(?i)(bearer\s+)([^\s,;]+)", r"\1[REDACTED]", text)
@@ -283,10 +283,7 @@ def _looks_secret(value: str) -> bool:
     lowered = value.casefold()
     if any(marker in lowered for marker in ("authorization:", "bearer ")):
         return True
-    return bool(
-        re.search(r"\bAIza[0-9A-Za-z_-]{20,}\b", value)
-        or re.search(r"\bsk-(?:proj-)?[0-9A-Za-z_-]{20,}\b", value)
-    )
+    return contains_provider_secret(value, require_context_for_modern_gemini=False)
 
 
 def _redacted_evidence(values: list[dict[str, Any] | str]) -> list[dict[str, Any] | str]:

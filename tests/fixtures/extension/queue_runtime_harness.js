@@ -78,6 +78,8 @@ const queue = globalThis.SotuHireQueue;
   assert.strictEqual(calls, callsAtLimit);
 
   const geminiLike = "AIza" + "A".repeat(28);
+  const modernGeminiLike =
+    "AQ." + "Ab3dEf6hJk9mNp2Qr5St8VwXyZ0_";
   const openAiLike = "sk-" + "B".repeat(28);
   const exported = queue.exportPayload([
     {
@@ -87,13 +89,16 @@ const queue = globalThis.SotuHireQueue;
         url: "https://jobs.example/vaga/99",
         apiKey: "field-secret",
         nested: { Authorization: "Bearer field-secret", token: "field-secret" },
-        visible_text: `Valores acidentais ${geminiLike} e ${openAiLike}`,
+        visible_text: `Gemini API key: ${modernGeminiLike}; outros ${geminiLike} e ${openAiLike}`,
+        ordinary_text: "A sigla AQ. aparece em um relatório normal.",
       },
     },
   ]);
   const serialized = JSON.stringify(exported);
   assert(!serialized.includes(geminiLike));
+  assert(!serialized.includes(modernGeminiLike));
   assert(!serialized.includes(openAiLike));
+  assert(serialized.includes("AQ. aparece"));
   assert(!Object.hasOwn(exported.items[0].body, "apiKey"));
   assert.deepStrictEqual(exported.items[0].body.nested, {});
 

@@ -49,7 +49,7 @@ def test_content_runtime_prioritizes_nested_schema_org_jobposting() -> None:
     "secret_value",
     [
         "AIza" + "A" * 28,
-        "AQ." + "B" * 28,
+        "AQ." + "Ab3dEf6hJk9mNp2Qr5St8VwXyZ0_",
         "sk-" + "C" * 28,
         "sk-" + "proj-" + "D" * 28,
     ],
@@ -60,10 +60,19 @@ def test_package_secret_scan_rejects_gemini_and_openai_patterns(
     extension = tmp_path / "extension"
     shutil.copytree("browser-extension", extension)
     with (extension / "popup.js").open("a", encoding="utf-8") as handle:
-        handle.write(f"\n// {secret_value}\n")
+        handle.write(f"\n// provider api key: {secret_value}\n")
 
     with pytest.raises(ValueError, match="Possivel segredo"):
         scan_for_secrets(extension)
+
+
+def test_package_secret_scan_allows_ordinary_aq_prose(tmp_path: Path) -> None:
+    extension = tmp_path / "extension"
+    shutil.copytree("browser-extension", extension)
+    with (extension / "popup.js").open("a", encoding="utf-8") as handle:
+        handle.write("\n// AQ. é apenas uma sigla neste texto.\n")
+
+    scan_for_secrets(extension)
 
 
 def test_popup_uses_versioned_handshake_contract() -> None:

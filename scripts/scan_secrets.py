@@ -4,7 +4,13 @@ from __future__ import annotations
 
 import argparse
 import re
+import sys
 from pathlib import Path
+from zipfile import BadZipFile, ZipFile
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 
 PATTERNS = (
     re.compile(rb"(?<![0-9A-Za-z_-])AIza[0-9A-Za-z_-]{20,}"),
@@ -36,7 +42,29 @@ def has_secret_pattern(path: Path) -> bool:
         content = path.read_bytes()
     except OSError:
         return False
-    return any(pattern.search(content) for pattern in PATTERNS)
+    if _content_has_secret(content):
+        return True
+    if path.suffix.casefold() != ".zip":
+        return False
+    try:
+        with ZipFile(path) as archive:
+            for member in archive.infolist():
+                if member.is_dir() or member.file_size > MAX_BYTES:
+                    continue
+                if _content_has_secret(archive.read(member)):
+                    return True
+    except (BadZipFile, OSError, RuntimeError):
+        return False
+    return False
+
+
+def _content_has_secret(content: bytes) -> bool:
+    from modules.security.credentials import contains_provider_secret
+
+    if any(pattern.search(content) for pattern in PATTERNS):
+        return True
+    text = content.decode("utf-8", errors="ignore")
+    return contains_provider_secret(text, require_context_for_modern_gemini=True)
 
 
 def main() -> int:

@@ -1,6 +1,6 @@
 /* SotuHire extension service worker: provider secrets, model catalogs and public GitHub enrichment. */
 
-importScripts("project_analysis.js");
+importScripts("queue_runtime.js", "project_analysis.js");
 
 const COMPANION_API = "http://127.0.0.1:8765";
 const APP_API = "http://127.0.0.1:8787/api/v1";
@@ -955,10 +955,9 @@ function modelSort(left, right) {
 }
 
 function safeError(error) {
-  return String(error?.message || error || "Falha desconhecida.")
-    .replace(
-      /AIza[0-9A-Za-z_-]+|AQ\.[0-9A-Za-z_-]+|sk-[A-Za-z0-9_-]+/g,
-      "[secret]",
-    )
-    .slice(0, 500);
+  return String(
+    globalThis.SotuHireQueue.sanitize(
+      String(error?.message || error || "Falha desconhecida."),
+    ),
+  ).slice(0, 500);
 }
