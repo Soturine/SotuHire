@@ -22,7 +22,11 @@ from modules.application_lab.canonical_document import (
     canonical_document,
 )
 from modules.application_lab.models import ResumeExport
-from modules.schemas.json_resume import CareerEvidence, JSONResume
+from modules.schemas.json_resume import (
+    CareerEvidence,
+    JSONResume,
+    SotuHireJSONResumeExtension,
+)
 
 ExportFormat = Literal["json_resume", "pdf", "docx"]
 PageSize = Literal["A4", "Letter"]
@@ -39,7 +43,7 @@ def prepare_resume_export(
     canonical = canonical_document(resume)
     stem = _safe_stem(canonical.title or "curriculo")
     if export_format == "json_resume":
-        payload = _json_resume(canonical).model_dump(mode="json", exclude_none=True)
+        payload = _json_resume(canonical).model_dump(mode="json", exclude_none=True, by_alias=True)
         encoded = json.dumps(
             payload,
             ensure_ascii=False,
@@ -102,11 +106,17 @@ def _json_resume(document: CanonicalProfessionalDocument) -> JSONResume:
     }
     buckets: dict[str, list[dict[str, Any]]] = {
         "work": [],
+        "volunteer": [],
         "education": [],
+        "awards": [],
         "skills": [],
         "projects": [],
         "certificates": [],
+        "publications": [],
         "languages": [],
+        "interests": [],
+        "references": [],
+        "professional_registrations": [],
     }
     evidence: list[CareerEvidence] = []
     for section in document.sections:
@@ -114,7 +124,7 @@ def _json_resume(document: CanonicalProfessionalDocument) -> JSONResume:
         for entry in section.entries:
             if not entry.confirmed_by_user:
                 continue
-            item = _entry_payload(entry)
+            item = _entry_payload(entry, bucket)
             if bucket:
                 buckets[bucket].append(item)
             for source_ref in entry.source_refs[:5]:
@@ -136,11 +146,19 @@ def _json_resume(document: CanonicalProfessionalDocument) -> JSONResume:
     return JSONResume(
         basics=basics,
         work=buckets["work"],
+        volunteer=buckets["volunteer"],
         education=buckets["education"],
+        awards=buckets["awards"],
         skills=buckets["skills"],
         projects=buckets["projects"],
         certificates=buckets["certificates"],
+        publications=buckets["publications"],
         languages=buckets["languages"],
+        interests=buckets["interests"],
+        references=buckets["references"],
+        sotuhire=SotuHireJSONResumeExtension(
+            professional_registrations=buckets["professional_registrations"]
+        ),
         evidence=evidence,
     )
 
@@ -229,31 +247,86 @@ def _section_bucket(section: CanonicalDocumentSection) -> str:
     return {
         "experience": "work",
         "work_experience": "work",
+        "volunteer": "volunteer",
+        "volunteer_work": "volunteer",
         "education": "education",
+        "awards": "awards",
+        "award": "awards",
         "skills": "skills",
         "projects": "projects",
         "portfolio": "projects",
         "certifications": "certificates",
-        "professional_registry": "certificates",
-        "professional_registrations": "certificates",
+        "certificates": "certificates",
+        "publications": "publications",
+        "publication": "publications",
+        "professional_registry": "professional_registrations",
+        "professional_registration": "professional_registrations",
+        "professional_registrations": "professional_registrations",
         "languages": "languages",
+        "interests": "interests",
+        "references": "references",
     }.get(normalized, "")
 
 
-def _entry_payload(entry: CanonicalDocumentEntry) -> dict[str, Any]:
-    return {
-        key: value
-        for key, value in {
-            "name": entry.title,
-            "position": entry.title,
-            "institution": entry.subtitle,
-            "summary": entry.content,
-            "startDate": entry.start_date,
-            "endDate": entry.end_date,
-            "keywords": [entry.title] if entry.title else [],
-        }.items()
-        if value
+def _entry_payload(entry: CanonicalDocumentEntry, bucket: str) -> dict[str, Any]:
+    common = {
+        "startDate": entry.start_date,
+        "endDate": entry.end_date,
     }
+    if bucket == "work":
+        values = {
+            "name": entry.subtitle,
+            "position": entry.title,
+            "summary": entry.content,
+            **common,
+        }
+    elif bucket == "volunteer":
+        values = {
+            "organization": entry.subtitle,
+            "position": entry.title,
+            "summary": entry.content,
+            **common,
+        }
+    elif bucket == "education":
+        values = {
+            "institution": entry.subtitle,
+            "studyType": entry.title,
+            "area": entry.content,
+            **common,
+        }
+    elif bucket == "awards":
+        values = {"title": entry.title, "awarder": entry.subtitle, "summary": entry.content}
+    elif bucket == "certificates":
+        values = {"name": entry.title, "issuer": entry.subtitle, "date": entry.end_date}
+    elif bucket == "publications":
+        values = {
+            "name": entry.title,
+            "publisher": entry.subtitle,
+            "summary": entry.content,
+        }
+    elif bucket == "skills":
+        values = {"name": entry.title, "keywords": [entry.title] if entry.title else []}
+    elif bucket == "languages":
+        values = {"language": entry.title, "fluency": entry.content}
+    elif bucket == "interests":
+        values = {"name": entry.title, "keywords": [entry.content] if entry.content else []}
+    elif bucket == "references":
+        values = {"name": entry.title, "reference": entry.content}
+    elif bucket == "professional_registrations":
+        values = {
+            "name": entry.title,
+            "authority": entry.subtitle,
+            "summary": entry.content,
+            "sourceRefs": entry.source_refs,
+        }
+    else:
+        values = {
+            "name": entry.title,
+            "description": entry.content,
+            "keywords": [entry.title] if entry.title else [],
+            **common,
+        }
+    return {key: value for key, value in values.items() if value not in (None, "", [])}
 
 
 def _safe_stem(value: str) -> str:

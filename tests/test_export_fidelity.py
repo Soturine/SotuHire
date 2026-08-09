@@ -91,3 +91,49 @@ def test_pdf_page_size_matches_a4_and_letter_contracts() -> None:
     assert round(a4_rect.height) == 842
     assert round(letter_rect.width) == 612
     assert round(letter_rect.height) == 792
+
+
+def test_professional_registration_has_its_own_json_resume_extension() -> None:
+    resume = _resume().model_copy(
+        update={
+            "sections": [
+                ResumeSection(
+                    section_type="professional_registrations",
+                    title="Registros profissionais",
+                    entries=[
+                        ResumeEntry(
+                            title="Registro Profissional 123",
+                            subtitle="Conselho Exemplo",
+                            content="Ativo; dado inteiramente ficticio.",
+                            source_refs=["fixture://registration/123"],
+                            confirmed_by_user=True,
+                        )
+                    ],
+                )
+            ]
+        }
+    )
+
+    _, payload = prepare_resume_export(resume, export_format="json_resume")
+    _, pdf_payload = prepare_resume_export(resume, export_format="pdf")
+    _, docx_payload = prepare_resume_export(resume, export_format="docx")
+
+    assert payload["certificates"] == []
+    registrations = payload["x-sotuhire"]["professionalRegistrations"]
+    assert registrations == [
+        {
+            "name": "Registro Profissional 123",
+            "authority": "Conselho Exemplo",
+            "summary": "Ativo; dado inteiramente ficticio.",
+            "sourceRefs": ["fixture://registration/123"],
+        }
+    ]
+    with fitz.open(
+        stream=base64.b64decode(cast(str, pdf_payload["content_base64"])),
+        filetype="pdf",
+    ) as pdf:
+        pdf_text = "\n".join(cast(str, page.get_text()) for page in pdf)
+    document = Document(io.BytesIO(base64.b64decode(cast(str, docx_payload["content_base64"]))))
+    docx_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
+    assert "REGISTROS PROFISSIONAIS" in pdf_text
+    assert "Registros profissionais" in docx_text

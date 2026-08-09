@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime
-from typing import Literal
+from typing import Any, Literal
 from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -37,6 +37,7 @@ class ProfileItem(BaseModel):
     tags: list[str] = Field(default_factory=list, max_length=80)
     skills: list[str] = Field(default_factory=list, max_length=80)
     evidence: str | None = Field(default=None, max_length=5000)
+    structured_data: dict[str, Any] = Field(default_factory=dict)
     source: str = Field(default="manual", max_length=120)
     source_ref: str | None = Field(default=None, max_length=500)
     review_status: EvidenceReviewStatus = EvidenceReviewStatus.CANDIDATE
@@ -70,6 +71,19 @@ class ProfileSourceSummary(BaseModel):
     last_imported_at: datetime | None = None
 
 
+class ProfileInteroperability(BaseModel):
+    """Source-specific payload fragments needed for lossless local round-trips."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    json_resume_schema_url: str | None = None
+    json_resume_basics: dict[str, Any] = Field(default_factory=dict)
+    json_resume_meta: dict[str, Any] = Field(default_factory=dict)
+    json_resume_extension: dict[str, Any] = Field(default_factory=dict)
+    json_resume_extra: dict[str, Any] = Field(default_factory=dict)
+    json_resume_evidence: list[dict[str, Any]] = Field(default_factory=list)
+
+
 class UniversalCareerProfile(BaseModel):
     """Universal, local-first career profile persisted on disk."""
 
@@ -90,6 +104,7 @@ class UniversalCareerProfile(BaseModel):
     constraints: list[ProfileItem] = Field(default_factory=list, max_length=80)
     items: list[ProfileItem] = Field(default_factory=list)
     source_summaries: list[ProfileSourceSummary] = Field(default_factory=list)
+    interoperability: ProfileInteroperability = Field(default_factory=ProfileInteroperability)
     updated_at: datetime = Field(default_factory=utc_now)
     created_at: datetime = Field(default_factory=utc_now)
 
