@@ -52,6 +52,8 @@ import type {
   LattesConfirmResult,
   LattesImportResult,
   LocalNotification,
+  LocalAiHealth,
+  LocalAiProviderId,
   MatchAnalysis,
   MatchAnalyzeResult,
   MatchRequirement,
@@ -514,6 +516,29 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           status: "not_configured",
         },
         normalizeAiSettings,
+      ),
+
+    localAiHealth: (payload: {
+      provider: LocalAiProviderId;
+      endpoint: string;
+      advanced_remote_opt_in?: boolean;
+      api_key?: string;
+    }) =>
+      call<LocalAiHealth>(
+        mode,
+        baseUrl,
+        "/ai/local/health",
+        { method: "POST", body: JSON.stringify(payload) },
+        {
+          provider: payload.provider,
+          endpoint: payload.endpoint,
+          status: "offline",
+          latency_ms: null,
+          models: [],
+          capabilities: ["explicit_endpoint_only"],
+          checked_at: new Date().toISOString(),
+          message: "Modo demo não consulta servidores locais.",
+        },
       ),
 
     resumeExtract: (resume_text: string) =>

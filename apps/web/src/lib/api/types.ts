@@ -196,6 +196,19 @@ export interface AiModelsResult {
   warnings?: string[];
 }
 
+export type LocalAiProviderId = "ollama" | "lm_studio" | "openai_compatible";
+
+export interface LocalAiHealth {
+  provider: LocalAiProviderId;
+  endpoint: string;
+  status: "ready" | "offline" | "error";
+  latency_ms?: number | null;
+  models: { id: string; owned_by: string }[];
+  capabilities: string[];
+  checked_at: string;
+  message: string;
+}
+
 export type ProfileConfidence = "low" | "medium" | "high";
 
 export interface ProfileItem {

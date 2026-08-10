@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Activity,
   Beaker,
@@ -20,9 +20,17 @@ import { useApiStatus } from "@/components/api-mode-badge";
 import { useApi } from "@/lib/api/hooks";
 import { DEFAULT_API_URL, useApiMode } from "@/lib/api/mode";
 import { APP_VERSION } from "@/lib/labels";
-import type { AiProvider, AiSettings, AiSettingsPreset, AiSettingsStatus } from "@/lib/api/types";
+import type {
+  AiProvider,
+  AiSettings,
+  AiSettingsPreset,
+  AiSettingsStatus,
+  LocalAiHealth,
+  LocalAiProviderId,
+} from "@/lib/api/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
+import { usePreferences } from "@/lib/preferences";
 import {
   DEMO_PERSONAS,
   getActiveDemoPersona,
@@ -51,135 +59,419 @@ function SettingsPage() {
       title="Configurações"
       description="Modo da API, providers de IA e verificações do ambiente local."
     >
-      <div className="grid gap-6 lg:grid-cols-2">
-        <SectionCard
-          title="Modo de operação"
-          description="Demo usa dados fictícios. Real consome sua API local."
+      <div className="space-y-6">
+        <nav
+          aria-label="Seções das configurações"
+          className="flex flex-wrap gap-2 rounded-lg border border-border bg-card p-3"
         >
-          <div className="grid grid-cols-2 gap-3">
-            <ModeCard
-              active={mode === "demo"}
-              onClick={() => setMode("demo")}
-              icon={<Beaker className="h-4 w-4" />}
-              title="Demo"
-              desc="Dados fictícios, ideal para explorar a UI."
-              tone="warning"
-            />
-            <ModeCard
-              active={mode === "real"}
-              onClick={() => setMode("real")}
-              icon={<Radio className="h-4 w-4" />}
-              title="API Real"
-              desc="Consome 127.0.0.1:8787 (FastAPI local)."
-              tone="success"
-            />
-          </div>
+          {[
+            ["geral", "Geral"],
+            ["idioma", "Idioma"],
+            ["aparencia", "Aparência"],
+            ["ia", "IA"],
+            ["privacidade", "Privacidade"],
+            ["dados", "Dados"],
+            ["extensao", "Extensão"],
+            ["notificacoes", "Notificações"],
+            ["ajuda", "Ajuda"],
+            ["sobre", "Sobre"],
+          ].map(([id, label]) => (
+            <a
+              key={id}
+              href={`#${id}`}
+              className="rounded-md border border-input px-3 py-1.5 text-xs font-medium hover:bg-muted"
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
 
-          <div className="mt-5">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Base URL da API
-            </label>
-            <div className="mt-1.5 flex gap-2">
-              <input
-                value={baseUrl}
-                onChange={(e) => setBaseUrl(e.target.value)}
-                className="flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
-              />
-              <button
-                onClick={() => {
-                  setBaseUrl(DEFAULT_API_URL);
-                  toast.success("Restaurado para o padrão");
-                }}
-                className="rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted"
-              >
-                Padrão
-              </button>
-            </div>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Padrão: <code className="rounded bg-muted px-1 py-0.5">{DEFAULT_API_URL}</code>
-            </p>
-            {mode === "real" && (
-              <p
-                className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3 text-xs"
-                data-testid="local-pairing-status"
-              >
-                <strong>Pareamento local protegido:</strong> a sessão HttpOnly é negociada
-                automaticamente e mutações usam CSRF mantido apenas em memória. Tokens nunca são
-                exibidos nesta tela.
-              </p>
-            )}
-          </div>
-        </SectionCard>
-
-        <SectionCard title="Status da API">
-          <ApiStatusPanel
-            status={status.status}
-            message={status.message}
-            onRefetch={() => healthQ.refetch()}
-            refreshing={healthQ.isFetching}
-            capabilities={healthQ.data?.capabilities}
-          />
-        </SectionCard>
-
-        <AiProvidersCard />
-
-        <SectionCard title="Sobre">
-          <div className="grid gap-3 text-sm">
-            <Item k="Versão" v={`v${APP_VERSION}`} />
-            <Item k="Local-first" v="Sim" />
-            <Item k="Segredos no cliente" v="Nenhum" />
-            <Item k="Contrato da API" v="v1" />
-          </div>
-        </SectionCard>
-
-        {mode === "demo" && (
+        <section
+          id="geral"
+          aria-labelledby="settings-general"
+          className="grid gap-6 lg:grid-cols-2"
+        >
+          <h2 id="settings-general" className="sr-only">
+            Geral
+          </h2>
           <SectionCard
-            className="lg:col-span-2"
-            title="Dados de demonstração multiárea"
-            description="Escolha uma persona fictícia coerente. Esta ação nunca altera dados da API Real."
+            title="Modo de operação"
+            description="Demo usa dados fictícios. Real consome sua API local."
           >
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-              <label className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Persona ativa
-                <select
-                  value={demoPersona}
-                  onChange={(event) => {
-                    const next = event.target.value;
-                    setDemoPersona(next);
-                    setActiveDemoPersona(next);
+            <div className="grid grid-cols-2 gap-3">
+              <ModeCard
+                active={mode === "demo"}
+                onClick={() => setMode("demo")}
+                icon={<Beaker className="h-4 w-4" />}
+                title="Demo"
+                desc="Dados fictícios, ideal para explorar a UI."
+                tone="warning"
+              />
+              <ModeCard
+                active={mode === "real"}
+                onClick={() => setMode("real")}
+                icon={<Radio className="h-4 w-4" />}
+                title="API Real"
+                desc="Consome 127.0.0.1:8787 (FastAPI local)."
+                tone="success"
+              />
+            </div>
+
+            <div className="mt-5">
+              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Base URL da API
+              </label>
+              <div className="mt-1.5 flex gap-2">
+                <input
+                  value={baseUrl}
+                  onChange={(e) => setBaseUrl(e.target.value)}
+                  className="flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
+                />
+                <button
+                  onClick={() => {
+                    setBaseUrl(DEFAULT_API_URL);
+                    toast.success("Restaurado para o padrão");
+                  }}
+                  className="rounded-md border border-input bg-background px-3 py-2 text-xs font-medium hover:bg-muted"
+                >
+                  Padrão
+                </button>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Padrão: <code className="rounded bg-muted px-1 py-0.5">{DEFAULT_API_URL}</code>
+              </p>
+              {mode === "real" && (
+                <p
+                  className="mt-3 rounded-lg border border-success/30 bg-success/5 p-3 text-xs"
+                  data-testid="local-pairing-status"
+                >
+                  <strong>Pareamento local protegido:</strong> a sessão HttpOnly é negociada
+                  automaticamente e mutações usam CSRF mantido apenas em memória. Tokens nunca são
+                  exibidos nesta tela.
+                </p>
+              )}
+            </div>
+          </SectionCard>
+
+          <SectionCard title="Status da API">
+            <ApiStatusPanel
+              status={status.status}
+              message={status.message}
+              onRefetch={() => healthQ.refetch()}
+              refreshing={healthQ.isFetching}
+              capabilities={healthQ.data?.capabilities}
+            />
+          </SectionCard>
+        </section>
+
+        <PreferenceSettingsCards />
+
+        <section id="ia" aria-labelledby="settings-ai">
+          <h2 id="settings-ai" className="sr-only">
+            IA
+          </h2>
+          <div className="space-y-6">
+            <LocalAiInteropCard />
+            <AiProvidersCard />
+          </div>
+        </section>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <section id="privacidade">
+            <SectionCard
+              title="Privacidade"
+              description="Controle quando dados podem sair da API local."
+            >
+              <p className="text-sm text-muted-foreground">
+                Providers externos permanecem opt-in. Segredos nunca retornam ao navegador.
+              </p>
+              <Link
+                to="/privacy"
+                className="mt-4 inline-flex text-sm font-medium text-accent hover:underline"
+              >
+                Abrir controles de privacidade
+              </Link>
+            </SectionCard>
+          </section>
+          <section id="dados">
+            <SectionCard
+              title="Dados"
+              description="Backup, exportação, restore e saúde do armazenamento local."
+            >
+              <Link to="/privacy" className="text-sm font-medium text-accent hover:underline">
+                Gerenciar dados locais
+              </Link>
+            </SectionCard>
+          </section>
+          <section id="extensao">
+            <SectionCard
+              title="Extensão"
+              description="Pareamento e captura assistida com identidade explícita."
+            >
+              <Link to="/sources" className="text-sm font-medium text-accent hover:underline">
+                Ver extensão e fontes
+              </Link>
+            </SectionCard>
+          </section>
+          <section id="notificacoes">
+            <SectionCard
+              title="Notificações"
+              description="Lembretes locais e ações sempre revisáveis."
+            >
+              <Link to="/career" className="text-sm font-medium text-accent hover:underline">
+                Gerenciar tarefas e lembretes
+              </Link>
+            </SectionCard>
+          </section>
+          <section id="ajuda">
+            <SectionCard
+              title="Ajuda"
+              description="Guias por fluxo, limites e solução de problemas."
+            >
+              <Link to="/help" className="text-sm font-medium text-accent hover:underline">
+                Abrir central de ajuda
+              </Link>
+            </SectionCard>
+          </section>
+
+          <section id="sobre">
+            <SectionCard title="Sobre">
+              <div className="grid gap-3 text-sm">
+                <Item k="Versão" v={`v${APP_VERSION}`} />
+                <Item k="Local-first" v="Sim" />
+                <Item k="Segredos no cliente" v="Nenhum" />
+                <Item k="Contrato da API" v="v1" />
+              </div>
+            </SectionCard>
+          </section>
+
+          {mode === "demo" && (
+            <SectionCard
+              className="lg:col-span-2"
+              title="Dados de demonstração multiárea"
+              description="Escolha uma persona fictícia coerente. Esta ação nunca altera dados da API Real."
+            >
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <label className="flex-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Persona ativa
+                  <select
+                    value={demoPersona}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setDemoPersona(next);
+                      setActiveDemoPersona(next);
+                      window.location.reload();
+                    }}
+                    data-testid="demo-persona-select"
+                    className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground"
+                  >
+                    {DEMO_PERSONAS.map((persona) => (
+                      <option key={persona.id} value={persona.id}>
+                        {persona.label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <button
+                  type="button"
+                  data-testid="restore-demo-data"
+                  onClick={() => {
+                    restoreDemoPersona();
+                    toast.success("Dados fictícios restaurados. Nenhum dado real foi apagado.");
                     window.location.reload();
                   }}
-                  data-testid="demo-persona-select"
-                  className="mt-1.5 w-full rounded-md border border-input bg-background px-3 py-2 text-sm font-normal normal-case tracking-normal text-foreground"
+                  className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
                 >
-                  {DEMO_PERSONAS.map((persona) => (
-                    <option key={persona.id} value={persona.id}>
-                      {persona.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <button
-                type="button"
-                data-testid="restore-demo-data"
-                onClick={() => {
-                  restoreDemoPersona();
-                  toast.success("Dados fictícios restaurados. Nenhum dado real foi apagado.");
-                  window.location.reload();
-                }}
-                className="rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-muted"
-              >
-                Restaurar dados de demonstração
-              </button>
-            </div>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Perfil, evidência, oportunidade, wishlist, Tracker, notificação e contexto usam a
-              mesma persona selecionada.
-            </p>
-          </SectionCard>
-        )}
+                  Restaurar dados de demonstração
+                </button>
+              </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                Perfil, evidência, oportunidade, wishlist, Tracker, notificação e contexto usam a
+                mesma persona selecionada.
+              </p>
+            </SectionCard>
+          )}
+        </div>
       </div>
     </AppShell>
+  );
+}
+
+function PreferenceSettingsCards() {
+  const { localePreference, setLocalePreference, themePreference, setThemePreference, t } =
+    usePreferences();
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <section id="idioma">
+        <SectionCard title={t("preferences.locale")} description={t("preferences.description")}>
+          <label className="text-sm font-medium" htmlFor="settings-locale">
+            {t("preferences.locale")}
+          </label>
+          <select
+            id="settings-locale"
+            value={localePreference}
+            onChange={(event) =>
+              setLocalePreference(event.target.value as "system" | "pt-BR" | "en-US")
+            }
+            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="system">{t("preferences.locale.system")}</option>
+            <option value="pt-BR">{t("preferences.locale.pt-BR")}</option>
+            <option value="en-US">{t("preferences.locale.en-US")}</option>
+          </select>
+        </SectionCard>
+      </section>
+      <section id="aparencia">
+        <SectionCard title={t("preferences.theme")} description={t("preferences.description")}>
+          <label className="text-sm font-medium" htmlFor="settings-theme">
+            {t("preferences.theme")}
+          </label>
+          <select
+            id="settings-theme"
+            value={themePreference}
+            onChange={(event) =>
+              setThemePreference(event.target.value as "system" | "light" | "dark")
+            }
+            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="system">{t("preferences.theme.system")}</option>
+            <option value="light">{t("preferences.theme.light")}</option>
+            <option value="dark">{t("preferences.theme.dark")}</option>
+          </select>
+        </SectionCard>
+      </section>
+    </div>
+  );
+}
+
+const LOCAL_AI_DEFAULTS: Record<LocalAiProviderId, string> = {
+  ollama: "http://127.0.0.1:11434/v1",
+  lm_studio: "http://127.0.0.1:1234/v1",
+  openai_compatible: "http://127.0.0.1:8000/v1",
+};
+
+function LocalAiInteropCard() {
+  const api = useApi();
+  const [provider, setProvider] = useState<LocalAiProviderId>("ollama");
+  const [endpoint, setEndpoint] = useState(LOCAL_AI_DEFAULTS.ollama);
+  const [advancedRemoteOptIn, setAdvancedRemoteOptIn] = useState(false);
+  const [health, setHealth] = useState<LocalAiHealth | null>(null);
+  const check = useMutation({
+    mutationFn: () =>
+      api.localAiHealth({
+        provider,
+        endpoint,
+        advanced_remote_opt_in: advancedRemoteOptIn,
+      }),
+    onSuccess: setHealth,
+    onError: () => setHealth(null),
+  });
+
+  const selectProvider = (value: LocalAiProviderId) => {
+    setProvider(value);
+    setEndpoint(LOCAL_AI_DEFAULTS[value]);
+    setAdvancedRemoteOptIn(false);
+    setHealth(null);
+  };
+
+  return (
+    <SectionCard
+      title="IA local e compatível"
+      description="Teste somente o endpoint escolhido. O SotuHire nunca procura servidores na rede."
+    >
+      <div className="grid gap-4 md:grid-cols-[minmax(0,0.7fr)_minmax(0,1.3fr)]">
+        <label className="text-sm font-medium" htmlFor="local-ai-provider">
+          Provider
+          <select
+            id="local-ai-provider"
+            value={provider}
+            onChange={(event) => selectProvider(event.target.value as LocalAiProviderId)}
+            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="ollama">Ollama</option>
+            <option value="lm_studio">LM Studio</option>
+            <option value="openai_compatible">OpenAI-compatible</option>
+          </select>
+        </label>
+        <label className="text-sm font-medium" htmlFor="local-ai-endpoint">
+          Endpoint explícito
+          <input
+            id="local-ai-endpoint"
+            type="url"
+            value={endpoint}
+            onChange={(event) => {
+              setEndpoint(event.target.value);
+              setHealth(null);
+            }}
+            spellCheck={false}
+            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-sm"
+          />
+        </label>
+      </div>
+      <label className="mt-4 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs">
+        <input
+          type="checkbox"
+          checked={advancedRemoteOptIn}
+          onChange={(event) => {
+            setAdvancedRemoteOptIn(event.target.checked);
+            setHealth(null);
+          }}
+          className="mt-0.5"
+        />
+        <span>
+          <strong className="block text-foreground">Permitir endpoint remoto avançado</strong>
+          Exige HTTPS e validação contra SSRF. Por padrão, somente loopback é aceito.
+        </span>
+      </label>
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <button
+          type="button"
+          onClick={() => check.mutate()}
+          disabled={check.isPending || !endpoint.trim()}
+          className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {check.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+          Testar endpoint
+        </button>
+        <span className="text-xs text-muted-foreground">
+          Nenhuma consulta ocorre antes deste botão.
+        </span>
+      </div>
+      {check.isError && (
+        <p
+          role="alert"
+          className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"
+        >
+          Não foi possível validar o endpoint informado.
+        </p>
+      )}
+      {health && (
+        <div
+          className="mt-4 rounded-lg border border-border bg-muted/30 p-3 text-xs"
+          aria-live="polite"
+          data-testid="local-ai-health-result"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <strong>Status: {health.status}</strong>
+            {health.latency_ms != null && <span>· {health.latency_ms} ms</span>}
+            <span>· {health.models.length} modelo(s)</span>
+          </div>
+          <p className="mt-1 text-muted-foreground">{health.message}</p>
+          {health.models.length > 0 && (
+            <p className="mt-2 break-words font-mono text-muted-foreground">
+              {health.models.map((model) => model.id).join(", ")}
+            </p>
+          )}
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {health.capabilities.map((capability) => (
+              <span key={capability} className="rounded bg-background px-2 py-1 font-mono">
+                {capability}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+    </SectionCard>
   );
 }
 
