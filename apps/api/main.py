@@ -14,9 +14,11 @@ from apps.api.routes import (
     ai_quality,
     analysis,
     application_lab,
+    career,
     data,
     extension,
     health,
+    interviews,
     local_security,
     notifications,
     outcomes,
@@ -80,6 +82,8 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(analysis.router)
     app.include_router(application_lab.application_lab_router)
     app.include_router(application_lab.resume_studio_router)
+    app.include_router(interviews.router)
+    app.include_router(career.router)
     app.include_router(ai_quality.router)
     app.include_router(outcomes.router)
     app.include_router(tracker.router)

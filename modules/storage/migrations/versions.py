@@ -1056,6 +1056,221 @@ def _migration_006(connection: sqlite3.Connection) -> None:
     )
 
 
+def _migration_007(connection: sqlite3.Connection) -> None:
+    """Add career-intelligence observations, interviews, and action workflows."""
+    _execute_script(
+        connection,
+        """
+        CREATE TABLE IF NOT EXISTS opportunity_observations (
+            observation_id TEXT PRIMARY KEY,
+            opportunity_id TEXT NOT NULL DEFAULT '',
+            provider TEXT NOT NULL,
+            external_id TEXT NOT NULL DEFAULT '',
+            source_url TEXT NOT NULL,
+            source_version TEXT NOT NULL DEFAULT '',
+            collection_method TEXT NOT NULL,
+            content_hash TEXT NOT NULL,
+            payload TEXT NOT NULL DEFAULT '{}',
+            retrieved_at TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE(provider, external_id, source_url, content_hash)
+        );
+        CREATE INDEX IF NOT EXISTS idx_opportunity_observations_identity
+        ON opportunity_observations(provider, external_id, retrieved_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_opportunity_observations_opportunity
+        ON opportunity_observations(opportunity_id, retrieved_at DESC);
+
+        CREATE TABLE IF NOT EXISTS opportunity_rankings (
+            ranking_id TEXT PRIMARY KEY,
+            opportunity_id TEXT NOT NULL DEFAULT '',
+            profile_id TEXT NOT NULL DEFAULT '',
+            fit_score REAL NOT NULL,
+            confidence REAL NOT NULL,
+            evidence_coverage REAL NOT NULL,
+            ranking_version TEXT NOT NULL,
+            payload TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            CHECK(fit_score BETWEEN 0 AND 100),
+            CHECK(confidence BETWEEN 0 AND 1),
+            CHECK(evidence_coverage BETWEEN 0 AND 1)
+        );
+        CREATE INDEX IF NOT EXISTS idx_opportunity_rankings_profile_score
+        ON opportunity_rankings(profile_id, fit_score DESC, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS taxonomy_datasets (
+            dataset_id TEXT PRIMARY KEY,
+            system TEXT NOT NULL,
+            version TEXT NOT NULL,
+            source_url TEXT NOT NULL,
+            license_name TEXT NOT NULL,
+            license_url TEXT NOT NULL DEFAULT '',
+            content_sha256 TEXT NOT NULL,
+            manifest TEXT NOT NULL DEFAULT '{}',
+            retrieved_at TEXT NOT NULL,
+            created_at TEXT NOT NULL,
+            UNIQUE(system, version, content_sha256),
+            CHECK(system IN ('cbo', 'qbq', 'esco', 'onet'))
+        );
+        CREATE TABLE IF NOT EXISTS taxonomy_mappings (
+            mapping_id TEXT PRIMARY KEY,
+            source_text TEXT NOT NULL,
+            target_id TEXT NOT NULL,
+            target_label TEXT NOT NULL,
+            taxonomy_ref TEXT NOT NULL DEFAULT '',
+            match_method TEXT NOT NULL,
+            confidence REAL NOT NULL,
+            review_status TEXT NOT NULL DEFAULT 'candidate',
+            payload TEXT NOT NULL DEFAULT '{}',
+            reviewed_at TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            CHECK(match_method IN ('exact', 'alias', 'normalized', 'taxonomy_crosswalk',
+                                   'semantic_candidate', 'manual')),
+            CHECK(confidence BETWEEN 0 AND 1),
+            CHECK(review_status IN ('candidate', 'confirmed', 'rejected'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_taxonomy_mappings_source
+        ON taxonomy_mappings(source_text, review_status);
+
+        CREATE TABLE IF NOT EXISTS interview_sessions (
+            session_id TEXT PRIMARY KEY,
+            application_id TEXT,
+            job_snapshot_id TEXT,
+            resume_snapshot_id TEXT,
+            profile_id TEXT NOT NULL DEFAULT '',
+            evidence_scope_id TEXT NOT NULL DEFAULT '',
+            interview_type TEXT NOT NULL,
+            scheduled_at TEXT,
+            organization TEXT NOT NULL DEFAULT '',
+            role TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'draft',
+            notes TEXT NOT NULL DEFAULT '',
+            payload TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(application_id) REFERENCES applications(id) ON DELETE SET NULL,
+            FOREIGN KEY(job_snapshot_id) REFERENCES job_snapshots(snapshot_id) ON DELETE SET NULL,
+            FOREIGN KEY(resume_snapshot_id) REFERENCES resume_snapshots(snapshot_id)
+                ON DELETE SET NULL,
+            CHECK(interview_type IN ('recruiter', 'technical', 'behavioral', 'manager',
+                                     'panel', 'case', 'academic', 'public_sector', 'other')),
+            CHECK(status IN ('draft', 'scheduled', 'preparing', 'completed', 'cancelled',
+                             'archived'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_interview_sessions_schedule
+        ON interview_sessions(status, scheduled_at);
+
+        CREATE TABLE IF NOT EXISTS interview_preparations (
+            preparation_id TEXT PRIMARY KEY,
+            session_id TEXT NOT NULL UNIQUE,
+            payload TEXT NOT NULL DEFAULT '{}',
+            review_status TEXT NOT NULL DEFAULT 'candidate',
+            dependency_hash TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(session_id) REFERENCES interview_sessions(session_id) ON DELETE CASCADE,
+            CHECK(review_status IN ('candidate', 'reviewed', 'rejected', 'stale'))
+        );
+
+        CREATE TABLE IF NOT EXISTS star_stories (
+            story_id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            review_status TEXT NOT NULL DEFAULT 'candidate',
+            payload TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            CHECK(review_status IN ('candidate', 'reviewed', 'confirmed', 'rejected', 'stale'))
+        );
+        CREATE TABLE IF NOT EXISTS interview_questions (
+            question_id TEXT PRIMARY KEY,
+            session_id TEXT,
+            category TEXT NOT NULL,
+            question TEXT NOT NULL,
+            payload TEXT NOT NULL DEFAULT '{}',
+            review_status TEXT NOT NULL DEFAULT 'candidate',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(session_id) REFERENCES interview_sessions(session_id) ON DELETE CASCADE
+        );
+        CREATE TABLE IF NOT EXISTS interview_draft_answers (
+            answer_id TEXT PRIMARY KEY,
+            question_id TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'draft',
+            payload TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(question_id) REFERENCES interview_questions(question_id)
+                ON DELETE CASCADE,
+            CHECK(status IN ('draft', 'reviewed', 'rejected', 'archived'))
+        );
+        CREATE TABLE IF NOT EXISTS follow_up_drafts (
+            follow_up_id TEXT PRIMARY KEY,
+            application_id TEXT,
+            interview_session_id TEXT,
+            follow_up_type TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'draft',
+            payload TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(application_id) REFERENCES applications(id) ON DELETE SET NULL,
+            FOREIGN KEY(interview_session_id) REFERENCES interview_sessions(session_id)
+                ON DELETE SET NULL,
+            CHECK(follow_up_type IN ('thank_you', 'application_follow_up',
+                                     'interview_follow_up', 'status_request', 'networking')),
+            CHECK(status IN ('draft', 'reviewed', 'copied', 'sent_manually', 'archived'))
+        );
+
+        CREATE TABLE IF NOT EXISTS career_tasks (
+            task_id TEXT PRIMARY KEY,
+            task_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            priority TEXT NOT NULL DEFAULT 'medium',
+            due_at TEXT,
+            payload TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            completed_at TEXT,
+            CHECK(task_type IN ('follow_up', 'interview', 'application', 'document',
+                                'certification', 'project', 'study', 'networking', 'custom')),
+            CHECK(status IN ('pending', 'in_progress', 'completed', 'cancelled', 'archived')),
+            CHECK(priority IN ('low', 'medium', 'high'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_career_tasks_due
+        ON career_tasks(status, due_at);
+        CREATE TABLE IF NOT EXISTS reminders (
+            reminder_id TEXT PRIMARY KEY,
+            task_id TEXT,
+            remind_at TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'scheduled',
+            payload TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(task_id) REFERENCES career_tasks(task_id) ON DELETE CASCADE,
+            CHECK(status IN ('scheduled', 'shown', 'dismissed', 'cancelled'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_reminders_schedule ON reminders(status, remind_at);
+
+        CREATE TABLE IF NOT EXISTS career_plans (
+            plan_id TEXT PRIMARY KEY,
+            profile_id TEXT NOT NULL DEFAULT '',
+            title TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'draft',
+            payload TEXT NOT NULL DEFAULT '{}',
+            dependency_hash TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            CHECK(status IN ('draft', 'active', 'completed', 'archived', 'stale'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_career_plans_profile
+        ON career_plans(profile_id, updated_at DESC);
+
+        INSERT INTO schema_metadata(key, value) VALUES ('schema_version', '7')
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+        """,
+    )
+
+
 MIGRATIONS = (
     Migration(
         version=1,
@@ -1165,6 +1380,34 @@ MIGRATIONS = (
             "permanecem preservados e nunca são regravados durante o upgrade."
         ),
         created_at="2026-08-03T00:00:00Z",
+    ),
+    Migration(
+        version=7,
+        description=(
+            "Fontes oficiais e taxonomias versionadas, entrevistas, follow-ups e acoes "
+            "de carreira locais."
+        ),
+        up=_migration_007,
+        validation=_validate_tables(
+            "opportunity_observations",
+            "opportunity_rankings",
+            "taxonomy_datasets",
+            "taxonomy_mappings",
+            "interview_sessions",
+            "interview_preparations",
+            "star_stories",
+            "interview_questions",
+            "interview_draft_answers",
+            "follow_up_drafts",
+            "career_tasks",
+            "reminders",
+            "career_plans",
+        ),
+        rollback_strategy=(
+            "Restaurar o backup pre-migracao v7. As novas tabelas nao reescrevem snapshots "
+            "ou arquivos legados."
+        ),
+        created_at="2026-08-09T00:00:00Z",
     ),
 )
 

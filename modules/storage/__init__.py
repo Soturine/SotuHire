@@ -2,6 +2,7 @@
 
 from .ai_runs import AiRun, AiRunStore
 from .applications import ApplicationRecord, ApplicationRepository
+from .career_workflows import CareerWorkflowRepository
 from .database import connect_database, default_database_path
 from .local_store import LocalStore
 from .migrations import LATEST_SCHEMA_VERSION, MigrationRunner, ensure_database
@@ -21,6 +22,7 @@ __all__ = [
     "AnalysisSnapshot",
     "ApplicationRecord",
     "ApplicationRepository",
+    "CareerWorkflowRepository",
     "JobSnapshot",
     "LocalStore",
     "MigrationRunner",
