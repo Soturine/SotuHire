@@ -105,7 +105,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sotuhire-sbom
-          path: dist/sotuhire-sbom-v1.9.9.cdx.json
+          path: dist/sotuhire-sbom-v1.10.1.cdx.json
 
   ai-quality:
     name: AI golden, injection and local regression
