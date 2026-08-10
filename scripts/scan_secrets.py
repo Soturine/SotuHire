@@ -36,9 +36,7 @@ def candidate_files(paths: list[Path]) -> list[Path]:
             continue
         if path.is_dir():
             files.extend(
-                item
-                for item in path.rglob("*")
-                if item.is_file() and not _is_excluded(item)
+                item for item in path.rglob("*") if item.is_file() and not _is_excluded(item)
             )
     return sorted(set(files))
 
