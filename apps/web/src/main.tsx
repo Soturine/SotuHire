@@ -3,8 +3,10 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 
 import { getRouter } from "./router";
+import { applyStoredAppearance } from "./lib/preferences";
 import "./styles.css";
 
+applyStoredAppearance();
 const router = getRouter();
 
 declare module "@tanstack/react-router" {

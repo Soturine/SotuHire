@@ -42,28 +42,44 @@ export const Route = createFileRoute("/dashboard")({
 
 function Dashboard() {
   const api = useApi();
-  const { mode } = useApiMode();
+  const { mode, baseUrl } = useApiMode();
 
-  const healthQ = useQuery({ queryKey: ["health", mode], queryFn: () => api.health() });
-  const metricsQ = useQuery({ queryKey: ["metrics", mode], queryFn: () => api.trackerMetrics() });
-  const jobsQ = useQuery({ queryKey: ["tracker-jobs", mode], queryFn: () => api.trackerJobs() });
-  const reqsQ = useQuery({ queryKey: ["reqs", mode], queryFn: () => api.trackerRequirements() });
-  const profileQ = useQuery({ queryKey: ["profile", mode], queryFn: () => api.profile() });
-  const radarQ = useQuery({ queryKey: ["radar-stats", mode], queryFn: () => api.radarStats() });
+  const healthQ = useQuery({ queryKey: ["health", mode, baseUrl], queryFn: () => api.health() });
+  const metricsQ = useQuery({
+    queryKey: ["metrics", mode, baseUrl],
+    queryFn: () => api.trackerMetrics(),
+  });
+  const jobsQ = useQuery({
+    queryKey: ["tracker-jobs", mode, baseUrl],
+    queryFn: () => api.trackerJobs(),
+  });
+  const reqsQ = useQuery({
+    queryKey: ["reqs", mode, baseUrl],
+    queryFn: () => api.trackerRequirements(),
+  });
+  const profileQ = useQuery({
+    queryKey: ["profile", mode, baseUrl],
+    queryFn: () => api.profile(),
+  });
+  const radarQ = useQuery({
+    queryKey: ["radar-stats", mode, baseUrl],
+    queryFn: () => api.radarStats(),
+  });
   const notificationsQ = useQuery({
-    queryKey: ["notifications", mode],
+    queryKey: ["notifications", mode, baseUrl],
     queryFn: () => api.notifications(),
   });
   const extensionQ = useQuery({
-    queryKey: ["extension-captures", mode],
+    queryKey: ["extension-captures", mode, baseUrl],
     queryFn: () => api.extensionCaptures(),
   });
   const examsQ = useQuery({
-    queryKey: ["public-exams", mode],
+    queryKey: ["public-exams", mode, baseUrl],
     queryFn: () => api.publicExamList(),
   });
 
   const recentJobs = (jobsQ.data?.jobs ?? []).slice(0, 5);
+  const latestScoredJob = recentJobs.find((job) => typeof job.match_score === "number");
   const weekly = metricsQ.data?.weekly_applications ?? [];
   const profile = profileQ.data?.profile;
   const profileItems = [...(profile?.items ?? []), ...(profile?.constraints ?? [])];
@@ -258,24 +274,34 @@ function Dashboard() {
           </SectionCard>
 
           <SectionCard title="Última análise" description="Pontuação da análise mais recente">
-            <div className="flex flex-col items-center gap-4">
-              <ScoreRing
-                value={78}
-                label="Compatibilidade"
-                size={128}
-                tone="primary"
-                sub="COMPAT."
-              />
-              <div className="grid w-full grid-cols-2 gap-2">
-                <MiniScore label="ATS" value={74} />
-                <MiniScore label="Aderência" value={81} />
-                <MiniScore label="Confiança" value={66} />
-                <MiniScore label="Risco" value={18} tone="warning" />
+            {latestScoredJob ? (
+              <div className="flex flex-col items-center gap-4">
+                <ScoreRing
+                  value={latestScoredJob.match_score!}
+                  label="Compatibilidade"
+                  size={128}
+                  tone="primary"
+                  sub="COMPAT."
+                />
+                <p className="text-center text-sm text-muted-foreground">
+                  {latestScoredJob.title} · {latestScoredJob.company}
+                </p>
+                <Link to="/match" className="text-xs font-medium text-accent hover:underline">
+                  Abrir Análise de Compatibilidade →
+                </Link>
               </div>
-              <Link to="/match" className="text-xs font-medium text-accent hover:underline">
-                Abrir Análise de Compatibilidade →
-              </Link>
-            </div>
+            ) : (
+              <div className="py-8 text-center text-sm text-muted-foreground">
+                Nenhuma análise real foi registrada ainda.
+                <br />
+                <Link
+                  to="/match"
+                  className="mt-2 inline-block font-medium text-accent hover:underline"
+                >
+                  Criar a primeira análise
+                </Link>
+              </div>
+            )}
           </SectionCard>
         </div>
 
@@ -394,26 +420,5 @@ function Dashboard() {
         </SectionCard>
       </div>
     </AppShell>
-  );
-}
-
-function MiniScore({
-  label,
-  value,
-  tone = "default",
-}: {
-  label: string;
-  value: number;
-  tone?: "default" | "warning";
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-muted/30 px-2.5 py-2 text-center">
-      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
-      <div
-        className={`text-display text-lg tabular-nums ${tone === "warning" ? "text-warning" : ""}`}
-      >
-        {value}
-      </div>
-    </div>
   );
 }

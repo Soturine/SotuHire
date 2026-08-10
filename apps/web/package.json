@@ -14,7 +14,7 @@
     "test": "npm run test:e2e",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "playwright test",
+    "test:e2e": "playwright test --project=chromium",
     "test:e2e:cross-browser": "playwright test",
     "format": "prettier --write ."
   },

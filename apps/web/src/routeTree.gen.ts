@@ -21,9 +21,12 @@ import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as MatchRouteImport } from './routes/match'
 import { Route as JobRouteImport } from './routes/job'
+import { Route as InterviewsRouteImport } from './routes/interviews'
 import { Route as IntelligenceRouteImport } from './routes/intelligence'
+import { Route as HelpRouteImport } from './routes/help'
 import { Route as GithubRouteImport } from './routes/github'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CareerRouteImport } from './routes/career'
 import { Route as AtsRouteImport } from './routes/ats'
 import { Route as ApplicationLabRouteImport } from './routes/application-lab'
 import { Route as AiQualityRouteImport } from './routes/ai-quality'
@@ -89,9 +92,19 @@ const JobRoute = JobRouteImport.update({
   path: '/job',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InterviewsRoute = InterviewsRouteImport.update({
+  id: '/interviews',
+  path: '/interviews',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IntelligenceRoute = IntelligenceRouteImport.update({
   id: '/intelligence',
   path: '/intelligence',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HelpRoute = HelpRouteImport.update({
+  id: '/help',
+  path: '/help',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GithubRoute = GithubRouteImport.update({
@@ -102,6 +115,11 @@ const GithubRoute = GithubRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CareerRoute = CareerRouteImport.update({
+  id: '/career',
+  path: '/career',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AtsRoute = AtsRouteImport.update({
@@ -130,9 +148,12 @@ export interface FileRoutesByFullPath {
   '/ai-quality': typeof AiQualityRoute
   '/application-lab': typeof ApplicationLabRoute
   '/ats': typeof AtsRoute
+  '/career': typeof CareerRoute
   '/dashboard': typeof DashboardRoute
   '/github': typeof GithubRoute
+  '/help': typeof HelpRoute
   '/intelligence': typeof IntelligenceRoute
+  '/interviews': typeof InterviewsRoute
   '/job': typeof JobRoute
   '/match': typeof MatchRoute
   '/privacy': typeof PrivacyRoute
@@ -151,9 +172,12 @@ export interface FileRoutesByTo {
   '/ai-quality': typeof AiQualityRoute
   '/application-lab': typeof ApplicationLabRoute
   '/ats': typeof AtsRoute
+  '/career': typeof CareerRoute
   '/dashboard': typeof DashboardRoute
   '/github': typeof GithubRoute
+  '/help': typeof HelpRoute
   '/intelligence': typeof IntelligenceRoute
+  '/interviews': typeof InterviewsRoute
   '/job': typeof JobRoute
   '/match': typeof MatchRoute
   '/privacy': typeof PrivacyRoute
@@ -173,9 +197,12 @@ export interface FileRoutesById {
   '/ai-quality': typeof AiQualityRoute
   '/application-lab': typeof ApplicationLabRoute
   '/ats': typeof AtsRoute
+  '/career': typeof CareerRoute
   '/dashboard': typeof DashboardRoute
   '/github': typeof GithubRoute
+  '/help': typeof HelpRoute
   '/intelligence': typeof IntelligenceRoute
+  '/interviews': typeof InterviewsRoute
   '/job': typeof JobRoute
   '/match': typeof MatchRoute
   '/privacy': typeof PrivacyRoute
@@ -196,9 +223,12 @@ export interface FileRouteTypes {
     | '/ai-quality'
     | '/application-lab'
     | '/ats'
+    | '/career'
     | '/dashboard'
     | '/github'
+    | '/help'
     | '/intelligence'
+    | '/interviews'
     | '/job'
     | '/match'
     | '/privacy'
@@ -217,9 +247,12 @@ export interface FileRouteTypes {
     | '/ai-quality'
     | '/application-lab'
     | '/ats'
+    | '/career'
     | '/dashboard'
     | '/github'
+    | '/help'
     | '/intelligence'
+    | '/interviews'
     | '/job'
     | '/match'
     | '/privacy'
@@ -238,9 +271,12 @@ export interface FileRouteTypes {
     | '/ai-quality'
     | '/application-lab'
     | '/ats'
+    | '/career'
     | '/dashboard'
     | '/github'
+    | '/help'
     | '/intelligence'
+    | '/interviews'
     | '/job'
     | '/match'
     | '/privacy'
@@ -260,9 +296,12 @@ export interface RootRouteChildren {
   AiQualityRoute: typeof AiQualityRoute
   ApplicationLabRoute: typeof ApplicationLabRoute
   AtsRoute: typeof AtsRoute
+  CareerRoute: typeof CareerRoute
   DashboardRoute: typeof DashboardRoute
   GithubRoute: typeof GithubRoute
+  HelpRoute: typeof HelpRoute
   IntelligenceRoute: typeof IntelligenceRoute
+  InterviewsRoute: typeof InterviewsRoute
   JobRoute: typeof JobRoute
   MatchRoute: typeof MatchRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -363,11 +402,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof JobRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/interviews': {
+      id: '/interviews'
+      path: '/interviews'
+      fullPath: '/interviews'
+      preLoaderRoute: typeof InterviewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/intelligence': {
       id: '/intelligence'
       path: '/intelligence'
       fullPath: '/intelligence'
       preLoaderRoute: typeof IntelligenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/help': {
+      id: '/help'
+      path: '/help'
+      fullPath: '/help'
+      preLoaderRoute: typeof HelpRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/github': {
@@ -382,6 +435,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/career': {
+      id: '/career'
+      path: '/career'
+      fullPath: '/career'
+      preLoaderRoute: typeof CareerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/ats': {
@@ -420,9 +480,12 @@ const rootRouteChildren: RootRouteChildren = {
   AiQualityRoute: AiQualityRoute,
   ApplicationLabRoute: ApplicationLabRoute,
   AtsRoute: AtsRoute,
+  CareerRoute: CareerRoute,
   DashboardRoute: DashboardRoute,
   GithubRoute: GithubRoute,
+  HelpRoute: HelpRoute,
   IntelligenceRoute: IntelligenceRoute,
+  InterviewsRoute: InterviewsRoute,
   JobRoute: JobRoute,
   MatchRoute: MatchRoute,
   PrivacyRoute: PrivacyRoute,

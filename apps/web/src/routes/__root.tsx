@@ -2,6 +2,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/react-router";
 import { ApiModeProvider } from "@/lib/api/mode";
 import { Toaster } from "@/components/ui/sonner";
+import { Onboarding } from "@/components/onboarding";
+import { PreferencesProvider } from "@/lib/preferences";
 
 function NotFoundComponent() {
   return (
@@ -86,10 +88,13 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   return (
     <QueryClientProvider client={queryClient}>
-      <ApiModeProvider>
-        <Outlet />
-        <Toaster richColors position="top-right" />
-      </ApiModeProvider>
+      <PreferencesProvider>
+        <ApiModeProvider>
+          <Outlet />
+          <Onboarding />
+          <Toaster richColors position="top-right" />
+        </ApiModeProvider>
+      </PreferencesProvider>
     </QueryClientProvider>
   );
 }
