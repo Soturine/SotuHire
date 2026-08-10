@@ -32,6 +32,14 @@ class CareerContextPurpose(StrEnum):
     ACADEMIC = "academic"
     LATTES = "lattes"
     PUBLIC_EXAMS = "public_exams"
+    INTERVIEW = "interview"
+    STAR = "star"
+    FOLLOW_UP = "follow_up"
+    CAREER_PLAN = "career_plan"
+    CERTIFICATION = "certification"
+    GAP_PROJECT = "gap_project"
+    OPPORTUNITY_INTELLIGENCE = "opportunity_intelligence"
+    TAXONOMY = "taxonomy"
 
 
 class CareerContextEvidence(BaseModel):

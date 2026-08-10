@@ -379,13 +379,81 @@ PASTED EDITAL TEXT:
 Return only JSON matching the expected schema.
 """
 
+CAREER_WORKFLOW_SYSTEM_PROMPT = """You support a local-first career workflow.
+
+Use only the minimum evidence explicitly supplied in the request. Never invent candidate facts,
+experience, skills, metrics, outcomes, company facts, taxonomy certainty, certification cost or
+validity. Taxonomy matches and generated text remain review candidates. Never send a message,
+submit an application, add a calendar event, or confirm profile evidence automatically.
+Return only JSON matching the requested schema and keep needs_user_review=true.
+"""
+
+CAREER_WORKFLOW_USER_TEMPLATE = """Create a reviewable structured draft for this career task.
+
+Task instructions: {task_instructions}
+Language: {language}
+Allowed context: {context}
+Confirmed evidence: {evidence}
+User request: {request}
+
+Return only JSON matching the expected schema.
+"""
+
+_CAREER_WORKFLOW_PROMPTS = (
+    (
+        "interview_question_generation_v1",
+        "interview_question_generation",
+        "Generate questions, not candidate answers, and identify missing evidence.",
+    ),
+    (
+        "interview_answer_drafting_v1",
+        "interview_answer_drafting",
+        "Draft only from cited evidence and expose missing information.",
+    ),
+    (
+        "star_story_structuring_v1",
+        "star_story_structuring",
+        "Structure supplied facts as STAR without adding numbers or results.",
+    ),
+    (
+        "follow_up_drafting_v1",
+        "follow_up_drafting",
+        "Create an unsent follow-up draft for manual review and copying.",
+    ),
+    (
+        "career_plan_explanation_v1",
+        "career_plan_explanation",
+        "Explain a deterministic plan without replacing user goals.",
+    ),
+    (
+        "certification_recommendation_explanation_v1",
+        "certification_recommendation_explanation",
+        "Explain classification and flag when an official source is needed.",
+    ),
+    (
+        "project_gap_recommendation_v1",
+        "project_gap_recommendation",
+        "Suggest a project whose deliverables produce reviewable evidence.",
+    ),
+    (
+        "opportunity_enrichment_v1",
+        "opportunity_enrichment",
+        "Enrich only a bounded top-K opportunity after local ranking.",
+    ),
+    (
+        "taxonomy_mapping_explanation_v1",
+        "taxonomy_mapping_explanation",
+        "Explain a mapping candidate; never confirm candidate possession or regulation.",
+    ),
+)
+
 
 def initial_prompt_specs(
     schema_overrides: dict[str, type[BaseModel]] | None = None,
 ) -> list[PromptSpec]:
     """Build initial v0.10 prompt specs with their output schemas."""
     schemas = schema_overrides or _default_schemas()
-    return [
+    specs = [
         PromptSpec(
             prompt_id="resume_extraction_v1",
             version="1.0.0",
@@ -531,6 +599,22 @@ def initial_prompt_specs(
             mode="public_exam_notice_extractor",
         ),
     ]
+    specs.extend(
+        PromptSpec(
+            prompt_id=prompt_id,
+            version="1.0.0",
+            system_prompt=CAREER_WORKFLOW_SYSTEM_PROMPT,
+            user_template=CAREER_WORKFLOW_USER_TEMPLATE.replace(
+                "{task_instructions}", instructions
+            ),
+            output_schema=schemas[prompt_id],
+            temperature=0.1,
+            mode=mode,
+            context_policy="minimum_confirmed_evidence_external_opt_in",
+        )
+        for prompt_id, mode, instructions in _CAREER_WORKFLOW_PROMPTS
+    )
+    return specs
 
 
 def default_prompt_registry() -> PromptRegistry:
@@ -547,6 +631,17 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         SafeAiInsightOutput,
         SourceImportEnrichmentOutput,
         WishlistDraftOutput,
+    )
+    from modules.ai.schemas.career_workflows import (
+        CareerPlanExplanationOutput,
+        CertificationRecommendationExplanationOutput,
+        FollowUpDraftingOutput,
+        InterviewAnswerDraftingOutput,
+        InterviewQuestionGenerationOutput,
+        OpportunityEnrichmentOutput,
+        ProjectGapRecommendationOutput,
+        StarStoryStructuringOutput,
+        TaxonomyMappingExplanationOutput,
     )
     from modules.ai.schemas.domain_classification import DomainClassificationOutput
     from modules.ai.schemas.job_extraction import JobExtractionOutput
@@ -573,4 +668,15 @@ def _default_schemas() -> dict[str, type[BaseModel]]:
         "profile_items_extractor_v1": ProfileImportDraft,
         "profile_lattes_extractor_v1": LattesImportResult,
         "public_exam_notice_extractor_v1": PublicExamImportResult,
+        "interview_question_generation_v1": InterviewQuestionGenerationOutput,
+        "interview_answer_drafting_v1": InterviewAnswerDraftingOutput,
+        "star_story_structuring_v1": StarStoryStructuringOutput,
+        "follow_up_drafting_v1": FollowUpDraftingOutput,
+        "career_plan_explanation_v1": CareerPlanExplanationOutput,
+        "certification_recommendation_explanation_v1": (
+            CertificationRecommendationExplanationOutput
+        ),
+        "project_gap_recommendation_v1": ProjectGapRecommendationOutput,
+        "opportunity_enrichment_v1": OpportunityEnrichmentOutput,
+        "taxonomy_mapping_explanation_v1": TaxonomyMappingExplanationOutput,
     }

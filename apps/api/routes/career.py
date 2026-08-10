@@ -4,8 +4,14 @@ from __future__ import annotations
 
 import sqlite3
 from datetime import datetime
+from typing import cast
 
 from fastapi import APIRouter, HTTPException, Query
+from modules.ai.career_workflows import (
+    CareerWorkflowAiResult,
+    CareerWorkflowTask,
+    run_career_workflow_ai,
+)
 from modules.career_actions import (
     CareerPlan,
     CareerTask,
@@ -17,6 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from apps.api.routes.responses import ok
 from apps.api.schemas.common import ApiEnvelope
+from apps.api.services.ai_settings import get_ai_runtime
 
 router = APIRouter(prefix="/api/v1/career", tags=["career-actions"])
 
@@ -40,6 +47,14 @@ class CalendarExportResponse(BaseModel):
     media_type: str = "text/calendar; charset=utf-8"
     content: str
     imported_automatically: bool = False
+
+
+class CareerAiRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    payload: dict[str, object] = Field(default_factory=dict)
+    source_refs: list[str] = Field(default_factory=list, max_length=100)
+    external_ai_opt_in: bool = False
 
 
 @router.get("/tasks", response_model=ApiEnvelope[list[CareerTask]])
@@ -95,6 +110,34 @@ def export_calendar(
             content=content,
         )
     )
+
+
+@router.post(
+    "/ai/{task_id}",
+    response_model=ApiEnvelope[CareerWorkflowAiResult],
+)
+def career_ai(
+    task_id: str,
+    payload: CareerAiRequest,
+) -> ApiEnvelope[CareerWorkflowAiResult]:
+    allowed = {
+        "career_plan_explanation",
+        "certification_recommendation_explanation",
+        "project_gap_recommendation",
+        "opportunity_enrichment",
+        "taxonomy_mapping_explanation",
+    }
+    if task_id not in allowed:
+        raise HTTPException(status_code=404, detail="Task de carreira nao registrada.")
+    runtime = get_ai_runtime("career_advice")
+    result = run_career_workflow_ai(
+        cast(CareerWorkflowTask, task_id),
+        payload.payload,
+        provider=runtime.provider if runtime.use_ai else None,
+        external_ai_opt_in=payload.external_ai_opt_in,
+        source_refs=payload.source_refs,
+    )
+    return ok(result)
 
 
 __all__ = ["router"]

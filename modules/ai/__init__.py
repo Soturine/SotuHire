@@ -1,5 +1,6 @@
 """Structured AI helpers."""
 
+from .career_workflows import CareerWorkflowAiResult, run_career_workflow_ai
 from .domain_classification_service import (
     DomainClassificationServiceResult,
     classify_domain_structured,
@@ -27,6 +28,8 @@ __all__ = [
     "extract_structured_resume",
     "AiTask",
     "AiTaskRegistry",
+    "CareerWorkflowAiResult",
     "default_ai_task_registry",
+    "run_career_workflow_ai",
     "get_provider",
 ]

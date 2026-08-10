@@ -10,7 +10,7 @@ def test_ai_task_registry_owns_every_production_prompt() -> None:
     prompts = default_prompt_registry()
     tasks = default_ai_task_registry(prompts)
 
-    assert len(tasks.list()) == 16
+    assert len(tasks.list()) == 25
     assert {task.prompt_id for task in tasks.list()} == set(prompts.list_prompt_ids())
     assert all(task.structured_output_required for task in tasks.list())
     assert all(task.fallback_available for task in tasks.list())

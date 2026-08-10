@@ -93,3 +93,15 @@ def test_api_real_interview_star_followup_task_plan_and_ics(monkeypatch, tmp_pat
     assert calendar.status_code == 200
     assert calendar.json()["data"]["imported_automatically"] is False
     assert "BEGIN:VCALENDAR\r\n" in calendar.json()["data"]["content"]
+
+    local_ai = client.post(
+        "/api/v1/interviews/ai/interview_question_generation",
+        json={
+            "payload": {"evidence": ["fixture://python"]},
+            "source_refs": ["fixture://python"],
+            "external_ai_opt_in": False,
+        },
+    )
+    assert local_ai.status_code == 200
+    assert local_ai.json()["data"]["provider_used"] == "local"
+    assert local_ai.json()["data"]["output"]["needs_user_review"] is True

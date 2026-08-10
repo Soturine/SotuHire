@@ -3,8 +3,14 @@
 from __future__ import annotations
 
 import sqlite3
+from typing import cast
 
 from fastapi import APIRouter, HTTPException, Query
+from modules.ai.career_workflows import (
+    CareerWorkflowAiResult,
+    CareerWorkflowTask,
+    run_career_workflow_ai,
+)
 from modules.interviews import (
     FollowUpDraft,
     InterviewDraftAnswer,
@@ -19,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from apps.api.routes.responses import ok
 from apps.api.schemas.common import ApiEnvelope
+from apps.api.services.ai_settings import get_ai_runtime
 
 router = APIRouter(prefix="/api/v1/interviews", tags=["interviews"])
 
@@ -38,6 +45,14 @@ class InterviewPrepareRequest(BaseModel):
     opportunity_summary: str = Field(default="", max_length=20_000)
     requirements: list[str] = Field(default_factory=list, max_length=100)
     evidence: list[ConfirmedInterviewEvidence] = Field(default_factory=list, max_length=200)
+
+
+class InterviewAiRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    payload: dict[str, object] = Field(default_factory=dict)
+    source_refs: list[str] = Field(default_factory=list, max_length=100)
+    external_ai_opt_in: bool = False
 
 
 @router.get("", response_model=ApiEnvelope[list[InterviewSession]])
@@ -147,6 +162,33 @@ def save_follow_up(payload: FollowUpDraft) -> ApiEnvelope[FollowUpDraft]:
         return ok(CareerWorkflowRepository().save_follow_up(payload))
     except sqlite3.IntegrityError as exc:
         raise HTTPException(status_code=409, detail="Vinculo do follow-up nao existe.") from exc
+
+
+@router.post(
+    "/ai/{task_id}",
+    response_model=ApiEnvelope[CareerWorkflowAiResult],
+)
+def interview_ai(
+    task_id: str,
+    payload: InterviewAiRequest,
+) -> ApiEnvelope[CareerWorkflowAiResult]:
+    allowed = {
+        "interview_question_generation",
+        "interview_answer_drafting",
+        "star_story_structuring",
+        "follow_up_drafting",
+    }
+    if task_id not in allowed:
+        raise HTTPException(status_code=404, detail="Task de entrevista nao registrada.")
+    runtime = get_ai_runtime("career_advice")
+    result = run_career_workflow_ai(
+        cast(CareerWorkflowTask, task_id),
+        payload.payload,
+        provider=runtime.provider if runtime.use_ai else None,
+        external_ai_opt_in=payload.external_ai_opt_in,
+        source_refs=payload.source_refs,
+    )
+    return ok(result)
 
 
 __all__ = ["router"]
