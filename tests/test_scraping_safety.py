@@ -94,7 +94,7 @@ def test_resolved_public_target_retains_only_validated_addresses() -> None:
 def test_public_redirect_is_revalidated_before_second_connection(monkeypatch) -> None:
     calls = []
 
-    def fake_request(target, headers, *, timeout, max_bytes):
+    def fake_request(target, headers, *, timeout, max_bytes, method, body):
         calls.append(target.hostname)
         message = Message()
         message["Location"] = "http://127.0.0.1/admin"

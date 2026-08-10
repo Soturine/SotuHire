@@ -15,10 +15,12 @@ from apps.api.routes import (
     analysis,
     application_lab,
     career,
+    career_intelligence,
     data,
     extension,
     health,
     interviews,
+    local_ai,
     local_security,
     notifications,
     opportunities,
@@ -86,9 +88,11 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(application_lab.resume_studio_router)
     app.include_router(interviews.router)
     app.include_router(career.router)
+    app.include_router(career_intelligence.router)
     app.include_router(opportunities.router)
     app.include_router(taxonomy.router)
     app.include_router(ai_quality.router)
+    app.include_router(local_ai.router)
     app.include_router(outcomes.router)
     app.include_router(tracker.router)
     app.include_router(settings_routes.router)

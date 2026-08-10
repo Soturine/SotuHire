@@ -104,8 +104,15 @@ def request_public_url(
     max_bytes: int = 2_000_000,
     resolver: Resolver | None = None,
     max_redirects: int = 5,
+    method: str = "GET",
+    body: bytes | None = None,
 ) -> PublicHttpResponse:
     """Fetch through an IP-pinned socket, re-resolving and revalidating every redirect."""
+    request_method = method.upper()
+    if request_method not in {"GET", "POST"}:
+        raise UnsafePublicUrl("Metodo HTTP publico nao permitido.")
+    if body is not None and len(body) > 2_000_000:
+        raise UnsafePublicUrl("Corpo da requisicao publica excede o limite seguro.")
     current = value
     previous_scheme = ""
     for redirect_count in range(max_redirects + 1):
@@ -113,7 +120,14 @@ def request_public_url(
         scheme = target.parsed.scheme.casefold()
         if previous_scheme == "https" and scheme != "https":
             raise UnsafePublicUrl("Redirect HTTPS para HTTP nao e permitido.")
-        response = _request_pinned(target, headers or {}, timeout=timeout, max_bytes=max_bytes)
+        response = _request_pinned(
+            target,
+            headers or {},
+            timeout=timeout,
+            max_bytes=max_bytes,
+            method=request_method,
+            body=body,
+        )
         if response.status not in REDIRECT_STATUSES:
             return response
         if redirect_count == max_redirects:
@@ -132,6 +146,8 @@ def _request_pinned(
     *,
     timeout: float,
     max_bytes: int,
+    method: str = "GET",
+    body: bytes | None = None,
 ) -> PublicHttpResponse:
     last_error: OSError | None = None
     path = target.parsed.path or "/"
@@ -158,7 +174,7 @@ def _request_pinned(
                 timeout=timeout,
             )
         try:
-            connection.request("GET", path, headers=request_headers)
+            connection.request(method, path, body=body, headers=request_headers)
             raw = connection.getresponse()
             body = raw.read(max_bytes + 1)
             if len(body) > max_bytes:
