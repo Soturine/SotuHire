@@ -24,6 +24,7 @@ EXCLUDED_PARTS = {
     "__pycache__",
     ".pytest_cache",
 }
+EXCLUDED_PREFIXES = (".tmp-",)
 MAX_BYTES = 10 * 1024 * 1024
 
 
@@ -37,9 +38,15 @@ def candidate_files(paths: list[Path]) -> list[Path]:
             files.extend(
                 item
                 for item in path.rglob("*")
-                if item.is_file() and not EXCLUDED_PARTS.intersection(item.parts)
+                if item.is_file() and not _is_excluded(item)
             )
     return sorted(set(files))
+
+
+def _is_excluded(path: Path) -> bool:
+    return bool(EXCLUDED_PARTS.intersection(path.parts)) or any(
+        part.startswith(EXCLUDED_PREFIXES) for part in path.parts
+    )
 
 
 def has_secret_pattern(path: Path) -> bool:

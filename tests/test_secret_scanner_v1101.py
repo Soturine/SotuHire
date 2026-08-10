@@ -48,7 +48,10 @@ def test_secret_scanner_checks_zip_members_without_exposing_value(tmp_path: Path
 
 def test_secret_scanner_ignores_generated_temporary_test_directories(tmp_path: Path) -> None:
     generated = tmp_path / ".tmp" / "pytest-fixture" / "runtime.js"
-    generated.parent.mkdir(parents=True)
-    generated.write_text("generated test artifact", encoding="utf-8")
+    basetemp_generated = tmp_path / ".tmp-final-pytest" / "case" / "runtime.js"
+    for item in (generated, basetemp_generated):
+        item.parent.mkdir(parents=True)
+        item.write_text("generated test artifact", encoding="utf-8")
 
     assert generated not in candidate_files([tmp_path])
+    assert basetemp_generated not in candidate_files([tmp_path])
