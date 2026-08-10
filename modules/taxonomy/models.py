@@ -86,9 +86,10 @@ class TaxonomyMapping(BaseModel):
 
     @model_validator(mode="after")
     def semantic_matches_require_review(self) -> TaxonomyMapping:
-        if self.match_method == MappingMethod.SEMANTIC_CANDIDATE:
-            self.review_status = "candidate"
+        if self.review_status == "candidate":
             self.reviewed_at = None
+        elif self.reviewed_at is None:
+            raise ValueError("Mapeamentos revisados exigem reviewed_at.")
         return self
 
 
