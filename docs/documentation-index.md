@@ -7,6 +7,8 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 - [Página inicial da documentação](index.md)
 - [README do repositório no GitHub](https://github.com/Soturine/SotuHire#readme)
 - [Visão do produto](01-product/vision.md)
+- [Visão do produto v2](01-product/v2-product-vision.md)
+- [Prévia visual v2](01-product/visual-preview.md)
 - [Roadmap atual](01-product/roadmap.md)
 - [Roteiro de demonstração](09-portfolio/demo-script.md)
 - [Case study](09-portfolio/portfolio-case-study.md)
@@ -27,6 +29,10 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 ## Arquitetura
 
+- [Evidence Graph](02-architecture/evidence-graph.md)
+- [Career State Engine](02-architecture/career-state-engine.md)
+- [Copilot sob aprovação humana](02-architecture/human-approved-copilot.md)
+- [Registry seguro de tools](02-architecture/copilot-tool-registry.md)
 - [Interoperabilidade com IA local](02-architecture/local-ai-interoperability.md)
 - [Matching por domínio](02-architecture/domain-matching-policies.md)
 - [Atualizações de taxonomia](02-architecture/taxonomy-updates.md)
@@ -129,3 +135,12 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 - [Release atual — v1.11.0](releases/v1.11.0.md)
 - [Releases anteriores no GitHub](https://github.com/Soturine/SotuHire/tree/main/docs/releases)
+# SotuHire v2
+
+- [Visão v2](01-product/v2-product-vision.md)
+- [Evidence Graph](02-architecture/evidence-graph.md)
+- [Career State](02-architecture/career-state-engine.md)
+- [Human-Approved Copilot](02-architecture/human-approved-copilot.md)
+- [Approval Queue](02-architecture/approval-queue.md)
+- [Threat model](06-engineering/v2-security-threat-model.md)
+- [Release v2.0](releases/v2.0.md)

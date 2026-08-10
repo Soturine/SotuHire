@@ -1,9 +1,9 @@
 # Escopo atual do produto
 
-O SotuHire v1.11.0 é um assistente de carreira local-first, multiárea e orientado por
-evidências. Ele organiza perfil, documentos, oportunidades e candidaturas; compara requisitos;
-prepara materiais revisáveis; e preserva os snapshots usados em cada decisão. IA externa é
-opcional e nunca substitui o caminho determinístico local.
+O SotuHire v2.0 é um copiloto de carreira local-first, multiárea e orientado por evidências. Ele
+organiza perfil, documentos, oportunidades e candidaturas em um Evidence Graph; deriva Career
+State e próximas ações deterministicamente; e só executa escritas locais depois de preview e
+aprovação humana. IA externa é opcional e nunca substitui o caminho determinístico local.
 
 ## Entregue
 
@@ -25,6 +25,9 @@ opcional e nunca substitui o caminho determinístico local.
 - Ollama, LM Studio e OpenAI-compatible com loopback default e health explícito;
 - matching determinístico por domínio, analytics descritivo e taxonomy updater reversível;
 - boundaries SSRF, URL, paths, restore e launcher endurecidos e dependências auditadas.
+- Evidence Inbox/Graph, portfólio multidisciplinar, Career State e Next Best Actions;
+- Copilot contextual com planos persistentes, proposals, preview, risco, approval, audit e undo;
+- Cockpit, fila de aprovações, busca universal e SQLite schema 8 como writer dos domínios v2.
 
 ## Modos
 
@@ -40,7 +43,8 @@ opcional e nunca substitui o caminho determinístico local.
 Não há auto-apply, login automático, form filling, bypass de CAPTCHA, pagamento, inscrição,
 envio de documento/mensagem, scraping autenticado agressivo ou decisão crítica autônoma.
 Download automático de datasets oficiais, envio de follow-up, calendário externo, auto-apply e
-migração automática/destrutiva dos stores JSON legados permanecem fora da v1.11.0.
+migração automática/destrutiva dos stores JSON legados permanecem fora da v2.0. MCP também não é
+exposto até existir transporte autenticado, escopos e auditoria equivalentes ao registry interno.
 
 O antigo documento de MVP foi preservado como [histórico](../history/mvp-scope.md), sem ser
 usado como descrição do produto atual.

@@ -47,7 +47,28 @@ extra_javascript:
 nav:
   - Início: index.md
   - Documentação: documentation-index.md
+  - SotuHire v2:
+      - Visão: 01-product/v2-product-vision.md
+      - Comece aqui: 05-user-guide/getting-started.md
+      - Career Cockpit: 05-user-guide/career-cockpit.md
+      - Evidence Graph: 02-architecture/evidence-graph.md
+      - Portfólio e acadêmico: 02-architecture/portfolio-and-academic-evidence.md
+      - Career State: 02-architecture/career-state-engine.md
+      - Human-Approved Copilot: 02-architecture/human-approved-copilot.md
+      - Tool Registry: 02-architecture/copilot-tool-registry.md
+      - Approval Queue: 02-architecture/approval-queue.md
+      - Contexto e privacidade: 04-ai/copilot-context-and-privacy.md
+      - Threat model: 06-engineering/v2-security-threat-model.md
+      - Migração e recovery: 06-engineering/v2-migration-and-recovery.md
+      - Implementação: 07-development/v2.0-implementation.md
+      - Aceite: 09-testing/v2.0-acceptance-matrix.md
+      - Release notes: releases/v2.0.md
   - Auditoria:
+      - Baseline v2.0: 00-audit/v2.0-baseline-full-repository-audit.md
+      - Arquitetura/dead code v2.0: 00-audit/v2.0-dead-code-dedup-and-architecture-audit.md
+      - Wiring Copilot v2.0: 00-audit/v2.0-ai-and-copilot-wiring-audit.md
+      - Produto final v2.0: 00-audit/v2.0-final-product-audit.md
+      - Screenshots v2.0: 00-audit/v2.0-screenshot-inventory.md
       - Baseline security/deps v1.11.0: 00-audit/v1.11.0-security-dependency-baseline.md
       - Dependências v1.11.0: 00-audit/v1.11.0-dependency-review.md
       - Dependabot alerts v1.11.0: 00-audit/v1.11.0-dependabot-security-alerts.md

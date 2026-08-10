@@ -1,23 +1,23 @@
-# Visual preview
+# Prévia visual v2.0
 
-Esta página registra a série visual atual da v1.11.0. As capturas são determinísticas, usam dados
-fictícios e não contêm chaves, PII, caminhos pessoais, chrome do navegador ou marca d'água.
+Esta série mostra o fluxo atual com dados fictícios de demonstração. Nenhuma captura comprova
+execução externa ou candidatura real.
 
-## Jornada atual
+![Walkthrough v2 do Copiloto sob aprovação humana](../assets/screenshots/sotuhire-v2-human-approved-career-copilot.gif)
 
-![Walkthrough v1.11.0 de segurança, IA local e inteligência](../assets/screenshots/sotuhire-v1.11.0-security-local-ai-intelligence.gif)
+## Jornada principal
 
-## Settings e IA local
+| Career Cockpit | Approval Queue |
+| --- | --- |
+| ![Cockpit](../assets/screenshots/v2/01-cockpit-light.png) | ![Fila de aprovação](../assets/screenshots/v2/04-approval-queue.png) |
 
-| Categorias consolidadas | Health explícito sem scan |
-|---|---|
-| ![Settings](../assets/screenshots/sotuhire-v1.11.0-settings-categories.png) | ![IA local](../assets/screenshots/sotuhire-v1.11.0-local-ai-health.png) |
+| Evidence Inbox | Portfólio |
+| --- | --- |
+| ![Evidence Inbox](../assets/screenshots/v2/05-evidence-inbox.png) | ![Portfólio](../assets/screenshots/v2/08-portfolio.png) |
 
-## Inteligência e segurança
+| Mobile Cockpit | Mobile Copilot |
+| --- | --- |
+| ![Cockpit móvel](../assets/screenshots/v2/19-mobile-cockpit.png) | ![Copilot móvel](../assets/screenshots/v2/20-mobile-copilot.png) |
 
-| Analytics fictício, sem causalidade | Privacidade e dados locais |
-|---|---|
-| ![Analytics](../assets/screenshots/sotuhire-v1.11.0-career-analytics.png) | ![Security status](../assets/screenshots/sotuhire-v1.11.0-security-status.png) |
-
-Capturas de releases anteriores permanecem no diretório de assets como histórico, mas não são
-apresentadas aqui como estado atual.
+O [inventário visual](../00-audit/v2.0-screenshot-inventory.md) registra as 20 capturas recapturadas,
+resoluções e superfícies cobertas. Assets anteriores permanecem apenas como histórico.

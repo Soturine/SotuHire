@@ -1,168 +1,117 @@
-# SotuHire
+# SotuHire — Copiloto de Carreira Local-First com IA, Evidências e Aprovação Humana
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
-[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
+[![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-315c70)](https://soturine.github.io/SotuHire/)
 [![Release](https://img.shields.io/github/v/release/Soturine/SotuHire?label=release)](https://github.com/Soturine/SotuHire/releases/latest)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
-[![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache--2.0-2a7f72)](LICENSE)
 
-## Visão geral
+O SotuHire ajuda estudantes e profissionais de diferentes áreas a compreender o estado da própria
+carreira, organizar evidências e decidir a próxima ação. Ele conecta perfil, currículo, portfólio,
+trajetória acadêmica, oportunidades, candidaturas, entrevistas e outcomes sem entregar decisões
+importantes a uma automação opaca.
 
-SotuHire é um assistente de carreira local-first, multiárea e orientado por evidências. Ele reúne currículo, trajetória acadêmica, portfólio, preferências, oportunidades, editais e histórico de candidaturas para ajudar a pessoa usuária a entender o próprio perfil e tomar decisões melhores sem entregar o controle a uma automação opaca.
+**O diferencial:** o Copilot pode observar, explicar, planejar e propor. Alterações importantes
+seguem sempre **prévia → evidências → impacto → aprovação humana → execução local → audit → undo**.
 
-O produto funciona como uma camada de continuidade entre o **Perfil Profissional Universal**, o **Career Context**, as análises de currículo e vaga, o Radar, o Tracker, o Lattes, os editais e a extensão do navegador. Dados confirmados mantêm origem e referência; itens incertos continuam como candidatos revisáveis. A IA é opcional: Gemini, OpenAI, Ollama, LM Studio e endpoints OpenAI-compatible podem enriquecer análises, enquanto o caminho determinístico local permanece disponível como base e fallback explícito.
+![SotuHire v2 — Human-Approved Career Copilot](docs/assets/screenshots/sotuhire-v2-human-approved-career-copilot.gif)
 
-A abordagem é local-first: banco, stores legados, snapshots e backups ficam no computador da pessoa usuária. Nenhuma candidatura, inscrição, pagamento ou envio de documento é realizado automaticamente. O SotuHire também não é apenas um “analisador de currículo”: ele preserva o que foi analisado, conecta evidências ao histórico e permite acompanhar como perfil, oportunidades e resultados evoluem.
+## Por que existe
 
-## Para quem serve
+Ferramentas isoladas não respondem “onde estou?”, “o que está faltando?” ou “por que devo fazer
+isso agora?”. O SotuHire cria continuidade entre dados confirmados e decisões. Inferências ficam
+na [Caixa de Evidências](docs/05-user-guide/evidence.md); fatos confirmados formam o
+[Evidence Graph](docs/02-architecture/evidence-graph.md); regras determinísticas produzem o
+[Career State](docs/02-architecture/career-state-engine.md); o
+[Copilot](docs/02-architecture/human-approved-copilot.md) transforma recomendações em propostas
+individuais e reversíveis.
 
-O SotuHire foi pensado para trajetórias profissionais diversas, inclusive quando GitHub não faz parte da área:
+Serve a software, engenharia, saúde, direito, pesquisa, educação, design, artes, administração,
+serviços, carreiras técnicas, concursos, início ou transição de carreira. GitHub é uma fonte útil
+quando aplicável — nunca o centro obrigatório do produto.
 
-- estudantes, estagiários, técnicos, tecnólogos e pessoas sem experiência formal;
-- engenharias, indústria, manutenção, laboratório, qualidade e operações;
-- saúde, direito e outras profissões com registros ou conselhos profissionais;
-- educação, pesquisa, iniciação científica, pós-graduação, docência e Currículo Lattes;
-- artes, design, arquitetura, comunicação, portfólio e produção cultural;
-- administração, finanças, atendimento, comercial, turismo e serviços;
-- transição de carreira, retorno ao mercado e mudança de área;
-- concursos, processos seletivos públicos, residências, bolsas e outros editais.
+## A jornada em cinco minutos
 
-## O que o SotuHire faz
+1. Inicie API e frontend e escolha idioma/tema.
+2. Crie ou importe o perfil; nenhuma extração vira fato automaticamente.
+3. Revise a Caixa de Evidências e confirme somente o que é verdadeiro.
+4. Abra o Career Cockpit para prioridades, gaps, entrevistas e candidaturas.
+5. Abra o Copilot, examine razão/evidências/impacto e crie uma proposta.
+6. Aprove individualmente, execute localmente e use undo quando oferecido.
 
-### Perfil Profissional Universal
+## Capacidades principais
 
-Centraliza objetivos, formação, experiências, projetos, competências, idiomas, registros, preferências e restrições. Evidências vindas de currículo, Lattes, GitHub, extensão ou IA entram como candidatos e só se tornam fatos confirmados após revisão humana.
+| Área | O que entrega | Boundary |
+| --- | --- | --- |
+| Career Cockpit | estado, prioridades e saúde de dados/IA | sem score mágico único |
+| Evidence Graph | nós e relações tipadas com origem, review e stale | inferência não vira fato |
+| Portfólio | software, pesquisa, ensino, design, hardware, arte e mais | IA gera rascunho revisável |
+| Acadêmico/profissional | Lattes, pesquisa, publicações, registros e resultados | números só confirmados |
+| Next Best Actions | regras determinísticas e explicáveis | sem alterar pesos por outcome |
+| Approval Queue | before/after, impacto, risco, evidence refs e undo | sem “Aprovar tudo” |
+| Copilot | contexto mínimo, planos e tools allowlisted | writes viram propostas |
+| Busca universal | rotas, evidências e portfólio | SQLite/local API, sem ElasticSearch |
+| Application Lab | Match, ATS, Tailor, variante, kit e Tracker | candidatura sempre manual |
+| Providers | local, Gemini, OpenAI, Ollama, LM Studio e compatíveis | opt-in e fallback explícito |
 
-### Currículo Mestre
+## Como tudo se conecta
 
-Importa PDF, DOCX, HTML, TXT e JSON Resume com revisão de blocos e proveniência antes da adoção. O **Resume Studio** mantém o Currículo Mestre, cria variantes rastreáveis com diff, editor, reordenação, undo/redo, autosave e preview ATS-safe, e exporta JSON Resume, DOCX e PDF reais. A biblioteca **Professional Assets** preserva origem, estado de revisão e dependências dos textos reutilizáveis.
-
-### Preparar candidatura
-
-O **Application Lab** conecta Perfil/evidências, Currículo Mestre, vaga, Match, ATS, readiness, sugestões Tailor revisáveis, variante, Application Kit, plano, snapshots e Tracker em dez etapas. Os resultados permanecem separados no Application Analysis Bundle; cada mudança depende de aprovação humana e trocar uma entrada marca somente os artefatos dependentes como `stale`.
-
-### Vaga, Match, ATS e Tailor
-
-- **Vaga:** estrutura cargo, organização, localidade, requisitos, palavras-chave e riscos.
-- **Match:** compara requisitos e evidências sem converter ausência de informação em experiência inventada.
-- **ATS:** separa termos presentes, sustentados por evidência e ausentes.
-- **Tailor:** sugere uma variante de currículo usando somente conteúdo que pode ser comprovado.
-
-### Lattes e Acadêmico
-
-Interpreta texto do Currículo Lattes e de trajetórias acadêmicas para identificar formação, pesquisa, publicações, docência, extensão, bolsas, eventos e produção técnica ou artística. O fluxo não faz login nem scraping autenticado do Lattes.
-
-### Editais e Concursos
-
-Organiza órgão, banca, cargos, requisitos, etapas, documentos, datas, taxa e conteúdo programático. O Exam Fit compara requisitos com evidências confirmadas e pode gerar checklist e plano inicial de estudo. O edital oficial sempre prevalece.
-
-### Radar, Wishlist e Notificações
-
-Permite descrever oportunidades desejadas, consultar fontes públicas configuradas, executar buscas revisáveis e agendar ciclos locais com quiet hours, cooldown e notificações. Não há inscrição nem candidatura automática.
-
-### Tracker e Kanban
-
-Mantém candidaturas em modo rápido — cargo, organização, URL e status — ou completo, com snapshots, análises, contatos, entrevistas, follow-up e resultado. O histórico preserva a vaga e o currículo realmente usados quando esses conteúdos estão disponíveis.
-
-### GitHub e Portfólio
-
-Analisa perfis e repositórios públicos, incluindo README, linguagens, estrutura, commits, atividade, práticas de engenharia e apresentação do projeto. As conclusões viram sugestões de evidência, não fatos salvos automaticamente.
-
-### Fontes e Captura
-
-Recebe texto, links, CSV, JSON, feeds públicos e capturas assistidas. A identidade canônica reduz duplicatas entre URL manual, Radar, extensão e portais diferentes, preservando as referências de origem.
-
-### Inteligência de oportunidades e taxonomias
-
-Conectores públicos Greenhouse, Lever, `schema.org/JobPosting` e RSS/Atom alimentam candidatos com proveniência. CBO, QBQ, ESCO e O*NET são versionados por manifesto/hash; mappings semânticos exigem revisão. O ranking separa fit, confiança e cobertura de evidência antes de qualquer top-K opcional com IA.
-
-### Entrevistas e ações de carreira
-
-Registra entrevistas, preparação com evidências confirmadas, histórias STAR, perguntas e respostas, além de follow-ups que permanecem rascunhos. Tarefas, lembretes e Career Plans organizam próximas ações; o calendário é um download ICS explícito, nunca uma inclusão automática.
-
-### Extensão do navegador
-
-Captura vaga, edital, projeto GitHub e lotes visíveis; analisa repositórios dentro do GitHub; mantém fila offline com retry e export/import; e conversa com o Local Companion ou com a API local. Pode operar sem o frontend aberto e possui modo próprio de IA opcional.
-
-### IA, memória e rastreabilidade
-
-Gemini, OpenAI e o caminho local usam contratos estruturados. Erros distinguem quota, rate limit, billing, projeto, modelo, schema e rede; retry respeita `Retry-After`, reparo é limitado e fallback nunca é silencioso. Execuções importantes registram provider e modelo solicitado/usado, prompt, fallback, evidências, avisos e necessidade de revisão — nunca a chave.
-
-### Snapshots, backup e export
-
-Vagas, currículos, variantes, editais e análises podem gerar snapshots imutáveis. O painel de Privacidade executa data health, cria backup ou export portátil, valida arquivos por checksum e só restaura após confirmação explícita.
-
-## Como as partes se conectam
-
-```text
-Perfil + evidências revisadas
-            ↓
-      Career Context
-            ↓
-       Application Lab
-            ↓
-Match · ATS · Tailor · variante · kit · plano
-            ↓
-  Tracker + snapshots + histórico
-            ↓
- feedback humano e atualização do Perfil
+```mermaid
+flowchart LR
+  S[Sources e documentos] --> I[Evidence Inbox]
+  I --> P[Universal Profile]
+  I --> G[Evidence Graph]
+  P --> C[Career State]
+  G --> C
+  C --> N[Next Best Actions]
+  N --> O[Career Copilot]
+  O --> Q[Proposals]
+  Q --> H{Human Approval}
+  H -->|approve| A[Application Services]
+  H -->|reject| U[Audit]
+  A --> D[(SQLite + snapshots)]
+  A --> U
+  U --> C
 ```
 
-Cada fluxo recebe apenas o contexto necessário. Evidências sensíveis são omitidas de providers externos por padrão, e conteúdo não confirmado não deve ser apresentado como fato seguro.
+```mermaid
+flowchart TB
+  W[React Web] --> F[FastAPI loopback]
+  E[Extension 0.10.0] --> L[Local Companion 2.0]
+  L --> F
+  F --> X[Domain + application services]
+  X --> DB[(SQLite schema 8)]
+  X --> R[Provider Router]
+  R --> LP[Local deterministic]
+  R --> GP[Gemini / OpenAI]
+  R --> OP[Ollama / LM Studio / compatible]
+  M[MCP] -. não exposto na v2.0 .-> X
+```
 
-## Preview
+Detalhes: [arquitetura v2](docs/02-architecture/data-flow.md),
+[tool registry](docs/02-architecture/copilot-tool-registry.md),
+[segurança](docs/06-engineering/v2-security-threat-model.md) e
+[privacidade do contexto](docs/04-ai/copilot-context-and-privacy.md).
 
-| Settings consolidado | IA local explícita |
+## Screenshots
+
+| Career Cockpit | Copilot contextual |
 | --- | --- |
-| ![Categorias de Settings com dados fictícios](docs/assets/screenshots/sotuhire-v1.11.0-settings-categories.png) | ![Health check de IA local sem network scan](docs/assets/screenshots/sotuhire-v1.11.0-local-ai-health.png) |
+| ![Cockpit](docs/assets/screenshots/v2/01-cockpit-light.png) | ![Copilot](docs/assets/screenshots/v2/03-copilot.png) |
 
-Veja também a [galeria e as notas da release atual](https://github.com/Soturine/SotuHire/releases/latest).
-
-![Jornada de segurança, IA local e inteligência](docs/assets/screenshots/sotuhire-v1.11.0-security-local-ai-intelligence.gif)
-
-| Analytics de carreira | Segurança e privacidade |
+| Approval Queue | Evidence Inbox |
 | --- | --- |
-| ![Analytics fictício e não causal](docs/assets/screenshots/sotuhire-v1.11.0-career-analytics.png) | ![Status local de segurança](docs/assets/screenshots/sotuhire-v1.11.0-security-status.png) |
+| ![Approval Queue](docs/assets/screenshots/v2/04-approval-queue.png) | ![Evidence Inbox](docs/assets/screenshots/v2/05-evidence-inbox.png) |
 
-| Perfil Profissional Universal | Match |
+| Portfólio | Mobile |
 | --- | --- |
-| ![Perfil Profissional Universal](docs/assets/screenshots/sotuhire-web-profile.png) | ![Análise de compatibilidade](docs/assets/screenshots/sotuhire-web-match.png) |
+| ![Portfólio](docs/assets/screenshots/v2/08-portfolio.png) | ![Cockpit mobile](docs/assets/screenshots/v2/19-mobile-cockpit.png) |
 
-| Radar | Tracker |
-| --- | --- |
-| ![Radar de oportunidades](docs/assets/screenshots/sotuhire-web-radar-schedules.png) | ![Tracker de candidaturas](docs/assets/screenshots/sotuhire-web-tracker.png) |
-
-| Lattes e Acadêmico | Editais e Concursos |
-| --- | --- |
-| ![Perfil acadêmico e Lattes](docs/assets/screenshots/sotuhire-web-profile-lattes.png) | ![Editais e concursos](docs/assets/screenshots/sotuhire-web-public-exams.png) |
-
-| Popup da extensão | Análise dentro do GitHub |
-| --- | --- |
-| ![Popup da extensão](docs/assets/screenshots/extension/popup-main.png) | ![Análise de repositório GitHub](docs/assets/screenshots/extension/github-analysis-modal.png) |
-
-Mais telas: [galeria e roteiro de demonstração](docs/09-portfolio/demo-script.md).
-
-## Modos de uso
-
-| Modo | O que executa | Persistência |
-| --- | --- | --- |
-| **Demo** | Frontend com personas e respostas coerentes, sem exigir backend | Estado da sessão do navegador |
-| **API Real** | React conectado à FastAPI local | SQLite e stores locais |
-| **Site sem extensão** | Todos os fluxos web, inclusive captura manual e fontes públicas | Local |
-| **Extensão independente** | Captura e análise própria; Companion pode receber dados sem React aberto | Service worker, fila e stores locais |
-| **Extensão integrada** | Handshake, contexto seguro, importação para Perfil, Vaga, Edital, GitHub e Tracker | Local Companion + API local |
+Galeria completa e roteiro: [demo de 3–5 minutos](docs/09-portfolio/demo-script.md).
 
 ## Instalação
 
-Requisitos:
-
-- Python 3.11 ou 3.12;
-- Node.js 22 e npm para o frontend;
-- Git;
-- Chrome, Edge ou outro navegador Chromium para a extensão;
-- chave Gemini ou OpenAI somente se desejar IA externa.
-
-Clone e crie o ambiente:
+Requisitos: Python 3.11/3.12, Node.js 22+, npm e Git.
 
 ```bash
 git clone https://github.com/Soturine/SotuHire.git
@@ -187,187 +136,100 @@ cd ../..
 source .venv/bin/activate
 python -m pip install --upgrade pip
 pip install -e ".[dev]"
-cd apps/web
-npm ci
-cd ../..
+cd apps/web && npm ci && cd ../..
 ```
 
-## Como executar
-
-Use terminais separados para API e frontend.
-
-API local:
+Em dois terminais:
 
 ```bash
 python scripts/run_api.py
 ```
-
-Frontend:
 
 ```bash
 cd apps/web
 npm run dev
 ```
 
-Abra `http://127.0.0.1:5173`. O seletor no app alterna entre Demo e API Real; a API usa `http://127.0.0.1:8787/api/v1` por padrão.
+Abra `http://127.0.0.1:5173`. A API permanece em loopback; os contratos v1 continuam em
+`/api/v1` e o núcleo Copilot/Evidence usa `/api/v2`.
 
-Local Companion para a extensão:
+Companion e extensão: `python -m modules.local_api.server` e depois carregue
+`browser-extension/` em `chrome://extensions`. Veja o [guia da extensão](browser-extension/README.md).
+
+## IA e providers
+
+O produto funciona sem IA externa. Em **Configurações → IA**, escolha:
+
+- **Local deterministic:** estado, ranking e regras sem modelo;
+- **Gemini/OpenAI:** somente com chave no backend e opt-in;
+- **Ollama/LM Studio/OpenAI-compatible:** endpoint loopback por padrão.
+
+Antes de compartilhar contexto externo, o SotuHire informa purpose, quantidade de itens, estimativa
+de tokens e itens sensíveis omitidos. Registro profissional é sensível e não sai por padrão.
+Veja [providers](docs/04-ai/provider-strategy.md) e [context budget](docs/04-ai/copilot-context-and-privacy.md).
+
+## Privacidade e segurança
+
+Dados estruturados v2 usam SQLite. JSON/JSONL permanece apenas para compatibilidade, fixtures e
+export onde necessário. Conteúdo de vagas, PDF, README, RSS, portfólio e web é não confiável e não
+pode escolher tools, alterar system instructions ou contornar aprovação.
+
+### O que o SotuHire NÃO faz
+
+- auto-apply, candidatura ou inscrição em massa;
+- login, CAPTCHA bypass ou captura de cookie/sessão/senha/token;
+- envio automático de currículo, e-mail ou resposta a recrutador;
+- pagamento ou submissão de formulário;
+- alteração silenciosa do perfil;
+- invenção de experiência, skill, formação, publicação, registro ou resultado.
+
+Threat model: [Copilot, tools, anexos, busca e prompt injection](docs/06-engineering/v2-security-threat-model.md).
+
+## Migração e recuperação
+
+Schema 6 ou 7 pode avançar explicitamente ao schema 8, com backup, dry-run e verify:
 
 ```bash
-python -m modules.local_api.server
+python scripts/migrate_local_data.py --dry-run
+python scripts/migrate_local_data.py --apply
+python scripts/migrate_local_data.py --verify
+python scripts/check_data_health.py
 ```
 
-Documentação local:
+Arquivos legados não são apagados. Leia o [guia de migração v2](docs/06-engineering/v2-migration-and-recovery.md).
 
-```bash
-mkdocs serve
-```
-
-Validação principal:
+## Desenvolvimento, testes e documentação
 
 ```bash
 ruff check .
 ruff format --check .
-pytest
 pyright
+pytest
 mkdocs build --strict
 cd apps/web
+npm run test:unit
 npm run lint
 npm run typecheck
 npm run build
 npm run test:e2e
 ```
 
-## Configuração de IA
-
-O SotuHire continua utilizável sem chave externa. Para habilitar IA:
-
-1. abra **Configurações → IA**;
-2. escolha **Gemini**, **OpenAI** ou **Local**;
-3. use o link do próprio app para abrir a página oficial do provider;
-4. cole a chave no backend local;
-5. atualize o catálogo, escolha o modelo e execute **Testar conexão**;
-6. selecione um preset ou habilite apenas os fluxos desejados.
-
-Os catálogos de modelo são consultados de verdade, possuem cache e podem ser atualizados; o modelo escolhido é enviado ao provider. Se o provider falhar, a resposta informa provider/modelo efetivamente usados e o motivo do fallback.
-
-No site, a chave é armazenada somente no backend local e não é devolvida ao React. Ela não deve ir para Git, documentação, screenshot, log, `localStorage`, `sessionStorage`, backup ou export. Testes externos são opt-in; a suíte padrão usa mocks.
-
-## Qualidade e avaliação da IA
-
-O painel **IA e Qualidade** mede execuções por tarefa, provider, modelo e versão do prompt. Ele combina validação de schema, golden datasets multiárea, evidência, claims sem suporte, fallback, latência, tokens, custo disponível e feedback humano. Comparações sempre exibem o tamanho da amostra e não declaram um vencedor definitivo com poucos casos.
-
-Os traces usam retenção configurável e, por padrão, não armazenam inputs nem outputs completos. Gemini/OpenAI são testados somente por opt-in com fixtures fictícias; mocks e fallback local mantêm os testes e o produto utilizáveis sem chamada paga. Outcome Learning associa sinais do Tracker a fonte, variante de currículo, Match e ATS, mas não afirma causalidade nem altera Perfil ou pesos automaticamente.
-
-- [Arquitetura de avaliação](docs/04-ai/ai-evaluation-architecture.md)
-- [Governança de prompts](docs/04-ai/prompt-governance.md)
-- [Benchmarking](docs/09-testing/ai-benchmarking.md)
-- [Feedback humano](docs/04-ai/human-feedback.md)
-- [Outcome Learning](docs/02-architecture/outcome-learning.md)
-
-## Extensão
-
-### Instalar em modo de desenvolvimento
-
-1. execute `python scripts/package_extension.py` para validar e gerar o ZIP, ou use a pasta `browser-extension/` diretamente;
-2. abra `chrome://extensions` ou `edge://extensions`;
-3. habilite **Modo do desenvolvedor**;
-4. clique em **Carregar sem compactação** e selecione `browser-extension/`.
-
-### Funcionamento
-
-- prioriza `schema.org/JobPosting`, depois metadados estruturados, seletores semânticos e texto visível;
-- cria capturas e snapshots de vaga, edital e projeto;
-- mantém fila com estado, número de tentativas, erro, próximo retry, limite e deduplicação;
-- permite exportar/importar a fila sem incluir chaves;
-- usa handshake para informar versões, capacidades e compatibilidade;
-- consulta apenas um resumo seguro do Perfil/Career Context;
-- oferece **Preparar candidatura** e abre o Lab somente com IDs de captura/snapshot;
-- funciona com Local Companion mesmo quando o frontend está fechado.
-
-Para análise GitHub, é possível usar processamento local, a IA configurada no SotuHire, Gemini próprio ou OpenAI próprio. A chave própria fica em sessão por padrão; persistência no cofre IndexedDB do service worker exige consentimento. Ela nunca usa `chrome.storage.sync`, não entra no content script ou na página e pode ser removida a qualquer momento.
-
-Detalhes de instalação, permissões e diagnóstico: [guia da extensão](browser-extension/README.md).
-
-## Dados e privacidade
-
-Por padrão, os dados ficam em `data/`:
-
-- `data/sotuhire.db`: entidades relacionais, snapshots, candidaturas e rastros seguros de IA;
-- `data/**/*.json` e `data/**/*.jsonl`: stores legados mantidos para compatibilidade e migração;
-- `data/backups/`: arquivos ZIP checksummed;
-- `data/secrets/`: configuração local de provider, sempre excluída de backup e Git.
-
-Defina `SOTUHIRE_DATA_DIR` para usar outro diretório local. Antes de migrar dados antigos:
-
-```bash
-python scripts/migrate_local_data.py --dry-run
-python scripts/migrate_local_data.py --apply
-python scripts/migrate_local_data.py --verify
-```
-
-Os arquivos JSON/JSONL antigos não são apagados. O `--apply` cria backup antes da transação e registra a migração. Para saúde, backup, export e restauração:
-
-```bash
-python scripts/check_data_health.py
-python scripts/backup_data.py
-python scripts/backup_data.py --export
-python scripts/restore_data.py data/backups/ARQUIVO.zip
-python scripts/restore_data.py data/backups/ARQUIVO.zip --apply
-```
-
-A primeira chamada de restore é dry-run. No frontend, a aplicação da restauração exige confirmação textual e cria um novo backup preventivo.
-
-O SotuHire não realiza auto-apply, candidatura automática, inscrição automática, pagamento, boleto, envio de documentos, bypass de CAPTCHA ou decisão crítica final apenas por IA.
-
-## Arquitetura
-
-- [Visão geral](docs/02-architecture/overview.md)
-- [Mapa de integração dos módulos](docs/02-architecture/module-integration-map.md)
-- [Matriz verificável de capacidades](docs/02-architecture/integration-capability-matrix.md)
-- [Career Context Engine](docs/02-architecture/career-context-engine.md)
-- [Linhagem e deduplicação](docs/02-architecture/data-lineage-and-deduplication.md)
-- [Repositories e persistência](docs/02-architecture/storage-repository-architecture.md)
-- [Schema SQLite e migrações](docs/02-architecture/sqlite-schema-and-migrations.md)
-- [Snapshots de candidatura](docs/02-architecture/application-snapshots.md)
+- [Documentação publicada](https://soturine.github.io/SotuHire/)
+- [Visão do produto](docs/01-product/v2-product-vision.md)
+- [Evidence Graph](docs/02-architecture/evidence-graph.md)
+- [Human-Approved Copilot](docs/02-architecture/human-approved-copilot.md)
+- [Approval Queue](docs/02-architecture/approval-queue.md)
+- [Frontend v2](docs/02-architecture/frontend-v2.md)
 - [Application Lab](docs/02-architecture/application-lab.md)
-- [Resume Studio](docs/02-architecture/resume-studio.md)
-- [Confiabilidade de providers](docs/02-architecture/provider-reliability.md)
-- [Backup, restore e data health](docs/02-architecture/backup-restore-and-data-health.md)
-- [Orquestração de IA](docs/04-ai/ai-orchestration-and-confidence.md)
-- [Extensão e Perfil](docs/02-architecture/extension-profile-bridge.md)
-- [Segurança e privacidade](docs/06-engineering/security-privacy.md)
+- [Roadmap](docs/01-product/roadmap.md)
+- [Release v2.0](docs/releases/v2.0.md)
 
-## Documentação
+## Post-v2
 
-- **Comece aqui:** [índice documental](docs/documentation-index.md) e [documentação publicada](https://soturine.github.io/SotuHire/)
-- **Produto:** [visão](docs/01-product/vision.md), [estratégia multiárea](docs/01-product/multi-domain-product-strategy.md) e [roadmap](docs/01-product/roadmap.md)
-- **Dados:** [arquitetura de storage](docs/02-architecture/storage-repository-architecture.md), [schema e migrações](docs/02-architecture/sqlite-schema-and-migrations.md) e [matriz de integração](docs/02-architecture/integration-capability-matrix.md)
-- **IA:** [catálogo de prompts](docs/04-ai/prompt-catalog.md), [plano de avaliação](docs/04-ai/ai-evaluation-plan.md) e [RAG local](docs/04-ai/career-memory-rag.md)
-- **Fontes e extensão:** [fontes de dados](docs/05-data-sources/job-sources.md) e [guia da extensão](browser-extension/README.md)
-- **Frontend:** [guia do app React, modos Demo/API Real e testes](apps/web/README.md)
-- **Testes:** [QA](docs/06-engineering/qa-testing.md), [CI/CD](docs/06-engineering/ci-cd.md) e [golden datasets](docs/09-testing/golden-datasets.md)
-- **Portfólio:** [roteiro de demonstração](docs/09-portfolio/demo-script.md) e [case study](docs/09-portfolio/portfolio-case-study.md)
-- **Histórico:** [CHANGELOG](CHANGELOG.md) e [releases](docs/releases/)
-
-## Roadmap
-
-As próximas frentes ampliam evidências acadêmicas/profissionais e evoluem para um copiloto com aprovação humana etapa a etapa. Consulte o [roadmap atual](docs/01-product/roadmap.md) para critérios, riscos e itens fora de escopo.
-
-## Contribuição
-
-1. abra uma issue descrevendo problema, evidência e comportamento esperado;
-2. crie uma branch curta e focada;
-3. adicione ou atualize testes e documentação;
-4. rode as validações locais relevantes;
-5. abra um pull request sem dados pessoais, chaves ou artefatos locais.
-
-Mudanças devem preservar o modo Demo, a API Real, o fallback local, a revisão humana e os limites de segurança do produto.
+O roadmap não promete uma versão arbitrária. Próximos investimentos dependem de feedback real:
+qualidade de recomendações com amostra (`n`), acessibilidade, conectores aprovados, migração gradual
+de compatibilidade legada e possível MCP local somente após validar transporte, token e scopes.
 
 ## Licença
 
-Distribuído sob a [Apache License 2.0](LICENSE).
-
----
-
-[Release atual](https://github.com/Soturine/SotuHire/releases/latest) · [Histórico de releases](docs/releases/) · [CHANGELOG](CHANGELOG.md)
+[Apache License 2.0](LICENSE). Contribuições seguem [CONTRIBUTING.md](CONTRIBUTING.md).

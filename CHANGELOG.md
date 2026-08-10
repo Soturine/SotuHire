@@ -4,6 +4,22 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [2.0.0] - 2026-08-10
+
+### Adicionado
+
+- Evidence Graph e portfólio multidisciplinar em SQLite schema 8.
+- Career State e Next Best Actions determinísticos, com confiança separada.
+- Career Copilot, planos, registry fechado, ProposedActions, approval, audit e undo.
+- Career Cockpit, Evidence Inbox, Approval Queue, Portfólio e busca Ctrl/Cmd+K.
+
+### Segurança e compatibilidade
+
+- Writes importantes exigem proposta individual e aprovação humana; tool injection, replay, stale,
+  expiry e input inválido possuem testes dirigidos.
+- App/Companion 2.0.0; extensão 0.10.0 sem bump vazio; contratos v1 preservados e API v2 adicionada.
+- Não foi criada release/tag v1.11.1.
+
 ## [1.11.0] - 2026-08-10
 
 ### Adicionado
