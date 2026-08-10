@@ -1,4 +1,4 @@
-"""Registered provider consumer with conservative local fallbacks for v1.11.0."""
+"""Registered provider consumer with conservative local fallbacks for SotuHire v2.0."""
 
 from __future__ import annotations
 

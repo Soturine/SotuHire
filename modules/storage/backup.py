@@ -21,7 +21,7 @@ from modules.storage.migrations import MigrationRunner
 from modules.storage.migrations.versions import LATEST_SCHEMA_VERSION
 from modules.storage.safe_paths import UnsafeStorePath, ensure_within, resolve_within, safe_relative
 
-APP_VERSION = "1.11.0"
+APP_VERSION = "2.0.0"
 EXCLUDED_PARTS = {
     "secrets",
     "secret",

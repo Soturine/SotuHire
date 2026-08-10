@@ -16,7 +16,7 @@ import type {
 
 export const mockHealth: Health = {
   status: "ok",
-  version: "1.11.0",
+  version: "2.0.0",
   local_first: true,
   environment: "mock",
   capabilities: [
