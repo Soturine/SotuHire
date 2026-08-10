@@ -8,19 +8,13 @@ import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
+from urllib.parse import urlparse
 
 from modules.core.text_utils import extract_keywords, normalize_text
 from modules.parsers.job_description_parser import SKILL_CATALOG
 from modules.schemas.resume_profile import ResumeProfileSchema
 
-EMAIL_PATTERN = re.compile(r"[\w.+-]+@[\w.-]+\.[a-zA-Z]{2,}")
 PHONE_PATTERN = re.compile(r"(?:\+?55\s*)?(?:\(?\d{2}\)?\s*)?\d{4,5}[-\s]?\d{4}")
-URL_PATTERN = re.compile(
-    r"(?:(?:https?://|www\.)[^\s|)>]+|"
-    r"(?:linkedin\.com/in|github\.com|behance\.net|[\w.-]+\.vercel\.app|"
-    r"[\w.-]+\.netlify\.app|[\w.-]+\.github\.io)/?[^\s|)>]*)",
-    flags=re.IGNORECASE,
-)
 CITY_PATTERN = re.compile(
     r"\b([A-ZÀ-Ý][A-Za-zÀ-ÿ' -]{2,30})\s*[,/-]\s*([A-Z]{2})\b",
 )
@@ -30,7 +24,6 @@ PERIOD_PATTERN = re.compile(
     r"|\b(?:19|20)\d{2}\b",
     flags=re.IGNORECASE,
 )
-LIST_SEPARATOR_PATTERN = re.compile(r"\s*(?:,|;|/|\||•|·)\s*")
 SKILL_CATEGORY_PREFIX_PATTERN = re.compile(
     r"^\s*(?:"
     r"linguagens?|web(?:\s*/\s*mobile)?|mobile|dados(?:\s*/\s*devops\s*/\s*ferramentas)?|"
@@ -255,8 +248,8 @@ def _detect_name(lines: list[str]) -> str:
         normalized = normalize_text(candidate)
         if (
             2 <= len(candidate.split()) <= 6
-            and not URL_PATTERN.search(candidate)
-            and not EMAIL_PATTERN.search(candidate)
+            and not _detect_links(candidate)
+            and not _detect_email(candidate)
             and not PHONE_PATTERN.fullmatch(candidate)
             and not _section_marker(candidate)[0]
             and not any(char.isdigit() for char in candidate)
@@ -277,16 +270,59 @@ def _detect_skills(text: str, catalog: list[str]) -> list[str]:
 
 
 def _detect_links(text: str) -> list[str]:
-    return _unique([link.rstrip(".,;") for link in URL_PATTERN.findall(text)])
+    links: list[str] = []
+    for raw in text.split():
+        candidate = raw.strip(" \t<>()[]{}|,;").rstrip(".")
+        lowered = candidate.casefold()
+        parseable = candidate
+        if lowered.startswith("www.") or not lowered.startswith(("http://", "https://")) and any(
+            lowered.startswith(prefix)
+            for prefix in ("linkedin.com/", "github.com/", "behance.net/")
+        ):
+            parseable = f"https://{candidate}"
+        parsed = urlparse(parseable)
+        hostname = (parsed.hostname or "").rstrip(".")
+        if parsed.scheme.casefold() in {"http", "https"} and "." in hostname:
+            links.append(candidate)
+    return _unique(links)
 
 
-def _first_match(pattern: re.Pattern[str], text: str) -> str:
-    match = pattern.search(text)
+def _detect_email(text: str) -> str:
+    allowed_local = frozenset(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-"
+    )
+    allowed_domain = frozenset(
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-"
+    )
+    for raw in text.split():
+        candidate = raw.strip(" \t<>()[]{}|,;:")
+        if candidate.count("@") != 1:
+            continue
+        local, domain = candidate.split("@", 1)
+        suffix = domain.rsplit(".", 1)[-1] if "." in domain else ""
+        if (
+            local
+            and domain
+            and len(suffix) >= 2
+            and all(char in allowed_local for char in local)
+            and all(char in allowed_domain for char in domain)
+        ):
+            return candidate
+    return ""
+
+
+def _detect_phone(text: str) -> str:
+    match = PHONE_PATTERN.search(text[:200_000])
     return match.group(0) if match else ""
 
 
 def _link_by_domain(links: list[str], domain: str) -> str:
-    return next((link for link in links if domain in link.lower()), "")
+    for link in links:
+        parseable = link if "://" in link else f"https://{link}"
+        hostname = (urlparse(parseable).hostname or "").rstrip(".").casefold()
+        if hostname == domain or hostname.endswith(f".{domain}"):
+            return link
+    return ""
 
 
 def _detect_city(text: str) -> str:
@@ -299,9 +335,9 @@ def _meaningful_lines(lines: list[str]) -> list[str]:
         line.strip(" \t-*•")
         for line in lines
         if line.strip(" \t-*•")
-        and not EMAIL_PATTERN.search(line)
+        and not _detect_email(line)
         and not PHONE_PATTERN.search(line)
-        and not URL_PATTERN.search(line)
+        and not _detect_links(line)
     ]
 
 
@@ -387,13 +423,23 @@ def _starts_course(line: str) -> bool:
 def _split_list_items(lines: list[str], *, split_and: bool = False) -> list[str]:
     items: list[str] = []
     for line in _meaningful_lines(lines):
-        fragments = LIST_SEPARATOR_PATTERN.split(line)
+        fragments = [line]
+        for separator in (",", ";", "/", "|", "•", "·"):
+            fragments = [part for fragment in fragments for part in fragment.split(separator)]
         if split_and:
-            fragments = [
-                part
-                for fragment in fragments
-                for part in re.split(r"\s+(?:e|and)\s+", fragment, flags=re.IGNORECASE)
-            ]
+            split_fragments: list[str] = []
+            for fragment in fragments:
+                current: list[str] = []
+                for word in fragment.split():
+                    if word.casefold() in {"e", "and"}:
+                        if current:
+                            split_fragments.append(" ".join(current))
+                            current = []
+                    else:
+                        current.append(word)
+                if current:
+                    split_fragments.append(" ".join(current))
+            fragments = split_fragments
         items.extend(fragment.strip(" .:-") for fragment in fragments)
     return _unique(items)
 
@@ -476,8 +522,8 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
 
     return ResumeProfileSchema(
         name=_detect_name(lines),
-        email=_first_match(EMAIL_PATTERN, clean_text),
-        phone=_first_match(PHONE_PATTERN, clean_text),
+        email=_detect_email(clean_text),
+        phone=_detect_phone(clean_text),
         city=_detect_city(clean_text),
         linkedin=_link_by_domain(links, "linkedin.com"),
         github=_link_by_domain(links, "github.com"),

@@ -11,6 +11,7 @@ from modules.storage.json_recovery import (
     json_store_health,
     restore_json_store,
 )
+from modules.storage.safe_paths import UnsafeStorePath
 
 
 def test_profile_corruption_is_quarantined_blocked_and_explicitly_restored(tmp_path) -> None:
@@ -51,3 +52,20 @@ def test_companion_jsonl_corruption_never_returns_false_empty_state(tmp_path) ->
 
     assert json_store_health(path).status == "degraded"
     assert list((tmp_path / ".quarantine").glob("captures.jsonl.*.corrupt"))
+
+
+def test_restore_rejects_external_and_arbitrary_sources(tmp_path) -> None:
+    root = tmp_path / "store-root"
+    target = root / "profiles.json"
+    target.parent.mkdir(parents=True)
+    target.write_text("{}", encoding="utf-8")
+    external = tmp_path / "external.json"
+    external.write_text("{}", encoding="utf-8")
+
+    with pytest.raises(UnsafeStorePath):
+        restore_json_store(target, external, store_root=root)
+
+    arbitrary_inside = root / "arbitrary.json"
+    arbitrary_inside.write_text("{}", encoding="utf-8")
+    with pytest.raises(UnsafeStorePath):
+        restore_json_store(target, arbitrary_inside, store_root=root)

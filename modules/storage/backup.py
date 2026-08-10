@@ -10,7 +10,7 @@ import tempfile
 import zipfile
 from contextlib import closing
 from datetime import UTC, datetime
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -19,6 +19,7 @@ from modules.security.credentials import contains_provider_secret
 from modules.storage.database import default_data_dir
 from modules.storage.migrations import MigrationRunner
 from modules.storage.migrations.versions import LATEST_SCHEMA_VERSION
+from modules.storage.safe_paths import UnsafeStorePath, ensure_within, resolve_within, safe_relative
 
 APP_VERSION = "1.10.1"
 EXCLUDED_PARTS = {
@@ -94,7 +95,7 @@ def create_backup(
     kind: Literal["backup", "export"] = "backup",
 ) -> BackupResult:
     """Create a portable, checksummed archive without local secrets."""
-    source = Path(data_dir) if data_dir is not None else default_data_dir()
+    source = (Path(data_dir) if data_dir is not None else default_data_dir()).resolve()
     source.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
     default_name = (
@@ -115,18 +116,23 @@ def create_backup(
             if not path.is_file() or path.resolve() == archive.resolve():
                 continue
             relative = path.relative_to(source)
+            try:
+                trusted_path = ensure_within(source, path)
+            except UnsafeStorePath:
+                manifest.excluded_files.append(relative.as_posix())
+                continue
             if not _allowed(relative, path):
                 manifest.excluded_files.append(relative.as_posix())
                 continue
             if _contains_secret_material(path):
                 manifest.excluded_files.append(relative.as_posix())
                 continue
-            safe_source = path
+            safe_source = trusted_path
             if path.suffix.casefold() in {".db", ".sqlite", ".sqlite3"}:
                 safe_source = temporary / relative
                 safe_source.parent.mkdir(parents=True, exist_ok=True)
-                _sqlite_backup(path, safe_source)
-                database_copies[path] = safe_source
+                _sqlite_backup(trusted_path, safe_source)
+                database_copies[trusted_path] = safe_source
             content_hash = _sha256(safe_source)
             manifest.files.append(
                 BackupFile(
@@ -138,7 +144,7 @@ def create_backup(
             archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
         ) as bundle:
             for item in manifest.files:
-                original = source / Path(item.path)
+                original = resolve_within(source, _safe_relative_path(item.path))
                 source_path = database_copies.get(original, original)
                 bundle.write(source_path, item.path)
             bundle.writestr(
@@ -159,14 +165,14 @@ def backup_database_file(database_path: str | Path) -> Path:
 
 
 def restore_backup(
-    archive_path: str | Path,
+    archive_path: Path,
     *,
     destination: str | Path | None = None,
     dry_run: bool = True,
 ) -> RestoreResult:
     """Validate and optionally restore a backup after creating a safety copy."""
-    archive = Path(archive_path)
-    target = Path(destination) if destination is not None else default_data_dir()
+    archive = archive_path.resolve()
+    target = (Path(destination) if destination is not None else default_data_dir()).resolve()
     if not archive.is_file():
         raise FileNotFoundError(f"Backup não encontrado: {archive}")
     with zipfile.ZipFile(archive) as bundle:
@@ -181,9 +187,10 @@ def restore_backup(
         declared_paths = [item.path for item in manifest.files]
         if len(declared_paths) != len(set(declared_paths)):
             raise ValueError("Backup contém caminhos duplicados no manifesto.")
+        safe_paths = {item.path: _safe_relative_path(item.path) for item in manifest.files}
         for item in manifest.files:
-            _safe_relative_path(item.path)
-            if not _allowed(Path(item.path), Path(item.path)):
+            relative = safe_paths[item.path]
+            if not _allowed(relative, relative):
                 raise ValueError(f"Backup contém caminho proibido: {item.path}")
             member = members.get(item.path)
             if member is None:
@@ -209,12 +216,12 @@ def restore_backup(
         with tempfile.TemporaryDirectory(prefix="sotuhire-restore-") as temporary_directory:
             staging = Path(temporary_directory)
             for item in manifest.files:
-                destination_path = staging / Path(item.path)
+                destination_path = resolve_within(staging, safe_paths[item.path])
                 destination_path.parent.mkdir(parents=True, exist_ok=True)
                 destination_path.write_bytes(bundle.read(item.path))
             for item in manifest.files:
-                source_path = staging / Path(item.path)
-                destination_path = target / Path(item.path)
+                source_path = resolve_within(staging, safe_paths[item.path])
+                destination_path = resolve_within(target, safe_paths[item.path])
                 destination_path.parent.mkdir(parents=True, exist_ok=True)
                 temporary_path = destination_path.with_suffix(f"{destination_path.suffix}.restore")
                 shutil.copy2(source_path, temporary_path)
@@ -244,7 +251,8 @@ def _validate_manifest_compatibility(manifest: BackupManifest) -> None:
 
 def _validate_sqlite_members(bundle: zipfile.ZipFile, manifest: BackupManifest) -> None:
     for item in manifest.files:
-        if Path(item.path).suffix.casefold() not in {".db", ".sqlite", ".sqlite3"}:
+        relative = _safe_relative_path(item.path)
+        if relative.suffix.casefold() not in {".db", ".sqlite", ".sqlite3"}:
             continue
         with tempfile.TemporaryDirectory(prefix="sotuhire-validate-db-") as directory:
             database = Path(directory) / "archive.db"
@@ -258,7 +266,7 @@ def _validate_sqlite_members(bundle: zipfile.ZipFile, manifest: BackupManifest) 
                         raise ValueError(f"Banco SQLite corrompido no backup: {item.path}")
                     if connection.execute("PRAGMA foreign_key_check").fetchall():
                         raise ValueError(f"Banco SQLite contém referências inválidas: {item.path}")
-                    if Path(item.path).name == "sotuhire.db":
+                    if relative.name == "sotuhire.db":
                         actual_schema = _archived_schema_version(connection)
                         if actual_schema != manifest.schema_version:
                             raise ValueError(
@@ -304,10 +312,10 @@ def _version_major(value: str) -> int:
 
 
 def _safe_relative_path(value: str) -> Path:
-    pure = PurePosixPath(value)
-    if pure.is_absolute() or ".." in pure.parts or not pure.parts:
-        raise ValueError(f"Caminho inseguro no backup: {value}")
-    return Path(*pure.parts)
+    try:
+        return safe_relative(value)
+    except UnsafeStorePath as exc:
+        raise ValueError(f"Caminho inseguro no backup: {value}") from exc
 
 
 def _allowed(relative: Path, source: Path) -> bool:

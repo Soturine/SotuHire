@@ -151,7 +151,7 @@ def save_local_ai_config(
     model: str = DEFAULT_GEMINI_MODEL,
     path: str | Path = DEFAULT_SECRETS_PATH,
 ) -> Path:
-    """Save non-versioned local AI configuration and activate it in this process."""
+    """Persist only non-secret preferences and keep the key in process memory."""
     cleaned_key = api_key.strip()
     if not cleaned_key:
         raise ValueError("Cole uma chave Gemini antes de salvar.")
@@ -161,7 +161,6 @@ def save_local_ai_config(
         "\n".join(
             [
                 f"DEFAULT_AI_PROVIDER = {_toml_string(provider)}",
-                f"GEMINI_API_KEY = {_toml_string(cleaned_key)}",
                 f"GEMINI_MODEL = {_toml_string(model)}",
                 "",
             ]

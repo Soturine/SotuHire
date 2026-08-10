@@ -26,7 +26,12 @@ def main() -> int:
     )
     args = parser.parse_args()
     if args.apply:
-        restore_json_store(args.store, args.backup, json_lines=args.jsonl)
+        restore_json_store(
+            args.store,
+            args.backup,
+            json_lines=args.jsonl,
+            store_root=args.store.parent,
+        )
     else:
         content = args.backup.read_text(encoding="utf-8")
         if args.jsonl:

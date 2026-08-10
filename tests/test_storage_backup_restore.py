@@ -85,6 +85,27 @@ def test_restore_rejects_corrupt_sqlite_even_with_matching_checksum(tmp_path):
         restore_backup(archive, destination=tmp_path / "restore", dry_run=True)
 
 
+@pytest.mark.parametrize("unsafe_path", ["../outside.json", "folder\\outside.json", "C:/outside.json"])
+def test_restore_rejects_traversal_and_alternate_path_syntax(tmp_path, unsafe_path):
+    payload = b"{}"
+    manifest = BackupManifest(
+        files=[
+            BackupFile(
+                path=unsafe_path,
+                size=len(payload),
+                sha256=hashlib.sha256(payload).hexdigest(),
+            )
+        ]
+    )
+    archive = tmp_path / "unsafe.zip"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr(unsafe_path, payload)
+        bundle.writestr("manifest.json", manifest.model_dump_json())
+
+    with pytest.raises(ValueError, match="Caminho inseguro"):
+        restore_backup(archive, destination=tmp_path / "restore", dry_run=True)
+
+
 def test_backup_manifest_reports_actual_schema_version(tmp_path):
     data_dir = tmp_path / "data"
     data_dir.mkdir()

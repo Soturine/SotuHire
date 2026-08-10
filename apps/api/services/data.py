@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import zipfile
 from pathlib import Path
 from typing import Literal
@@ -25,7 +26,7 @@ from apps.api.schemas.data import (
 )
 
 RESTORE_CONFIRMATION = "RESTAURAR"
-ARCHIVE_PREFIXES = ("sotuhire-data-backup-", "sotuhire-data-export-")
+ARCHIVE_NAME = re.compile(r"^sotuhire-data-(?:backup|export)-[A-Za-z0-9-]+\.zip$")
 
 
 class DataArchiveError(ValueError):
@@ -80,17 +81,14 @@ def create_data_archive(kind: Literal["backup", "export"]) -> DataArchiveRespons
 
 def resolve_data_archive(archive_name: str) -> Path:
     """Resolve a client archive identifier without permitting path traversal."""
-    if not archive_name.startswith(ARCHIVE_PREFIXES) or not archive_name.endswith(".zip"):
+    if not ARCHIVE_NAME.fullmatch(archive_name):
         raise DataArchiveError("Nome de backup inválido.")
-    if Path(archive_name).name != archive_name:
-        raise DataArchiveError("Caminho de backup inválido.")
     root = _archive_directory().resolve()
-    candidate = (root / archive_name).resolve()
-    if candidate.parent != root:
-        raise DataArchiveError("Backup fora do diretório permitido.")
-    if not candidate.is_file():
-        raise FileNotFoundError("Backup local não encontrado.")
-    return candidate
+    for candidate in root.glob("sotuhire-data-*.zip"):
+        resolved = candidate.resolve()
+        if resolved.parent == root and candidate.name == archive_name and resolved.is_file():
+            return resolved
+    raise FileNotFoundError("Backup local não encontrado.")
 
 
 def restore_data(payload: DataRestoreRequest) -> DataRestoreResponse:

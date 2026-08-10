@@ -22,7 +22,7 @@ def main() -> int:
     )
     args = parser.parse_args()
     result = restore_backup(
-        args.archive,
+        Path(args.archive),
         destination=args.destination,
         dry_run=not args.apply,
     )

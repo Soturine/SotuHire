@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from modules.storage.json_recovery import atomic_write_json
+from modules.storage.safe_paths import resolve_within, safe_component
 from modules.taxonomy.models import TaxonomyDatasetManifest
 
 
@@ -15,7 +16,7 @@ class VersionedTaxonomyStore:
     """Persist immutable verified snapshots without downloading data implicitly."""
 
     def __init__(self, root: str | Path = "data/taxonomies") -> None:
-        self.root = Path(root)
+        self.root = Path(root).resolve()
 
     def save(
         self,
@@ -48,7 +49,10 @@ class VersionedTaxonomyStore:
         return decoded
 
     def _path(self, manifest: TaxonomyDatasetManifest) -> Path:
-        return self.root / manifest.system / manifest.version / f"{manifest.content_sha256}.json"
+        system = safe_component(manifest.system, label="sistema")
+        version = safe_component(manifest.version, label="versao")
+        checksum = safe_component(manifest.content_sha256, label="checksum")
+        return resolve_within(self.root, Path(system) / version / f"{checksum}.json")
 
 
 def taxonomy_content_sha256(records: list[dict[str, Any]]) -> str:

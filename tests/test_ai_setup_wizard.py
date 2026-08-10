@@ -20,7 +20,9 @@ def test_setup_saves_non_versioned_local_configuration(tmp_path, monkeypatch):
     saved = setup.save_local_ai_config("fake-secret", path=target)
 
     assert saved == target
-    assert "fake-secret" in target.read_text(encoding="utf-8")
+    persisted = target.read_text(encoding="utf-8")
+    assert "fake-secret" not in persisted
+    assert "DEFAULT_AI_PROVIDER" in persisted
     assert setup.gemini_api_key() == "fake-secret"
 
 

@@ -13,7 +13,16 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from modules.storage.safe_paths import UnsafeStorePath, ensure_within, safe_component
+
 T = TypeVar("T")
+
+
+def _trusted_target(path: str | Path) -> Path:
+    """Normalize an application-owned store path and reject special basenames."""
+    raw = Path(path)
+    safe_component(raw.name, label="arquivo")
+    return ensure_within(raw.parent, raw)
 
 
 class JsonStoreError(RuntimeError):
@@ -50,7 +59,7 @@ def load_json(
     validator: Callable[[Any], T],
     default_factory: Callable[[], T],
 ) -> T:
-    target = Path(path)
+    target = _trusted_target(path)
     _raise_if_degraded(target)
     if not target.exists():
         return default_factory()
@@ -66,7 +75,7 @@ def load_jsonl(
     *,
     validator: Callable[[Any], T],
 ) -> list[T]:
-    target = Path(path)
+    target = _trusted_target(path)
     _raise_if_degraded(target)
     if not target.exists():
         return []
@@ -106,7 +115,7 @@ def atomic_write_text(
     backups: int = 3,
     allow_degraded: bool = False,
 ) -> Path:
-    target = Path(path)
+    target = _trusted_target(path)
     if not allow_degraded:
         _raise_if_degraded(target)
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -125,7 +134,7 @@ def atomic_write_text(
 
 
 def json_store_health(path: str | Path) -> JsonStoreHealth:
-    target = Path(path)
+    target = _trusted_target(path)
     marker = _marker_path(target)
     metadata: dict[str, Any] = {}
     if marker.exists():
@@ -149,10 +158,19 @@ def restore_json_store(
     source: str | Path,
     *,
     json_lines: bool = False,
+    store_root: str | Path | None = None,
 ) -> Path:
     """Explicitly restore a valid backup and clear the degraded marker."""
-    target = Path(path)
-    source_path = Path(source)
+    target = _trusted_target(path)
+    root = Path(store_root).resolve() if store_root is not None else target.parent.resolve()
+    target = ensure_within(root, target)
+    source_path = ensure_within(root, source)
+    allowed_source_roots = (
+        (target.parent / ".backups").resolve(),
+        (target.parent / ".quarantine").resolve(),
+    )
+    if not any(_is_within(candidate_root, source_path) for candidate_root in allowed_source_roots):
+        raise UnsafeStorePath("Restore permitido somente de backup ou quarantine do store.")
     content = source_path.read_text(encoding="utf-8")
     if json_lines:
         for line in content.splitlines():
@@ -210,7 +228,26 @@ def _backup_files(path: Path) -> list[Path]:
     backup_dir = path.parent / ".backups"
     if not backup_dir.exists():
         return []
-    return sorted(backup_dir.glob(f"{path.name}.*.bak"), reverse=True)
+    prefix = f"{path.name}."
+    return sorted(
+        (
+            candidate
+            for candidate in backup_dir.iterdir()
+            if candidate.is_file()
+            and candidate.name.startswith(prefix)
+            and candidate.name.endswith(".bak")
+            and ensure_within(backup_dir, candidate) == candidate.resolve()
+        ),
+        reverse=True,
+    )
+
+
+def _is_within(root: Path, candidate: Path) -> bool:
+    try:
+        candidate.relative_to(root)
+    except ValueError:
+        return False
+    return True
 
 
 def _write_marker(path: Path, payload: dict[str, str]) -> None:

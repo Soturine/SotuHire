@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from modules.storage.safe_paths import UnsafeStorePath
 from modules.taxonomy import (
     MappingMethod,
     NormalizedOccupation,
@@ -34,6 +35,10 @@ def test_versioned_taxonomy_cache_verifies_manifest_and_is_content_addressed(
     invalid = manifest.model_copy(update={"content_sha256": "0" * 64})
     with pytest.raises(ValueError, match="hash"):
         store.save(invalid, records)
+
+    traversal = manifest.model_copy(update={"version": "../outside"})
+    with pytest.raises(UnsafeStorePath):
+        store.save(traversal, records)
 
 
 def test_taxonomy_mapping_keeps_fuzzy_matches_reviewable_and_never_confirms_skill() -> None:
