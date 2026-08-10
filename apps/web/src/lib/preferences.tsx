@@ -79,7 +79,7 @@ export function applyStoredAppearance(): void {
 }
 
 export function PreferencesProvider({ children }: { children: ReactNode }) {
-  const initial = useMemo(readPreferences, []);
+  const initial = useMemo(() => readPreferences(), []);
   const [localePreference, setLocalePreference] = useState<LocalePreference>(initial.locale);
   const [themePreference, setThemePreference] = useState<ThemePreference>(initial.theme);
   const [systemRevision, setSystemRevision] = useState(0);
