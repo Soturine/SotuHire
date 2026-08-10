@@ -16,6 +16,7 @@ from apps.api.routes import (
     application_lab,
     career,
     career_intelligence,
+    copilot_v2,
     data,
     extension,
     health,
@@ -89,6 +90,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.include_router(interviews.router)
     app.include_router(career.router)
     app.include_router(career_intelligence.router)
+    app.include_router(copilot_v2.router)
     app.include_router(opportunities.router)
     app.include_router(taxonomy.router)
     app.include_router(ai_quality.router)
