@@ -30,7 +30,7 @@ class LocalAiCheckRequest(BaseModel):
 @router.get("/defaults", response_model=ApiEnvelope[dict[str, str]])
 def local_ai_defaults() -> ApiEnvelope[dict[str, str]]:
     """List documented loopback defaults without probing any endpoint."""
-    return ok(dict(DEFAULT_LOCAL_ENDPOINTS))
+    return ok({str(provider): endpoint for provider, endpoint in DEFAULT_LOCAL_ENDPOINTS.items()})
 
 
 @router.post("/health", response_model=ApiEnvelope[LocalAiHealth])

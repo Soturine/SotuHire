@@ -198,6 +198,7 @@ class _PinnedHTTPConnection(http.client.HTTPConnection):
     def __init__(self, host: str, port: int, pinned_address: str, *, timeout: float) -> None:
         super().__init__(host, port=port, timeout=timeout)
         self._pinned_address = pinned_address
+        self.source_address: tuple[str, int] | None = None
 
     def connect(self) -> None:
         self.sock = socket.create_connection(
@@ -209,8 +210,11 @@ class _PinnedHTTPConnection(http.client.HTTPConnection):
 
 class _PinnedHTTPSConnection(http.client.HTTPSConnection):
     def __init__(self, host: str, port: int, pinned_address: str, *, timeout: float) -> None:
-        super().__init__(host, port=port, timeout=timeout, context=ssl.create_default_context())
+        tls_context = ssl.create_default_context()
+        super().__init__(host, port=port, timeout=timeout, context=tls_context)
         self._pinned_address = pinned_address
+        self.source_address: tuple[str, int] | None = None
+        self._tls_context = tls_context
 
     def connect(self) -> None:
         sock = socket.create_connection(
@@ -218,7 +222,7 @@ class _PinnedHTTPSConnection(http.client.HTTPSConnection):
             self.timeout,
             self.source_address,
         )
-        self.sock = self._context.wrap_socket(sock, server_hostname=self.host)
+        self.sock = self._tls_context.wrap_socket(sock, server_hostname=self.host)
 
 
 def _default_port(parsed: ParseResult) -> int:
