@@ -134,7 +134,7 @@ function ApplicationLabPage() {
     };
   }, []);
 
-  const detailKey = ["application-lab-session", mode, sessionId] as const;
+  const detailKey = ["application-lab-session", mode, baseUrl, sessionId] as const;
   const setDetail = (detail: ApplicationLabDetail) => qc.setQueryData(detailKey, detail);
 
   const create = useMutation({
