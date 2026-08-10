@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import secrets
 import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -30,6 +31,7 @@ class ApiSettings:
     allowed_origins: list[str] = field(default_factory=lambda: list(DEFAULT_ALLOWED_ORIGINS))
     allowed_hosts: list[str] = field(default_factory=lambda: list(DEFAULT_ALLOWED_HOSTS))
     installation_token: str = ""
+    pairing_bootstrap: str = field(default_factory=lambda: secrets.token_urlsafe(32))
     auth_path: Path = Path("data/security/local-auth.json")
     max_body_bytes: int = 12 * 1024 * 1024
     max_batch_items: int = 100
@@ -67,6 +69,9 @@ class ApiSettings:
             allowed_hosts=_split_csv(os.getenv("SOTUHIRE_API_ALLOWED_HOSTS", ""))
             or list(DEFAULT_ALLOWED_HOSTS),
             installation_token=os.getenv("SOTUHIRE_LOCAL_API_TOKEN", "").strip(),
+            pairing_bootstrap=(
+                os.getenv("SOTUHIRE_PAIRING_BOOTSTRAP", "").strip() or secrets.token_urlsafe(32)
+            ),
             auth_path=data_dir / "security" / "local-auth.json",
         )
 

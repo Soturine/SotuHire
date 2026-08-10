@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from urllib.request import Request, urlopen
+from urllib.request import Request
 
 from modules.scraping.cache import ScrapingCache
+from modules.scraping.http_safety import safe_public_opener, validate_public_url
 from modules.scraping.rate_limit import DomainRateLimiter
 from modules.scraping.robots import inspect_source_safety, robots_allows
 from modules.scraping.schemas import FetchResult
@@ -64,15 +65,18 @@ class ScrapingClient:
         timeout_seconds: float,
         max_bytes: int,
     ) -> FetchResult:
+        validate_public_url(url, resolve=True)
         request = Request(url, headers=headers)
-        with urlopen(request, timeout=timeout_seconds) as response:  # noqa: S310
+        with safe_public_opener().open(request, timeout=timeout_seconds) as response:  # noqa: S310
+            final_url = response.geturl()
+            validate_public_url(final_url, resolve=True)
             payload = response.read(max_bytes + 1)
             if len(payload) > max_bytes:
                 raise ValueError("Resposta excede o limite seguro de coleta.")
             content_type = response.headers.get("Content-Type", "")
             encoding = response.headers.get_content_charset() or "utf-8"
             return FetchResult(
-                url=response.geturl(),
+                url=final_url,
                 status_code=response.status,
                 content_type=content_type,
                 text=payload.decode(encoding, errors="replace"),

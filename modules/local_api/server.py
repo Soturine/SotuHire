@@ -9,6 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import cast
 
 from modules.local_api.app import LocalCompanionApp
+from modules.local_api.origins import companion_origin_allowed
 from modules.security import LocalRateLimiter, RequestLimitError, RequestPolicy
 
 DEFAULT_HOST = "127.0.0.1"
@@ -120,10 +121,7 @@ class CompanionRequestHandler(BaseHTTPRequestHandler):
 
 
 def _origin_allowed(origin: str) -> bool:
-    return origin.startswith("chrome-extension://") or origin in {
-        "http://127.0.0.1:5173",
-        "http://localhost:5173",
-    }
+    return companion_origin_allowed(origin)
 
 
 def start_server(

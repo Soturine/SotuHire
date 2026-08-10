@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { clearInMemoryPairing, pairedApiFetch } from "./api-pairing";
+import { clearInMemoryPairing, normalizeLocalApiBaseUrl, pairedApiFetch } from "./api-pairing";
 
 const BASE = "http://127.0.0.1:8787/api/v1";
 
@@ -14,6 +14,7 @@ describe("local API pairing", () => {
     const calls: Array<[string, RequestInit]> = [];
     const responses = [
       response(401, { error: { message: "pairing required" } }),
+      response(401, { error: { message: "session missing" } }),
       response(200, { data: { challenge_id: "challenge-id-1234", proof: "proof-123456789012" } }),
       response(200, { data: { paired: true, csrf_token: "csrf-memory-only" } }),
       response(200, { data: { saved: true } }),
@@ -26,6 +27,7 @@ describe("local API pairing", () => {
       }),
     );
     const storageSpy = vi.spyOn(Storage.prototype, "setItem");
+    window.location.hash = "sotuhire-pairing=bootstrap-memory-only";
 
     const result = await pairedApiFetch(BASE, "/profile/import-text", {
       method: "POST",
@@ -36,13 +38,28 @@ describe("local API pairing", () => {
     expect(result.status).toBe(200);
     expect(calls.map(([url]) => url)).toEqual([
       `${BASE}/profile/import-text`,
+      "http://127.0.0.1:8787/api/v1/security/csrf",
       "http://127.0.0.1:8787/api/v1/security/pairing/start",
       "http://127.0.0.1:8787/api/v1/security/pairing/complete",
       `${BASE}/profile/import-text`,
     ]);
-    expect(calls[3][1].credentials).toBe("include");
-    expect(calls[3][1].headers).toMatchObject({ "X-SotuHire-CSRF": "csrf-memory-only" });
+    expect(calls[2][1].headers).toMatchObject({
+      "X-SotuHire-Pairing-Bootstrap": "bootstrap-memory-only",
+    });
+    expect(calls[4][1].credentials).toBe("include");
+    expect(calls[4][1].headers).toMatchObject({ "X-SotuHire-CSRF": "csrf-memory-only" });
     expect(storageSpy).not.toHaveBeenCalled();
+    expect(window.location.hash).toBe("");
+  });
+
+  it("accepts only loopback API roots", () => {
+    expect(normalizeLocalApiBaseUrl("http://localhost:8787/api/v1/")).toBe(
+      "http://localhost:8787/api/v1",
+    );
+    expect(() => normalizeLocalApiBaseUrl("https://api.example.com/api/v1")).toThrow(/loopback/);
+    expect(() => normalizeLocalApiBaseUrl("http://user:secret@127.0.0.1:8787/api/v1")).toThrow(
+      /loopback/,
+    );
   });
 });
 

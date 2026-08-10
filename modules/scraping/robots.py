@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from urllib.parse import urlparse
+from urllib.request import Request
 from urllib.robotparser import RobotFileParser
 
+from modules.scraping.http_safety import UnsafePublicUrl, safe_public_opener, validate_public_url
 from modules.scraping.schemas import SourceSafety
 
 AUTH_MARKERS = ("/login", "/signin", "/auth", "/checkpoint", "/session")
@@ -26,15 +28,15 @@ def detect_source_type(url: str) -> str:
 def inspect_source_safety(url: str) -> SourceSafety:
     """Reject authenticated or non-public URLs before any request."""
     parsed = urlparse(url.strip())
-    domain = parsed.netloc.lower()
+    domain = (parsed.hostname or "").lower()
     is_linkedin = domain == "linkedin.com" or domain.endswith(".linkedin.com")
     authentication_required = any(marker in parsed.path.lower() for marker in AUTH_MARKERS)
-    allowed = (
-        parsed.scheme in {"http", "https"}
-        and bool(domain)
-        and not authentication_required
-        and not is_linkedin
-    )
+    try:
+        validate_public_url(url)
+        public_url = True
+    except UnsafePublicUrl:
+        public_url = False
+    allowed = public_url and not authentication_required and not is_linkedin
     warning = ""
     if authentication_required:
         warning = (
@@ -69,8 +71,25 @@ def robots_allows(
     robots_url = f"{parsed.scheme}://{parsed.netloc}/robots.txt"
     parser = reader_factory()
     parser.set_url(robots_url)
+    if reader_factory is not RobotFileParser:
+        try:
+            parser.read()
+        except OSError:
+            return True
+        return parser.can_fetch(user_agent, url)
+    validate_public_url(robots_url, resolve=True)
+    request = Request(robots_url, headers={"User-Agent": user_agent})
     try:
-        parser.read()
+        with safe_public_opener().open(request, timeout=10) as response:  # noqa: S310
+            final_url = response.geturl()
+            validate_public_url(final_url, resolve=True)
+            payload = response.read(256_001)
+            if len(payload) > 256_000:
+                return False
+            encoding = response.headers.get_content_charset() or "utf-8"
+            parser.parse(payload.decode(encoding, errors="replace").splitlines())
+    except UnsafePublicUrl:
+        raise
     except OSError:
         return True
     return parser.can_fetch(user_agent, url)

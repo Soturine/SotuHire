@@ -21,6 +21,17 @@ $CompanionHealthUrl = "$CompanionUrl/health"
 $LogDir = Join-Path $Root ".sotuhire\logs"
 $Processes = @()
 
+$PairingBytes = New-Object byte[] 32
+$PairingRng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+try {
+    $PairingRng.GetBytes($PairingBytes)
+} finally {
+    $PairingRng.Dispose()
+}
+$PairingBootstrap = [Convert]::ToBase64String($PairingBytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')
+$env:SOTUHIRE_PAIRING_BOOTSTRAP = $PairingBootstrap
+$FrontendLaunchUrl = "$FrontendUrl/#sotuhire-pairing=$PairingBootstrap"
+
 function Assert-Command {
     param(
         [string]$Name,
@@ -193,7 +204,7 @@ try {
         $Processes += Start-SotuCommand -Name "Frontend" -WorkingDirectory $WebRoot -Command $WebCommand
         Wait-Http -Url $FrontendHealthUrl -Name "Frontend" -TimeoutSeconds 180
         if (-not $NoBrowser) {
-            Start-Process $FrontendUrl
+            Start-Process $FrontendLaunchUrl
         }
     }
 

@@ -39,7 +39,11 @@ def start_pairing(payload: PairingStartRequest, request: Request) -> ApiEnvelope
     del payload.client_name
     origin = request.headers.get("origin", "")
     try:
-        challenge = _manager(request).start_pairing(origin=origin, client_kind=payload.client_kind)
+        challenge = _manager(request).start_pairing(
+            origin=origin,
+            client_kind=payload.client_kind,
+            bootstrap_proof=request.headers.get("x-sotuhire-pairing-bootstrap", ""),
+        )
     except PairingError as exc:
         raise HTTPException(status_code=403, detail=str(exc)) from None
     return ok(
@@ -87,6 +91,19 @@ def complete_pairing(
 @router.get("/status", response_model=ApiEnvelope[dict[str, object]])
 def pairing_status(request: Request) -> ApiEnvelope[dict[str, object]]:
     return ok({"paired": True, **_manager(request).public_status()})
+
+
+@router.get("/csrf", response_model=ApiEnvelope[dict[str, object]])
+def refresh_csrf(request: Request) -> ApiEnvelope[dict[str, object]]:
+    """Rotate CSRF after reload without exposing or persisting the session cookie."""
+    try:
+        csrf_token = _manager(request).rotate_csrf(
+            request.cookies.get(SESSION_COOKIE, ""),
+            origin=request.headers.get("origin", ""),
+        )
+    except PairingError as exc:
+        raise HTTPException(status_code=401, detail=str(exc)) from None
+    return ok({"csrf_token": csrf_token})
 
 
 __all__ = ["router"]

@@ -8,10 +8,15 @@ from modules.security import LocalAuthManager, PairingError, RequestLimitError, 
 
 TOKEN = "middleware-test-token-with-more-than-thirty-two-characters"
 ORIGIN = "http://127.0.0.1:5173"
+PAIRING_BOOTSTRAP = "pairing-bootstrap-test-only-0123456789"
 
 
 def _client(**settings_overrides) -> TestClient:
-    settings = ApiSettings(installation_token=TOKEN, **settings_overrides)
+    settings = ApiSettings(
+        installation_token=TOKEN,
+        pairing_bootstrap=PAIRING_BOOTSTRAP,
+        **settings_overrides,
+    )
     return TestClient(create_app(settings), base_url="http://127.0.0.1:8787")
 
 
@@ -21,6 +26,7 @@ def test_health_is_public_and_does_not_serialize_authentication_material() -> No
     assert response.status_code == 200
     serialized = response.text
     assert TOKEN not in serialized
+    assert PAIRING_BOOTSTRAP not in serialized
     assert "installation_token" not in serialized
     assert "local-auth" not in serialized
 
@@ -55,7 +61,10 @@ def test_web_pairing_sets_httponly_cookie_requires_csrf_and_rejects_replay() -> 
     client = _client()
     start = client.post(
         "/api/v1/security/pairing/start",
-        headers={"Origin": ORIGIN},
+        headers={
+            "Origin": ORIGIN,
+            "X-SotuHire-Pairing-Bootstrap": PAIRING_BOOTSTRAP,
+        },
         json={"client_kind": "web", "client_name": "Teste"},
     )
     challenge = start.json()["data"]
@@ -97,6 +106,38 @@ def test_web_pairing_sets_httponly_cookie_requires_csrf_and_rejects_replay() -> 
         },
     )
     assert replay.status_code == 401
+
+
+def test_pairing_requires_installation_bootstrap_and_csrf_can_rotate() -> None:
+    client = _client()
+    denied = client.post(
+        "/api/v1/security/pairing/start",
+        headers={"Origin": ORIGIN},
+        json={"client_kind": "web", "client_name": "Teste"},
+    )
+    started = client.post(
+        "/api/v1/security/pairing/start",
+        headers={
+            "Origin": ORIGIN,
+            "X-SotuHire-Pairing-Bootstrap": PAIRING_BOOTSTRAP,
+        },
+        json={"client_kind": "web", "client_name": "Teste"},
+    )
+    challenge = started.json()["data"]
+    completed = client.post(
+        "/api/v1/security/pairing/complete",
+        headers={"Origin": ORIGIN},
+        json={
+            "challenge_id": challenge["challenge_id"],
+            "proof": challenge["proof"],
+            "client_kind": "web",
+        },
+    )
+    rotated = client.get("/api/v1/security/csrf", headers={"Origin": ORIGIN})
+
+    assert denied.status_code == 403
+    assert started.status_code == completed.status_code == rotated.status_code == 200
+    assert rotated.json()["data"]["csrf_token"] != completed.json()["data"]["csrf_token"]
 
 
 def test_pairing_expiry_is_enforced_without_exposing_proof() -> None:

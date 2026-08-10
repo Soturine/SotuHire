@@ -1,5 +1,6 @@
 {
   "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAub4/odPIju4gZyEWarauCwwvHDQQcihlI3RJyAv2DEoBjZROS5YigbcqtFcmwIHWT4hWiWrLiZ+SoLvex2T61LC3qZtHSFNZZLvMezlf6XZG8Kd5IRGLPWKJ3WDKLff7FTJPFM0yQhRwQ61F0klGgi5+xjJ5RP5NE2cgR0cVzX3lHobXPbqdNRIi5Q4Xahx8Y5TkAAeOxOaG9wpVj2LWInOWDXqr2iGVUf2rxOoxg6io5e4xI3HzMrSgOxoXzqOFpKT7UH/kRadkaU50WWlzI4jBqf1h7prZmGUi9q/daoSVKXdD8M5Y6pEZRHQR/DiKYwj1M6Qm1WTwpVajMpOF7QIDAQAB",
   "name": "SotuHire Assistive Browser Companion",
   "version": "0.9.5",
   "description": "Captura vagas, editais/concursos e projetos visíveis para o SotuHire local.",

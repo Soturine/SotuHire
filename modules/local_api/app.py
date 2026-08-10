@@ -28,6 +28,7 @@ from modules.core.opportunity_identity import (
 from modules.github_analyzer import analyze_github_repository, project_report_from_github_analysis
 from modules.github_analyzer.exceptions import GitHubAnalyzerError
 from modules.local_api.compatibility import APP_VERSION, compatible_extension
+from modules.local_api.origins import companion_origin_allowed
 from modules.local_api.schemas import (
     ApplicationBatchPayload,
     BrowserCapturePayload,
@@ -799,10 +800,7 @@ class LocalCompanionApp:
 
 
 def _pairing_origin_allowed(origin: str) -> bool:
-    return origin.startswith("chrome-extension://") or origin in {
-        "http://127.0.0.1:5173",
-        "http://localhost:5173",
-    }
+    return companion_origin_allowed(origin)
 
 
 def _merge_extension_ai_report(

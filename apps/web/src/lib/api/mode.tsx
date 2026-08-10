@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, type ReactNode } from "react";
 
+import { normalizeLocalApiBaseUrl } from "@/features/local-security/api-pairing";
+
 export type ApiMode = "demo" | "real";
 
 export const DEFAULT_API_URL = "http://127.0.0.1:8787/api/v1";
@@ -21,8 +23,8 @@ export function ApiModeProvider({ children }: { children: ReactNode }) {
     const saved = localStorage.getItem(MODE_KEY);
     return saved === "real" ? "real" : "demo";
   });
-  const [baseUrl, setBaseUrlState] = useState<string>(
-    () => localStorage.getItem(URL_KEY)?.trim() || ENV_API_URL,
+  const [baseUrl, setBaseUrlState] = useState<string>(() =>
+    safeLocalApiUrl(localStorage.getItem(URL_KEY)?.trim() || ENV_API_URL),
   );
 
   const setMode = (m: ApiMode) => {
@@ -30,8 +32,9 @@ export function ApiModeProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(MODE_KEY, m);
   };
   const setBaseUrl = (u: string) => {
-    setBaseUrlState(u);
-    localStorage.setItem(URL_KEY, u);
+    const normalized = normalizeLocalApiBaseUrl(u);
+    setBaseUrlState(normalized);
+    localStorage.setItem(URL_KEY, normalized);
   };
 
   return (
@@ -39,6 +42,15 @@ export function ApiModeProvider({ children }: { children: ReactNode }) {
       {children}
     </ApiModeContext.Provider>
   );
+}
+
+function safeLocalApiUrl(value: string): string {
+  try {
+    return normalizeLocalApiBaseUrl(value);
+  } catch {
+    localStorage.removeItem(URL_KEY);
+    return DEFAULT_API_URL;
+  }
 }
 
 export function useApiMode() {

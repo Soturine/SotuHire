@@ -42,6 +42,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
     app.state.settings = resolved
     app.state.local_auth = LocalAuthManager(
         installation_token=resolved.installation_token,
+        pairing_bootstrap=resolved.pairing_bootstrap,
         token_path=resolved.auth_path,
     )
     app.add_middleware(
@@ -54,6 +55,7 @@ def create_app(settings: ApiSettings | None = None) -> FastAPI:
             "Authorization",
             "X-SotuHire-Token",
             "X-SotuHire-CSRF",
+            "X-SotuHire-Pairing-Bootstrap",
             "X-Idempotency-Key",
             "X-Request-ID",
         ],

@@ -1,6 +1,7 @@
 import json
 
 from modules.local_api import LocalCompanionApp
+from modules.local_api.origins import DEFAULT_EXTENSION_ID
 from modules.local_api.server import start_server, stop_server
 
 
@@ -32,7 +33,7 @@ def test_local_api_rejects_payload_that_is_too_large():
 
 def test_local_api_extension_pairing_is_one_use_and_origin_bound():
     app = LocalCompanionApp(token="local-secret")
-    origin = "chrome-extension://abcdefghijklmnop"
+    origin = f"chrome-extension://{DEFAULT_EXTENSION_ID}"
     start_status, start = app.handle("POST", "/pairing/start", body=b"{}", origin=origin)
     complete_body = json.dumps(
         {"challenge_id": start["challenge_id"], "proof": start["proof"]}
@@ -56,6 +57,19 @@ def test_local_api_extension_pairing_is_one_use_and_origin_bound():
         )[0]
         == 401
     )
+
+
+def test_local_api_rejects_unlisted_extension_origin() -> None:
+    app = LocalCompanionApp(token="local-secret")
+
+    status, _ = app.handle(
+        "POST",
+        "/pairing/start",
+        body=b"{}",
+        origin="chrome-extension://aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    )
+
+    assert status == 403
 
 
 def test_local_api_server_refuses_public_bind():

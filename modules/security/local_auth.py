@@ -100,12 +100,16 @@ class LocalAuthManager:
         self,
         *,
         installation_token: str = "",
+        pairing_bootstrap: str = "",
         token_path: str | Path = "data/security/local-auth.json",
         pairing_ttl_seconds: int = DEFAULT_PAIRING_TTL_SECONDS,
         session_ttl_seconds: int = DEFAULT_SESSION_TTL_SECONDS,
         clock: Callable[[], float] = time.monotonic,
     ) -> None:
         self._explicit_token = installation_token.strip()
+        self._pairing_bootstrap_digest = (
+            _digest(pairing_bootstrap.strip()) if pairing_bootstrap.strip() else ""
+        )
         self._store = InstallationTokenStore(token_path)
         self._installation_token = ""
         self.pairing_ttl_seconds = max(10, pairing_ttl_seconds)
@@ -121,9 +125,23 @@ class LocalAuthManager:
             return False
         return hmac.compare_digest(provided, self._get_installation_token())
 
-    def start_pairing(self, *, origin: str, client_kind: str) -> PairingChallenge:
+    def start_pairing(
+        self,
+        *,
+        origin: str,
+        client_kind: str,
+        bootstrap_proof: str = "",
+    ) -> PairingChallenge:
         if not origin:
             raise PairingError("O pairing exige uma origem local explícita.")
+        if self._pairing_bootstrap_digest and not (
+            bootstrap_proof
+            and hmac.compare_digest(
+                self._pairing_bootstrap_digest,
+                _digest(bootstrap_proof),
+            )
+        ):
+            raise PairingError("O pairing exige o bootstrap local desta instalacao.")
         now = self._clock()
         challenge_id = uuid4().hex
         proof = secrets.token_urlsafe(24)
@@ -205,6 +223,26 @@ class LocalAuthManager:
         if session_token:
             with self._lock:
                 self._sessions.pop(_digest(session_token), None)
+
+    def rotate_csrf(self, session_token: str, *, origin: str) -> str:
+        """Rotate CSRF material for an authenticated same-origin browser session."""
+        if not session_token:
+            raise PairingError("A sessao local nao esta autenticada.")
+        now = self._clock()
+        session_digest = _digest(session_token)
+        with self._lock:
+            self._prune(now)
+            session = self._sessions.get(session_digest)
+            if session is None or not hmac.compare_digest(session.origin, origin):
+                raise PairingError("A sessao local expirou ou pertence a outra origem.")
+            csrf_token = secrets.token_urlsafe(32)
+            self._sessions[session_digest] = _LocalSession(
+                csrf_digest=_digest(csrf_token),
+                origin=session.origin,
+                client_kind=session.client_kind,
+                expires_at=session.expires_at,
+            )
+        return csrf_token
 
     def public_status(self) -> dict[str, object]:
         now = self._clock()
