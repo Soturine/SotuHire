@@ -14,6 +14,15 @@ export default defineConfig({
     viewport: { width: 1440, height: 1000 },
     deviceScaleFactor: 1,
     trace: "on-first-retry",
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: baseURL,
+          localStorage: [{ name: "sotuhire.onboarding.v1.complete", value: "true" }],
+        },
+      ],
+    },
   },
   projects: [
     { name: "chromium", use: { browserName: "chromium" } },
