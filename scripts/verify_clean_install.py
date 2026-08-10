@@ -59,7 +59,23 @@ def main() -> None:
             )
 
         _run([str(python), "-m", "compileall", "modules", "tests", "apps", "scripts"], checkout)
-        _run([str(python), "-m", "pytest", "-q"], checkout)
+        test_env = dict(os.environ)
+        test_env.pop("SOTUHIRE_TEST_GEMINI_API_KEY", None)
+        test_env.pop("SOTUHIRE_TEST_OPENAI_API_KEY", None)
+        _run(
+            [
+                str(python),
+                "-m",
+                "pytest",
+                "-q",
+                "-m",
+                "not external_ai",
+                "--basetemp",
+                str(checkout / ".pytest-tmp"),
+            ],
+            checkout,
+            env=test_env,
+        )
         _run([str(python), "scripts/package_extension.py"], checkout)
         _run([str(python), "-m", "mkdocs", "build", "--strict"], checkout)
 
