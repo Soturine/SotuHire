@@ -215,6 +215,7 @@ npm run test:e2e
 ```
 
 - [Documentação publicada](https://soturine.github.io/SotuHire/)
+- [Índice completo da documentação](docs/documentation-index.md)
 - [Visão do produto](docs/01-product/v2-product-vision.md)
 - [Evidence Graph](docs/02-architecture/evidence-graph.md)
 - [Human-Approved Copilot](docs/02-architecture/human-approved-copilot.md)
@@ -223,6 +224,7 @@ npm run test:e2e
 - [Application Lab](docs/02-architecture/application-lab.md)
 - [Roadmap](docs/01-product/roadmap.md)
 - [Release v2.0](docs/releases/v2.0.md)
+- [Histórico de mudanças](CHANGELOG.md)
 
 ## Post-v2
 

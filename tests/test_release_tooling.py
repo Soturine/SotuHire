@@ -16,7 +16,7 @@ def test_sbom_is_cyclonedx_and_deterministic() -> None:
 
     assert first == second
     assert first["bomFormat"] == "CycloneDX"
-    assert first["metadata"]["component"]["version"] == "1.11.0"
+    assert first["metadata"]["component"]["version"] == "2.0.0"
     assert {item["name"] for item in first["components"]} >= {
         "fastapi",
         "pypdf",

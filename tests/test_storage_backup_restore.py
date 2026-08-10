@@ -114,11 +114,11 @@ def test_backup_manifest_reports_actual_schema_version(tmp_path):
 
     legacy_only = create_backup(data_dir=data_dir, destination=tmp_path / "legacy.zip")
     assert legacy_only.manifest.schema_version == 0
-    assert legacy_only.manifest.max_supported_schema_version == 7
+    assert legacy_only.manifest.max_supported_schema_version == 8
 
     MigrationRunner(data_dir / "sotuhire.db").apply(create_backup=False)
     migrated = create_backup(data_dir=data_dir, destination=tmp_path / "migrated.zip")
-    assert migrated.manifest.schema_version == 7
+    assert migrated.manifest.schema_version == 8
 
 
 def test_data_health_reports_schema_and_corrupt_legacy_json(tmp_path):
@@ -129,7 +129,7 @@ def test_data_health_reports_schema_and_corrupt_legacy_json(tmp_path):
 
     report = check_data_health(data_dir=data_dir)
 
-    assert report.schema_version == 7
+    assert report.schema_version == 8
     assert not report.healthy
     assert any(item.code == "legacy_json_corrupt" for item in report.issues)
 

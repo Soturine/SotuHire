@@ -8,17 +8,27 @@ from modules.copilot_v2 import CareerCopilot, CareerStateEngine, CopilotReposito
 from modules.copilot_v2.models import (
     EvidenceEdge,
     EvidenceNode,
+    EvidenceNodeType,
+    EvidenceRelationType,
     PortfolioItem,
+    PortfolioType,
     ProposalStatus,
+    ReviewStatus,
 )
 from modules.storage.migrations import LATEST_SCHEMA_VERSION, MigrationRunner
+from pydantic import HttpUrl
 
 
 def _now() -> datetime:
     return datetime.now(UTC)
 
 
-def _node(node_id: str, node_type: str, title: str, status: str = "confirmed") -> EvidenceNode:
+def _node(
+    node_id: str,
+    node_type: EvidenceNodeType,
+    title: str,
+    status: ReviewStatus = ReviewStatus.CONFIRMED,
+) -> EvidenceNode:
     return EvidenceNode(
         node_id=node_id,
         node_type=node_type,
@@ -44,14 +54,16 @@ def test_schema_8_migrates_and_validates(tmp_path: Path) -> None:
 
 def test_evidence_graph_keeps_inference_reviewable(tmp_path: Path) -> None:
     repository = CopilotRepository(tmp_path / "sotuhire.db")
-    project = repository.save_node(_node("project-1", "project", "Projeto Aurora"))
-    skill = repository.save_node(_node("skill-1", "skill", "Python", "candidate"))
+    project = repository.save_node(_node("project-1", EvidenceNodeType.PROJECT, "Projeto Aurora"))
+    skill = repository.save_node(
+        _node("skill-1", EvidenceNodeType.SKILL, "Python", ReviewStatus.CANDIDATE)
+    )
     edge = repository.save_edge(
         EvidenceEdge(
             edge_id="edge-1",
             source_id=project.node_id,
             target_id=skill.node_id,
-            relation_type="project_demonstrates_skill",
+            relation_type=EvidenceRelationType.PROJECT_DEMONSTRATES_SKILL,
             evidence_refs=[project.node_id],
             source_refs=["manual:test"],
             confidence=0.7,
@@ -70,10 +82,10 @@ def test_portfolio_is_multidisciplinary_and_local(tmp_path: Path) -> None:
     item = PortfolioItem(
         portfolio_item_id="portfolio-1",
         title="Pesquisa de materiais",
-        type="research",
-        links=["https://example.org/fictitious-case"],
+        type=PortfolioType.RESEARCH,
+        links=[HttpUrl("https://example.org/fictitious-case")],
         skills=["Análise"],
-        review_status="candidate",
+        review_status=ReviewStatus.CANDIDATE,
         created_at=_now(),
         updated_at=_now(),
     )
@@ -85,9 +97,16 @@ def test_portfolio_is_multidisciplinary_and_local(tmp_path: Path) -> None:
 
 def test_career_state_and_next_actions_are_deterministic(tmp_path: Path) -> None:
     repository = CopilotRepository(tmp_path / "sotuhire.db")
-    repository.save_node(_node("project-1", "project", "Projeto Aurora"))
-    repository.save_node(_node("skill-1", "skill", "Python"))
-    repository.save_node(_node("candidate-1", "publication", "Artigo para revisar", "candidate"))
+    repository.save_node(_node("project-1", EvidenceNodeType.PROJECT, "Projeto Aurora"))
+    repository.save_node(_node("skill-1", EvidenceNodeType.SKILL, "Python"))
+    repository.save_node(
+        _node(
+            "candidate-1",
+            EvidenceNodeType.PUBLICATION,
+            "Artigo para revisar",
+            ReviewStatus.CANDIDATE,
+        )
+    )
 
     first = CareerStateEngine(repository.database_path).build()
     second = CareerStateEngine(repository.database_path).build()
@@ -147,7 +166,7 @@ def test_changed_career_state_marks_proposal_stale(tmp_path: Path) -> None:
         {"title": "Revisar projeto", "task_type": "project"},
         reason="Gap determinístico.",
     )
-    copilot.repository.save_node(_node("changed-1", "project", "Novo projeto"))
+    copilot.repository.save_node(_node("changed-1", EvidenceNodeType.PROJECT, "Novo projeto"))
 
     reviewed = copilot.approve(proposal.proposal_id)
 
@@ -170,7 +189,11 @@ def test_tool_input_schema_rejects_extra_fields(tmp_path: Path) -> None:
 def test_sensitive_registration_is_omitted_from_external_context(tmp_path: Path) -> None:
     repository = CopilotRepository(tmp_path / "sotuhire.db")
     repository.save_node(
-        _node("registration-1", "professional_registration", "Registro profissional").model_copy(
+        _node(
+            "registration-1",
+            EvidenceNodeType.PROFESSIONAL_REGISTRATION,
+            "Registro profissional",
+        ).model_copy(
             update={"sensitive": True, "payload": {"registration_number": "SYNTHETIC-000"}}
         )
     )
@@ -198,6 +221,8 @@ def test_plan_can_pause_resume_and_cancel_persistently(tmp_path: Path) -> None:
     assert copilot.transition_plan(plan.plan_id, "pause").status == "paused"
     assert copilot.transition_plan(plan.plan_id, "resume").status == "active"
     assert copilot.transition_plan(plan.plan_id, "cancel").status == "cancelled"
-    assert copilot.repository.get_plan(plan.plan_id).status == "cancelled"
+    persisted = copilot.repository.get_plan(plan.plan_id)
+    assert persisted is not None
+    assert persisted.status == "cancelled"
     with pytest.raises(ValueError, match="cannot transition"):
         copilot.transition_plan(plan.plan_id, "resume")

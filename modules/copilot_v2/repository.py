@@ -16,6 +16,7 @@ from modules.storage.migrations import ensure_database
 
 from .models import (
     CopilotPlan,
+    CopilotPlanStep,
     EvidenceEdge,
     EvidenceNode,
     PortfolioItem,
@@ -458,14 +459,14 @@ class CopilotRepository:
             status=row["status"],
             context_summary=_loads(row["context_summary"]),
             steps=[
-                {
-                    "step_id": step["step_id"],
-                    "position": step["position"],
-                    "title": step["title"],
-                    "status": step["status"],
-                    "proposal_id": step["proposal_id"],
-                    "payload": _loads(step["payload"]),
-                }
+                CopilotPlanStep(
+                    step_id=step["step_id"],
+                    position=step["position"],
+                    title=step["title"],
+                    status=step["status"],
+                    proposal_id=step["proposal_id"],
+                    payload=_loads(step["payload"]),
+                )
                 for step in steps
             ],
             created_at=row["created_at"],

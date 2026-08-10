@@ -20,7 +20,7 @@ from modules.copilot_v2.models import (
     ReviewStatus,
 )
 from modules.copilot_v2.repository import utc_now
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 from apps.api.routes.responses import ok
 from apps.api.schemas.common import ApiEnvelope
@@ -63,7 +63,7 @@ class PortfolioItemCreate(StrictRequest):
     type: PortfolioType
     description: str = Field(default="", max_length=20_000)
     role: str = Field(default="", max_length=240)
-    links: list[str] = Field(default_factory=list, max_length=20)
+    links: list[HttpUrl] = Field(default_factory=list, max_length=20)
     skills: list[str] = Field(default_factory=list, max_length=100)
     tools: list[str] = Field(default_factory=list, max_length=100)
     evidence_refs: list[str] = Field(default_factory=list, max_length=100)

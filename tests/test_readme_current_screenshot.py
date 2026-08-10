@@ -1,81 +1,58 @@
 from pathlib import Path
 
 
-def test_readme_is_atemporal_and_references_current_product_screenshots():
+def test_readme_references_only_current_v2_product_visuals() -> None:
     readme = Path("README.md").read_text(encoding="utf-8")
     screenshots = [
-        Path("docs/assets/screenshots/sotuhire-v1.11.0-settings-categories.png"),
-        Path("docs/assets/screenshots/sotuhire-v1.11.0-local-ai-health.png"),
-        Path("docs/assets/screenshots/sotuhire-v1.11.0-security-local-ai-intelligence.gif"),
-        Path("docs/assets/screenshots/sotuhire-v1.11.0-career-analytics.png"),
-        Path("docs/assets/screenshots/sotuhire-v1.11.0-security-status.png"),
-        Path("docs/assets/screenshots/sotuhire-web-profile.png"),
-        Path("docs/assets/screenshots/sotuhire-web-match.png"),
-        Path("docs/assets/screenshots/sotuhire-web-radar-schedules.png"),
-        Path("docs/assets/screenshots/sotuhire-web-tracker.png"),
-        Path("docs/assets/screenshots/sotuhire-web-profile-lattes.png"),
-        Path("docs/assets/screenshots/sotuhire-web-public-exams.png"),
-        Path("docs/assets/screenshots/extension/popup-main.png"),
-        Path("docs/assets/screenshots/extension/github-analysis-modal.png"),
+        Path("docs/assets/screenshots/sotuhire-v2-human-approved-career-copilot.gif"),
+        Path("docs/assets/screenshots/v2/01-cockpit-light.png"),
+        Path("docs/assets/screenshots/v2/03-copilot.png"),
+        Path("docs/assets/screenshots/v2/04-approval-queue.png"),
+        Path("docs/assets/screenshots/v2/05-evidence-inbox.png"),
+        Path("docs/assets/screenshots/v2/08-portfolio.png"),
+        Path("docs/assets/screenshots/v2/19-mobile-cockpit.png"),
     ]
 
     for screenshot in screenshots:
-        assert str(screenshot).replace("\\", "/") in readme
+        assert screenshot.as_posix() in readme
         assert screenshot.exists()
         assert 10_000 < screenshot.stat().st_size < 2_000_000
     assert readme.count("docs/assets/screenshots/") == len(screenshots)
-    assert "docs/assets/screenshots/sotuhire-web-product-walkthrough.gif" not in readme
+    assert "sotuhire-web-product-walkthrough.gif" not in readme
     assert "sotuhire-v1.9.9-document-to-application-walkthrough.gif" not in readme
-    assert "[CHANGELOG](CHANGELOG.md)" in readme
-    assert "github/v/release/Soturine/SotuHire" in readme
-    assert "releases/latest" in readme
-    assert "Frontend moderno v1.9.0" not in readme
-    assert "API local v1.9.0" not in readme
-    assert "Na v1.8.2" not in readme
+    assert "sotuhire-v1.11.0" not in readme
+
+
+def test_readme_is_a_complete_v2_product_entrypoint() -> None:
+    readme = Path("README.md").read_text(encoding="utf-8")
+
+    assert readme.startswith(
+        "# SotuHire — Copiloto de Carreira Local-First com IA, Evidências e Aprovação Humana"
+    )
+    for section in [
+        "## Por que existe",
+        "## A jornada em cinco minutos",
+        "## Capacidades principais",
+        "## Como tudo se conecta",
+        "## Screenshots",
+        "## Instalação",
+        "## IA e providers",
+        "## Privacidade e segurança",
+        "## Migração e recuperação",
+        "## Desenvolvimento, testes e documentação",
+        "## Post-v2",
+        "## Licença",
+    ]:
+        assert section in readme
     for link in [
         "docs/documentation-index.md",
         "docs/01-product/roadmap.md",
-        "docs/01-product/vision.md",
-        "docs/01-product/multi-domain-product-strategy.md",
-        "docs/02-architecture/module-integration-map.md",
-        "docs/02-architecture/career-context-engine.md",
-        "docs/02-architecture/extension-profile-bridge.md",
-        "docs/02-architecture/integration-capability-matrix.md",
-        "docs/02-architecture/storage-repository-architecture.md",
-        "docs/02-architecture/sqlite-schema-and-migrations.md",
-        "docs/02-architecture/application-snapshots.md",
-        "docs/02-architecture/backup-restore-and-data-health.md",
-        "docs/04-ai/prompt-catalog.md",
-        "docs/04-ai/career-memory-rag.md",
-        "docs/04-ai/ai-evaluation-plan.md",
-        "docs/06-engineering/security-privacy.md",
-        "docs/09-testing/golden-datasets.md",
-        "docs/05-data-sources/job-sources.md",
+        "docs/02-architecture/evidence-graph.md",
+        "docs/02-architecture/human-approved-copilot.md",
+        "docs/02-architecture/copilot-tool-registry.md",
+        "docs/06-engineering/v2-security-threat-model.md",
+        "docs/releases/v2.0.md",
         "CHANGELOG.md",
         "browser-extension/README.md",
-        "apps/web/README.md",
     ]:
         assert link in readme
-
-    required_sections = [
-        "## Visão geral",
-        "## Para quem serve",
-        "## O que o SotuHire faz",
-        "## Como as partes se conectam",
-        "## Preview",
-        "## Modos de uso",
-        "## Instalação",
-        "## Como executar",
-        "## Configuração de IA",
-        "## Qualidade e avaliação da IA",
-        "## Extensão",
-        "## Dados e privacidade",
-        "## Arquitetura",
-        "## Documentação",
-        "## Roadmap",
-        "## Contribuição",
-        "## Licença",
-    ]
-    assert all(section in readme for section in required_sections)
-    assert "v1.9.7" not in readme
-    assert "sotuhire-v1.10.1" not in readme
