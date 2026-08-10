@@ -6,7 +6,7 @@ Currículos, vagas, portfólios, Lattes, editais e candidaturas vivem em ferrame
 
 ## Solução
 
-SotuHire centraliza evidências em um Perfil Profissional Universal. O Career Context Engine seleciona apenas o contexto necessário e o distribui para Match, ATS, Tailor, Radar, Editais, Tracker e extensão. Tudo permanece revisável e local-first.
+SotuHire centraliza evidências em um Perfil Profissional Universal. O Career Context Engine seleciona apenas o contexto necessário e o distribui para fontes, taxonomias, Match, ATS, Tailor, Radar, Editais, Tracker, entrevistas e ações de carreira. Tudo permanece revisável e local-first.
 
 ## Arquitetura
 
@@ -14,7 +14,7 @@ SotuHire centraliza evidências em um Perfil Profissional Universal. O Career Co
 - `apps/api/`: FastAPI local e contratos Pydantic.
 - `apps/web/`: React/Vite em Demo e API Real.
 - `browser-extension/`: Companion assistiva com captura manual e fila offline.
-- JSON/JSONL atômico mantém implantação simples; sem banco externo ou microserviços.
+- SQLite 7 sustenta domínios transacionais novos; JSON/JSONL legados permanecem explícitos durante a transição, sem banco externo ou microserviços.
 
 ## IA explicável
 
@@ -26,7 +26,7 @@ A demo cobre engenharia, enfermagem/COREN, pesquisa/Lattes, docência/extensão,
 
 ## Extensão e integrações
 
-A v0.9.1 captura vaga, edital, GitHub e lotes com a Local Companion; funciona sem o frontend aberto. O popup e o modal injetado organizam análise local, IA do SotuHire e Gemini/OpenAI próprios. Catálogos oficiais atualizáveis alimentam uma seleção de modelo funcional, enquanto a API pública do GitHub aprofunda README, commits, stack, estrutura e atividade sem autenticação. Offline, mantém fila temporária e fallback local. O site funciona integralmente sem a extensão.
+A extensão 0.10.0 captura vaga, edital, GitHub e lotes com a Local Companion; funciona sem o frontend aberto e compartilha preferências de locale/tema/ajuda. O popup e o modal injetado organizam análise local, IA do SotuHire e Gemini/OpenAI próprios. Catálogos oficiais atualizáveis alimentam uma seleção de modelo funcional, enquanto a API pública do GitHub aprofunda README, commits, stack, estrutura e atividade sem autenticação. Offline, mantém fila temporária e fallback local. O site funciona integralmente sem a extensão.
 
 ## Segurança e decisões técnicas
 
@@ -42,4 +42,4 @@ O projeto combina pytest, Ruff, Pyright, compileall, MkDocs strict, TypeScript, 
 
 ## Resultado e próximos passos
 
-A v1.9.5 transforma abas antes conectadas de forma desigual em um fluxo demonstrável com proveniência. Próximos passos legítimos: upload direto de PDF/HTML, estudo avançado por edital, notificações do sistema e telemetria local de uso/fallback.
+A v1.10.1 conecta Perfil → oportunidade → candidatura → entrevista → ação com proveniência e aprovação humana. Próximos passos legítimos estão no roadmap: interoperabilidade madura com IA local, taxonomias mais profundas, evidência acadêmica/profissional ampliada e analytics explicável — sem auto-apply.

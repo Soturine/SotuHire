@@ -3,8 +3,8 @@
 O domínio `modules/professional_assets` mantém uma biblioteca local de materiais
 profissionais reutilizáveis. Ele aceita currículo mestre, variante, carta,
 mensagem ao recrutador, bio, seção Sobre, resumo de portfólio, destaque de
-projeto e Application Kit. Entrevistas e histórias STAR completas continuam
-fora do escopo da v1.9.9.
+projeto e Application Kit. Entrevistas e histórias STAR completas pertencem ao domínio separado
+`modules/interviews`, entregue na v1.10.1, para não misturar materiais reutilizáveis com sessões de entrevista.
 
 ## Modelo e proveniência
 

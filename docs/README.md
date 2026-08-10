@@ -9,6 +9,9 @@ A documentação separa referências atuais de histórico. Para conhecer o produ
 - [Roadmap](01-product/roadmap.md)
 - [Visão geral da arquitetura](02-architecture/overview.md)
 - [Matriz de capacidades](02-architecture/integration-capability-matrix.md)
+- [Escopo atual v1.10.1](01-product/current-product-scope.md)
+- [Fontes oficiais e taxonomias](02-architecture/official-opportunity-sources.md)
+- [Entrevistas e ações de carreira](02-architecture/interview-and-career-workflows.md)
 - [Application Lab](02-architecture/application-lab.md)
 - [Resume Studio](02-architecture/resume-studio.md)
 - [Roteiro de demonstração](09-portfolio/demo-script.md)
@@ -32,7 +35,7 @@ A documentação separa referências atuais de histórico. Para conhecer o produ
 - [SQLite e migrações](02-architecture/sqlite-schema-and-migrations.md)
 - [Snapshots](02-architecture/application-snapshots.md)
 - [Backup, restore e data health](02-architecture/backup-restore-and-data-health.md)
-- [Auditoria de dados e integração](00-audit/v1.9.6-data-and-integration-audit.md)
+- [Auditoria final de integração v1.10.1](00-audit/v1.10.1-final-product-integration-audit.md)
 
 ## IA
 
@@ -66,5 +69,5 @@ A documentação separa referências atuais de histórico. Para conhecer o produ
 
 - [Case study](09-portfolio/portfolio-case-study.md)
 - [Histórico de desenvolvimento](07-development/setup.md)
-- [Release atual](releases/v1.9.8.md)
+- [Release atual — v1.10.1](releases/v1.10.1.md)
 - [CHANGELOG no GitHub](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md)

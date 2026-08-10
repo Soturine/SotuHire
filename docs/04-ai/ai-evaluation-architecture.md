@@ -14,7 +14,7 @@ AiTask + PromptSpec
   → associação exploratória com outcomes
 ```
 
-`modules/ai/task_registry.py` vincula as 16 tarefas de produção a prompt, versão, schemas, providers, fallback, propósito de contexto, política sensível e suíte. `modules/ai/evaluation/` contém o contrato das fixtures e métricas puras. O runner reprodutível está em `scripts/run_ai_benchmark.py`.
+`modules/ai/task_registry.py` vincula as 25 tarefas de produção a prompt, versão, schemas, providers, fallback, propósito de contexto, política sensível e suíte. `modules/ai/evaluation/` contém o contrato das fixtures e métricas puras. O runner reprodutível está em `scripts/run_ai_benchmark.py`.
 
 ## Evidência e confiança
 
@@ -39,6 +39,8 @@ Por padrão, `ai_trace_store_inputs=false`, `ai_trace_store_outputs=false` e `ai
 
 O sistema não declara vencedor de provider com amostra insuficiente, não infere causalidade a partir do Tracker, não altera Perfil/pesos automaticamente e funciona sem provider externo por meio de fallback determinístico explícito.
 
-## Confiabilidade v1.9.8
+## Confiabilidade v1.10.1
 
 O runner separa diagnóstico, structured output e release-smoke. `ProviderError` fornece categorias equivalentes entre adapters; métricas incluem bloqueio de conta, retry, repair, timeout e request ID sanitizado. Suites de provider não aplicam fallback para mascarar falha; fluxos de produto aplicam fallback local e o registram explicitamente.
+
+Na rodada externa final de 2026-08-10, Gemini concluiu diagnóstico e casos estruturados reais. A conta OpenAI retornou `INSUFFICIENT_QUOTA`, permaneceu como bloqueio externo explícito e não produziu baseline. Os resultados continuam amostras operacionais pequenas, não ranking definitivo de modelos.

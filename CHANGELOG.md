@@ -4,6 +4,38 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.10.1] - 2026-08-10
+
+### Adicionado
+
+- Conectores públicos Greenhouse, Lever, `schema.org/JobPosting` e RSS/Atom com proveniência, identidade canônica, deduplicação e ranking local explicável.
+- Camada versionada de normalização de ocupações e competências para CBO, QBQ, ESCO e O*NET, com manifestos, hashes e revisão humana de mappings.
+- Workflows persistentes de entrevista, banco STAR, perguntas/respostas, follow-up em rascunho, tarefas, lembretes, Career Plan e exportação ICS explícita.
+- Frontend com preferências adaptativas `pt-BR`/`en-US`, tema claro/escuro/sistema, ajuda contextual, central de ajuda, onboarding e novas jornadas de entrevista e carreira.
+- Nove tasks de IA para os novos workflows, todas ligadas ao registry, prompt versionado, schema, propósito mínimo de Career Context e fallback local.
+- Schema SQLite 7, documentação de arquitetura/regras/migração, evidências visuais atuais e extensão MV3 0.10.0.
+
+### Alterado
+
+- Dashboard em API Real passa a exibir somente scores persistidos; caches e pareamento do frontend ficam isolados por origem/base URL.
+- JSON Resume passa a mapear semanticamente todas as seções oficiais suportadas, preservar extensões e manter registros profissionais fora de `certificates`.
+- Navegação, headings, drawers e controles compartilhados foram reorganizados para jornada, teclado, mobile e zoom, sem fonte web remota.
+- README, índices, escopo atual, roadmap, catálogo de prompts, matriz de capacidades e documentação de release foram alinhados à v1.10.1.
+
+### Segurança e integridade
+
+- Detecção/redaction de credenciais Gemini modernas `AQ.` cobre arquivos, ZIPs, traces, diagnósticos, respostas e service worker sem marcar texto comum indiscriminadamente.
+- Pairing local usa bootstrap fora de banda, cookie HttpOnly, CSRF rotativo, TTL e allowlist exata da extensão; URLs da API web ficam restritas a loopback.
+- Proteção SSRF rejeita userinfo, portas inesperadas, IP/DNS não global e revalida cada redirect.
+- Follow-up permanece rascunho, ICS é somente download e nenhuma ação de terceiro é enviada automaticamente.
+
+### Limitações conhecidas
+
+- Algumas telas históricas ainda possuem conteúdo interno apenas em PT-BR; shell, navegação, ajuda e fluxos novos respondem ao locale.
+- Bases oficiais completas não são baixadas nem redistribuídas automaticamente; importação e mappings permanecem versionados e revisáveis.
+- Stores JSON/JSONL legados continuam ativos para contratos antigos; os novos domínios usam SQLite sem dual-write oculto.
+- Providers externos dependem de rede, credencial e quota. Na validação final, Gemini executou casos reais; OpenAI foi bloqueado por quota insuficiente e não foi tratado como aprovação.
+
 ## [1.9.9] - 2026-08-07
 
 ### Adicionado

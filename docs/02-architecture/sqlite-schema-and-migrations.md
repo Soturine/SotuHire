@@ -210,3 +210,14 @@ fictícia é criada em `captures`.
 O schema alvo permanece exatamente 6. Upgrade suportado parte do schema 5 e é
 validado por `MigrationRunner.verify()`, `foreign_key_check` e teste de execução
 repetida.
+
+## Migration 7 — inteligência de carreira e ações
+
+A migration 7 eleva o schema 6 para 7 sem reescrever tabelas ou stores legados. Ela adiciona:
+
+- `opportunity_observations` e `opportunity_rankings`, com identidade/proveniência e scores de fit, confiança e cobertura separados;
+- `taxonomy_datasets` e `taxonomy_mappings`, com sistema, versão, licença, SHA-256 e estado de revisão;
+- sessões/preparações de entrevista, histórias STAR, perguntas, respostas e follow-ups em rascunho;
+- tarefas, lembretes e planos de carreira locais.
+
+O upgrade é idempotente, transacional e validado por todas as 13 tabelas novas. A estratégia de rollback é restaurar o backup pré-v7; reduzir manualmente `schema_version` não é suportado. O destino atual é schema 7.

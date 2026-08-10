@@ -1,4 +1,4 @@
-# Referências externas da v1.9.9
+# Referências externas — base v1.9.9, revisada na v1.10.1
 
 Pesquisa realizada em 3 de agosto de 2026 usando sites oficiais e repositórios originais. O
 objetivo foi observar padrões, não copiar branding, layout, texto, código, automação de candidatura,
@@ -18,7 +18,7 @@ form filling ou arquitetura SaaS. Nenhum código dessas referências foi incorpo
 
 - [Chrome Manifest V3](https://developer.chrome.com/docs/extensions/develop/migrate/what-is-mv3):
   service worker sob demanda, código empacotado e permissões mínimas influenciaram a extensão
-  0.9.5. Não foram adicionados hosts amplos nem código remoto.
+  0.10.0. Não foram adicionados hosts amplos nem código remoto.
 - [OWASP API4:2023](https://owasp.org/API-Security/editions/2023/en/0xa4-unrestricted-resource-consumption/):
   limites de upload, memória, operações, paginação e taxa foram adaptados à API loopback.
 - [OWASP CORS guidance](https://cheatsheetseries.owasp.org/cheatsheets/HTML5_Security_Cheat_Sheet.html):
@@ -35,7 +35,7 @@ form filling ou arquitetura SaaS. Nenhum código dessas referências foi incorpo
   reabertura de DOCX com parágrafos/estilos. Recursos não suportados e layout pixel-perfect ficam
   fora da promessa.
 
-## Taxonomias somente para roadmap
+## Taxonomias e interoperabilidade v1.10.1
 
 | Fonte oficial consultada | Versão/estado | Influência retida |
 |---|---|---|
@@ -44,5 +44,6 @@ form filling ou arquitetura SaaS. Nenhum código dessas referências foi incorpo
 | [ESCO](https://esco.ec.europa.eu/en/classification) | v1.2.1, 2025-12-10 | conceitos multilíngues e relações ocupação↔skill, nunca verdade automática sobre a pessoa |
 | [O*NET](https://www.onetcenter.org/overview.html) | database 30.3; dados em geral CC BY 4.0 com exceções | content model e taxonomy com atribuição/licença por dataset |
 
-Nenhuma taxonomia foi baixada ou embutida na v1.9.9. A v1.10.0 deverá fixar versão, checksum,
-licença/atribuição, mapeamento e data de atualização antes de expor qualquer resultado.
+Na v1.10.1, o produto entrega contratos e manifestos versionados com checksum,
+licença/atribuição, mapping revisável e data de atualização. Bases completas não são baixadas nem
+redistribuídas automaticamente; um dataset só é aceito quando sua versão e seu hash são explícitos.

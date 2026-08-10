@@ -41,7 +41,7 @@ Vitest/Testing Library/MSW cobrem contratos rápidos; Playwright valida o navega
 
 `scripts/package_extension.py` valida Manifest V3, arquivos obrigatórios e padrões de segredo
 antes de criar o ZIP. `scripts/verify_extension_package.py` reabre o artefato, rejeita path
-traversal/entradas extras e confere o manifest 0.9.5. O workflow apenas publica o artefato de CI;
+traversal/entradas extras e confere o manifest 0.10.0. O workflow apenas publica o artefato de CI;
 a GitHub Release é criada manualmente depois dos gates verdes.
 
 ## Segurança e supply chain

@@ -16,6 +16,11 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 - [Estratégia multiárea](01-product/multi-domain-product-strategy.md)
 - [Histórias de usuário e casos de uso](01-product/user-stories.md)
 - [Escopo atual](01-product/current-product-scope.md)
+- [Fontes oficiais](02-architecture/official-opportunity-sources.md)
+- [Taxonomias](02-architecture/taxonomy-layer.md)
+- [Entrevistas e carreira](02-architecture/interview-and-career-workflows.md)
+- [I18n e tema](02-architecture/i18n-and-theme.md)
+- [Ajuda contextual](02-architecture/help-system.md)
 - [Escopo do MVP histórico](history/mvp-scope.md)
 - [GitHub Pages](01-product/github-pages-site.md)
 - [Arquivo histórico do roadmap](01-product/roadmap-archive-through-v1.9.5.md)
@@ -115,5 +120,5 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 ## Releases
 
-- [Release atual](releases/v1.9.8.md)
+- [Release atual — v1.10.1](releases/v1.10.1.md)
 - [Releases anteriores no GitHub](https://github.com/Soturine/SotuHire/tree/main/docs/releases)

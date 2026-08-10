@@ -6,5 +6,5 @@ evidência confirmada, o estado é `unknown`; se a vaga os tornar obrigatórios,
 o bloqueio e recomenda conferência na fonte oficial.
 
 CBO/QBQ classificam ocupações/qualificações e não substituem a lei que regulamenta uma
-profissão. A v1.9.9 não importa essas taxonomias; integração oficial, versionada e licenciada
-permanece no roadmap v1.10.0.
+profissão. Na v1.10.1, seus manifestos e mappings são versionados, têm hash e exigem revisão;
+nenhum mapping taxonômico promove licença ou registro profissional a fato confirmado.

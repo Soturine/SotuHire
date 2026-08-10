@@ -124,9 +124,9 @@ Veja também a [galeria completa de telas da v1.10.1](docs/releases/v1.10.1.md).
 | --- | --- |
 | ![Dashboard fictício dark/en-US](docs/assets/screenshots/sotuhire-v1.10.1-home-dark-en.png) | ![Help Drawer](docs/assets/screenshots/sotuhire-v1.10.1-help-drawer.png) |
 
-| API Real e pareamento local | Estados da extensão |
+| Radar com fontes oficiais | Tema e idioma |
 | --- | --- |
-| ![API Real com pareamento protegido](docs/assets/screenshots/sotuhire-v1.9.9-api-real.png) | ![Extensão conectada](docs/assets/screenshots/extension/sotuhire-v1.9.9-extension-connected.png) |
+| ![Radar com fontes oficiais fictícias](docs/assets/screenshots/sotuhire-v1.10.1-radar-official-sources.png) | ![Preferências de tema e idioma](docs/assets/screenshots/sotuhire-v1.10.1-settings-theme-locale.png) |
 
 | Perfil Profissional Universal | Match |
 | --- | --- |
