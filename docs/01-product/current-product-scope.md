@@ -1,6 +1,6 @@
 # Escopo atual do produto
 
-O SotuHire v1.9.9 é um assistente de carreira local-first, multiárea e orientado por
+O SotuHire v1.10.1 é um assistente de carreira local-first, multiárea e orientado por
 evidências. Ele organiza perfil, documentos, oportunidades e candidaturas; compara requisitos;
 prepara materiais revisáveis; e preserva os snapshots usados em cada decisão. IA externa é
 opcional e nunca substitui o caminho determinístico local.
@@ -15,7 +15,12 @@ opcional e nunca substitui o caminho determinístico local.
 - Application Lab com Match, ATS, readiness e Tailor reais e independentes;
 - Professional Assets e Application Kit com lifecycle, aprovação por item e stale;
 - Tracker transacional em SQLite, snapshots, outcomes manuais, Radar paginado e leases locais;
-- extensão MV3 0.9.5 com captura assistida, fila, handoff por IDs e Companion idempotente;
+- fontes Greenhouse, Lever, JobPosting e RSS/Atom com proveniência e dedupe;
+- taxonomias CBO/QBQ/ESCO/O*NET versionadas e ranking local explicável;
+- Interview Preparation, STAR, perguntas, respostas e follow-up draft;
+- tarefas, lembretes, Career Plan e export ICS explícito;
+- locale/tema adaptativos, ajuda contextual e onboarding;
+- extensão MV3 0.10.0 com captura assistida, preferências e Companion idempotente;
 - Gemini/OpenAI opt-in, fallback local explícito, schema estruturado e erros tipados.
 
 ## Modos
@@ -31,7 +36,8 @@ opcional e nunca substitui o caminho determinístico local.
 
 Não há auto-apply, login automático, form filling, bypass de CAPTCHA, pagamento, inscrição,
 envio de documento/mensagem, scraping autenticado agressivo ou decisão crítica autônoma.
-Taxonomias CBO/QBQ/ESCO/O*NET e conectores oficiais estão no roadmap, não na v1.9.9.
+Download automático de datasets oficiais, envio de follow-up, calendário externo, auto-apply e
+migração total dos stores JSON legados permanecem fora da v1.10.1.
 
 O antigo documento de MVP foi preservado como [histórico](../history/mvp-scope.md), sem ser
 usado como descrição do produto atual.

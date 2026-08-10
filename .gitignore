@@ -232,6 +232,7 @@ n8n_data/
 postgres_data/
 /storage/
 .cache/
+.tmp/
 .sotuhire/
 /data/
 /data/settings/ai-settings.json

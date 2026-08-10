@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.9.9-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.9.9)
+[![Release](https://img.shields.io/badge/release-v1.10.1-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.10.1)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -72,6 +72,14 @@ Analisa perfis e repositórios públicos, incluindo README, linguagens, estrutur
 
 Recebe texto, links, CSV, JSON, feeds públicos e capturas assistidas. A identidade canônica reduz duplicatas entre URL manual, Radar, extensão e portais diferentes, preservando as referências de origem.
 
+### Inteligência de oportunidades e taxonomias
+
+Conectores públicos Greenhouse, Lever, `schema.org/JobPosting` e RSS/Atom alimentam candidatos com proveniência. CBO, QBQ, ESCO e O*NET são versionados por manifesto/hash; mappings semânticos exigem revisão. O ranking separa fit, confiança e cobertura de evidência antes de qualquer top-K opcional com IA.
+
+### Entrevistas e ações de carreira
+
+Registra entrevistas, preparação com evidências confirmadas, histórias STAR, perguntas e respostas, além de follow-ups que permanecem rascunhos. Tarefas, lembretes e Career Plans organizam próximas ações; o calendário é um download ICS explícito, nunca uma inclusão automática.
+
 ### Extensão do navegador
 
 Captura vaga, edital, projeto GitHub e lotes visíveis; analisa repositórios dentro do GitHub; mantém fila offline com retry e export/import; e conversa com o Local Companion ou com a API local. Pode operar sem o frontend aberto e possui modo próprio de IA opcional.
@@ -104,17 +112,17 @@ Cada fluxo recebe apenas o contexto necessário. Evidências sensíveis são omi
 
 ## Preview
 
-| Ingestão e revisão | Application Analysis Bundle |
+| Entrevista, STAR e follow-up | Plano e ações de carreira |
 | --- | --- |
-| ![Revisão de blocos de um PDF fictício](docs/assets/screenshots/sotuhire-v1.9.9-block-review.png) | ![Match, ATS, readiness e Tailor separados](docs/assets/screenshots/sotuhire-v1.9.9-application-analysis-bundle.png) |
+| ![Fluxos de entrevista fictícios](docs/assets/screenshots/sotuhire-v1.10.1-interview-star-followup.png) | ![Ações de carreira fictícias](docs/assets/screenshots/sotuhire-v1.10.1-career-actions-plan.png) |
 
-Veja também a [galeria completa de telas da v1.9.9](docs/releases/v1.9.9.md).
+Veja também a [galeria completa de telas da v1.10.1](docs/releases/v1.10.1.md).
 
-![Jornada SotuHire v1.9.9: documento, revisão, candidatura e exportação](docs/assets/screenshots/sotuhire-v1.9.9-document-to-application-walkthrough.gif)
+![Jornada SotuHire v1.10.1: inteligência, entrevista e ações](docs/assets/screenshots/sotuhire-v1.10.1-career-intelligence-walkthrough.gif)
 
-| Resume Studio e preview | Application Kit revisável |
+| Tema escuro e shell em inglês | Ajuda contextual |
 | --- | --- |
-| ![Resume Studio com preview fiel](docs/assets/screenshots/sotuhire-v1.9.9-resume-preview.png) | ![Application Kit com oito itens](docs/assets/screenshots/sotuhire-v1.9.9-application-kit-review.png) |
+| ![Dashboard fictício dark/en-US](docs/assets/screenshots/sotuhire-v1.10.1-home-dark-en.png) | ![Help Drawer](docs/assets/screenshots/sotuhire-v1.10.1-help-drawer.png) |
 
 | API Real e pareamento local | Estados da extensão |
 | --- | --- |
@@ -352,7 +360,7 @@ O SotuHire não realiza auto-apply, candidatura automática, inscrição automá
 
 ## Roadmap
 
-As próximas frentes aprofundam calibração por domínio, edição avançada de documentos e conectores públicos oficiais, sempre mantendo workflows de carreira sob aprovação humana. Consulte o [roadmap atual](docs/01-product/roadmap.md) para critérios, riscos e itens fora de escopo.
+As próximas frentes aprofundam taxonomias, interoperabilidade com IA local, avaliação multi-provider e evidências acadêmicas/profissionais, sempre sob aprovação humana. Consulte o [roadmap atual](docs/01-product/roadmap.md) para critérios, riscos e itens fora de escopo.
 
 ## Contribuição
 
@@ -370,4 +378,4 @@ Distribuído sob a [Apache License 2.0](LICENSE).
 
 ---
 
-Release atual: [v1.9.9](https://github.com/Soturine/SotuHire/releases/tag/v1.9.9) · [Notas da release](docs/releases/v1.9.9.md) · [Tag](https://github.com/Soturine/SotuHire/tree/v1.9.9)
+Release atual: [v1.10.1](https://github.com/Soturine/SotuHire/releases/tag/v1.10.1) · [Notas da release](docs/releases/v1.10.1.md) · [Tag](https://github.com/Soturine/SotuHire/tree/v1.10.1)

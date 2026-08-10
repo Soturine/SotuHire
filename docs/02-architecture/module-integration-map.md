@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Estado da v1.9.9 validado em 3 de agosto de 2026. O commit-base verificável de cada capacidade está na
+Estado da v1.10.1 validado em 10 de agosto de 2026. O commit-base verificável de cada capacidade está na
 [matriz de integração atual](integration-capability-matrix.md).
 
 Este mapa registra como `apps/web`, FastAPI, Local Companion, extensão e `modules/` se conectam
@@ -45,6 +45,11 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Application Lab | `/application-lab` | `/api/v1/application-lab/*` | `apps.api.services.application_lab` | `modules/application_lab` + motores Match/ATS/Tailor | Real v1.9.9 |
 | Resume Studio e ingestão | `/resume-studio` | `/api/v1/resume-studio/*` | `apps.api.services.application_lab` | documento canônico, ingestion e export | Real v1.9.9 |
 | Professional Assets | `/application-lab` | `/api/v1/professional-assets/*` | `apps.api.services.professional_assets` | `modules/professional_assets` | Real v1.9.9 |
+| Opportunity Intelligence | `/radar` | `/api/v1/opportunities/*` | routes + repository | `modules/opportunities`, `modules/storage/career_intelligence.py` | Real v1.10.1 |
+| Taxonomias | `/radar` | `/api/v1/taxonomy/*` | routes + repository | `modules/taxonomy` | Real v1.10.1 |
+| Interview e STAR | `/interviews` | `/api/v1/interviews/*` | routes + repository | `modules/interviews`, AiTask Registry | Real v1.10.1 |
+| Ações e Career Plan | `/career` | `/api/v1/career/*` | routes + repository | `modules/career_actions` | Real v1.10.1 |
+| Ajuda/tema/locale | `/help` + shell | local no navegador | sem backend | catálogo i18n e Radix | Real v1.10.1 |
 
 ## Editais e concursos v1.9.3
 

@@ -48,6 +48,11 @@ nav:
   - Início: index.md
   - Documentação: documentation-index.md
   - Auditoria:
+      - Baseline completo v1.10.1: 00-audit/v1.10.1-baseline-full-repository-audit.md
+      - Código morto e dívida v1.10.1: 00-audit/v1.10.1-dead-code-dedup-and-debt-audit.md
+      - Providers v1.10.1: 00-audit/v1.10.1-ai-provider-integration-audit.md
+      - Pesquisa externa v1.10.1: 00-audit/v1.10.1-external-research.md
+      - Integração final v1.10.1: 00-audit/v1.10.1-final-product-integration-audit.md
       - Baseline e riscos v1.9.9: 00-audit/v1.9.9-baseline-and-risk-register.md
       - Auditoria de implementação v1.9.9: 00-audit/v1.9.9-hardening-ingestion-resume-studio-audit.md
       - Auditoria final v1.9.9: 00-audit/v1.9.9-final-integration-audit.md
@@ -78,6 +83,11 @@ nav:
       - Opportunity Fit Score: 01-product/user-preferences-opportunity-fit.md
       - Concurso Mode: 01-product/concurso-mode.md
   - Arquitetura:
+      - I18n e tema: 02-architecture/i18n-and-theme.md
+      - Sistema de ajuda: 02-architecture/help-system.md
+      - Fontes oficiais: 02-architecture/official-opportunity-sources.md
+      - Taxonomias: 02-architecture/taxonomy-layer.md
+      - Entrevista e carreira: 02-architecture/interview-and-career-workflows.md
       - Overview: 02-architecture/overview.md
       - Data flow: 02-architecture/data-flow.md
       - Folder structure: 02-architecture/folder-structure.md
@@ -120,6 +130,10 @@ nav:
       - Linhagem e deduplicação: 02-architecture/data-lineage-and-deduplication.md
       - Storage e histórico legado: 02-architecture/storage-and-history.md
   - Regras de negócio:
+      - Deduplicação de oportunidades: 03-business-rules/opportunity-deduplication.md
+      - Mapeamento taxonômico: 03-business-rules/taxonomy-mapping.md
+      - Interview STAR e follow-up: 03-business-rules/interview-star-follow-up.md
+      - Ações de carreira: 03-business-rules/career-actions.md
       - Semântica de scores: 03-business-rules/score-semantics.md
       - Scores, confiança e requisitos: 03-business-rules/scores-confidence-and-requirements.md
       - Estado de revisão de evidência: 03-business-rules/evidence-review-state.md
@@ -201,6 +215,7 @@ nav:
       - GitHub portfolio analyzer: 05-data-sources/github-portfolio-analyzer.md
       - JobSpy experimental reference: 05-data-sources/jobspy-experimental-reference.md
   - Engenharia:
+      - Frontend UX e acessibilidade: 06-engineering/frontend-ux-accessibility.md
       - Threat model: 06-engineering/threat-model.md
       - Clean Code e SOLID: 06-engineering/clean-code-solid.md
       - QA Testing: 06-engineering/qa-testing.md
@@ -210,6 +225,7 @@ nav:
       - Recuperação e quarantine JSON: 06-engineering/data-recovery-and-json-quarantine.md
       - Avoid overengineering: 06-engineering/avoid-overengineering.md
   - Testes:
+      - Matriz de aceite v1.10.1: 09-testing/v1.10.1-acceptance-matrix.md
       - Matriz de aceite v1.9.9: 09-testing/v1.9.9-acceptance-matrix.md
       - Fixtures de ingestão: 09-testing/document-ingestion-fixtures.md
       - Fidelidade dos exports: 09-testing/export-fidelity.md
@@ -223,6 +239,8 @@ nav:
       - Application Lab: 09-testing/application-lab-testing.md
       - Resume Studio: 09-testing/resume-studio-testing.md
   - Desenvolvimento:
+      - Implementação v1.10.1: 07-development/v1.10.1-implementation.md
+      - Migração v1.10.1: 07-development/v1.10.1-migration.md
       - Implementação v1.9.9: 07-development/v1.9.9-implementation.md
       - Clean install v1.9.9: 07-development/v1.9.9-clean-install.md
       - Migração v1.9.9: 07-development/v1.9.9-migration.md
@@ -294,6 +312,7 @@ nav:
       - Release notes v1.9.7: releases/v1.9.7.md
       - Release notes v1.9.8: releases/v1.9.8.md
       - Release notes v1.9.9: releases/v1.9.9.md
+      - Release notes v1.10.1: releases/v1.10.1.md
   - Portfólio:
       - Roteiro de demonstração: 09-portfolio/demo-script.md
       - Case study: 09-portfolio/portfolio-case-study.md

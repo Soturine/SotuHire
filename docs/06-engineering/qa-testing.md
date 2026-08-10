@@ -90,6 +90,7 @@ npm run lint
 npm run typecheck
 npm run build
 npm run test:e2e
+npm run test:e2e:cross-browser
 ```
 
 Fluxos novos têm testes dedicados:

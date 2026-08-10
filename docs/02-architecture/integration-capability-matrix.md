@@ -23,10 +23,13 @@ Cada capacidade registra um commit-base ancestral verificável; o manifesto não
 | ai_settings | Configuração de IA | `/settings` | 7 | sem contexto dedicado | não | A configuração do site não lê nem persiste a chave própria da extensão. | AiRunStore registra metadados seguros; segredos não entram em snapshots. | complete | nenhuma registrada |
 | notifications | Notificações locais | `/dashboard` | 4 | sem contexto dedicado | não | A extensão não recebe notificações do site. | A notificação referencia a origem; não é um snapshot de conteúdo. | complete | Não existe rota exclusiva; o resumo é exibido no Dashboard e no Radar. |
 | data_reliability | Persistência, migração, backup e saúde dos dados | `/privacy` | 5 | sem contexto dedicado | não | Backups não incluem chrome.storage, IndexedDB, chaves, tokens ou cookies. | Tabelas e triggers impedem UPDATE/DELETE de snapshots imutáveis. | complete | nenhuma registrada |
-| ai_quality_outcomes | Qualidade de IA, feedback humano e resultados profissionais | `/ai-quality` | 10 | dashboard | resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1 | A extensão 0.9.5 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. | complete | Métricas externas dependem de execução opt-in com chaves temporárias. |
-| application_lab | Preparar candidatura | `/application-lab` | 9 | match | match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1 | A extensão 0.9.5 abre o Lab ou o Resume Studio somente com capture_id e job_snapshot_id; o Perfil completo e documentos locais permanecem fora da extensão. | Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker. | complete | Notificações do plano permanecem locais; nenhum calendário externo é criado automaticamente. |
+| ai_quality_outcomes | Qualidade de IA, feedback humano e resultados profissionais | `/ai-quality` | 10 | dashboard | resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1 | A extensão 0.10.0 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. | complete | Métricas externas dependem de execução opt-in com chaves temporárias. |
+| application_lab | Preparar candidatura | `/application-lab` | 9 | match | match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1 | A extensão 0.10.0 abre o Lab ou o Resume Studio somente com capture_id e job_snapshot_id; o Perfil completo e documentos locais permanecem fora da extensão. | Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker. | complete | Notificações do plano permanecem locais; nenhum calendário externo é criado automaticamente. |
 | resume_studio | Resume Studio | `/resume-studio` | 9 | sem contexto dedicado | não | A extensão encaminha a vaga ao Application Lab; não lê nem envia o currículo. | O Tracker preserva snapshots distintos do mestre e da variante usada. | complete | OCR de documentos somente-imagem permanece fora do fluxo padrão e é sinalizado para revisão manual. |
 | professional_assets | Professional Assets | `/application-lab` | 5 | sem contexto dedicado | não | A extensão abre o Resume Studio por IDs e nunca lê documentos ou assets locais. | Revisões e dependency_hash preservam o estado usado pelo Application Kit. | complete | Envio por e-mail, calendário externo e submissão automática permanecem fora do produto. |
+| opportunity_intelligence | Opportunity Intelligence e Taxonomias | `/radar` | 9 | opportunity_intelligence | opportunity_enrichment_v1, taxonomy_mapping_explanation_v1 | A extensão entrega capturas públicas; não executa ranking nem confirma taxonomia. | Observações imutáveis e rankings versionados no SQLite schema 7. | complete | Datasets oficiais não são baixados implicitamente; stores de Opportunity legados continuam em contrato separado. |
+| interview_workflows | Interview, STAR e Follow-up | `/interviews` | 13 | interview | interview_question_generation_v1, interview_answer_drafting_v1, star_story_structuring_v1, follow_up_drafting_v1 | Sem envio de entrevista, resposta ou follow-up pela extensão. | Session guarda IDs dos snapshots de vaga/currículo e evidence_scope_id. | complete | Follow-up permanece rascunho e envio é sempre manual. |
+| career_actions | Tarefas, Reminders e Career Plan | `/career` | 8 | career_plan | career_plan_explanation_v1, certification_recommendation_explanation_v1, project_gap_recommendation_v1 | Sem calendário externo, notificações ou execução de tarefa pela extensão. | dependency_hash marca plano stale quando dependências mudam. | complete | ICS é somente download; nenhum calendário é alterado automaticamente. |
 
 ## Contratos por capacidade
 
@@ -418,7 +421,7 @@ Cada capacidade registra um commit-base ancestral verificável; o manifesto não
 | `profile_integration` | Usa somente contexto necessário e confirmado; itens não confirmados permanecem sinalizados e não viram fatos. |
 | `context_purpose` | `dashboard` |
 | `ai_support` | enabled=true; prompts=resume_extraction_v1, job_extraction_multi_domain_v1, domain_classification_v1, profile_items_extractor_v1, profile_lattes_extractor_v1, public_exam_notice_extractor_v1, match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1, job_wishlist_builder_v1, job_radar_match_explanation_v1, source_import_enrichment_v1, github_repo_analysis_v2, github_profile_analysis_v1, portfolio_gap_analysis_v1, career_advice_v1; providers=local, gemini, openai; fallback=Determinístico local, explícito e mensurado |
-| `extension_support` | A extensão 0.9.5 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. |
+| `extension_support` | A extensão 0.10.0 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo. |
 | `dedupe_strategy` | Eventos e feedback usam IDs únicos; métricas de deduplicação são avaliadas separadamente. |
 | `snapshot_support` | Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas. |
 | `tests` | `tests/test_ai_task_registry.py`<br>`tests/test_ai_evaluation_metrics.py`<br>`tests/test_ai_golden_datasets.py`<br>`tests/test_ai_feedback_outcomes.py`<br>`tests/test_ai_quality_api.py`<br>`tests/test_prompt_injection_defense.py` |
@@ -443,7 +446,7 @@ Cada capacidade registra um commit-base ancestral verificável; o manifesto não
 | `profile_integration` | Seleciona referências confirmadas do Perfil e preserva a origem; candidatos não viram fatos automaticamente. |
 | `context_purpose` | `match` |
 | `ai_support` | enabled=true; prompts=match_analysis_evidence_based_v1, ats_analysis_v1, resume_tailor_v1; providers=local, gemini, openai; fallback=Relatório de prontidão determinístico e fallback local explícito |
-| `extension_support` | A extensão 0.9.5 abre o Lab ou o Resume Studio somente com capture_id e job_snapshot_id; o Perfil completo e documentos locais permanecem fora da extensão. |
+| `extension_support` | A extensão 0.10.0 abre o Lab ou o Resume Studio somente com capture_id e job_snapshot_id; o Perfil completo e documentos locais permanecem fora da extensão. |
 | `dedupe_strategy` | Reutiliza identidade da captura, job_snapshot_id e snapshots existentes em vez de duplicar a vaga. |
 | `snapshot_support` | Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker. |
 | `tests` | `tests/test_application_lab_service.py`<br>`tests/test_application_lab_api.py`<br>`tests/test_application_lab_repository.py`<br>`apps/web/tests/e2e/application-lab.spec.ts` |
@@ -504,6 +507,81 @@ Cada capacidade registra um commit-base ancestral verificável; o manifesto não
 | `verification_date` | `2026-08-03` |
 | `verification_command` | `python scripts/validate_capabilities.py` |
 | `known_gaps` | Envio por e-mail, calendário externo e submissão automática permanecem fora do produto. |
+
+### Opportunity Intelligence e Taxonomias (`opportunity_intelligence`)
+
+| Campo | Valor verificado |
+|---|---|
+| `capability_id` | `opportunity_intelligence` |
+| `frontend_route` | `/radar` |
+| `api_endpoints` | `POST /api/v1/opportunities/observations`<br>`GET /api/v1/opportunities/candidates`<br>`POST /api/v1/opportunities/rankings`<br>`GET /api/v1/opportunities/rankings`<br>`POST /api/v1/taxonomy/datasets`<br>`GET /api/v1/taxonomy/datasets`<br>`POST /api/v1/taxonomy/mappings`<br>`GET /api/v1/taxonomy/mappings`<br>`PATCH /api/v1/taxonomy/mappings/{mapping_id}/review` |
+| `backend_services` | `apps/api/routes/opportunities.py`<br>`apps/api/routes/taxonomy.py` |
+| `core_modules` | `modules/opportunities/intelligence.py`<br>`modules/taxonomy/normalization.py`<br>`modules/storage/career_intelligence.py` |
+| `stores` | `modules/storage/career_intelligence.py`<br>`modules/taxonomy/catalog.py` |
+| `profile_integration` | Preferências confirmadas alimentam ranking local; mappings não confirmam skills no Perfil. |
+| `context_purpose` | `opportunity_intelligence` |
+| `ai_support` | enabled=true; prompts=opportunity_enrichment_v1, taxonomy_mapping_explanation_v1; providers=local, gemini, openai; fallback=Dedupe, mapping candidato e ranking determinísticos |
+| `extension_support` | A extensão entrega capturas públicas; não executa ranking nem confirma taxonomia. |
+| `dedupe_strategy` | Provider/external_id, URL canônica e organização+título+local, preservando proveniência. |
+| `snapshot_support` | Observações imutáveis e rankings versionados no SQLite schema 7. |
+| `tests` | `tests/test_api_career_intelligence.py`<br>`tests/test_official_opportunity_connectors.py`<br>`tests/test_taxonomy_layer.py` |
+| `docs` | `docs/02-architecture/official-opportunity-sources.md`<br>`docs/02-architecture/taxonomy-layer.md`<br>`docs/03-business-rules/opportunity-deduplication.md` |
+| `status` | `complete` |
+| `verification_ref` | `capability:opportunity_intelligence` |
+| `verification_base_commit` | `c7aca1aba9fcd9eba858b5416316a380abb5f2d0` |
+| `verification_date` | `2026-08-10` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Datasets oficiais não são baixados implicitamente; stores de Opportunity legados continuam em contrato separado. |
+
+### Interview, STAR e Follow-up (`interview_workflows`)
+
+| Campo | Valor verificado |
+|---|---|
+| `capability_id` | `interview_workflows` |
+| `frontend_route` | `/interviews` |
+| `api_endpoints` | `GET /api/v1/interviews`<br>`POST /api/v1/interviews`<br>`GET /api/v1/interviews/{session_id}/preparation`<br>`POST /api/v1/interviews/{session_id}/prepare`<br>`GET /api/v1/interviews/star-stories`<br>`POST /api/v1/interviews/star-stories`<br>`GET /api/v1/interviews/questions`<br>`POST /api/v1/interviews/questions`<br>`GET /api/v1/interviews/answers`<br>`POST /api/v1/interviews/answers`<br>`GET /api/v1/interviews/follow-ups`<br>`POST /api/v1/interviews/follow-ups`<br>`POST /api/v1/interviews/ai/{task_id}` |
+| `backend_services` | `apps/api/routes/interviews.py` |
+| `core_modules` | `modules/interviews/models.py`<br>`modules/interviews/preparation.py`<br>`modules/ai/career_workflows.py` |
+| `stores` | `modules/storage/career_workflows.py` |
+| `profile_integration` | Preparação e drafts usam somente evidências confirmadas e source refs. |
+| `context_purpose` | `interview` |
+| `ai_support` | enabled=true; prompts=interview_question_generation_v1, interview_answer_drafting_v1, star_story_structuring_v1, follow_up_drafting_v1; providers=local, gemini, openai; fallback=Preparação local e drafts conservadores revisáveis |
+| `extension_support` | Sem envio de entrevista, resposta ou follow-up pela extensão. |
+| `dedupe_strategy` | IDs estáveis e vínculos SQLite; preparação é única por session_id. |
+| `snapshot_support` | Session guarda IDs dos snapshots de vaga/currículo e evidence_scope_id. |
+| `tests` | `tests/test_interview_and_career_workflows.py`<br>`tests/test_api_interview_career.py`<br>`tests/test_ai_career_workflow_tasks.py` |
+| `docs` | `docs/02-architecture/interview-and-career-workflows.md`<br>`docs/03-business-rules/interview-star-follow-up.md` |
+| `status` | `complete` |
+| `verification_ref` | `capability:interview_workflows` |
+| `verification_base_commit` | `c7aca1aba9fcd9eba858b5416316a380abb5f2d0` |
+| `verification_date` | `2026-08-10` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | Follow-up permanece rascunho e envio é sempre manual. |
+
+### Tarefas, Reminders e Career Plan (`career_actions`)
+
+| Campo | Valor verificado |
+|---|---|
+| `capability_id` | `career_actions` |
+| `frontend_route` | `/career` |
+| `api_endpoints` | `GET /api/v1/career/tasks`<br>`POST /api/v1/career/tasks`<br>`GET /api/v1/career/reminders`<br>`POST /api/v1/career/reminders`<br>`GET /api/v1/career/plans`<br>`POST /api/v1/career/plans`<br>`POST /api/v1/career/calendar/export`<br>`POST /api/v1/career/ai/{task_id}` |
+| `backend_services` | `apps/api/routes/career.py` |
+| `core_modules` | `modules/career_actions/models.py`<br>`modules/career_actions/ics.py`<br>`modules/ai/career_workflows.py` |
+| `stores` | `modules/storage/career_workflows.py` |
+| `profile_integration` | Planos citam perfil/evidências sem promover recomendações a fatos. |
+| `context_purpose` | `career_plan` |
+| `ai_support` | enabled=true; prompts=career_plan_explanation_v1, certification_recommendation_explanation_v1, project_gap_recommendation_v1; providers=local, gemini, openai; fallback=Tarefas, plano e ICS locais |
+| `extension_support` | Sem calendário externo, notificações ou execução de tarefa pela extensão. |
+| `dedupe_strategy` | IDs próprios e upsert transacional no SQLite schema 7. |
+| `snapshot_support` | dependency_hash marca plano stale quando dependências mudam. |
+| `tests` | `tests/test_interview_and_career_workflows.py`<br>`tests/test_api_interview_career.py` |
+| `docs` | `docs/02-architecture/interview-and-career-workflows.md`<br>`docs/03-business-rules/career-actions.md` |
+| `status` | `complete` |
+| `verification_ref` | `capability:career_actions` |
+| `verification_base_commit` | `c7aca1aba9fcd9eba858b5416316a380abb5f2d0` |
+| `verification_date` | `2026-08-10` |
+| `verification_command` | `python scripts/validate_capabilities.py` |
+| `known_gaps` | ICS é somente download; nenhum calendário é alterado automaticamente. |
 
 ## Como validar
 

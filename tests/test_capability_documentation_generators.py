@@ -84,9 +84,11 @@ def test_prompt_catalog_comes_from_registry_and_marks_unconsumed_contracts() -> 
     expected = render_catalog(rows)
     by_id = {row["prompt_id"]: row for row in rows}
 
-    assert len(rows) == 16
+    assert len(rows) == 25
     assert by_id["career_advice_v1"]["status"] == "implementado"
     assert by_id["domain_classification_v1"]["status"] == "implementado sem fluxo integrado"
+    assert by_id["interview_question_generation_v1"]["status"] == "implementado"
+    assert by_id["taxonomy_mapping_explanation_v1"]["fallback"] != "Não documentado"
     assert by_id["match_analysis_evidence_based_v1"]["consumers"]
     assert by_id["resume_extraction_v1"]["schema"].endswith("ResumeExtractionOutput")
     assert by_id["resume_extraction_v1"]["evaluation_suite"] == "golden"

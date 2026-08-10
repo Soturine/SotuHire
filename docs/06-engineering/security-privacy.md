@@ -143,3 +143,12 @@ externos guardam erro sanitizado/request ID, nunca chave ou corpo pessoal integr
 ## Mensagens geradas
 
 O usuário deve revisar toda mensagem antes de enviar. A IA pode cometer erro, exagerar ou omitir informações.
+
+## Hardening v1.10.1
+
+- pairing usa bootstrap no fragment e origem exata da extensão, sem devolver a prova publicamente;
+- CSRF pode ser rotacionado por sessão HttpOnly e é escopado por base URL no frontend;
+- SSRF bloqueia userinfo, portas inesperadas, DNS/IP não global e revalida redirects;
+- scanner/redactor cobre chaves Gemini modernas `AQ.` em texto, erros, ZIP e extensão;
+- follow-up é draft, ICS é download, taxonomia é candidata e datasets exigem SHA-256;
+- os três arquivos de navegador autenticado protegidos pela release permanecem byte-idênticos.

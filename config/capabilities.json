@@ -901,7 +901,7 @@
                                                               ],
                                                 "fallback":  "Determinístico local, explícito e mensurado"
                                             },
-                             "extension_support":  "A extensão 0.9.5 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo.",
+                             "extension_support":  "A extensão 0.10.0 envia feedback somente para traces persistidos, sem conteúdo analisado ou segredo.",
                              "dedupe_strategy":  "Eventos e feedback usam IDs únicos; métricas de deduplicação são avaliadas separadamente.",
                              "snapshot_support":  "Traces referenciam execuções e snapshots sem armazenar entradas ou saídas pessoais completas.",
                              "tests":  [
@@ -970,7 +970,7 @@
                                                               ],
                                                 "fallback":  "Relatório de prontidão determinístico e fallback local explícito"
                                             },
-                             "extension_support":  "A extensão 0.9.5 abre o Lab ou o Resume Studio somente com capture_id e job_snapshot_id; o Perfil completo e documentos locais permanecem fora da extensão.",
+                             "extension_support":  "A extensão 0.10.0 abre o Lab ou o Resume Studio somente com capture_id e job_snapshot_id; o Perfil completo e documentos locais permanecem fora da extensão.",
                              "dedupe_strategy":  "Reutiliza identidade da captura, job_snapshot_id e snapshots existentes em vez de duplicar a vaga.",
                              "snapshot_support":  "Vincula vaga, mestre, variante, análise, kit e plano à candidatura no Tracker.",
                              "tests":  [
@@ -1104,6 +1104,176 @@
                              "known_gaps":  [
                                                 "Envio por e-mail, calendário externo e submissão automática permanecem fora do produto."
                                             ]
+                         },
+                         {
+                             "capability_id": "opportunity_intelligence",
+                             "label": "Opportunity Intelligence e Taxonomias",
+                             "frontend_route": "/radar",
+                             "api_endpoints": [
+                                 "POST /api/v1/opportunities/observations",
+                                 "GET /api/v1/opportunities/candidates",
+                                 "POST /api/v1/opportunities/rankings",
+                                 "GET /api/v1/opportunities/rankings",
+                                 "POST /api/v1/taxonomy/datasets",
+                                 "GET /api/v1/taxonomy/datasets",
+                                 "POST /api/v1/taxonomy/mappings",
+                                 "GET /api/v1/taxonomy/mappings",
+                                 "PATCH /api/v1/taxonomy/mappings/{mapping_id}/review"
+                             ],
+                             "backend_services": [
+                                 "apps/api/routes/opportunities.py",
+                                 "apps/api/routes/taxonomy.py"
+                             ],
+                             "core_modules": [
+                                 "modules/opportunities/intelligence.py",
+                                 "modules/taxonomy/normalization.py",
+                                 "modules/storage/career_intelligence.py"
+                             ],
+                             "stores": [
+                                 "modules/storage/career_intelligence.py",
+                                 "modules/taxonomy/catalog.py"
+                             ],
+                             "profile_integration": "Preferências confirmadas alimentam ranking local; mappings não confirmam skills no Perfil.",
+                             "context_purpose": "opportunity_intelligence",
+                             "ai_support": {
+                                 "enabled": true,
+                                 "prompt_ids": [
+                                     "opportunity_enrichment_v1",
+                                     "taxonomy_mapping_explanation_v1"
+                                 ],
+                                 "providers": ["local", "gemini", "openai"],
+                                 "fallback": "Dedupe, mapping candidato e ranking determinísticos"
+                             },
+                             "extension_support": "A extensão entrega capturas públicas; não executa ranking nem confirma taxonomia.",
+                             "dedupe_strategy": "Provider/external_id, URL canônica e organização+título+local, preservando proveniência.",
+                             "snapshot_support": "Observações imutáveis e rankings versionados no SQLite schema 7.",
+                             "tests": [
+                                 "tests/test_api_career_intelligence.py",
+                                 "tests/test_official_opportunity_connectors.py",
+                                 "tests/test_taxonomy_layer.py"
+                             ],
+                             "docs": [
+                                 "docs/02-architecture/official-opportunity-sources.md",
+                                 "docs/02-architecture/taxonomy-layer.md",
+                                 "docs/03-business-rules/opportunity-deduplication.md"
+                             ],
+                             "verification_ref": "capability:opportunity_intelligence",
+                             "verification_base_commit": "c7aca1aba9fcd9eba858b5416316a380abb5f2d0",
+                             "verification_date": "2026-08-10",
+                             "verification_command": "python scripts/validate_capabilities.py",
+                             "status": "complete",
+                             "known_gaps": [
+                                 "Datasets oficiais não são baixados implicitamente; stores de Opportunity legados continuam em contrato separado."
+                             ]
+                         },
+                         {
+                             "capability_id": "interview_workflows",
+                             "label": "Interview, STAR e Follow-up",
+                             "frontend_route": "/interviews",
+                             "api_endpoints": [
+                                 "GET /api/v1/interviews",
+                                 "POST /api/v1/interviews",
+                                 "GET /api/v1/interviews/{session_id}/preparation",
+                                 "POST /api/v1/interviews/{session_id}/prepare",
+                                 "GET /api/v1/interviews/star-stories",
+                                 "POST /api/v1/interviews/star-stories",
+                                 "GET /api/v1/interviews/questions",
+                                 "POST /api/v1/interviews/questions",
+                                 "GET /api/v1/interviews/answers",
+                                 "POST /api/v1/interviews/answers",
+                                 "GET /api/v1/interviews/follow-ups",
+                                 "POST /api/v1/interviews/follow-ups",
+                                 "POST /api/v1/interviews/ai/{task_id}"
+                             ],
+                             "backend_services": ["apps/api/routes/interviews.py"],
+                             "core_modules": [
+                                 "modules/interviews/models.py",
+                                 "modules/interviews/preparation.py",
+                                 "modules/ai/career_workflows.py"
+                             ],
+                             "stores": ["modules/storage/career_workflows.py"],
+                             "profile_integration": "Preparação e drafts usam somente evidências confirmadas e source refs.",
+                             "context_purpose": "interview",
+                             "ai_support": {
+                                 "enabled": true,
+                                 "prompt_ids": [
+                                     "interview_question_generation_v1",
+                                     "interview_answer_drafting_v1",
+                                     "star_story_structuring_v1",
+                                     "follow_up_drafting_v1"
+                                 ],
+                                 "providers": ["local", "gemini", "openai"],
+                                 "fallback": "Preparação local e drafts conservadores revisáveis"
+                             },
+                             "extension_support": "Sem envio de entrevista, resposta ou follow-up pela extensão.",
+                             "dedupe_strategy": "IDs estáveis e vínculos SQLite; preparação é única por session_id.",
+                             "snapshot_support": "Session guarda IDs dos snapshots de vaga/currículo e evidence_scope_id.",
+                             "tests": [
+                                 "tests/test_interview_and_career_workflows.py",
+                                 "tests/test_api_interview_career.py",
+                                 "tests/test_ai_career_workflow_tasks.py"
+                             ],
+                             "docs": [
+                                 "docs/02-architecture/interview-and-career-workflows.md",
+                                 "docs/03-business-rules/interview-star-follow-up.md"
+                             ],
+                             "verification_ref": "capability:interview_workflows",
+                             "verification_base_commit": "c7aca1aba9fcd9eba858b5416316a380abb5f2d0",
+                             "verification_date": "2026-08-10",
+                             "verification_command": "python scripts/validate_capabilities.py",
+                             "status": "complete",
+                             "known_gaps": ["Follow-up permanece rascunho e envio é sempre manual."]
+                         },
+                         {
+                             "capability_id": "career_actions",
+                             "label": "Tarefas, Reminders e Career Plan",
+                             "frontend_route": "/career",
+                             "api_endpoints": [
+                                 "GET /api/v1/career/tasks",
+                                 "POST /api/v1/career/tasks",
+                                 "GET /api/v1/career/reminders",
+                                 "POST /api/v1/career/reminders",
+                                 "GET /api/v1/career/plans",
+                                 "POST /api/v1/career/plans",
+                                 "POST /api/v1/career/calendar/export",
+                                 "POST /api/v1/career/ai/{task_id}"
+                             ],
+                             "backend_services": ["apps/api/routes/career.py"],
+                             "core_modules": [
+                                 "modules/career_actions/models.py",
+                                 "modules/career_actions/ics.py",
+                                 "modules/ai/career_workflows.py"
+                             ],
+                             "stores": ["modules/storage/career_workflows.py"],
+                             "profile_integration": "Planos citam perfil/evidências sem promover recomendações a fatos.",
+                             "context_purpose": "career_plan",
+                             "ai_support": {
+                                 "enabled": true,
+                                 "prompt_ids": [
+                                     "career_plan_explanation_v1",
+                                     "certification_recommendation_explanation_v1",
+                                     "project_gap_recommendation_v1"
+                                 ],
+                                 "providers": ["local", "gemini", "openai"],
+                                 "fallback": "Tarefas, plano e ICS locais"
+                             },
+                             "extension_support": "Sem calendário externo, notificações ou execução de tarefa pela extensão.",
+                             "dedupe_strategy": "IDs próprios e upsert transacional no SQLite schema 7.",
+                             "snapshot_support": "dependency_hash marca plano stale quando dependências mudam.",
+                             "tests": [
+                                 "tests/test_interview_and_career_workflows.py",
+                                 "tests/test_api_interview_career.py"
+                             ],
+                             "docs": [
+                                 "docs/02-architecture/interview-and-career-workflows.md",
+                                 "docs/03-business-rules/career-actions.md"
+                             ],
+                             "verification_ref": "capability:career_actions",
+                             "verification_base_commit": "c7aca1aba9fcd9eba858b5416316a380abb5f2d0",
+                             "verification_date": "2026-08-10",
+                             "verification_command": "python scripts/validate_capabilities.py",
+                             "status": "complete",
+                             "known_gaps": ["ICS é somente download; nenhum calendário é alterado automaticamente."]
                          }
                      ]
 }

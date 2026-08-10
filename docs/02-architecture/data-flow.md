@@ -1,6 +1,18 @@
 # Fluxo de dados
 
-## Fluxo do MVP 1
+## Fluxo atual v1.10.1
+
+```text
+Perfil confirmado → Career Context mínimo → documentos/material
+→ fontes públicas com proveniência → dedupe/taxonomia → ranking local
+→ Application Lab/Tracker → Interview/STAR/follow-up draft
+→ tarefas/lembretes/Career Plan → ação humana
+```
+
+Observações, rankings, mappings, entrevistas e ações novas usam SQLite schema 7. IA externa é opt-in,
+recebe contexto mínimo e sempre produz candidato revisável. O fluxo abaixo descreve o MVP histórico.
+
+## Fluxo histórico do MVP 1
 
 ```text
 1. Usuário envia PDF
