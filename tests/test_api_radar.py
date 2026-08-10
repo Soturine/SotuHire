@@ -51,6 +51,14 @@ def _fake_fetch(self, url: str, *, delay_seconds: float = 0.2) -> FetchResult:
     )
 
 
+def _patch_scraping_fetch(monkeypatch) -> None:  # noqa: ANN001
+    monkeypatch.setattr("modules.scraping.client.ScrapingClient.fetch", _fake_fetch)
+    monkeypatch.setattr(
+        "modules.scraping.client.ScrapingClient.fetch_conditional",
+        lambda self, url, **kwargs: _fake_fetch(self, url),
+    )
+
+
 def _create_wishlist(client) -> str:
     response = client.post(
         "/api/v1/radar/wishlists",
@@ -88,7 +96,7 @@ def test_radar_wishlist_source_run_alert_and_save_actions(
     monkeypatch,
 ) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
-    monkeypatch.setattr("modules.scraping.client.ScrapingClient.fetch", _fake_fetch)
+    _patch_scraping_fetch(monkeypatch)
     client = api_client()
     wishlist_id = _create_wishlist(client)
     source_id = _create_rss_source(client)
@@ -140,7 +148,7 @@ def test_radar_dedupes_repeated_results_and_guides_planned_sources(
     monkeypatch,
 ) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
-    monkeypatch.setattr("modules.scraping.client.ScrapingClient.fetch", _fake_fetch)
+    _patch_scraping_fetch(monkeypatch)
     client = api_client()
     wishlist_id = _create_wishlist(client)
     source_id = _create_rss_source(client)
@@ -183,7 +191,7 @@ def test_radar_ai_explanation_uses_provider_without_returning_secret(
     monkeypatch,
 ) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
-    monkeypatch.setattr("modules.scraping.client.ScrapingClient.fetch", _fake_fetch)
+    _patch_scraping_fetch(monkeypatch)
 
     class FakeGeminiProvider:
         name = "gemini"
@@ -256,6 +264,10 @@ def test_radar_invalid_rss_returns_friendly_source_error(
         )
 
     monkeypatch.setattr("modules.scraping.client.ScrapingClient.fetch", invalid_fetch)
+    monkeypatch.setattr(
+        "modules.scraping.client.ScrapingClient.fetch_conditional",
+        lambda self, url, **kwargs: invalid_fetch(self, url),
+    )
     client = api_client()
     wishlist_id = _create_wishlist(client)
     source_id = _create_rss_source(client)

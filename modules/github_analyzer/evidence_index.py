@@ -154,9 +154,7 @@ def _secret_evidence(files: list[SelectedRepositoryFile]) -> list[EvidenceItem]:
                 )
                 break
         else:
-            if contains_provider_secret(
-                file.content, require_context_for_modern_gemini=True
-            ):
+            if contains_provider_secret(file.content, require_context_for_modern_gemini=True):
                 items.append(
                     EvidenceItem(
                         claim="Possible exposed secret detected in sampled content.",

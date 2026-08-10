@@ -5,7 +5,7 @@ import { server } from "@/test/server";
 
 import { makeApi } from "./client";
 
-const baseUrl = "http://api.test/api/v1";
+const baseUrl = "http://127.0.0.1:8787/api/v1";
 
 describe("data reliability client", () => {
   it("normalizes health issues from a real API envelope", async () => {

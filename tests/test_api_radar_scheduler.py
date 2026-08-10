@@ -34,6 +34,14 @@ def _fake_fetch(self, url: str, *, delay_seconds: float = 0.2) -> FetchResult:
     )
 
 
+def _patch_scraping_fetch(monkeypatch) -> None:  # noqa: ANN001
+    monkeypatch.setattr("modules.scraping.client.ScrapingClient.fetch", _fake_fetch)
+    monkeypatch.setattr(
+        "modules.scraping.client.ScrapingClient.fetch_conditional",
+        lambda self, url, **kwargs: _fake_fetch(self, url),
+    )
+
+
 def _create_wishlist(client, name: str = "Engenharia multi area") -> str:
     response = client.post(
         "/api/v1/radar/wishlists",
@@ -73,7 +81,7 @@ def test_scheduler_crud_run_now_notifications_and_cooldown(
     monkeypatch,
 ) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
-    monkeypatch.setattr("modules.scraping.client.ScrapingClient.fetch", _fake_fetch)
+    _patch_scraping_fetch(monkeypatch)
     client = api_client()
     wishlist_id = _create_wishlist(client)
     source_id = _create_rss_source(client)
@@ -213,7 +221,7 @@ def test_scheduler_handles_no_active_source_with_warning(tmp_path: Path, monkeyp
 
 def test_scheduler_uses_profile_context_when_enabled(tmp_path: Path, monkeypatch) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
-    monkeypatch.setattr("modules.scraping.client.ScrapingClient.fetch", _fake_fetch)
+    _patch_scraping_fetch(monkeypatch)
     client = api_client()
     client.post(
         "/api/v1/profile/items",
