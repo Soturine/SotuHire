@@ -2,7 +2,12 @@
 
 from typing import Any
 
-from modules.matching.domain_weights import MatchWeights, weights_for_domain
+from modules.matching.domain_weights import (
+    DomainMatchingPolicy,
+    MatchWeights,
+    policy_for_domain,
+    weights_for_domain,
+)
 from modules.matching.models import (
     OTHER_PROFESSIONAL_REGISTRATION_OPTION,
     CandidateEvidence,
@@ -28,6 +33,7 @@ __all__ = [
     "analyze_match_v2",
     "CandidateEvidence",
     "CriticalGap",
+    "DomainMatchingPolicy",
     "MatchExplanation",
     "MatchRequirement",
     "MatchResultV2",
@@ -35,6 +41,7 @@ __all__ = [
     "MatchWeights",
     "OTHER_PROFESSIONAL_REGISTRATION_OPTION",
     "ProfessionalRegistrationInput",
+    "policy_for_domain",
     "RequirementMatch",
     "TransferableSkillMatch",
     "weights_for_domain",

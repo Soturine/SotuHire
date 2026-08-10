@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Annotated
 
 from fastapi import APIRouter, Depends
+from modules.tracker.career_analytics import CareerAnalyticsReport
 
 from apps.api.routes.responses import ok
 from apps.api.schemas.analysis import (
@@ -84,3 +85,11 @@ def tracker_sources(
 ) -> ApiEnvelope[TrackerSourcesResponse]:
     """Return source performance metrics."""
     return ok(service.sources())
+
+
+@router.get("/analytics", response_model=ApiEnvelope[CareerAnalyticsReport])
+def tracker_analytics(
+    service: TrackerDependency,
+) -> ApiEnvelope[CareerAnalyticsReport]:
+    """Return explainable descriptive analytics, never causal claims."""
+    return ok(service.analytics())

@@ -7,6 +7,7 @@ from modules.context import CareerContext, CareerContextEngine, CareerContextPur
 from modules.core.text_utils import normalize_text
 from modules.schemas.job_analysis import JobAnalysisSchema
 from modules.storage.models import StoredAnalysis
+from modules.tracker.career_analytics import CareerAnalyticsReport, build_career_analytics
 from modules.tracker.dashboard import (
     calculate_application_funnel,
     calculate_dashboard_metrics,
@@ -189,6 +190,10 @@ class TrackerService:
                 for item in calculate_source_metrics(self.tracker.list_analyses())
             ]
         )
+
+    def analytics(self) -> CareerAnalyticsReport:
+        """Return descriptive funnel and segment analytics with sample disclosure."""
+        return build_career_analytics(self.tracker.list_analyses())
 
     def _get(self, record_id: str) -> StoredAnalysis:
         record = self.tracker.store.get(record_id)
