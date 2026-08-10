@@ -4,6 +4,30 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [1.11.0] - 2026-08-10
+
+### Adicionado
+
+- Políticas determinísticas de matching para 13 domínios, analytics explicável e updater explícito
+  com preview/apply/status/rollback para CBO, QBQ, ESCO e O*NET.
+- Interoperabilidade opt-in com Ollama, LM Studio e endpoints OpenAI-compatible, incluindo health
+  explícito e matriz completa de 25 AiTasks.
+- Settings reorganizado em Geral, Idioma, Aparência, IA, Privacidade, Dados, Extensão,
+  Notificações, Ajuda e Sobre.
+
+### Segurança
+
+- Transporte SSRF-safe conecta ao mesmo IP validado e revalida redirects; boundaries de URL,
+  Origin, paths, restore e argumentos do Chromium foram endurecidos.
+- GitHub Actions/CodeQL usam runtime atual e pins SHA; frontend resolve nanoid 3.3.18 sem override.
+- PyMuPDF AGPL/comercial foi substituído por pypdf e ReportLab BSD.
+
+### Alterado
+
+- Aplicação/Companion 1.11.0; extensão permanece 0.10.0 e SQLite permanece schema 7 porque não houve
+  mudança material nesses contratos.
+- Documentação, roadmap, arquitetura, regras, auditorias e evidência de release foram sincronizados.
+
 ## [1.10.1] - 2026-08-10
 
 ### Adicionado

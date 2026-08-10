@@ -1,6 +1,6 @@
 # Escopo atual do produto
 
-O SotuHire v1.10.1 é um assistente de carreira local-first, multiárea e orientado por
+O SotuHire v1.11.0 é um assistente de carreira local-first, multiárea e orientado por
 evidências. Ele organiza perfil, documentos, oportunidades e candidaturas; compara requisitos;
 prepara materiais revisáveis; e preserva os snapshots usados em cada decisão. IA externa é
 opcional e nunca substitui o caminho determinístico local.
@@ -22,6 +22,9 @@ opcional e nunca substitui o caminho determinístico local.
 - locale/tema adaptativos, ajuda contextual e onboarding;
 - extensão MV3 0.10.0 com captura assistida, preferências e Companion idempotente;
 - Gemini/OpenAI opt-in, fallback local explícito, schema estruturado e erros tipados.
+- Ollama, LM Studio e OpenAI-compatible com loopback default e health explícito;
+- matching determinístico por domínio, analytics descritivo e taxonomy updater reversível;
+- boundaries SSRF, URL, paths, restore e launcher endurecidos e dependências auditadas.
 
 ## Modos
 
@@ -37,7 +40,7 @@ opcional e nunca substitui o caminho determinístico local.
 Não há auto-apply, login automático, form filling, bypass de CAPTCHA, pagamento, inscrição,
 envio de documento/mensagem, scraping autenticado agressivo ou decisão crítica autônoma.
 Download automático de datasets oficiais, envio de follow-up, calendário externo, auto-apply e
-migração total dos stores JSON legados permanecem fora da v1.10.1.
+migração automática/destrutiva dos stores JSON legados permanecem fora da v1.11.0.
 
 O antigo documento de MVP foi preservado como [histórico](../history/mvp-scope.md), sem ser
 usado como descrição do produto atual.

@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Soturine/SotuHire/actions/workflows/ci.yml)
 [![Docs](https://img.shields.io/badge/docs-GitHub%20Pages-blue)](https://soturine.github.io/SotuHire/)
-[![Release](https://img.shields.io/badge/release-v1.10.1-brightgreen)](https://github.com/Soturine/SotuHire/releases/tag/v1.10.1)
+[![Release](https://img.shields.io/github/v/release/Soturine/SotuHire?label=release)](https://github.com/Soturine/SotuHire/releases/latest)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-3776AB)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
@@ -10,7 +10,7 @@
 
 SotuHire é um assistente de carreira local-first, multiárea e orientado por evidências. Ele reúne currículo, trajetória acadêmica, portfólio, preferências, oportunidades, editais e histórico de candidaturas para ajudar a pessoa usuária a entender o próprio perfil e tomar decisões melhores sem entregar o controle a uma automação opaca.
 
-O produto funciona como uma camada de continuidade entre o **Perfil Profissional Universal**, o **Career Context**, as análises de currículo e vaga, o Radar, o Tracker, o Lattes, os editais e a extensão do navegador. Dados confirmados mantêm origem e referência; itens incertos continuam como candidatos revisáveis. A IA é opcional: Gemini e OpenAI podem enriquecer análises, enquanto o caminho local permanece disponível como base e fallback explícito.
+O produto funciona como uma camada de continuidade entre o **Perfil Profissional Universal**, o **Career Context**, as análises de currículo e vaga, o Radar, o Tracker, o Lattes, os editais e a extensão do navegador. Dados confirmados mantêm origem e referência; itens incertos continuam como candidatos revisáveis. A IA é opcional: Gemini, OpenAI, Ollama, LM Studio e endpoints OpenAI-compatible podem enriquecer análises, enquanto o caminho determinístico local permanece disponível como base e fallback explícito.
 
 A abordagem é local-first: banco, stores legados, snapshots e backups ficam no computador da pessoa usuária. Nenhuma candidatura, inscrição, pagamento ou envio de documento é realizado automaticamente. O SotuHire também não é apenas um “analisador de currículo”: ele preserva o que foi analisado, conecta evidências ao histórico e permite acompanhar como perfil, oportunidades e resultados evoluem.
 
@@ -112,21 +112,17 @@ Cada fluxo recebe apenas o contexto necessário. Evidências sensíveis são omi
 
 ## Preview
 
-| Entrevista, STAR e follow-up | Plano e ações de carreira |
+| Settings consolidado | IA local explícita |
 | --- | --- |
-| ![Fluxos de entrevista fictícios](docs/assets/screenshots/sotuhire-v1.10.1-interview-star-followup.png) | ![Ações de carreira fictícias](docs/assets/screenshots/sotuhire-v1.10.1-career-actions-plan.png) |
+| ![Categorias de Settings com dados fictícios](docs/assets/screenshots/sotuhire-v1.11.0-settings-categories.png) | ![Health check de IA local sem network scan](docs/assets/screenshots/sotuhire-v1.11.0-local-ai-health.png) |
 
-Veja também a [galeria completa de telas da v1.10.1](docs/releases/v1.10.1.md).
+Veja também a [galeria e as notas da release atual](https://github.com/Soturine/SotuHire/releases/latest).
 
-![Jornada SotuHire v1.10.1: inteligência, entrevista e ações](docs/assets/screenshots/sotuhire-v1.10.1-career-intelligence-walkthrough.gif)
+![Jornada de segurança, IA local e inteligência](docs/assets/screenshots/sotuhire-v1.11.0-security-local-ai-intelligence.gif)
 
-| Tema escuro e shell em inglês | Ajuda contextual |
+| Analytics de carreira | Segurança e privacidade |
 | --- | --- |
-| ![Dashboard fictício dark/en-US](docs/assets/screenshots/sotuhire-v1.10.1-home-dark-en.png) | ![Help Drawer](docs/assets/screenshots/sotuhire-v1.10.1-help-drawer.png) |
-
-| Radar com fontes oficiais | Tema e idioma |
-| --- | --- |
-| ![Radar com fontes oficiais fictícias](docs/assets/screenshots/sotuhire-v1.10.1-radar-official-sources.png) | ![Preferências de tema e idioma](docs/assets/screenshots/sotuhire-v1.10.1-settings-theme-locale.png) |
+| ![Analytics fictício e não causal](docs/assets/screenshots/sotuhire-v1.11.0-career-analytics.png) | ![Status local de segurança](docs/assets/screenshots/sotuhire-v1.11.0-security-status.png) |
 
 | Perfil Profissional Universal | Match |
 | --- | --- |
@@ -139,10 +135,6 @@ Veja também a [galeria completa de telas da v1.10.1](docs/releases/v1.10.1.md).
 | Lattes e Acadêmico | Editais e Concursos |
 | --- | --- |
 | ![Perfil acadêmico e Lattes](docs/assets/screenshots/sotuhire-web-profile-lattes.png) | ![Editais e concursos](docs/assets/screenshots/sotuhire-web-public-exams.png) |
-
-| Configuração de IA | Dados e privacidade |
-| --- | --- |
-| ![Configuração de IA](docs/assets/screenshots/sotuhire-web-settings-ai.png) | ![Data health, backup e restauração](docs/assets/screenshots/sotuhire-web-privacy.png) |
 
 | Popup da extensão | Análise dentro do GitHub |
 | --- | --- |
@@ -360,7 +352,7 @@ O SotuHire não realiza auto-apply, candidatura automática, inscrição automá
 
 ## Roadmap
 
-As próximas frentes aprofundam taxonomias, interoperabilidade com IA local, avaliação multi-provider e evidências acadêmicas/profissionais, sempre sob aprovação humana. Consulte o [roadmap atual](docs/01-product/roadmap.md) para critérios, riscos e itens fora de escopo.
+As próximas frentes ampliam evidências acadêmicas/profissionais e evoluem para um copiloto com aprovação humana etapa a etapa. Consulte o [roadmap atual](docs/01-product/roadmap.md) para critérios, riscos e itens fora de escopo.
 
 ## Contribuição
 
@@ -378,4 +370,4 @@ Distribuído sob a [Apache License 2.0](LICENSE).
 
 ---
 
-Release atual: [v1.10.1](https://github.com/Soturine/SotuHire/releases/tag/v1.10.1) · [Notas da release](docs/releases/v1.10.1.md) · [Tag](https://github.com/Soturine/SotuHire/tree/v1.10.1)
+[Release atual](https://github.com/Soturine/SotuHire/releases/latest) · [Histórico de releases](docs/releases/) · [CHANGELOG](CHANGELOG.md)

@@ -1,23 +1,16 @@
 # Roadmap do SotuHire
 
-## Estado atual — v1.10.1
+## Estado atual — v1.11.0
 
 O produto conecta Perfil Universal, documentos, fontes públicas, taxonomias, oportunidades,
 candidaturas, entrevistas e ações de carreira. O histórico detalhado fica no
 [CHANGELOG](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md), na
-[implementação](../07-development/v1.10.1-implementation.md) e nas
-[release notes](../releases/v1.10.1.md).
+[implementação](../07-development/v1.11.0-implementation.md) e nas
+[release notes](../releases/v1.11.0.md).
 
 As prioridades continuam local-first, multiárea, evidence-first e sob aprovação humana. Nenhuma próxima etapa inclui auto-apply, login automático, captura de sessão ou decisão crítica autônoma.
 
 ## Próximas versões
-
-### v1.11.0 — Advanced Career Intelligence & Local AI Interoperability
-
-- taxonomias mais profundas e conectores oficiais adicionais;
-- Ollama/LM Studio/OpenAI-compatible maduro;
-- avaliação multi-provider por task e matching por domínio;
-- analytics de carreira explicável.
 
 ### v1.11.1 — Portfolio, Academic & Professional Evidence Expansion
 

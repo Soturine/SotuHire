@@ -13,7 +13,10 @@ Os valores vêm de traces, benchmarks e feedback; conteúdo pessoal completo nã
 
 Qualidade por custo e por latência só é calculada quando ambas as grandezas existem. Custo desconhecido permanece ausente; o sistema não inventa preço. Um provider não é declarado vencedor definitivo apenas por média agregada, pois tarefa, domínio, prompt e amostra podem diferir.
 
-O provider local é a referência de disponibilidade e privacidade. Gemini e OpenAI são opt-in. Ollama, LM Studio e endpoints OpenAI-compatible continuam como capacidade futura: a v1.10.1 não introduz um adapter novo sem cobertura suficiente de structured output e fallback.
+O provider local determinístico é a referência de disponibilidade e privacidade. Gemini e OpenAI
+são opt-in. A v1.11.0 adiciona o adapter OpenAI-compatible para Ollama, LM Studio e endpoint local
+customizado, com structured output validado por schema. Esses providers permanecem `unverified`
+até benchmark real por modelo; compatibilidade de protocolo não é afirmação de qualidade.
 
 ## Baseline da v1.9.7
 

@@ -28,11 +28,14 @@ SQLite local adiciona transações, foreign keys, migrações e vínculos entre 
 - [Snapshots](02-architecture/application-snapshots.md)
 - [Backup, restore e health](02-architecture/backup-restore-and-data-health.md)
 - [Linhagem e dedupe](02-architecture/data-lineage-and-deduplication.md)
-- [Auditoria final de integração v1.10.1](00-audit/v1.10.1-final-product-integration-audit.md)
+- [Auditoria integral v1.11.0](00-audit/v1.11.0-full-repository-audit.md)
 
 ## IA responsável
 
 Gemini e OpenAI são opcionais. O caminho local continua disponível e o fallback é explícito. Itens não confirmados não devem virar fatos seguros em ATS, Tailor, Radar ou edital.
+
+Ollama, LM Studio e endpoints OpenAI-compatible podem ser testados explicitamente em loopback;
+nenhuma descoberta de rede é realizada.
 
 - [Orquestração e confiança](04-ai/ai-orchestration-and-confidence.md)
 - [Catálogo de providers/modelos](02-architecture/ai-provider-model-catalog.md)
@@ -41,7 +44,7 @@ Gemini e OpenAI são opcionais. O caminho local continua disponível e o fallbac
 - [Golden datasets](09-testing/golden-datasets.md)
 - [Arquitetura de avaliação](04-ai/ai-evaluation-architecture.md)
 - [Taxonomia de erros](04-ai/provider-error-taxonomy.md)
-- [Auditoria de providers v1.10.1](00-audit/v1.10.1-ai-provider-integration-audit.md)
+- [Auditoria de wiring de IA v1.11.0](00-audit/v1.11.0-ai-wiring-audit.md)
 - [Feedback humano e outcomes](04-ai/human-feedback.md)
 
 ## Extensão e fontes

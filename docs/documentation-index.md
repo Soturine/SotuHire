@@ -27,6 +27,9 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 ## Arquitetura
 
+- [Interoperabilidade com IA local](02-architecture/local-ai-interoperability.md)
+- [Matching por domínio](02-architecture/domain-matching-policies.md)
+- [Atualizações de taxonomia](02-architecture/taxonomy-updates.md)
 - [Visão geral](02-architecture/overview.md)
 - [Mapa de integração de módulos](02-architecture/module-integration-map.md)
 - [Matriz verificável de capacidades](02-architecture/integration-capability-matrix.md)
@@ -91,6 +94,10 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 ## Testes e engenharia
 
+- [Aceite de segurança v1.11.0](09-testing/v1.11.0-security-acceptance.md)
+- [Benchmarks provider/domínio v1.11.0](09-testing/v1.11.0-provider-domain-benchmarks.md)
+- [Segurança de dependências](06-engineering/dependency-security.md)
+- [Licenciamento PDF](06-engineering/pdf-renderer-licensing.md)
 - [QA e testes](06-engineering/qa-testing.md)
 - [CI/CD](06-engineering/ci-cd.md)
 - [Segurança e privacidade](06-engineering/security-privacy.md)
@@ -120,5 +127,5 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 ## Releases
 
-- [Release atual — v1.10.1](releases/v1.10.1.md)
+- [Release atual — v1.11.0](releases/v1.11.0.md)
 - [Releases anteriores no GitHub](https://github.com/Soturine/SotuHire/tree/main/docs/releases)

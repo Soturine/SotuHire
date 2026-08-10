@@ -48,6 +48,12 @@ nav:
   - Início: index.md
   - Documentação: documentation-index.md
   - Auditoria:
+      - Baseline security/deps v1.11.0: 00-audit/v1.11.0-security-dependency-baseline.md
+      - Dependências v1.11.0: 00-audit/v1.11.0-dependency-review.md
+      - Dependabot alerts v1.11.0: 00-audit/v1.11.0-dependabot-security-alerts.md
+      - CodeQL v1.11.0: 00-audit/v1.11.0-codeql-remediation.md
+      - Wiring de IA v1.11.0: 00-audit/v1.11.0-ai-wiring-audit.md
+      - Repositório integral v1.11.0: 00-audit/v1.11.0-full-repository-audit.md
       - Baseline completo v1.10.1: 00-audit/v1.10.1-baseline-full-repository-audit.md
       - Código morto e dívida v1.10.1: 00-audit/v1.10.1-dead-code-dedup-and-debt-audit.md
       - Providers v1.10.1: 00-audit/v1.10.1-ai-provider-integration-audit.md
@@ -83,6 +89,9 @@ nav:
       - Opportunity Fit Score: 01-product/user-preferences-opportunity-fit.md
       - Concurso Mode: 01-product/concurso-mode.md
   - Arquitetura:
+      - Interoperabilidade com IA local: 02-architecture/local-ai-interoperability.md
+      - Matching por domínio: 02-architecture/domain-matching-policies.md
+      - Atualizações de taxonomia: 02-architecture/taxonomy-updates.md
       - I18n e tema: 02-architecture/i18n-and-theme.md
       - Sistema de ajuda: 02-architecture/help-system.md
       - Fontes oficiais: 02-architecture/official-opportunity-sources.md
@@ -130,6 +139,8 @@ nav:
       - Linhagem e deduplicação: 02-architecture/data-lineage-and-deduplication.md
       - Storage e histórico legado: 02-architecture/storage-and-history.md
   - Regras de negócio:
+      - Matching por domínio: 03-business-rules/domain-matching.md
+      - Analytics de carreira: 03-business-rules/career-analytics.md
       - Deduplicação de oportunidades: 03-business-rules/opportunity-deduplication.md
       - Mapeamento taxonômico: 03-business-rules/taxonomy-mapping.md
       - Interview STAR e follow-up: 03-business-rules/interview-star-follow-up.md
@@ -215,6 +226,9 @@ nav:
       - GitHub portfolio analyzer: 05-data-sources/github-portfolio-analyzer.md
       - JobSpy experimental reference: 05-data-sources/jobspy-experimental-reference.md
   - Engenharia:
+      - Segurança de dependências: 06-engineering/dependency-security.md
+      - Licenciamento PDF: 06-engineering/pdf-renderer-licensing.md
+      - Remediação CodeQL: 06-engineering/codeql-remediation.md
       - Frontend UX e acessibilidade: 06-engineering/frontend-ux-accessibility.md
       - Threat model: 06-engineering/threat-model.md
       - Clean Code e SOLID: 06-engineering/clean-code-solid.md
@@ -225,6 +239,8 @@ nav:
       - Recuperação e quarantine JSON: 06-engineering/data-recovery-and-json-quarantine.md
       - Avoid overengineering: 06-engineering/avoid-overengineering.md
   - Testes:
+      - Aceite de segurança v1.11.0: 09-testing/v1.11.0-security-acceptance.md
+      - Benchmarks provider/domínio v1.11.0: 09-testing/v1.11.0-provider-domain-benchmarks.md
       - Matriz de aceite v1.10.1: 09-testing/v1.10.1-acceptance-matrix.md
       - Matriz de aceite v1.9.9: 09-testing/v1.9.9-acceptance-matrix.md
       - Fixtures de ingestão: 09-testing/document-ingestion-fixtures.md
@@ -239,6 +255,7 @@ nav:
       - Application Lab: 09-testing/application-lab-testing.md
       - Resume Studio: 09-testing/resume-studio-testing.md
   - Desenvolvimento:
+      - Implementação v1.11.0: 07-development/v1.11.0-implementation.md
       - Implementação v1.10.1: 07-development/v1.10.1-implementation.md
       - Migração v1.10.1: 07-development/v1.10.1-migration.md
       - Implementação v1.9.9: 07-development/v1.9.9-implementation.md
@@ -313,6 +330,7 @@ nav:
       - Release notes v1.9.8: releases/v1.9.8.md
       - Release notes v1.9.9: releases/v1.9.9.md
       - Release notes v1.10.1: releases/v1.10.1.md
+      - Release notes v1.11.0: releases/v1.11.0.md
   - Portfólio:
       - Roteiro de demonstração: 09-portfolio/demo-script.md
       - Case study: 09-portfolio/portfolio-case-study.md

@@ -1,6 +1,6 @@
 # Mapa de integração de módulos
 
-Estado da v1.10.1 validado em 10 de agosto de 2026. O commit-base verificável de cada capacidade está na
+Estado da v1.11.0 validado em 10 de agosto de 2026. O commit-base verificável de cada capacidade está na
 [matriz de integração atual](integration-capability-matrix.md).
 
 Este mapa registra como `apps/web`, FastAPI, Local Companion, extensão e `modules/` se conectam
@@ -50,6 +50,10 @@ scores, valida evidências, aplica regras anti-invenção e decide fallback.
 | Interview e STAR | `/interviews` | `/api/v1/interviews/*` | routes + repository | `modules/interviews`, AiTask Registry | Real v1.10.1 |
 | Ações e Career Plan | `/career` | `/api/v1/career/*` | routes + repository | `modules/career_actions` | Real v1.10.1 |
 | Ajuda/tema/locale | `/help` + shell | local no navegador | sem backend | catálogo i18n e Radix | Real v1.10.1 |
+| IA local | `/settings` | `/api/v1/ai/local/*` | route explícita | `modules/ai/local_interop.py` | Real v1.11.0 |
+| Matching por domínio | consumers de Match | `/api/v1/career-intelligence/*` | route determinística | `modules/matching/domain_weights.py` | Real v1.11.0 |
+| Analytics de carreira | `/intelligence`/API | `/api/v1/tracker/analytics` | tracker | `modules/tracker/career_analytics.py` | Real v1.11.0 |
+| Taxonomy updater | API | `/api/v1/taxonomy/updates/*` | taxonomy route | `modules/taxonomy/updater.py` | Real v1.11.0 |
 
 ## Editais e concursos v1.9.3
 
