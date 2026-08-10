@@ -1547,8 +1547,7 @@ function LocalExtensionPanel() {
                   profileCandidates.mutate({
                     captureId: capture.id,
                     title: capture.title,
-                    isProject:
-                      capture.kind === "github_repo" || isGitHubWebUrl(capture.url),
+                    isProject: capture.kind === "github_repo" || isGitHubWebUrl(capture.url),
                   })
                 }
                 onReview={() => patchCapture.mutate({ captureId: capture.id, status: "reviewed" })}
