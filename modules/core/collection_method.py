@@ -13,6 +13,7 @@ CollectionMethod = Literal[
     "browser_assisted_capture",
     "extension_capture",
     "companion_capture",
+    "official_api",
     "official_api_future",
     "public_exam_manual",
     "demo_fixture",

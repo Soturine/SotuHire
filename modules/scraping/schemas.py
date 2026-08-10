@@ -83,6 +83,9 @@ class FetchResult(BaseModel):
     status_code: int
     content_type: str = ""
     text: str = ""
+    etag: str = ""
+    last_modified: str = ""
+    not_modified: bool = False
     from_cache: bool = False
     collected_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 

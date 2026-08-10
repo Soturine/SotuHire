@@ -31,6 +31,8 @@ def default_source_registry() -> SourceRegistry:
     from modules.scraping.connectors.authenticated_browser import AuthenticatedBrowserConnector
     from modules.scraping.connectors.company_career_page import CompanyCareerPageConnector
     from modules.scraping.connectors.generic_public_page import GenericPublicPageConnector
+    from modules.scraping.connectors.greenhouse import GreenhouseConnector
+    from modules.scraping.connectors.lever import LeverConnector
     from modules.scraping.connectors.manual_url import ManualUrlConnector
     from modules.scraping.connectors.rss_feed import RssFeedConnector
 
@@ -40,4 +42,6 @@ def default_source_registry() -> SourceRegistry:
     registry.register("generic_public_page", GenericPublicPageConnector)
     registry.register("company_career_page", CompanyCareerPageConnector)
     registry.register("rss", RssFeedConnector)
+    registry.register("greenhouse", GreenhouseConnector)
+    registry.register("lever", LeverConnector)
     return registry

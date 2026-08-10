@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
+from urllib.error import HTTPError
 from urllib.request import Request
 
 from modules.scraping.cache import ScrapingCache
@@ -58,6 +59,31 @@ class ScrapingClient:
         )
         return self.cache.set(result)
 
+    def fetch_conditional(
+        self,
+        url: str,
+        *,
+        etag: str = "",
+        last_modified: str = "",
+        delay_seconds: float = 2.0,
+    ) -> FetchResult:
+        """Fetch a feed using RFC validators without returning cached content as new."""
+        safety = inspect_source_safety(url)
+        if not safety.allowed:
+            raise ValueError(safety.warning)
+        if not self.robot_checker(url, self.user_agent):
+            raise PermissionError("robots.txt nao permite coleta desta URL.")
+        self.rate_limiter.wait(url, delay_seconds)
+        headers = {
+            "User-Agent": self.user_agent,
+            "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml",
+        }
+        if etag:
+            headers["If-None-Match"] = etag
+        if last_modified:
+            headers["If-Modified-Since"] = last_modified
+        return self._urllib_transport(url, headers, self.timeout_seconds, self.max_bytes)
+
     @staticmethod
     def _urllib_transport(
         url: str,
@@ -67,17 +93,32 @@ class ScrapingClient:
     ) -> FetchResult:
         validate_public_url(url, resolve=True)
         request = Request(url, headers=headers)
-        with safe_public_opener().open(request, timeout=timeout_seconds) as response:  # noqa: S310
-            final_url = response.geturl()
-            validate_public_url(final_url, resolve=True)
-            payload = response.read(max_bytes + 1)
-            if len(payload) > max_bytes:
-                raise ValueError("Resposta excede o limite seguro de coleta.")
-            content_type = response.headers.get("Content-Type", "")
-            encoding = response.headers.get_content_charset() or "utf-8"
+        try:
+            with safe_public_opener().open(request, timeout=timeout_seconds) as response:  # noqa: S310
+                final_url = response.geturl()
+                validate_public_url(final_url, resolve=True)
+                payload = response.read(max_bytes + 1)
+                if len(payload) > max_bytes:
+                    raise ValueError("Resposta excede o limite seguro de coleta.")
+                content_type = response.headers.get("Content-Type", "")
+                encoding = response.headers.get_content_charset() or "utf-8"
+                return FetchResult(
+                    url=final_url,
+                    status_code=response.status,
+                    content_type=content_type,
+                    text=payload.decode(encoding, errors="replace"),
+                    etag=response.headers.get("ETag", ""),
+                    last_modified=response.headers.get("Last-Modified", ""),
+                )
+        except HTTPError as exc:
+            if exc.code != 304:
+                raise
             return FetchResult(
-                url=final_url,
-                status_code=response.status,
-                content_type=content_type,
-                text=payload.decode(encoding, errors="replace"),
+                url=url,
+                status_code=304,
+                etag=exc.headers.get("ETag", request.get_header("If-None-Match", "")),
+                last_modified=exc.headers.get(
+                    "Last-Modified", request.get_header("If-Modified-Since", "")
+                ),
+                not_modified=True,
             )
