@@ -13,7 +13,13 @@
         <strong>SotuHire</strong>
         <span>GitHub & Career Companion</span>
       </div>
-      <span class="version">v0.9.5</span>
+      <select id="ui-locale" class="compact-select" aria-label="Idioma">
+        <option value="system">Auto</option>
+        <option value="pt-BR">PT</option>
+        <option value="en-US">EN</option>
+      </select>
+      <button id="theme-toggle" class="icon-button" type="button" aria-label="Alternar tema">◐</button>
+      <span class="version">v0.10.0</span>
     </header>
 
     <section class="status-strip" aria-label="Status do Companion">
@@ -34,16 +40,16 @@
 
     <main>
       <section class="hero-card">
-        <span class="eyebrow">Página atual</span>
-        <h1 id="page-title">Capturar e analisar</h1>
-        <p>
+        <span class="eyebrow" data-i18n="currentPage">Página atual</span>
+        <h1 id="page-title" data-i18n-fallback="captureTitle">Capturar e analisar</h1>
+        <p data-i18n="heroDescription">
           Transforme sinais públicos em evidências revisáveis, sem auto-apply.
         </p>
         <div class="hero-actions">
-          <button data-action="project-standalone" class="primary">
+          <button data-action="project-standalone" class="primary" data-i18n="analyzeProject">
             ✦ Analisar GitHub/portfólio
           </button>
-          <button data-action="capture" class="secondary">Salvar vaga</button>
+          <button data-action="capture" class="secondary" data-i18n="saveJob">Salvar vaga</button>
         </div>
       </section>
 
@@ -53,13 +59,13 @@
           data-tab="capture-panel"
           aria-selected="true"
         >
-          Capturar
+          <span data-i18n="captureTab">Capturar</span>
         </button>
         <button class="tab" data-tab="projects-panel" aria-selected="false">
-          Projetos
+          <span data-i18n="projectsTab">Projetos</span>
         </button>
         <button class="tab" data-tab="ai-panel" aria-selected="false">
-          IA
+          <span data-i18n="aiTab">IA</span>
         </button>
       </nav>
 
@@ -263,6 +269,16 @@
         </div>
       </section>
     </main>
+
+    <details class="help-panel">
+      <summary data-i18n="helpTitle">Ajuda e privacidade</summary>
+      <div>
+        <strong data-i18n="helpWhat">O que esta extensão faz?</strong>
+        <p data-i18n="helpBody">Captura apenas conteúdo público visível e cria dados revisáveis. Nunca envia candidatura, preenche formulário ou contorna login.</p>
+        <strong data-i18n="helpAi">Como a IA funciona?</strong>
+        <p data-i18n="helpAiBody">O provider é opcional. Revise toda sugestão e confirme fatos, requisitos e fontes no SotuHire.</p>
+      </div>
+    </details>
 
     <footer>
       <a href="http://127.0.0.1:5173" target="_blank" rel="noreferrer"

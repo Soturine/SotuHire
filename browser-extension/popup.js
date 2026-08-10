@@ -14,7 +14,77 @@ const keyState = document.querySelector("#key-state");
 const compatibilityStatus = document.querySelector("#compatibility-status");
 const queueImportFile = document.querySelector("#queue-import-file");
 const queueRuntime = globalThis.SotuHireQueue;
+const uiLocale = document.querySelector("#ui-locale");
+const themeToggle = document.querySelector("#theme-toggle");
 let providerConfiguration = {};
+let uiPreferences = { locale: "system", theme: "system" };
+
+const UI_MESSAGES = {
+  "pt-BR": {
+    currentPage: "Página atual",
+    captureTitle: "Capturar e analisar",
+    heroDescription: "Transforme sinais públicos em evidências revisáveis, sem auto-apply.",
+    analyzeProject: "✦ Analisar GitHub/portfólio",
+    saveJob: "Salvar vaga",
+    captureTab: "Capturar",
+    projectsTab: "Projetos",
+    aiTab: "IA",
+    helpTitle: "Ajuda e privacidade",
+    helpWhat: "O que esta extensão faz?",
+    helpBody:
+      "Captura apenas conteúdo público visível e cria dados revisáveis. Nunca envia candidatura, preenche formulário ou contorna login.",
+    helpAi: "Como a IA funciona?",
+    helpAiBody:
+      "O provider é opcional. Revise toda sugestão e confirme fatos, requisitos e fontes no SotuHire.",
+    theme: "Tema",
+  },
+  "en-US": {
+    currentPage: "Current page",
+    captureTitle: "Capture and analyze",
+    heroDescription: "Turn public signals into reviewable evidence, without auto-apply.",
+    analyzeProject: "✦ Analyze GitHub/portfolio",
+    saveJob: "Save job",
+    captureTab: "Capture",
+    projectsTab: "Projects",
+    aiTab: "AI",
+    helpTitle: "Help and privacy",
+    helpWhat: "What does this extension do?",
+    helpBody:
+      "It captures only visible public content and creates reviewable data. It never submits applications, fills forms, or bypasses login.",
+    helpAi: "How does AI work?",
+    helpAiBody:
+      "The provider is optional. Review every suggestion and confirm facts, requirements, and sources in SotuHire.",
+    theme: "Theme",
+  },
+};
+
+function resolvedLocale() {
+  if (uiPreferences.locale !== "system") return uiPreferences.locale;
+  return navigator.language?.toLowerCase().startsWith("pt") ? "pt-BR" : "en-US";
+}
+
+function resolvedTheme() {
+  if (uiPreferences.theme !== "system") return uiPreferences.theme;
+  return matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function applyUiPreferences() {
+  const locale = resolvedLocale();
+  const theme = resolvedTheme();
+  const messages = UI_MESSAGES[locale];
+  document.documentElement.lang = locale;
+  document.documentElement.dataset.theme = theme;
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    const value = messages[element.dataset.i18n];
+    if (value) element.textContent = value;
+  });
+  uiLocale.value = uiPreferences.locale;
+  themeToggle.textContent = theme === "dark" ? "☾" : "☀";
+  themeToggle.title = `${messages.theme}: ${theme}`;
+  themeToggle.setAttribute("aria-label", themeToggle.title);
+}
+
+applyUiPreferences();
 
 initialize().catch((error) => showError(error.message));
 
@@ -23,7 +93,10 @@ async function initialize() {
     "aiProvider",
     "aiModels",
     "deepProjectAnalysis",
+    "uiPreferences",
   ]);
+  uiPreferences = { ...uiPreferences, ...(saved.uiPreferences || {}) };
+  applyUiPreferences();
   deepProjectAnalysis.checked = Boolean(saved.deepProjectAnalysis);
   aiProvider.value = saved.aiProvider || "sotuhire";
   const tab = await currentTab();
@@ -34,6 +107,23 @@ async function initialize() {
   await checkCompanion();
   await retryPending(false);
 }
+
+uiLocale.addEventListener("change", async () => {
+  uiPreferences.locale = uiLocale.value;
+  await chrome.storage.local.set({ uiPreferences });
+  applyUiPreferences();
+});
+
+themeToggle.addEventListener("click", async () => {
+  const order = ["system", "light", "dark"];
+  uiPreferences.theme = order[(order.indexOf(uiPreferences.theme) + 1) % order.length];
+  await chrome.storage.local.set({ uiPreferences });
+  applyUiPreferences();
+});
+
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+  if (uiPreferences.theme === "system") applyUiPreferences();
+});
 
 document.querySelectorAll(".tab").forEach((tab) => {
   tab.addEventListener("click", () => {

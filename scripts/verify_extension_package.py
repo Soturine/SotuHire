@@ -34,8 +34,8 @@ def verify_package(path: Path) -> dict[str, object]:
         raise ValueError("Artefato não é um ZIP válido.") from exc
     if packaged_manifest != expected_manifest:
         raise ValueError("Manifest empacotado diverge do manifest validado.")
-    if packaged_manifest.get("version") != "0.9.5":
-        raise ValueError("A release v1.9.9 exige extensão 0.9.5.")
+    if packaged_manifest.get("version") != "0.10.0":
+        raise ValueError("A release v1.10.1 exige extensão 0.10.0.")
     return packaged_manifest
 
 
@@ -45,7 +45,7 @@ def main() -> int:
         "path",
         type=Path,
         nargs="?",
-        default=DIST_DIR / "sotuhire-extension-v0.9.5.zip",
+        default=DIST_DIR / "sotuhire-extension-v0.10.0.zip",
     )
     args = parser.parse_args()
     manifest = verify_package(args.path)

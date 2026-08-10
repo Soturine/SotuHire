@@ -90,7 +90,7 @@ revisão humana.
 5. Fixe o SotuHire na barra do navegador, se desejar.
 
 Para testar um ZIP gerado pelo projeto, extraia-o primeiro e carregue a pasta resultante. O arquivo
-`manifest.json` informa a versão instalada; a implementação atual usa a linha `0.9.5`.
+`manifest.json` informa a versão instalada; a implementação atual usa a linha `0.10.0`.
 
 ### Iniciar a integração local
 
@@ -167,7 +167,7 @@ O popup envia sua versão ao endpoint `POST /handshake` da Local Companion. A re
 
 ```json
 {
-  "extension_version": "0.9.5",
+  "extension_version": "0.10.0",
   "companion_version": "1.9.8",
   "api_version": "v1",
   "capabilities": ["application_lab.open"],
@@ -183,7 +183,7 @@ disponível. Uma versão incompatível não é apresentada como conexão saudáv
 O site também expõe `POST /api/v1/extension/handshake` para validar a ponte entre frontend,
 FastAPI, Companion e extensão.
 
-Na 0.9.5, **Preparar candidatura** abre o Application Lab e **Abrir Resume Studio** abre o editor
+Na 0.10.0, **Preparar candidatura** abre o Application Lab e **Abrir Resume Studio** abre o editor
 somente com `capture_id` e `job_snapshot_id`. A extensão não lê nem envia currículos locais. O popup
 mostra o estado de pareamento e avisa quando uma nova versão da vaga torna artefatos anteriores
 desatualizados.

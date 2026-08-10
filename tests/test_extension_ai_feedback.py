@@ -31,5 +31,5 @@ def test_extension_feedback_version_is_094() -> None:
     manifest = (ROOT / "browser-extension" / "manifest.json").read_text(encoding="utf-8")
     popup = (ROOT / "browser-extension" / "popup.html").read_text(encoding="utf-8")
 
-    assert '"version": "0.9.5"' in manifest
-    assert "v0.9.5" in popup
+    assert '"version": "0.10.0"' in manifest
+    assert "v0.10.0" in popup

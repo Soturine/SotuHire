@@ -60,7 +60,7 @@ CHROME_STUB = r"""
       get: async () => ({}), set: async () => {}, remove: async () => {}
     }},
     runtime: {
-      getManifest: () => ({ version: "0.9.5" }),
+      getManifest: () => ({ version: "0.10.0" }),
       sendMessage: async (message) => {
         if (message.type === "SOTUHIRE_AI_STATUS") return {
           ok: true,
@@ -121,10 +121,10 @@ CHROME_STUB = r"""
     let payload = { ok: true, message: "Ação concluída no Companion local." };
     if (path.endsWith("/health")) payload = { ok: true, message: "SotuHire Local Companion conectado." };
     if (path.endsWith("/handshake")) payload = {
-      extension_version: "0.9.5",
-      companion_version: "1.9.9",
+      extension_version: "0.10.0",
+      companion_version: "1.10.1",
       api_version: "v1",
-      app_version: "1.9.9",
+      app_version: "1.10.1",
       capabilities: [
         "capture.job", "capture.public_exam", "capture.github", "capture.snapshot",
         "queue.retry", "queue.export_import", "jobposting.jsonld", "ai.own_key",
@@ -133,12 +133,12 @@ CHROME_STUB = r"""
       compatible: true,
       warnings: [],
       min_supported_extension_version: "0.9.1",
-      max_tested_extension_version: "0.9.5",
+      max_tested_extension_version: "0.10.0",
       min_supported_companion_version: "1.9.5"
     };
     if (path.includes("context-summary")) payload = {
       ok: true,
-      app_version: "1.9.9",
+      app_version: "1.10.1",
       profile_available: true,
       profile_summary: "Resumo seguro disponível no backend local.",
       enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
