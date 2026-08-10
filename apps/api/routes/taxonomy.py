@@ -11,6 +11,10 @@ from modules.storage.database import default_data_dir
 from modules.taxonomy import (
     TaxonomyDatasetManifest,
     TaxonomyMapping,
+    TaxonomySystem,
+    TaxonomyUpdatePreview,
+    TaxonomyUpdater,
+    TaxonomyUpdateStatus,
     VersionedTaxonomyStore,
 )
 from pydantic import BaseModel, ConfigDict, Field
@@ -32,6 +36,12 @@ class TaxonomyReviewRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     review_status: Literal["confirmed", "rejected"]
+
+
+class TaxonomyApplyRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    preview_id: str = Field(min_length=32, max_length=32, pattern=r"^[a-f0-9]{32}$")
 
 
 @router.post(
@@ -92,6 +102,47 @@ def review_mapping(
         update={"review_status": payload.review_status, "reviewed_at": datetime.now(UTC)}
     )
     return ok(repository.save_mapping(TaxonomyMapping.model_validate(reviewed)))
+
+
+@router.post("/updates/preview", response_model=ApiEnvelope[TaxonomyUpdatePreview])
+def preview_update(payload: TaxonomyDatasetImportRequest) -> ApiEnvelope[TaxonomyUpdatePreview]:
+    """Stage and inspect a supplied official snapshot without activating it."""
+    updater = TaxonomyUpdater(default_data_dir() / "taxonomies")
+    try:
+        return ok(updater.preview(payload.manifest, payload.records))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+
+
+@router.post("/updates/apply", response_model=ApiEnvelope[TaxonomyUpdateStatus])
+def apply_update(payload: TaxonomyApplyRequest) -> ApiEnvelope[TaxonomyUpdateStatus]:
+    """Apply only a previously previewed, checksummed snapshot."""
+    updater = TaxonomyUpdater(default_data_dir() / "taxonomies")
+    try:
+        manifest = updater.preview_manifest(payload.preview_id)
+        status = updater.apply(payload.preview_id)
+    except (FileNotFoundError, KeyError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    CareerIntelligenceRepository().save_dataset(manifest)
+    return ok(status)
+
+
+@router.post(
+    "/updates/{system}/rollback",
+    response_model=ApiEnvelope[TaxonomyUpdateStatus],
+)
+def rollback_update(system: TaxonomySystem) -> ApiEnvelope[TaxonomyUpdateStatus]:
+    """Roll back the active pointer; immutable snapshot content remains available."""
+    try:
+        return ok(TaxonomyUpdater(default_data_dir() / "taxonomies").rollback(system))
+    except (FileNotFoundError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+
+
+@router.get("/updates/{system}", response_model=ApiEnvelope[TaxonomyUpdateStatus])
+def update_status(system: TaxonomySystem) -> ApiEnvelope[TaxonomyUpdateStatus]:
+    """Return active version, checksum, history and last explicit apply time."""
+    return ok(TaxonomyUpdater(default_data_dir() / "taxonomies").status(system))
 
 
 __all__ = ["router"]

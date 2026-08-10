@@ -10,6 +10,7 @@ from .models import (
     TaxonomySystem,
 )
 from .normalization import TaxonomyNormalizer
+from .updater import TaxonomyUpdatePreview, TaxonomyUpdater, TaxonomyUpdateStatus
 
 __all__ = [
     "MappingMethod",
@@ -19,6 +20,9 @@ __all__ = [
     "TaxonomyMapping",
     "TaxonomyNormalizer",
     "TaxonomySystem",
+    "TaxonomyUpdatePreview",
+    "TaxonomyUpdateStatus",
+    "TaxonomyUpdater",
     "VersionedTaxonomyStore",
     "taxonomy_content_sha256",
 ]
