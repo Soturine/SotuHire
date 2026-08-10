@@ -25,7 +25,11 @@ def validate_local_cdp_url(value: str) -> str:
     if not cleaned or cleaned.startswith("-") or "\r" in cleaned or "\n" in cleaned:
         raise ValueError("Endpoint CDP invalido.")
     parsed = urlparse(cleaned)
-    if parsed.scheme.casefold() != "http" or parsed.username is not None or parsed.password is not None:
+    if (
+        parsed.scheme.casefold() != "http"
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
         raise ValueError("O endpoint CDP deve usar HTTP local sem credenciais.")
     hostname = (parsed.hostname or "").rstrip(".").casefold()
     try:

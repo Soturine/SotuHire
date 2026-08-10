@@ -275,9 +275,13 @@ def _detect_links(text: str) -> list[str]:
         candidate = raw.strip(" \t<>()[]{}|,;").rstrip(".")
         lowered = candidate.casefold()
         parseable = candidate
-        if lowered.startswith("www.") or not lowered.startswith(("http://", "https://")) and any(
-            lowered.startswith(prefix)
-            for prefix in ("linkedin.com/", "github.com/", "behance.net/")
+        if (
+            lowered.startswith("www.")
+            or not lowered.startswith(("http://", "https://"))
+            and any(
+                lowered.startswith(prefix)
+                for prefix in ("linkedin.com/", "github.com/", "behance.net/")
+            )
         ):
             parseable = f"https://{candidate}"
         parsed = urlparse(parseable)
@@ -288,12 +292,8 @@ def _detect_links(text: str) -> list[str]:
 
 
 def _detect_email(text: str) -> str:
-    allowed_local = frozenset(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-"
-    )
-    allowed_domain = frozenset(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-"
-    )
+    allowed_local = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._+-")
+    allowed_domain = frozenset("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.-")
     for raw in text.split():
         candidate = raw.strip(" \t<>()[]{}|,;:")
         if candidate.count("@") != 1:

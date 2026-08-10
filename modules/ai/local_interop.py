@@ -69,7 +69,12 @@ def validate_local_ai_endpoint(
     parsed = urlparse(raw)
     if parsed.scheme.casefold() not in {"http", "https"} or not parsed.hostname:
         raise ValueError("Endpoint de IA local deve usar HTTP ou HTTPS.")
-    if parsed.username is not None or parsed.password is not None or parsed.query or parsed.fragment:
+    if (
+        parsed.username is not None
+        or parsed.password is not None
+        or parsed.query
+        or parsed.fragment
+    ):
         raise ValueError("Endpoint de IA não pode conter credenciais, query ou fragmento.")
     try:
         port = parsed.port or (443 if parsed.scheme.casefold() == "https" else 80)
@@ -239,7 +244,9 @@ class OpenAICompatibleLocalProvider(AIProvider):
         try:
             content = str(response["choices"][0]["message"]["content"])
         except (KeyError, IndexError, TypeError) as exc:
-            raise ProviderUnavailableError("Provider local retornou contrato incompatível.") from exc
+            raise ProviderUnavailableError(
+                "Provider local retornou contrato incompatível."
+            ) from exc
         self.last_call_metadata = {
             "latency_ms": round((time.perf_counter() - started) * 1000),
             "provider": self.name,

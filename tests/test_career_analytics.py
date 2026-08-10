@@ -12,9 +12,13 @@ def _record(status: JobStatus, *, hours: int, source: str = "example.com") -> St
     applied = datetime(2026, 1, 1, tzinfo=UTC)
     history = [{"status": "applied", "at": applied.isoformat()}]
     if status in {JobStatus.INTERVIEW, JobStatus.OFFER}:
-        history.append({"status": "interview", "at": (applied + timedelta(hours=hours)).isoformat()})
+        history.append(
+            {"status": "interview", "at": (applied + timedelta(hours=hours)).isoformat()}
+        )
     if status == JobStatus.OFFER:
-        history.append({"status": "offer", "at": (applied + timedelta(hours=hours + 2)).isoformat()})
+        history.append(
+            {"status": "offer", "at": (applied + timedelta(hours=hours + 2)).isoformat()}
+        )
     return StoredAnalysis(
         job_title="Pessoa desenvolvedora Python",
         status=status,

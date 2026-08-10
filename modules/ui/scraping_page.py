@@ -286,9 +286,7 @@ def render_authenticated_browser_collection() -> None:
         disabled=not ready,
     ):
         with st.spinner("Navegando na sessão autenticada..."):
-            safe_source = source.model_copy(
-                update={"url": validate_browser_start_url(source.url)}
-            )
+            safe_source = source.model_copy(update={"url": validate_browser_start_url(source.url)})
             st.session_state.collection_result = collect_authenticated_source(safe_source)
     if actions[1].button(
         "Salvar fonte autenticada",

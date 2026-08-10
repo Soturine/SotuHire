@@ -85,7 +85,9 @@ def test_restore_rejects_corrupt_sqlite_even_with_matching_checksum(tmp_path):
         restore_backup(archive, destination=tmp_path / "restore", dry_run=True)
 
 
-@pytest.mark.parametrize("unsafe_path", ["../outside.json", "folder\\outside.json", "C:/outside.json"])
+@pytest.mark.parametrize(
+    "unsafe_path", ["../outside.json", "folder\\outside.json", "C:/outside.json"]
+)
 def test_restore_rejects_traversal_and_alternate_path_syntax(tmp_path, unsafe_path):
     payload = b"{}"
     manifest = BackupManifest(

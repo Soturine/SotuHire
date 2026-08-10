@@ -134,7 +134,15 @@ def _events(record: StoredAnalysis) -> list[tuple[str, datetime]]:
 
 def _reached(record: StoredAnalysis, status: str) -> bool:
     terminal_implies: dict[str, set[str]] = {
-        "applied": {"applied", "message_sent", "follow_up", "interview", "technical_test", "offer", "rejected"},
+        "applied": {
+            "applied",
+            "message_sent",
+            "follow_up",
+            "interview",
+            "technical_test",
+            "offer",
+            "rejected",
+        },
         "interview": {"interview", "technical_test", "offer"},
         "offer": {"offer"},
         "rejected": {"rejected"},
@@ -144,10 +152,15 @@ def _reached(record: StoredAnalysis, status: str) -> bool:
 
 
 def _responded(record: StoredAnalysis) -> bool:
-    return bool(record.contact_history) or _reached(record, "interview") or record.status.value in {
-        "message_sent",
-        "follow_up",
-    }
+    return (
+        bool(record.contact_history)
+        or _reached(record, "interview")
+        or record.status.value
+        in {
+            "message_sent",
+            "follow_up",
+        }
+    )
 
 
 def _response_hours(record: StoredAnalysis) -> float | None:
@@ -155,7 +168,11 @@ def _response_hours(record: StoredAnalysis) -> float | None:
     if applied_at is None:
         applied_at = next((at for status, at in _events(record) if status == "applied"), None)
     response_at = next(
-        (at for status, at in _events(record) if status in {"message_sent", "follow_up", "interview", "technical_test", "offer"}),
+        (
+            at
+            for status, at in _events(record)
+            if status in {"message_sent", "follow_up", "interview", "technical_test", "offer"}
+        ),
         None,
     )
     if applied_at is None or response_at is None or response_at < applied_at:

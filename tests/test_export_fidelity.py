@@ -78,12 +78,16 @@ def test_pdf_page_size_matches_a4_and_letter_contracts() -> None:
     _, a4_payload = prepare_resume_export(resume, export_format="pdf", page_size="A4")
     _, letter_payload = prepare_resume_export(resume, export_format="pdf", page_size="Letter")
 
-    a4_rect = PdfReader(
-        io.BytesIO(base64.b64decode(cast(str, a4_payload["content_base64"])))
-    ).pages[0].mediabox
-    letter_rect = PdfReader(
-        io.BytesIO(base64.b64decode(cast(str, letter_payload["content_base64"])))
-    ).pages[0].mediabox
+    a4_rect = (
+        PdfReader(io.BytesIO(base64.b64decode(cast(str, a4_payload["content_base64"]))))
+        .pages[0]
+        .mediabox
+    )
+    letter_rect = (
+        PdfReader(io.BytesIO(base64.b64decode(cast(str, letter_payload["content_base64"]))))
+        .pages[0]
+        .mediabox
+    )
 
     assert round(float(a4_rect.width)) == 595
     assert round(float(a4_rect.height)) == 842

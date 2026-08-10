@@ -95,6 +95,7 @@ class DomainMatchingPolicy:
         )
         return round(numerator / denominator, 2)
 
+
 DOMAIN_WEIGHT_OVERRIDES: dict[str, MatchWeights] = {
     "nursing": MatchWeights(
         required_requirements=0.30,

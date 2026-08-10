@@ -43,9 +43,7 @@ def test_ingestion_removes_script_content_from_html():
 
 
 def test_ingestion_supports_pdf_and_docx():
-    pdf_result = LocalDocumentIngestionPipeline().ingest(
-        "resume.pdf", _pdf_bytes("Curriculo PDF")
-    )
+    pdf_result = LocalDocumentIngestionPipeline().ingest("resume.pdf", _pdf_bytes("Curriculo PDF"))
 
     docx = Document()
     docx.add_paragraph("Curriculo DOCX")
@@ -93,9 +91,7 @@ def test_ingestion_rejects_spoofed_paths_mime_and_encrypted_pdf():
 
 
 def test_image_only_pdf_is_reviewable_without_hidden_ocr():
-    result = LocalDocumentIngestionPipeline().ingest(
-        "scan.pdf", _pdf_bytes(rectangle=True)
-    )
+    result = LocalDocumentIngestionPipeline().ingest("scan.pdf", _pdf_bytes(rectangle=True))
 
     assert result.status == "needs_review"
     assert any("OCR não é executado" in warning for warning in result.warnings)
