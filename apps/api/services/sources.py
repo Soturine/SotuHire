@@ -11,6 +11,7 @@ from modules.ai.tracing import record_ai_run, runtime_model, runtime_trace_kwarg
 from modules.context import CareerContext, CareerContextEngine, CareerContextPurpose, context_brief
 from modules.core.text_utils import normalize_text
 from modules.profile import ProfileContextOrchestrator
+from modules.scraping.browser_inputs import validate_browser_start_url, validate_local_cdp_url
 from modules.scraping.browser_session import inspect_browser_session, launch_authenticated_browser
 from modules.scraping.collection import collect_authenticated_source
 from modules.scraping.schemas import ScrapingSource
@@ -47,7 +48,7 @@ from apps.api.services.ai_settings import get_ai_runtime
 
 def authenticated_browser_status(endpoint: str) -> AuthenticatedBrowserStatusResponse:
     """Return the status of the local authenticated browser session."""
-    status = inspect_browser_session(endpoint)
+    status = inspect_browser_session(validate_local_cdp_url(endpoint))
     return AuthenticatedBrowserStatusResponse(
         available=status.available,
         endpoint=status.endpoint,
@@ -61,7 +62,10 @@ def authenticated_browser_launch(
 ) -> AuthenticatedBrowserStatusResponse:
     """Open or reuse the dedicated browser for manual login."""
     try:
-        status = launch_authenticated_browser(request.start_url, request.browser_cdp_url)
+        status = launch_authenticated_browser(
+            validate_browser_start_url(request.start_url),
+            validate_local_cdp_url(request.browser_cdp_url),
+        )
     except (FileNotFoundError, ValueError) as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
     return AuthenticatedBrowserStatusResponse(
@@ -82,16 +86,18 @@ def authenticated_browser_collect(
             detail="Confirme que o uso da fonte autenticada esta autorizado antes de coletar.",
         )
 
+    safe_url = validate_browser_start_url(request.url)
+    safe_cdp_url = validate_local_cdp_url(request.browser_cdp_url)
     source = ScrapingSource(
         name=request.name,
         type="authenticated_browser",
-        url=request.url,
+        url=safe_url,
         collection_mode="AUTHENTICATED_BROWSER",
         enabled=True,
         max_items=request.max_items,
         max_pages=request.max_pages,
         delay_seconds=request.delay_seconds,
-        browser_cdp_url=request.browser_cdp_url,
+        browser_cdp_url=safe_cdp_url,
         authorized_use=request.authorized_use,
         authorization_reference=request.authorization_reference,
     )

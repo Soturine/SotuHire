@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from urllib.parse import urlparse
-from urllib.request import Request
 from urllib.robotparser import RobotFileParser
 
-from modules.scraping.http_safety import UnsafePublicUrl, safe_public_opener, validate_public_url
+from modules.scraping.http_safety import UnsafePublicUrl, request_public_url, validate_public_url
 from modules.scraping.schemas import SourceSafety
 
 AUTH_MARKERS = ("/login", "/signin", "/auth", "/checkpoint", "/session")
@@ -77,17 +76,17 @@ def robots_allows(
         except OSError:
             return True
         return parser.can_fetch(user_agent, url)
-    validate_public_url(robots_url, resolve=True)
-    request = Request(robots_url, headers={"User-Agent": user_agent})
     try:
-        with safe_public_opener().open(request, timeout=10) as response:  # noqa: S310
-            final_url = response.geturl()
-            validate_public_url(final_url, resolve=True)
-            payload = response.read(256_001)
-            if len(payload) > 256_000:
-                return False
-            encoding = response.headers.get_content_charset() or "utf-8"
-            parser.parse(payload.decode(encoding, errors="replace").splitlines())
+        response = request_public_url(
+            robots_url,
+            headers={"User-Agent": user_agent},
+            timeout=10,
+            max_bytes=256_000,
+        )
+        if response.status >= 400:
+            return True
+        encoding = response.headers.get_content_charset() or "utf-8"
+        parser.parse(response.body.decode(encoding, errors="replace").splitlines())
     except UnsafePublicUrl:
         raise
     except OSError:

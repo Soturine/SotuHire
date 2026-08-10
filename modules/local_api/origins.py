@@ -30,4 +30,19 @@ def companion_origin_allowed(origin: str) -> bool:
     return origin in _WEB_ORIGINS or origin in extension_origins()
 
 
-__all__ = ["DEFAULT_EXTENSION_ID", "companion_origin_allowed", "extension_origins"]
+def canonical_companion_origin(origin: str) -> str:
+    """Return an allowlisted canonical value, never an untrusted reflected header."""
+    if "\r" in origin or "\n" in origin:
+        return ""
+    for candidate in (*sorted(_WEB_ORIGINS), *sorted(extension_origins())):
+        if origin == candidate:
+            return candidate
+    return ""
+
+
+__all__ = [
+    "DEFAULT_EXTENSION_ID",
+    "canonical_companion_origin",
+    "companion_origin_allowed",
+    "extension_origins",
+]

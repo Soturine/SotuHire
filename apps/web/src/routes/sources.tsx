@@ -40,6 +40,7 @@ import type {
 import { SOURCE_CARDS, SOURCE_FLOW } from "@/mocks/sources";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
+import { isGitHubWebUrl } from "@/lib/security/url";
 
 export const Route = createFileRoute("/sources")({
   head: () => ({
@@ -1547,7 +1548,7 @@ function LocalExtensionPanel() {
                     captureId: capture.id,
                     title: capture.title,
                     isProject:
-                      capture.kind === "github_repo" || capture.url.includes("github.com/"),
+                      capture.kind === "github_repo" || isGitHubWebUrl(capture.url),
                   })
                 }
                 onReview={() => patchCapture.mutate({ captureId: capture.id, status: "reviewed" })}
@@ -1602,10 +1603,10 @@ function ExtensionCaptureRow({
   onArchive: () => void;
   onIgnore: () => void;
 }) {
-  const kind = capture.kind || (capture.url.includes("github.com") ? "github_repo" : "job");
+  const kind = capture.kind || (isGitHubWebUrl(capture.url) ? "github_repo" : "job");
   const origin = capture.source || capture.domain || capture.company || "Fonte local";
   const date = capture.captured_at || capture.updated_at;
-  const isGithub = kind === "github_repo" || capture.url.includes("github.com/");
+  const isGithub = kind === "github_repo" || isGitHubWebUrl(capture.url);
   const isPublicExam = kind === "public_exam";
   return (
     <li

@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import logging
 from collections.abc import Callable
-from urllib.error import HTTPError
-from urllib.request import Request
 
 from modules.scraping.cache import ScrapingCache
-from modules.scraping.http_safety import safe_public_opener, validate_public_url
+from modules.scraping.http_safety import request_public_url
 from modules.scraping.rate_limit import DomainRateLimiter
 from modules.scraping.robots import inspect_source_safety, robots_allows
 from modules.scraping.schemas import FetchResult
@@ -91,34 +89,31 @@ class ScrapingClient:
         timeout_seconds: float,
         max_bytes: int,
     ) -> FetchResult:
-        validate_public_url(url, resolve=True)
-        request = Request(url, headers=headers)
-        try:
-            with safe_public_opener().open(request, timeout=timeout_seconds) as response:  # noqa: S310
-                final_url = response.geturl()
-                validate_public_url(final_url, resolve=True)
-                payload = response.read(max_bytes + 1)
-                if len(payload) > max_bytes:
-                    raise ValueError("Resposta excede o limite seguro de coleta.")
-                content_type = response.headers.get("Content-Type", "")
-                encoding = response.headers.get_content_charset() or "utf-8"
-                return FetchResult(
-                    url=final_url,
-                    status_code=response.status,
-                    content_type=content_type,
-                    text=payload.decode(encoding, errors="replace"),
-                    etag=response.headers.get("ETag", ""),
-                    last_modified=response.headers.get("Last-Modified", ""),
-                )
-        except HTTPError as exc:
-            if exc.code != 304:
-                raise
+        response = request_public_url(
+            url,
+            headers=headers,
+            timeout=timeout_seconds,
+            max_bytes=max_bytes,
+        )
+        if response.status == 304:
             return FetchResult(
-                url=url,
+                url=response.url,
                 status_code=304,
-                etag=exc.headers.get("ETag", request.get_header("If-None-Match", "")),
-                last_modified=exc.headers.get(
-                    "Last-Modified", request.get_header("If-Modified-Since", "")
+                etag=response.headers.get("ETag", headers.get("If-None-Match", "")),
+                last_modified=response.headers.get(
+                    "Last-Modified", headers.get("If-Modified-Since", "")
                 ),
                 not_modified=True,
             )
+        if response.status >= 400:
+            raise OSError(f"Coleta publica falhou com HTTP {response.status}.")
+        content_type = response.headers.get("Content-Type", "")
+        encoding = response.headers.get_content_charset() or "utf-8"
+        return FetchResult(
+            url=response.url,
+            status_code=response.status,
+            content_type=content_type,
+            text=response.body.decode(encoding, errors="replace"),
+            etag=response.headers.get("ETag", ""),
+            last_modified=response.headers.get("Last-Modified", ""),
+        )

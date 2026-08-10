@@ -127,13 +127,16 @@ def render_limited_chips(
 
 def link_label(url: str) -> str:
     """Return a compact human label for a detected resume link."""
-    lowered = url.lower()
-    if "linkedin.com" in lowered:
+    from urllib.parse import urlparse
+
+    hostname = (urlparse(link_href(url)).hostname or "").rstrip(".").casefold()
+    if hostname == "linkedin.com" or hostname.endswith(".linkedin.com"):
         return "LinkedIn"
-    if "github.com" in lowered:
+    if hostname == "github.com" or hostname.endswith(".github.com"):
         return "GitHub"
     if any(
-        domain in lowered for domain in ["behance.net", "vercel.app", "netlify.app", "github.io"]
+        hostname == domain or hostname.endswith(f".{domain}")
+        for domain in ["behance.net", "vercel.app", "netlify.app", "github.io"]
     ):
         return "Portfólio"
     return "Site"

@@ -9,7 +9,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import cast
 
 from modules.local_api.app import LocalCompanionApp
-from modules.local_api.origins import companion_origin_allowed
+from modules.local_api.origins import canonical_companion_origin, companion_origin_allowed
 from modules.security import LocalRateLimiter, RequestLimitError, RequestPolicy
 
 DEFAULT_HOST = "127.0.0.1"
@@ -109,8 +109,9 @@ class CompanionRequestHandler(BaseHTTPRequestHandler):
 
     def _cors_headers(self) -> None:
         origin = self.headers.get("Origin", "")
-        if origin and _origin_allowed(origin):
-            self.send_header("Access-Control-Allow-Origin", origin)
+        allowed_origin = canonical_companion_origin(origin)
+        if allowed_origin:
+            self.send_header("Access-Control-Allow-Origin", allowed_origin)
             self.send_header("Vary", "Origin")
         self.send_header(
             "Access-Control-Allow-Headers",

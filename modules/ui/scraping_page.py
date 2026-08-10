@@ -8,6 +8,7 @@ import streamlit as st
 
 from modules.opportunities import OpportunityStore, filter_opportunities, opportunity_to_job_posting
 from modules.scraping import ScrapingSource, inspect_source_safety
+from modules.scraping.browser_inputs import validate_browser_start_url, validate_local_cdp_url
 from modules.scraping.browser_session import (
     inspect_browser_session,
     launch_authenticated_browser,
@@ -210,9 +211,9 @@ def authenticated_source_from_controls() -> ScrapingSource:
         max_items=int(st.session_state.get("authenticated_max_items", 50)),
         max_pages=int(st.session_state.get("authenticated_max_pages", 5)),
         delay_seconds=float(st.session_state.get("authenticated_delay", 2.0)),
-        browser_cdp_url=str(
-            st.session_state.get("authenticated_cdp_url", "http://127.0.0.1:9222")
-        ).strip(),
+        browser_cdp_url=validate_local_cdp_url(
+            str(st.session_state.get("authenticated_cdp_url", "http://127.0.0.1:9222")).strip()
+        ),
         authorized_use=bool(st.session_state.get("authenticated_authorized_use", False)),
         authorization_reference=str(
             st.session_state.get("authenticated_authorization_reference", "")
@@ -266,7 +267,9 @@ def render_authenticated_browser_collection() -> None:
     browser_actions = st.columns(2)
     if browser_actions[0].button("Abrir navegador para login", use_container_width=True):
         try:
-            status = launch_authenticated_browser(source.url, source.browser_cdp_url)
+            status = launch_authenticated_browser(
+                validate_browser_start_url(source.url), source.browser_cdp_url
+            )
             (st.success if status.available else st.error)(status.message)
             if status.available:
                 st.rerun()
@@ -283,7 +286,10 @@ def render_authenticated_browser_collection() -> None:
         disabled=not ready,
     ):
         with st.spinner("Navegando na sessão autenticada..."):
-            st.session_state.collection_result = collect_authenticated_source(source)
+            safe_source = source.model_copy(
+                update={"url": validate_browser_start_url(source.url)}
+            )
+            st.session_state.collection_result = collect_authenticated_source(safe_source)
     if actions[1].button(
         "Salvar fonte autenticada",
         use_container_width=True,
