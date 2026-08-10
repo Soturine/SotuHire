@@ -16,19 +16,11 @@ export function SourceCardItem({ card }: { card: SourceCard }) {
   const Icon = card.icon;
   const disabled = card.disabled || (!card.to && !card.anchor);
 
-  const button = (
-    <button
-      type="button"
-      disabled={disabled}
-      className={cn(
-        "inline-flex w-full items-center justify-center rounded-md px-3 py-2 text-xs font-medium transition-colors",
-        disabled
-          ? "cursor-not-allowed border border-border bg-muted/50 text-muted-foreground"
-          : "bg-primary text-primary-foreground hover:bg-primary/90",
-      )}
-    >
-      {card.cta}
-    </button>
+  const controlClass = cn(
+    "inline-flex w-full items-center justify-center rounded-md px-3 py-2 text-xs font-medium transition-colors",
+    disabled
+      ? "cursor-not-allowed border border-border bg-muted/50 text-muted-foreground"
+      : "bg-primary text-primary-foreground hover:bg-primary/90",
   );
 
   return (
@@ -52,15 +44,17 @@ export function SourceCardItem({ card }: { card: SourceCard }) {
       </div>
       <div className="mt-auto">
         {card.anchor && !card.disabled ? (
-          <a href={card.anchor} className="block">
-            {button}
+          <a href={card.anchor} className={controlClass}>
+            {card.cta}
           </a>
         ) : card.to && !card.disabled ? (
-          <Link to={card.to} className="block">
-            {button}
+          <Link to={card.to} className={controlClass}>
+            {card.cta}
           </Link>
         ) : (
-          button
+          <button type="button" disabled className={controlClass}>
+            {card.cta}
+          </button>
         )}
       </div>
     </article>

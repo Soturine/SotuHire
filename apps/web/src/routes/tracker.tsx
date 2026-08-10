@@ -45,9 +45,9 @@ const STAGES: { id: ColumnDef["stage"]; label: string; desc: string }[] = [
 
 function TrackerPage() {
   const api = useApi();
-  const { mode } = useApiMode();
+  const { mode, baseUrl } = useApiMode();
   const qc = useQueryClient();
-  const jobsKey = ["tracker-jobs", mode] as const;
+  const jobsKey = ["tracker-jobs", mode, baseUrl] as const;
 
   const jobsQ = useQuery({ queryKey: jobsKey, queryFn: () => api.trackerJobs() });
   const [creating, setCreating] = useState(false);

@@ -137,19 +137,19 @@ function PrivacyPage() {
 
 function DataReliabilityPanel() {
   const api = useApi();
-  const { mode } = useApiMode();
+  const { mode, baseUrl } = useApiMode();
   const queryClient = useQueryClient();
   const [selectedArchive, setSelectedArchive] = useState("");
   const [validatedArchive, setValidatedArchive] = useState("");
   const [confirmation, setConfirmation] = useState("");
 
   const healthQ = useQuery({
-    queryKey: ["data-health", mode],
+    queryKey: ["data-health", mode, baseUrl],
     queryFn: () => api.dataHealth(),
     retry: false,
   });
   const archivesQ = useQuery({
-    queryKey: ["data-archives", mode],
+    queryKey: ["data-archives", mode, baseUrl],
     queryFn: () => api.dataArchives(),
     retry: false,
   });
@@ -166,7 +166,7 @@ function DataReliabilityPanel() {
       setSelectedArchive(archive.archive_name);
       setValidatedArchive("");
       setConfirmation("");
-      void queryClient.invalidateQueries({ queryKey: ["data-archives", mode] });
+      void queryClient.invalidateQueries({ queryKey: ["data-archives", mode, baseUrl] });
       toast.success(
         archive.kind === "export"
           ? "Export portátil criado sem segredos."
@@ -200,8 +200,8 @@ function DataReliabilityPanel() {
     onSuccess: (result) => {
       setValidatedArchive("");
       setConfirmation("");
-      void queryClient.invalidateQueries({ queryKey: ["data-health", mode] });
-      void queryClient.invalidateQueries({ queryKey: ["data-archives", mode] });
+      void queryClient.invalidateQueries({ queryKey: ["data-health", mode, baseUrl] });
+      void queryClient.invalidateQueries({ queryKey: ["data-archives", mode, baseUrl] });
       toast.success(result.message);
     },
     onError: (error) => toast.error(errorMessage(error)),

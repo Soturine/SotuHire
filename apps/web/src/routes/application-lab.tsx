@@ -77,7 +77,7 @@ const REAL_PROGRESS = [
 
 function ApplicationLabPage() {
   const api = useApi();
-  const { mode } = useApiMode();
+  const { mode, baseUrl } = useApiMode();
   const search = Route.useSearch();
   const qc = useQueryClient();
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -95,16 +95,16 @@ function ApplicationLabPage() {
   );
 
   const sessionsQ = useQuery({
-    queryKey: ["application-lab-sessions", mode],
+    queryKey: ["application-lab-sessions", mode, baseUrl],
     queryFn: () => api.applicationLabSessions(),
   });
   const masterQ = useQuery({
-    queryKey: ["resume-studio-master", mode],
+    queryKey: ["resume-studio-master", mode, baseUrl],
     queryFn: () => api.resumeStudioMaster(),
     retry: false,
   });
   const detailQ = useQuery({
-    queryKey: ["application-lab-session", mode, sessionId],
+    queryKey: ["application-lab-session", mode, baseUrl, sessionId],
     queryFn: () => api.applicationLabSession(sessionId!),
     enabled: Boolean(sessionId),
   });

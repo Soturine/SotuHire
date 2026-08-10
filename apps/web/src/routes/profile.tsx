@@ -53,8 +53,8 @@ const sourceTypes = [
 function ProfilePage() {
   const api = useApi();
   const qc = useQueryClient();
-  const { mode } = useApiMode();
-  const profileQ = useQuery({ queryKey: ["profile", mode], queryFn: () => api.profile() });
+  const { mode, baseUrl } = useApiMode();
+  const profileQ = useQuery({ queryKey: ["profile", mode, baseUrl], queryFn: () => api.profile() });
   const profile = profileQ.data?.profile;
 
   const [form, setForm] = useState(() => profileFormDefaults());

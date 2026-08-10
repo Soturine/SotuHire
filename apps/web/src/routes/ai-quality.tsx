@@ -47,27 +47,33 @@ const percent = (value?: number | null) =>
 
 function AiQualityPage() {
   const api = useApi();
-  const { mode } = useApiMode();
+  const { mode, baseUrl } = useApiMode();
   const queryClient = useQueryClient();
   const summary = useQuery({
-    queryKey: ["ai-quality-summary", mode],
+    queryKey: ["ai-quality-summary", mode, baseUrl],
     queryFn: api.aiQualitySummary,
   });
-  const runs = useQuery({ queryKey: ["ai-quality-runs", mode], queryFn: api.aiQualityRuns });
+  const runs = useQuery({
+    queryKey: ["ai-quality-runs", mode, baseUrl],
+    queryFn: api.aiQualityRuns,
+  });
   const providers = useQuery({
-    queryKey: ["ai-quality-providers", mode],
+    queryKey: ["ai-quality-providers", mode, baseUrl],
     queryFn: api.aiQualityProviders,
   });
   const prompts = useQuery({
-    queryKey: ["ai-quality-prompts", mode],
+    queryKey: ["ai-quality-prompts", mode, baseUrl],
     queryFn: api.aiQualityPrompts,
   });
   const benchmarks = useQuery({
-    queryKey: ["ai-quality-benchmarks", mode],
+    queryKey: ["ai-quality-benchmarks", mode, baseUrl],
     queryFn: api.aiQualityBenchmarks,
   });
-  const feedback = useQuery({ queryKey: ["ai-feedback", mode], queryFn: api.aiFeedback });
-  const outcomes = useQuery({ queryKey: ["outcomes-summary", mode], queryFn: api.outcomesSummary });
+  const feedback = useQuery({ queryKey: ["ai-feedback", mode, baseUrl], queryFn: api.aiFeedback });
+  const outcomes = useQuery({
+    queryKey: ["outcomes-summary", mode, baseUrl],
+    queryFn: api.outcomesSummary,
+  });
   const [runId, setRunId] = useState("");
   const [rating, setRating] = useState<"useful" | "partial" | "not_useful">("useful");
   const [decision, setDecision] = useState<"accepted" | "edited" | "rejected" | "ignored">(
@@ -96,8 +102,8 @@ function AiQualityPage() {
     },
     onSuccess: () => {
       setComment("");
-      void queryClient.invalidateQueries({ queryKey: ["ai-feedback", mode] });
-      void queryClient.invalidateQueries({ queryKey: ["ai-quality-summary", mode] });
+      void queryClient.invalidateQueries({ queryKey: ["ai-feedback", mode, baseUrl] });
+      void queryClient.invalidateQueries({ queryKey: ["ai-quality-summary", mode, baseUrl] });
     },
   });
 
@@ -395,7 +401,7 @@ function AiQualityPage() {
           </TabsContent>
 
           <TabsContent value="privacy">
-            <SectionCard title="Privacidade de traces" description="Default seguro da v1.9.9.">
+            <SectionCard title="Privacidade de traces" description="Default seguro da v1.10.1.">
               <div className="grid gap-4 sm:grid-cols-3">
                 <PrivacyItem title="Inputs completos" value="não armazenados" />
                 <PrivacyItem title="Outputs completos" value="não armazenados" />

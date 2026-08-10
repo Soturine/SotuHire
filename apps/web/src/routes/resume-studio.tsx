@@ -56,20 +56,20 @@ type StudioView = "editor" | "preview" | "diff";
 
 function ResumeStudioPage() {
   const api = useApi();
-  const { mode } = useApiMode();
+  const { mode, baseUrl } = useApiMode();
   const queryClient = useQueryClient();
   const search = Route.useSearch();
   const masterQ = useQuery({
-    queryKey: ["resume-studio-master", mode],
+    queryKey: ["resume-studio-master", mode, baseUrl],
     queryFn: () => api.resumeStudioMaster(),
   });
   const variantsQ = useQuery({
-    queryKey: ["resume-studio-variants", mode, masterQ.data?.resume.master_resume_id],
+    queryKey: ["resume-studio-variants", mode, baseUrl, masterQ.data?.resume.master_resume_id],
     queryFn: () => api.resumeStudioVariants(masterQ.data?.resume.master_resume_id),
     enabled: Boolean(masterQ.data?.resume),
   });
   const templatesQ = useQuery({
-    queryKey: ["resume-studio-templates", mode],
+    queryKey: ["resume-studio-templates", mode, baseUrl],
     queryFn: () => api.resumeStudioTemplates(),
   });
   const [view, setView] = useState<StudioView>("editor");
