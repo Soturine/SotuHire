@@ -69,5 +69,5 @@ A documentação separa referências atuais de histórico. Para conhecer o produ
 
 - [Case study](09-portfolio/portfolio-case-study.md)
 - [Histórico de desenvolvimento](07-development/setup.md)
-- [Release atual — v1.11.0](releases/v1.11.0.md)
+- [Release atual — v2.0](releases/v2.0.md)
 - [CHANGELOG no GitHub](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md)

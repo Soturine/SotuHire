@@ -50,13 +50,12 @@ nav:
   - SotuHire v2:
       - Visão: 01-product/v2-product-vision.md
       - Comece aqui: 05-user-guide/getting-started.md
-      - Career Cockpit: 05-user-guide/career-cockpit.md
+      - Jornada, Copilot e aprovações: 05-user-guide/career-workflow.md
       - Evidence Graph: 02-architecture/evidence-graph.md
       - Portfólio e acadêmico: 02-architecture/portfolio-and-academic-evidence.md
-      - Career State: 02-architecture/career-state-engine.md
       - Human-Approved Copilot: 02-architecture/human-approved-copilot.md
-      - Tool Registry: 02-architecture/copilot-tool-registry.md
-      - Approval Queue: 02-architecture/approval-queue.md
+      - Fluxo de dados: 02-architecture/data-flow.md
+      - Frontend e design system: 02-architecture/frontend-v2.md
       - Contexto e privacidade: 04-ai/copilot-context-and-privacy.md
       - Threat model: 06-engineering/v2-security-threat-model.md
       - Migração e recovery: 06-engineering/v2-migration-and-recovery.md
@@ -112,13 +111,9 @@ nav:
       - Concurso Mode: 01-product/concurso-mode.md
   - Arquitetura:
       - Evidence Graph: 02-architecture/evidence-graph.md
-      - Career State Engine: 02-architecture/career-state-engine.md
       - Copilot sob aprovação humana: 02-architecture/human-approved-copilot.md
-      - Approval Queue: 02-architecture/approval-queue.md
-      - Registry seguro de tools: 02-architecture/copilot-tool-registry.md
       - Portfólio e evidência acadêmica: 02-architecture/portfolio-and-academic-evidence.md
       - Frontend v2: 02-architecture/frontend-v2.md
-      - MCP local - decisão v2: 02-architecture/mcp.md
       - ADRs v2:
           - Evidence Graph em SQLite: 02-architecture/adrs/001-evidence-graph-sqlite.md
           - Limite de aprovação humana: 02-architecture/adrs/002-human-approval-boundary.md
@@ -175,10 +170,6 @@ nav:
       - Linhagem e deduplicação: 02-architecture/data-lineage-and-deduplication.md
       - Storage e histórico legado: 02-architecture/storage-and-history.md
   - Regras de negócio:
-      - Evidence Graph v2: 03-business-rules/evidence-graph.md
-      - Portfólio e evidências: 03-business-rules/portfolio-evidence.md
-      - Ações do Copilot: 03-business-rules/copilot-actions.md
-      - Aprovação e undo: 03-business-rules/approval-and-undo.md
       - Matching por domínio: 03-business-rules/domain-matching.md
       - Analytics de carreira: 03-business-rules/career-analytics.md
       - Deduplicação de oportunidades: 03-business-rules/opportunity-deduplication.md
@@ -206,9 +197,7 @@ nav:
       - Prontidão da candidatura: 03-business-rules/application-readiness.md
       - Variantes e sugestões: 03-business-rules/resume-variants-and-suggestions.md
   - IA:
-      - Orquestração do Copilot: 04-ai/copilot-orchestration.md
       - Contexto e privacidade: 04-ai/copilot-context-and-privacy.md
-      - Segurança das tools: 04-ai/tool-safety.md
       - Prompting: 04-ai/prompting.md
       - Arquitetura de prompts: 04-ai/prompt-architecture.md
       - Prompt Registry: 04-ai/prompt-registry.md
@@ -251,11 +240,7 @@ nav:
       - ML avançado futuro: 04-ai/advanced-ml-future.md
   - Guia do usuário v2:
       - Primeiros passos: 05-user-guide/getting-started.md
-      - Career Cockpit: 05-user-guide/career-cockpit.md
-      - Evidence Inbox: 05-user-guide/evidence.md
-      - Portfólio: 05-user-guide/portfolio.md
-      - Copilot: 05-user-guide/copilot.md
-      - Approval Queue: 05-user-guide/approval-queue.md
+      - Jornada, Copilot e aprovações: 05-user-guide/career-workflow.md
   - Fontes de dados:
       - Job sources: 05-data-sources/job-sources.md
       - Brazilian job portals: 05-data-sources/brazilian-job-portals.md
@@ -276,7 +261,6 @@ nav:
       - GitHub portfolio analyzer: 05-data-sources/github-portfolio-analyzer.md
       - JobSpy experimental reference: 05-data-sources/jobspy-experimental-reference.md
   - Engenharia:
-      - Design System v2: 06-engineering/v2-frontend-design-system.md
       - Migração e recuperação v2: 06-engineering/v2-migration-and-recovery.md
       - Threat model v2: 06-engineering/v2-security-threat-model.md
       - Segurança de dependências: 06-engineering/dependency-security.md

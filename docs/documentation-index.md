@@ -30,9 +30,11 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 ## Arquitetura
 
 - [Evidence Graph](02-architecture/evidence-graph.md)
-- [Career State Engine](02-architecture/career-state-engine.md)
 - [Copilot sob aprovação humana](02-architecture/human-approved-copilot.md)
-- [Registry seguro de tools](02-architecture/copilot-tool-registry.md)
+- [Fluxo de dados v2](02-architecture/data-flow.md)
+- [Frontend v2 e design system](02-architecture/frontend-v2.md)
+- [Portfólio e evidência acadêmica/profissional](02-architecture/portfolio-and-academic-evidence.md)
+- [Jornada do usuário, Copilot e aprovações](05-user-guide/career-workflow.md)
 - [Interoperabilidade com IA local](02-architecture/local-ai-interoperability.md)
 - [Matching por domínio](02-architecture/domain-matching-policies.md)
 - [Atualizações de taxonomia](02-architecture/taxonomy-updates.md)
@@ -133,14 +135,6 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 ## Releases
 
-- [Release atual — v1.11.0](releases/v1.11.0.md)
-- [Releases anteriores no GitHub](https://github.com/Soturine/SotuHire/tree/main/docs/releases)
-# SotuHire v2
-
-- [Visão v2](01-product/v2-product-vision.md)
-- [Evidence Graph](02-architecture/evidence-graph.md)
-- [Career State](02-architecture/career-state-engine.md)
-- [Human-Approved Copilot](02-architecture/human-approved-copilot.md)
-- [Approval Queue](02-architecture/approval-queue.md)
-- [Threat model](06-engineering/v2-security-threat-model.md)
-- [Release v2.0](releases/v2.0.md)
+- [Release atual — v2.0](releases/v2.0.md)
+- [CHANGELOG](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md)
+- [Releases anteriores](https://github.com/Soturine/SotuHire/tree/main/docs/releases)

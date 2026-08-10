@@ -20,9 +20,9 @@ seguem sempre **prévia → evidências → impacto → aprovação humana → e
 
 Ferramentas isoladas não respondem “onde estou?”, “o que está faltando?” ou “por que devo fazer
 isso agora?”. O SotuHire cria continuidade entre dados confirmados e decisões. Inferências ficam
-na [Caixa de Evidências](docs/05-user-guide/evidence.md); fatos confirmados formam o
+na [Caixa de Evidências](docs/05-user-guide/career-workflow.md#evidence-inbox); fatos confirmados formam o
 [Evidence Graph](docs/02-architecture/evidence-graph.md); regras determinísticas produzem o
-[Career State](docs/02-architecture/career-state-engine.md); o
+[Career State](docs/02-architecture/human-approved-copilot.md#career-state); o
 [Copilot](docs/02-architecture/human-approved-copilot.md) transforma recomendações em propostas
 individuais e reversíveis.
 
@@ -85,11 +85,11 @@ flowchart TB
   R --> LP[Local deterministic]
   R --> GP[Gemini / OpenAI]
   R --> OP[Ollama / LM Studio / compatible]
-  M[MCP] -. não exposto na v2.0 .-> X
+  M["MCP — não exposto na v2.0"] -.-> X
 ```
 
 Detalhes: [arquitetura v2](docs/02-architecture/data-flow.md),
-[tool registry](docs/02-architecture/copilot-tool-registry.md),
+[Copilot e tool registry](docs/02-architecture/human-approved-copilot.md),
 [segurança](docs/06-engineering/v2-security-threat-model.md) e
 [privacidade do contexto](docs/04-ai/copilot-context-and-privacy.md).
 
@@ -219,7 +219,7 @@ npm run test:e2e
 - [Visão do produto](docs/01-product/v2-product-vision.md)
 - [Evidence Graph](docs/02-architecture/evidence-graph.md)
 - [Human-Approved Copilot](docs/02-architecture/human-approved-copilot.md)
-- [Approval Queue](docs/02-architecture/approval-queue.md)
+- [Guia da jornada e aprovações](docs/05-user-guide/career-workflow.md)
 - [Frontend v2](docs/02-architecture/frontend-v2.md)
 - [Application Lab](docs/02-architecture/application-lab.md)
 - [Roadmap](docs/01-product/roadmap.md)
