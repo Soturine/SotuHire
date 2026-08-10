@@ -1,4 +1,4 @@
-"""Write deterministic SHA-256 checksums for the v1.10.1 release assets."""
+"""Write deterministic SHA-256 checksums for the v1.11.0 release assets."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
 DEFAULT_ASSETS = (
     DIST / "sotuhire-extension-v0.10.0.zip",
-    DIST / "sotuhire-sbom-v1.10.1.cdx.json",
+    DIST / "sotuhire-sbom-v1.11.0.cdx.json",
 )
 
 

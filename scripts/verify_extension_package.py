@@ -35,7 +35,7 @@ def verify_package(path: Path) -> dict[str, object]:
     if packaged_manifest != expected_manifest:
         raise ValueError("Manifest empacotado diverge do manifest validado.")
     if packaged_manifest.get("version") != "0.10.0":
-        raise ValueError("A release v1.10.1 exige extensão 0.10.0.")
+        raise ValueError("A release v1.11.0 exige extensão 0.10.0.")
     return packaged_manifest
 
 

@@ -4,21 +4,17 @@ from pathlib import Path
 def test_readme_is_atemporal_and_references_current_product_screenshots():
     readme = Path("README.md").read_text(encoding="utf-8")
     screenshots = [
-        Path("docs/assets/screenshots/sotuhire-v1.10.1-interview-star-followup.png"),
-        Path("docs/assets/screenshots/sotuhire-v1.10.1-career-actions-plan.png"),
-        Path("docs/assets/screenshots/sotuhire-v1.10.1-home-dark-en.png"),
-        Path("docs/assets/screenshots/sotuhire-v1.10.1-help-drawer.png"),
-        Path("docs/assets/screenshots/sotuhire-v1.10.1-career-intelligence-walkthrough.gif"),
-        Path("docs/assets/screenshots/sotuhire-v1.10.1-radar-official-sources.png"),
-        Path("docs/assets/screenshots/sotuhire-v1.10.1-settings-theme-locale.png"),
+        Path("docs/assets/screenshots/sotuhire-v1.11.0-settings-categories.png"),
+        Path("docs/assets/screenshots/sotuhire-v1.11.0-local-ai-health.png"),
+        Path("docs/assets/screenshots/sotuhire-v1.11.0-security-local-ai-intelligence.gif"),
+        Path("docs/assets/screenshots/sotuhire-v1.11.0-career-analytics.png"),
+        Path("docs/assets/screenshots/sotuhire-v1.11.0-security-status.png"),
         Path("docs/assets/screenshots/sotuhire-web-profile.png"),
         Path("docs/assets/screenshots/sotuhire-web-match.png"),
         Path("docs/assets/screenshots/sotuhire-web-radar-schedules.png"),
         Path("docs/assets/screenshots/sotuhire-web-tracker.png"),
         Path("docs/assets/screenshots/sotuhire-web-profile-lattes.png"),
         Path("docs/assets/screenshots/sotuhire-web-public-exams.png"),
-        Path("docs/assets/screenshots/sotuhire-web-settings-ai.png"),
-        Path("docs/assets/screenshots/sotuhire-web-privacy.png"),
         Path("docs/assets/screenshots/extension/popup-main.png"),
         Path("docs/assets/screenshots/extension/github-analysis-modal.png"),
     ]
@@ -31,7 +27,8 @@ def test_readme_is_atemporal_and_references_current_product_screenshots():
     assert "docs/assets/screenshots/sotuhire-web-product-walkthrough.gif" not in readme
     assert "sotuhire-v1.9.9-document-to-application-walkthrough.gif" not in readme
     assert "[CHANGELOG](CHANGELOG.md)" in readme
-    assert "release-v1.10.1" in readme
+    assert "github/v/release/Soturine/SotuHire" in readme
+    assert "releases/latest" in readme
     assert "Frontend moderno v1.9.0" not in readme
     assert "API local v1.9.0" not in readme
     assert "Na v1.8.2" not in readme
@@ -54,7 +51,6 @@ def test_readme_is_atemporal_and_references_current_product_screenshots():
         "docs/06-engineering/security-privacy.md",
         "docs/09-testing/golden-datasets.md",
         "docs/05-data-sources/job-sources.md",
-        "docs/releases/v1.10.1.md",
         "CHANGELOG.md",
         "browser-extension/README.md",
         "apps/web/README.md",
@@ -82,4 +78,4 @@ def test_readme_is_atemporal_and_references_current_product_screenshots():
     ]
     assert all(section in readme for section in required_sections)
     assert "v1.9.7" not in readme
-    assert readme.count("v1.10.1") >= 6
+    assert "sotuhire-v1.10.1" not in readme

@@ -122,9 +122,9 @@ CHROME_STUB = r"""
     if (path.endsWith("/health")) payload = { ok: true, message: "SotuHire Local Companion conectado." };
     if (path.endsWith("/handshake")) payload = {
       extension_version: "0.10.0",
-      companion_version: "1.10.1",
+      companion_version: "1.11.0",
       api_version: "v1",
-      app_version: "1.10.1",
+      app_version: "1.11.0",
       capabilities: [
         "capture.job", "capture.public_exam", "capture.github", "capture.snapshot",
         "queue.retry", "queue.export_import", "jobposting.jsonld", "ai.own_key",
@@ -138,7 +138,7 @@ CHROME_STUB = r"""
     };
     if (path.includes("context-summary")) payload = {
       ok: true,
-      app_version: "1.10.1",
+      app_version: "1.11.0",
       profile_available: true,
       profile_summary: "Resumo seguro disponível no backend local.",
       enabled_flows: ["job", "public_exam", "github", "profile_evidence"],

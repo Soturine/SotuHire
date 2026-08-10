@@ -136,7 +136,7 @@ export const mockBenchmarks: AiBenchmarkSummary[] = [
   {
     benchmark_run_id: "demo-benchmark-local-001",
     git_sha: "fictitious",
-    app_version: "1.10.1",
+    app_version: "1.11.0",
     suite: "golden",
     providers: ["local"],
     models: ["local"],

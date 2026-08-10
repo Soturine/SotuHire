@@ -1,4 +1,4 @@
-"""Registered provider consumer with conservative local fallbacks for v1.10.1."""
+"""Registered provider consumer with conservative local fallbacks for v1.11.0."""
 
 from __future__ import annotations
 

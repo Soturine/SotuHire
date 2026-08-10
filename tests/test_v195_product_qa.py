@@ -14,9 +14,9 @@ def test_release_versions_are_aligned_and_extension_is_independent():
     web_package = json.loads(_read("apps/web/package.json"))
 
     assert manifest["version"] == "0.10.0"
-    assert web_package["version"] == "1.10.1"
-    assert 'version = "1.10.1"' in _read("pyproject.toml")
-    assert 'API_VERSION = "1.10.1"' in _read("apps/api/config.py")
+    assert web_package["version"] == "1.11.0"
+    assert 'version = "1.11.0"' in _read("pyproject.toml")
+    assert 'API_VERSION = "1.11.0"' in _read("apps/api/config.py")
     assert "https://generativelanguage.googleapis.com/*" in manifest.get("host_permissions", [])
     assert "https://api.openai.com/*" in manifest.get("host_permissions", [])
 
