@@ -57,7 +57,7 @@
 :root {
   --radius: 0.75rem;
 
-  /* Light-on-deep-navy SaaS palette. Ink + emerald accent. */
+  /* SotuHire v2: calm compass blue, evidence teal and warm trajectory surfaces. */
   --background: oklch(0.985 0.003 240);
   --foreground: oklch(0.18 0.03 250);
 
@@ -78,7 +78,7 @@
   --muted-foreground: oklch(0.52 0.02 255);
 
   /* Accent = emerald */
-  --accent: oklch(0.72 0.16 165);
+  --accent: oklch(0.63 0.13 183);
   --accent-foreground: oklch(0.16 0.04 200);
 
   --destructive: oklch(0.62 0.22 25);
@@ -92,7 +92,7 @@
 
   --border: oklch(0.92 0.008 250);
   --input: oklch(0.92 0.008 250);
-  --ring: oklch(0.72 0.16 165);
+  --ring: oklch(0.63 0.13 183);
 
   --chart-1: oklch(0.55 0.16 255); /* indigo */
   --chart-2: oklch(0.72 0.16 165); /* emerald */
@@ -102,12 +102,12 @@
 
   --sidebar: oklch(0.18 0.03 255);
   --sidebar-foreground: oklch(0.92 0.01 240);
-  --sidebar-primary: oklch(0.72 0.16 165);
+  --sidebar-primary: oklch(0.68 0.12 183);
   --sidebar-primary-foreground: oklch(0.16 0.04 200);
   --sidebar-accent: oklch(0.24 0.04 255);
   --sidebar-accent-foreground: oklch(0.97 0.005 240);
   --sidebar-border: oklch(0.28 0.03 255);
-  --sidebar-ring: oklch(0.72 0.16 165);
+  --sidebar-ring: oklch(0.68 0.12 183);
 
   --gradient-hero:
     radial-gradient(ellipse at top, oklch(0.96 0.04 165 / 0.5), transparent 60%),
@@ -131,10 +131,52 @@
   --secondary-foreground: oklch(0.96 0.005 240);
   --muted: oklch(0.24 0.03 255);
   --muted-foreground: oklch(0.7 0.02 250);
-  --accent: oklch(0.72 0.16 165);
+  --accent: oklch(0.7 0.12 183);
   --accent-foreground: oklch(0.14 0.04 200);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
+}
+
+@layer components {
+  .trajectory-surface {
+    background:
+      radial-gradient(
+        circle at 85% 15%,
+        color-mix(in oklab, var(--color-accent) 22%, transparent),
+        transparent 32%
+      ),
+      linear-gradient(
+        135deg,
+        color-mix(in oklab, var(--color-card) 94%, var(--color-accent)),
+        var(--color-card)
+      );
+    box-shadow: var(--shadow-elevated);
+  }
+  .trajectory-surface::before {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+  }
+  .portfolio-cover {
+    display: flex;
+    min-height: 9rem;
+    align-items: flex-end;
+    padding: 1rem;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .portfolio-cover-0 {
+    background: linear-gradient(145deg, oklch(0.34 0.08 244), oklch(0.62 0.12 183));
+  }
+  .portfolio-cover-1 {
+    background: linear-gradient(145deg, oklch(0.4 0.09 305), oklch(0.68 0.1 33));
+  }
+  .portfolio-cover-2 {
+    background: linear-gradient(145deg, oklch(0.35 0.07 151), oklch(0.68 0.11 88));
+  }
 }
 
 @layer base {

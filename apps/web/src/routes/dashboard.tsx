@@ -1,424 +1,235 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import {
-  Activity,
-  ArrowUpRight,
-  Briefcase,
+  ArrowRight,
+  CalendarClock,
   CheckCircle2,
-  Kanban,
-  LineChart as LineChartIcon,
-  Target,
-  TrendingUp,
-  UserRound,
-  RadioTower,
-  ScrollText,
+  Compass,
   Inbox,
-  Wand2,
-  XCircle,
+  Layers3,
+  ShieldCheck,
+  Target,
 } from "lucide-react";
-import { useApi } from "@/lib/api/hooks";
+
 import { AppShell } from "@/components/app-shell";
-import { GuidedFlow } from "@/components/guided-flow";
-import { StatCard } from "@/components/stat-card";
-import { SectionCard } from "@/components/section-card";
-import { ScoreRing } from "@/components/score-ring";
-import { ErrorState, LoadingState, Skeleton } from "@/components/states";
-import {
-  Area,
-  AreaChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { Button } from "@/components/ui/button";
+import { v2Api } from "@/features/career-copilot/api";
 import { useApiMode } from "@/lib/api/mode";
-import { statusLabel } from "@/lib/labels";
+import { usePreferences } from "@/lib/preferences";
 
-export const Route = createFileRoute("/dashboard")({
-  head: () => ({ meta: [{ title: "Dashboard — SotuHire" }] }),
-  component: Dashboard,
-});
+export const Route = createFileRoute("/dashboard")({ component: CareerCockpit });
 
-function Dashboard() {
-  const api = useApi();
+const copy = {
+  "pt-BR": {
+    title: "Cockpit de carreira",
+    description: "O que mudou, o que precisa de atenção e por quê.",
+    eyebrow: "Seu estado profissional agora",
+    approvals: "Aguardando sua aprovação",
+    evidence: "Cobertura de evidências",
+    active: "Candidaturas ativas",
+    interview: "Próxima entrevista",
+    priorities: "Próximas melhores ações",
+    why: "Por que agora",
+    impact: "Impacto esperado",
+    effort: "Esforço",
+    open: "Revisar",
+    strengths: "Forças comprovadas",
+    gaps: "Lacunas para revisar",
+    noProvider: "Confiança do provider não entra no cálculo determinístico.",
+  },
+  "en-US": {
+    title: "Career cockpit",
+    description: "What changed, what needs attention, and why.",
+    eyebrow: "Your career state now",
+    approvals: "Waiting for your approval",
+    evidence: "Evidence coverage",
+    active: "Active applications",
+    interview: "Next interview",
+    priorities: "Next best actions",
+    why: "Why now",
+    impact: "Expected impact",
+    effort: "Effort",
+    open: "Review",
+    strengths: "Confirmed strengths",
+    gaps: "Gaps to review",
+    noProvider: "Provider confidence is not part of deterministic scoring.",
+  },
+};
+
+function CareerCockpit() {
   const { mode, baseUrl } = useApiMode();
-
-  const healthQ = useQuery({ queryKey: ["health", mode, baseUrl], queryFn: () => api.health() });
-  const metricsQ = useQuery({
-    queryKey: ["metrics", mode, baseUrl],
-    queryFn: () => api.trackerMetrics(),
+  const { locale } = usePreferences();
+  const t = copy[locale];
+  const state = useQuery({
+    queryKey: ["v2", "career-state", mode, baseUrl],
+    queryFn: () => v2Api(mode, baseUrl).careerState(),
   });
-  const jobsQ = useQuery({
-    queryKey: ["tracker-jobs", mode, baseUrl],
-    queryFn: () => api.trackerJobs(),
+  const approvals = useQuery({
+    queryKey: ["v2", "approvals", mode, baseUrl],
+    queryFn: () => v2Api(mode, baseUrl).approvals(),
   });
-  const reqsQ = useQuery({
-    queryKey: ["reqs", mode, baseUrl],
-    queryFn: () => api.trackerRequirements(),
-  });
-  const profileQ = useQuery({
-    queryKey: ["profile", mode, baseUrl],
-    queryFn: () => api.profile(),
-  });
-  const radarQ = useQuery({
-    queryKey: ["radar-stats", mode, baseUrl],
-    queryFn: () => api.radarStats(),
-  });
-  const notificationsQ = useQuery({
-    queryKey: ["notifications", mode, baseUrl],
-    queryFn: () => api.notifications(),
-  });
-  const extensionQ = useQuery({
-    queryKey: ["extension-captures", mode, baseUrl],
-    queryFn: () => api.extensionCaptures(),
-  });
-  const examsQ = useQuery({
-    queryKey: ["public-exams", mode, baseUrl],
-    queryFn: () => api.publicExamList(),
-  });
-
-  const recentJobs = (jobsQ.data?.jobs ?? []).slice(0, 5);
-  const latestScoredJob = recentJobs.find((job) => typeof job.match_score === "number");
-  const weekly = metricsQ.data?.weekly_applications ?? [];
-  const profile = profileQ.data?.profile;
-  const profileItems = [...(profile?.items ?? []), ...(profile?.constraints ?? [])];
-  const confirmedEvidence = profileItems.filter((item) => item.confirmed_by_user).length;
-  const profileSignals = [
-    profile?.headline,
-    profile?.summary,
-    profile?.primary_domains.length,
-    profile?.target_roles.length,
-    profile?.preferred_locations.length,
-    confirmedEvidence,
-  ].filter(Boolean).length;
-  const profileCompleteness = Math.round((profileSignals / 6) * 100);
-  const pendingCaptures = (extensionQ.data?.captures ?? []).filter(
-    (capture) => capture.status !== "tracked" && capture.status !== "archived",
-  ).length;
 
   return (
-    <AppShell
-      title="Dashboard"
-      description="Visão geral da sua jornada de candidaturas, scores e gaps."
-      actions={
-        <Link
-          to="/match"
-          className="hidden items-center gap-1.5 rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 sm:inline-flex"
-        >
-          Nova análise <ArrowUpRight className="h-3 w-3" />
-        </Link>
-      }
-    >
-      <div className="space-y-6">
-        {/* API status banner */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-3">
-            <div
-              className={`grid h-9 w-9 shrink-0 place-items-center rounded-lg ${
-                mode === "demo"
-                  ? "bg-warning/15 text-warning"
-                  : healthQ.isError
-                    ? "bg-destructive/15 text-destructive"
-                    : "bg-success/15 text-success"
-              }`}
-            >
-              <Activity className="h-4 w-4" />
+    <AppShell title={t.title} description={t.description}>
+      <div className="career-map mx-auto max-w-7xl space-y-6">
+        <section className="trajectory-surface overflow-hidden rounded-3xl border p-6 md:p-8">
+          <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
+            <div>
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+                <Compass className="h-4 w-4" /> {t.eyebrow}
+              </p>
+              <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
+                {state.data?.profile_summary ?? "Carregando estado da carreira…"}
+              </h2>
+              <p className="mt-4 max-w-2xl text-sm text-muted-foreground">{t.noProvider}</p>
             </div>
-            <div className="min-w-0 text-sm">
-              <div className="font-semibold">
-                {mode === "demo"
-                  ? "Modo Demo ativo"
-                  : healthQ.isLoading
-                    ? "Verificando API local…"
-                    : healthQ.isError
-                      ? "API local não detectada"
-                      : `API online · v${healthQ.data?.version}`}
-              </div>
-              <div className="text-xs text-muted-foreground">
-                {mode === "demo"
-                  ? "Você está navegando com dados fictícios. Troque para API Real em Configurações."
-                  : healthQ.isError
-                    ? "Rode `python scripts/run_api.py` ou ative o modo Demo."
-                    : "Conectado em http://127.0.0.1:8787/api/v1"}
-              </div>
-            </div>
-          </div>
-          {mode === "real" && healthQ.data?.capabilities && (
-            <div className="flex flex-wrap gap-1.5">
-              {healthQ.data.capabilities.slice(0, 4).map((c) => (
-                <span
-                  key={c}
-                  className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground"
-                >
-                  {c}
+            <div className="rounded-2xl border border-accent/20 bg-background/70 p-5 backdrop-blur">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium">{t.evidence}</span>
+                <span className="text-2xl font-semibold tabular-nums">
+                  {Math.round((state.data?.confidence.data_coverage ?? 0) * 100)}%
                 </span>
-              ))}
-            </div>
-          )}
-        </div>
-
-        <SectionCard
-          title="Fluxo guiado"
-          description="Siga o caminho principal: currículo, vaga, compatibilidade, ATS, ajuste, portfólio e tracker."
-        >
-          <GuidedFlow compact />
-        </SectionCard>
-
-        {/* KPIs */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Vagas salvas"
-            value={metricsQ.data?.total_saved ?? "—"}
-            icon={Briefcase}
-            hint="No tracker local"
-          />
-          <StatCard
-            label="Aplicadas"
-            value={metricsQ.data?.total_applied ?? "—"}
-            icon={CheckCircle2}
-            tone="accent"
-            hint="Total enviadas"
-          />
-          <StatCard
-            label="Taxa de resposta"
-            value={metricsQ.data ? `${Math.round(metricsQ.data.response_rate * 100)}%` : "—"}
-            icon={TrendingUp}
-            hint={`Entrevistas: ${metricsQ.data ? Math.round(metricsQ.data.interview_rate * 100) : "—"}%`}
-          />
-          <StatCard
-            label="ATS médio"
-            value={metricsQ.data?.average_ats ?? "—"}
-            icon={Target}
-            hint="Últimas análises"
-          />
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard
-            label="Perfil completo"
-            value={profileQ.isLoading ? "—" : `${profileCompleteness}%`}
-            icon={UserRound}
-            hint={`${confirmedEvidence} evidência(s) confirmada(s)`}
-          />
-          <StatCard
-            label="Radar"
-            value={radarQ.data?.new_results ?? "—"}
-            icon={RadioTower}
-            tone="accent"
-            hint={`${radarQ.data?.unread_alerts ?? 0} alerta(s) não lido(s)`}
-          />
-          <StatCard
-            label="Editais acompanhados"
-            value={examsQ.data?.notices.length ?? "—"}
-            icon={ScrollText}
-            hint="Checklist e plano exigem revisão"
-          />
-          <StatCard
-            label="Itens para revisar"
-            value={pendingCaptures + (notificationsQ.data?.unread_count ?? 0)}
-            icon={Inbox}
-            hint={`${pendingCaptures} captura(s) · ${notificationsQ.data?.unread_count ?? 0} notificação(ões)`}
-          />
-        </div>
-
-        {/* Charts + scores */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          <SectionCard
-            title="Candidaturas por semana"
-            description="Evolução do volume aplicado"
-            className="lg:col-span-2"
-          >
-            {metricsQ.isLoading ? (
-              <Skeleton className="h-64 w-full" />
-            ) : (
-              <div className="h-64 w-full">
-                <ResponsiveContainer>
-                  <AreaChart data={weekly} margin={{ left: -16, right: 8, top: 8 }}>
-                    <defs>
-                      <linearGradient id="appsG" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="var(--color-accent)" stopOpacity={0.35} />
-                        <stop offset="100%" stopColor="var(--color-accent)" stopOpacity={0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid
-                      stroke="var(--color-border)"
-                      strokeDasharray="3 3"
-                      vertical={false}
-                    />
-                    <XAxis
-                      dataKey="week"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fontSize: 11 }}
-                    />
-                    <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11 }} width={32} />
-                    <Tooltip
-                      contentStyle={{
-                        background: "var(--color-card)",
-                        border: "1px solid var(--color-border)",
-                        borderRadius: 8,
-                        fontSize: 12,
-                      }}
-                    />
-                    <Area
-                      dataKey="count"
-                      stroke="var(--color-accent)"
-                      strokeWidth={2}
-                      fill="url(#appsG)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
               </div>
-            )}
-          </SectionCard>
-
-          <SectionCard title="Última análise" description="Pontuação da análise mais recente">
-            {latestScoredJob ? (
-              <div className="flex flex-col items-center gap-4">
-                <ScoreRing
-                  value={latestScoredJob.match_score!}
-                  label="Compatibilidade"
-                  size={128}
-                  tone="primary"
-                  sub="COMPAT."
+              <div className="mt-4 h-2 rounded-full bg-muted">
+                <div
+                  className="h-full rounded-full bg-accent"
+                  style={{
+                    width: `${Math.round((state.data?.confidence.data_coverage ?? 0) * 100)}%`,
+                  }}
                 />
-                <p className="text-center text-sm text-muted-foreground">
-                  {latestScoredJob.title} · {latestScoredJob.company}
-                </p>
-                <Link to="/match" className="text-xs font-medium text-accent hover:underline">
-                  Abrir Análise de Compatibilidade →
-                </Link>
               </div>
-            ) : (
-              <div className="py-8 text-center text-sm text-muted-foreground">
-                Nenhuma análise real foi registrada ainda.
-                <br />
-                <Link
-                  to="/match"
-                  className="mt-2 inline-block font-medium text-accent hover:underline"
-                >
-                  Criar a primeira análise
-                </Link>
-              </div>
-            )}
-          </SectionCard>
-        </div>
-
-        {/* Recent jobs + intelligence */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          <SectionCard
-            title="Últimas candidaturas"
-            description="Vagas mais recentes no tracker"
-            actions={
-              <Link
-                to="/tracker"
-                className="text-xs font-medium text-muted-foreground hover:text-foreground"
-              >
-                Ver tudo
-              </Link>
-            }
-            padded={false}
-          >
-            {jobsQ.isLoading ? (
-              <LoadingState />
-            ) : jobsQ.isError ? (
-              <ErrorState error={jobsQ.error} onRetry={() => jobsQ.refetch()} />
-            ) : (
-              <ul className="divide-y divide-border">
-                {recentJobs.map((j) => (
-                  <li
-                    key={j.id}
-                    className="flex items-center justify-between gap-3 px-5 py-3 hover:bg-muted/40"
-                  >
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{j.title}</div>
-                      <div className="truncate text-xs text-muted-foreground">
-                        {j.company} · {j.source}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="hidden rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground sm:inline">
-                        {statusLabel(j.status)}
-                      </span>
-                      <span className="text-display text-base tabular-nums">
-                        {j.match_score ?? "—"}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SectionCard>
-
-          <SectionCard
-            title="Inteligência de Candidaturas"
-            description="Requisitos mais pedidos × evidência sua"
-            actions={
-              <Link
-                to="/intelligence"
-                className="text-xs font-medium text-muted-foreground hover:text-foreground"
-              >
-                Ver tudo
-              </Link>
-            }
-          >
-            {reqsQ.isLoading ? (
-              <LoadingState />
-            ) : (
-              <ul className="space-y-3">
-                {reqsQ.data?.top_requirements.slice(0, 5).map((r) => (
-                  <li key={r.name} className="space-y-1.5">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="flex items-center gap-1.5 font-medium">
-                        {r.candidate_has_evidence ? (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-accent" />
-                        ) : (
-                          <XCircle className="h-3.5 w-3.5 text-destructive" />
-                        )}
-                        {r.name}
-                      </span>
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {r.count} vagas
-                      </span>
-                    </div>
-                    <div className="h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={`h-full ${r.candidate_has_evidence ? "bg-accent" : "bg-destructive/70"}`}
-                        style={{ width: `${Math.min(100, r.count * 8)}%` }}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </SectionCard>
-        </div>
-
-        {/* Shortcuts */}
-        <SectionCard title="Atalhos">
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              { to: "/match", icon: Target, label: "Análise de Compatibilidade" },
-              { to: "/ats", icon: LineChartIcon, label: "Análise ATS" },
-              { to: "/tailor", icon: Wand2, label: "Ajuste de Currículo" },
-              { to: "/tracker", icon: Kanban, label: "Candidaturas" },
-            ].map((s) => (
-              <Link
-                key={s.to}
-                to={s.to}
-                className="group flex items-center justify-between rounded-lg border border-border bg-card px-4 py-3 transition-all hover:border-accent/40 hover:bg-accent/5"
-              >
-                <div className="flex items-center gap-2.5">
-                  <s.icon className="h-4 w-4 text-muted-foreground group-hover:text-accent" />
-                  <span className="text-sm font-medium">{s.label}</span>
-                </div>
-                <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground group-hover:text-accent" />
-              </Link>
-            ))}
+            </div>
           </div>
-        </SectionCard>
+        </section>
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Career signals">
+          <Signal
+            icon={Inbox}
+            label={t.approvals}
+            value={approvals.data?.filter((item) => item.status === "proposed").length ?? 0}
+            to="/approvals"
+          />
+          <Signal
+            icon={Target}
+            label={t.active}
+            value={state.data?.active_applications ?? 0}
+            to="/tracker"
+          />
+          <Signal
+            icon={CalendarClock}
+            label={t.interview}
+            value={state.data?.upcoming_interviews ?? 0}
+            to="/interviews"
+          />
+          <Signal
+            icon={Layers3}
+            label={t.gaps}
+            value={state.data?.evidence_gaps.length ?? 0}
+            to="/evidence"
+          />
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[1.45fr_0.55fr]">
+          <div className="rounded-2xl border bg-card p-5 shadow-[var(--shadow-soft)] md:p-6">
+            <div className="mb-5 flex items-center justify-between">
+              <h2 className="text-xl font-semibold">{t.priorities}</h2>
+              <ShieldCheck className="h-5 w-5 text-accent" aria-label="Human approval required" />
+            </div>
+            <ol className="space-y-3">
+              {state.data?.recommendation_candidates.map((action, index) => (
+                <li
+                  key={action.action_id}
+                  className="group rounded-xl border bg-background p-4 transition-colors hover:border-accent/40"
+                >
+                  <div className="flex gap-4">
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
+                      {index + 1}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold">{action.type.replaceAll("_", " ")}</h3>
+                        <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium">
+                          {action.urgency}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-sm">
+                        <span className="font-medium">{t.why}:</span> {action.reason}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        <span className="font-medium text-foreground">{t.impact}:</span>{" "}
+                        {action.impact} · {t.effort}: {action.estimated_effort}
+                      </p>
+                    </div>
+                    <Button asChild variant="outline" size="sm">
+                      <Link to="/approvals">
+                        {t.open}
+                        <ArrowRight />
+                      </Link>
+                    </Button>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+
+          <div className="space-y-6">
+            <ListPanel title={t.strengths} items={state.data?.confirmed_strengths ?? []} positive />
+            <ListPanel title={t.gaps} items={state.data?.evidence_gaps ?? []} />
+          </div>
+        </section>
       </div>
     </AppShell>
+  );
+}
+
+function Signal({
+  icon: Icon,
+  label,
+  value,
+  to,
+}: {
+  icon: typeof Target;
+  label: string;
+  value: number;
+  to: "/approvals" | "/tracker" | "/interviews" | "/evidence";
+}) {
+  return (
+    <Link
+      to={to}
+      className="group rounded-2xl border bg-card p-5 shadow-[var(--shadow-soft)] transition-transform hover:-translate-y-0.5"
+    >
+      <div className="flex items-center justify-between">
+        <Icon className="h-5 w-5 text-accent" />
+        <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
+      </div>
+      <div className="mt-5 text-3xl font-semibold tabular-nums">{value}</div>
+      <div className="mt-1 text-sm text-muted-foreground">{label}</div>
+    </Link>
+  );
+}
+
+function ListPanel({
+  title,
+  items,
+  positive = false,
+}: {
+  title: string;
+  items: string[];
+  positive?: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border bg-card p-5">
+      <h2 className="font-semibold">{title}</h2>
+      <ul className="mt-4 space-y-3">
+        {items.slice(0, 5).map((item) => (
+          <li key={item} className="flex gap-2 text-sm">
+            <CheckCircle2
+              className={`mt-0.5 h-4 w-4 shrink-0 ${positive ? "text-accent" : "text-warning"}`}
+            />
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

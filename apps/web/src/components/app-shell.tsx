@@ -24,6 +24,9 @@ import {
   ListTodo,
   ChevronRight,
   Menu,
+  Network,
+  FolderKanban,
+  BadgeCheck,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { ContextHelp } from "./context-help";
@@ -34,6 +37,8 @@ import { usePreferences } from "@/lib/preferences";
 import { cn } from "@/lib/utils";
 import { APP_VERSION, API_LOCAL_HOST } from "@/lib/labels";
 import { ApiModeBadge } from "./api-mode-badge";
+import { CopilotDrawer } from "@/features/career-copilot/copilot-drawer";
+import { CommandPalette } from "@/features/career-copilot/command-palette";
 
 const nav = [
   {
@@ -44,12 +49,23 @@ const nav = [
         label: "route.dashboard.label" as TranslationKey,
         icon: LayoutDashboard,
       },
+      {
+        to: "/approvals" as const,
+        label: "route.approvals.label" as TranslationKey,
+        icon: BadgeCheck,
+      },
     ],
   },
   {
     group: "nav.group.profile" as TranslationKey,
     items: [
       { to: "/profile" as const, label: "route.profile.label" as TranslationKey, icon: UserRound },
+      { to: "/evidence" as const, label: "route.evidence.label" as TranslationKey, icon: Network },
+      {
+        to: "/portfolio" as const,
+        label: "route.portfolio.label" as TranslationKey,
+        icon: FolderKanban,
+      },
       { to: "/resume" as const, label: "route.resume.label" as TranslationKey, icon: FileText },
       {
         to: "/resume-studio" as const,
@@ -247,6 +263,8 @@ export function AppShell({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <div className="hidden sm:flex sm:items-center sm:gap-2">{actions}</div>
+            <CommandPalette />
+            <CopilotDrawer pathname={pathname} />
             <ContextHelp pathname={pathname} />
             <PreferencesDialog />
             <ApiModeBadge />

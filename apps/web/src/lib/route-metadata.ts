@@ -15,6 +15,24 @@ export const ROUTES: RouteMetadata[] = [
     description: "route.dashboard.description",
   },
   {
+    path: "/approvals",
+    label: "route.approvals.label",
+    title: "route.approvals.title",
+    description: "route.approvals.description",
+  },
+  {
+    path: "/evidence",
+    label: "route.evidence.label",
+    title: "route.evidence.title",
+    description: "route.evidence.description",
+  },
+  {
+    path: "/portfolio",
+    label: "route.portfolio.label",
+    title: "route.portfolio.title",
+    description: "route.portfolio.description",
+  },
+  {
     path: "/profile",
     label: "route.profile.label",
     title: "route.profile.title",

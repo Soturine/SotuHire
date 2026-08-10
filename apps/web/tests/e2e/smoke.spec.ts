@@ -2,7 +2,10 @@
 
 const coreScreens = [
   { path: "/", heading: /SotuHire/i },
-  { path: "/dashboard", heading: "Dashboard" },
+  { path: "/dashboard", heading: "Cockpit de carreira" },
+  { path: "/evidence", heading: "Caixa de evidências" },
+  { path: "/portfolio", heading: "Portfólio" },
+  { path: "/approvals", heading: "Aguardando sua aprovação" },
   { path: "/resume", heading: /Curr.culo/ },
   { path: "/application-lab", heading: /Preparar candidatura/ },
   { path: "/resume-studio", heading: /Resume Studio/ },
@@ -30,10 +33,9 @@ test("home, dashboard and guided flow render without legacy branding", async ({ 
   await expect(page.locator("body")).not.toContainText("Match Engine 2.0");
 
   await page.goto("/dashboard");
-  await expect(page.getByRole("heading", { name: "Dashboard" })).toBeVisible();
-  await expect(page.getByText("Fluxo guiado")).toBeVisible();
-  await expect(page.getByText("Adicionar curriculo")).toBeVisible();
-  await expect(page.getByText("Acompanhar no Kanban")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Cockpit de carreira" })).toBeVisible();
+  await expect(page.getByText("Próximas melhores ações")).toBeVisible();
+  await expect(page.getByText("Aguardando sua aprovação").first()).toBeVisible();
 });
 
 test("core screens open in every configured browser", async ({ page }) => {
@@ -616,9 +618,12 @@ test("responsive layouts avoid page-level horizontal overflow", async ({ page },
     "Responsive matrix is captured once in Chromium.",
   );
   const viewports = [
+    { width: 360, height: 800 },
     { width: 390, height: 844 },
     { width: 768, height: 1024 },
+    { width: 1024, height: 900 },
     { width: 1440, height: 1000 },
+    { width: 1920, height: 1080 },
   ];
 
   for (const viewport of viewports) {
