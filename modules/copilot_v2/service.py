@@ -188,6 +188,19 @@ class CareerCopilot:
         )
         return self.repository.save_plan(plan)
 
+    def transition_plan(self, plan_id: str, action: str) -> CopilotPlan:
+        transitions = {
+            "pause": ({"active"}, "paused"),
+            "resume": ({"paused"}, "active"),
+            "cancel": ({"active", "paused"}, "cancelled"),
+        }
+        if action not in transitions:
+            raise ValueError("Unsupported plan transition")
+        expected, target = transitions[action]
+        plan = self.repository.transition_plan(plan_id, expected=expected, target=target)
+        self.repository.audit("human", f"plan_{target}", payload={"plan_id": plan_id})
+        return plan
+
     def _execute_local(self, proposal: ProposedAction) -> dict[str, Any]:
         if proposal.action_type == "create_task":
             task_id = self._task_id(proposal)

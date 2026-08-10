@@ -248,6 +248,16 @@ def create_plan(payload: CopilotPlanCreate) -> ApiEnvelope[CopilotPlan]:
     return ok(_copilot().plan(payload.intent))
 
 
+@router.post("/copilot/plans/{plan_id}/{action}", response_model=ApiEnvelope[CopilotPlan])
+def transition_plan(plan_id: str, action: str) -> ApiEnvelope[CopilotPlan]:
+    try:
+        return ok(_copilot().transition_plan(plan_id, action))
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Plan not found") from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 @router.get("/copilot/tools", response_model=ApiEnvelope[list[dict[str, Any]]])
 def list_tools() -> ApiEnvelope[list[dict[str, Any]]]:
     tools = [

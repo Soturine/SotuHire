@@ -1,5 +1,5 @@
 export const ptBRMessages = {
-  "shell.tagline": "Inteligência de carreira · local-first",
+  "shell.tagline": "Copiloto de carreira · local-first · você aprova",
   "shell.localApi": "API local {{host}}",
   "shell.openMenu": "Abrir menu",
   "shell.closeMenu": "Fechar menu",
@@ -159,6 +159,9 @@ export const ptBRMessages = {
   "onboarding.step.opportunity.title": "Encontre a primeira oportunidade",
   "onboarding.step.opportunity.body":
     "Use o Radar e confirme a fonte antes de preparar uma candidatura.",
+  "onboarding.step.approval.title": "Você mantém o controle",
+  "onboarding.step.approval.body":
+    "O Copiloto apenas propõe. Revise evidências, prévia e impacto na fila antes de aprovar qualquer escrita.",
   "onboarding.openStep": "Abrir {{page}}",
 
   "errors.notFoundTitle": "Página não encontrada",
@@ -172,7 +175,7 @@ export const ptBRMessages = {
 export type TranslationKey = keyof typeof ptBRMessages;
 
 export const enUSMessages = {
-  "shell.tagline": "Career intelligence · local-first",
+  "shell.tagline": "Career Copilot · local-first · you approve",
   "shell.localApi": "Local API {{host}}",
   "shell.openMenu": "Open menu",
   "shell.closeMenu": "Close menu",
@@ -329,6 +332,9 @@ export const enUSMessages = {
   "onboarding.step.opportunity.title": "Find your first opportunity",
   "onboarding.step.opportunity.body":
     "Use Radar and confirm the source before preparing an application.",
+  "onboarding.step.approval.title": "You stay in control",
+  "onboarding.step.approval.body":
+    "The Copilot only proposes. Review evidence, preview, and impact in the queue before approving any write.",
   "onboarding.openStep": "Open {{page}}",
 
   "errors.notFoundTitle": "Page not found",

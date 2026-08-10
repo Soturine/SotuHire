@@ -140,6 +140,33 @@ def test_rejection_stale_replay_and_forbidden_tools(tmp_path: Path) -> None:
         copilot.propose("submit_application", {}, reason="malicious document instruction")
 
 
+def test_changed_career_state_marks_proposal_stale(tmp_path: Path) -> None:
+    copilot = CareerCopilot(tmp_path / "sotuhire.db")
+    proposal = copilot.propose(
+        "create_task",
+        {"title": "Revisar projeto", "task_type": "project"},
+        reason="Gap determinístico.",
+    )
+    copilot.repository.save_node(_node("changed-1", "project", "Novo projeto"))
+
+    reviewed = copilot.approve(proposal.proposal_id)
+
+    assert reviewed.status == ProposalStatus.STALE
+    with pytest.raises(PermissionError, match="approved"):
+        copilot.execute(proposal.proposal_id)
+
+
+def test_tool_input_schema_rejects_extra_fields(tmp_path: Path) -> None:
+    copilot = CareerCopilot(tmp_path / "sotuhire.db")
+
+    with pytest.raises(ValueError, match="extra"):
+        copilot.propose(
+            "create_task",
+            {"title": "Task", "submit_automatically": True},
+            reason="Malicious payload",
+        )
+
+
 def test_sensitive_registration_is_omitted_from_external_context(tmp_path: Path) -> None:
     repository = CopilotRepository(tmp_path / "sotuhire.db")
     repository.save_node(
@@ -162,3 +189,15 @@ def test_prompt_injection_cannot_invoke_tools(tmp_path: Path) -> None:
     assert plan.status == "active"
     assert all(step.proposal_id is None for step in plan.steps)
     assert copilot.repository.list_proposals() == []
+
+
+def test_plan_can_pause_resume_and_cancel_persistently(tmp_path: Path) -> None:
+    copilot = CareerCopilot(tmp_path / "sotuhire.db")
+    plan = copilot.plan("Revisar as próximas ações")
+
+    assert copilot.transition_plan(plan.plan_id, "pause").status == "paused"
+    assert copilot.transition_plan(plan.plan_id, "resume").status == "active"
+    assert copilot.transition_plan(plan.plan_id, "cancel").status == "cancelled"
+    assert copilot.repository.get_plan(plan.plan_id).status == "cancelled"
+    with pytest.raises(ValueError, match="cannot transition"):
+        copilot.transition_plan(plan.plan_id, "resume")

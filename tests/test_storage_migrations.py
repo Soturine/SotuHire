@@ -166,6 +166,42 @@ def test_v7_upgrades_a_v6_fixture_and_remains_idempotent(tmp_path):
     assert runner.verify() == []
 
 
+def test_v8_upgrades_a_v7_fixture_without_rewriting_v1_tables(tmp_path):
+    database = tmp_path / "sotuhire-v7.db"
+    with connect_database(database) as connection:
+        MigrationRunner._bootstrap_history(connection)
+        for migration in MIGRATIONS[:7]:
+            migration.up(connection)
+            connection.execute(
+                """INSERT INTO migration_history
+                (version, description, applied_at, success, validation_errors,
+                 rollback_strategy, created_at) VALUES (?, ?, '2026-08-10', 1, '[]', ?, ?)""",
+                (
+                    migration.version,
+                    migration.description,
+                    migration.rollback_strategy,
+                    migration.created_at,
+                ),
+            )
+        connection.execute(
+            """INSERT INTO career_tasks
+            (task_id,task_type,title,status,priority,payload,created_at,updated_at)
+            VALUES ('legacy-task','custom','Preserved','pending','medium','{}','2026','2026')"""
+        )
+        connection.commit()
+
+    runner = MigrationRunner(database)
+    assert runner.apply(create_backup=False) == [8]
+    assert runner.verify() == []
+    with connect_database(database) as connection:
+        assert (
+            connection.execute(
+                "SELECT title FROM career_tasks WHERE task_id='legacy-task'"
+            ).fetchone()[0]
+            == "Preserved"
+        )
+
+
 def test_snapshot_tables_reject_mutation_at_database_level(tmp_path):
     database = tmp_path / "sotuhire.db"
     MigrationRunner(database).apply(create_backup=False)

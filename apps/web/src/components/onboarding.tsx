@@ -15,7 +15,7 @@ import { usePreferences } from "@/lib/preferences";
 const STEPS: Array<{
   title: TranslationKey;
   body: TranslationKey;
-  to?: "/profile" | "/resume" | "/settings" | "/sources" | "/radar";
+  to?: "/profile" | "/resume" | "/settings" | "/sources" | "/radar" | "/approvals";
   page?: TranslationKey;
 }> = [
   { title: "onboarding.step.preferences.title", body: "onboarding.step.preferences.body" },
@@ -49,6 +49,12 @@ const STEPS: Array<{
     body: "onboarding.step.opportunity.body",
     to: "/radar",
     page: "route.radar.label",
+  },
+  {
+    title: "onboarding.step.approval.title",
+    body: "onboarding.step.approval.body",
+    to: "/approvals",
+    page: "route.approvals.label",
   },
 ];
 

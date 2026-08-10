@@ -439,6 +439,61 @@ class CopilotRepository:
                 )
         return plan
 
+    def get_plan(self, plan_id: str) -> CopilotPlan | None:
+        self._ensure()
+        with connect_database(self.database_path) as connection:
+            row = connection.execute(
+                "SELECT * FROM copilot_plans WHERE plan_id=?", (plan_id,)
+            ).fetchone()
+            if row is None:
+                return None
+            steps = connection.execute(
+                "SELECT * FROM copilot_plan_steps WHERE plan_id=? ORDER BY position",
+                (plan_id,),
+            ).fetchall()
+        return CopilotPlan(
+            plan_id=row["plan_id"],
+            intent=row["intent"],
+            title=row["title"],
+            status=row["status"],
+            context_summary=_loads(row["context_summary"]),
+            steps=[
+                {
+                    "step_id": step["step_id"],
+                    "position": step["position"],
+                    "title": step["title"],
+                    "status": step["status"],
+                    "proposal_id": step["proposal_id"],
+                    "payload": _loads(step["payload"]),
+                }
+                for step in steps
+            ],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+        )
+
+    def transition_plan(self, plan_id: str, *, expected: set[str], target: str) -> CopilotPlan:
+        self._ensure()
+        current = self.get_plan(plan_id)
+        if current is None:
+            raise KeyError(plan_id)
+        if current.status not in expected:
+            raise ValueError(f"Plan cannot transition from {current.status} to {target}")
+        now = utc_now()
+        with connect_database(self.database_path) as connection:
+            placeholders = ",".join("?" for _ in expected)
+            result = connection.execute(
+                f"UPDATE copilot_plans SET status=?,updated_at=? "
+                f"WHERE plan_id=? AND status IN ({placeholders})",
+                (target, now.isoformat(), plan_id, *sorted(expected)),
+            )
+            if result.rowcount != 1:
+                raise ValueError("Plan changed concurrently")
+        updated = self.get_plan(plan_id)
+        if updated is None:
+            raise KeyError(plan_id)
+        return updated
+
     def list_audit_events(self, *, limit: int = 200) -> list[dict[str, Any]]:
         self._ensure()
         with connect_database(self.database_path) as connection:
