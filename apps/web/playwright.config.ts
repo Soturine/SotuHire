@@ -19,7 +19,13 @@ export default defineConfig({
       origins: [
         {
           origin: baseURL,
-          localStorage: [{ name: "sotuhire.onboarding.v1.complete", value: "true" }],
+          localStorage: [
+            { name: "sotuhire.onboarding.v1.complete", value: "true" },
+            {
+              name: "sotuhire.ui-preferences.v1",
+              value: JSON.stringify({ locale: "pt-BR", theme: "system" }),
+            },
+          ],
         },
       ],
     },

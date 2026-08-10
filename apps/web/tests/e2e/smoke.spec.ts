@@ -56,7 +56,7 @@ test("sidebar navigates across core screens", async ({ page }) => {
     { label: /Editais \/ Concursos/i, url: /\/public-exams$/, heading: "Editais / Concursos" },
     { label: /Perfil/i, url: /\/profile$/, heading: "Perfil" },
     { label: /Fontes e Captura/i, url: /\/sources$/, heading: "Fontes e Captura" },
-    { label: /Configura..es/i, url: /\/settings$/, heading: /Configura..es/ },
+    { label: /Prefer.ncias/i, url: /\/settings$/, heading: /Configura..es/ },
   ];
 
   for (const route of routes) {
@@ -202,7 +202,7 @@ test("sources page handles local extension offline and fake capture imports", as
     page.getByText(/Companion offline|Companion conectado|API Real sem oportunidades/i).first(),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Configurações", exact: true }).click();
+  await page.getByRole("link", { name: "Preferências", exact: true }).click();
   await page.getByRole("button", { name: "Demo" }).click();
   await page.getByRole("link", { name: /Fontes e Captura/i }).click();
   await expect(page.getByText(/Extens.o Local/).first()).toBeVisible();
@@ -457,7 +457,7 @@ test("API Real empty states do not silently show demo opportunity data", async (
 
   await page
     .getByRole("navigation")
-    .getByRole("link", { name: /Candidaturas/i })
+    .getByRole("link", { name: /Tracker/i })
     .click();
   await expect(page.getByText("Nenhuma candidatura ainda")).toBeVisible();
   await expect(page.locator("body")).not.toContainText("Empresa Demo");
