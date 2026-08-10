@@ -13,7 +13,7 @@ def test_migrations_create_versioned_schema_and_are_idempotent(tmp_path):
     runner = MigrationRunner(database)
 
     assert runner.current_version() == 0
-    assert runner.apply(create_backup=False) == [1, 2, 3, 4, 5, 6, 7]
+    assert runner.apply(create_backup=False) == [1, 2, 3, 4, 5, 6, 7, 8]
     assert runner.current_version() == LATEST_SCHEMA_VERSION
     assert runner.apply(create_backup=False) == []
     assert runner.verify() == []
@@ -75,6 +75,16 @@ def test_migrations_create_versioned_schema_and_are_idempotent(tmp_path):
             "career_tasks",
             "reminders",
             "career_plans",
+            "evidence_nodes",
+            "evidence_edges",
+            "portfolio_items",
+            "career_state_snapshots",
+            "proposed_actions",
+            "action_executions",
+            "copilot_plans",
+            "copilot_plan_steps",
+            "copilot_audit_events",
+            "copilot_feedback",
         } <= tables
         assert connection.execute("PRAGMA foreign_keys").fetchone()[0] == 1
         assert connection.execute("PRAGMA journal_mode").fetchone()[0] == "wal"
@@ -118,7 +128,7 @@ def test_v6_backfills_legacy_evidence_review_status(tmp_path):
         )
         connection.commit()
 
-    assert MigrationRunner(database).apply(create_backup=False) == [6, 7]
+    assert MigrationRunner(database).apply(create_backup=False) == [6, 7, 8]
     with connect_database(database) as connection:
         statuses = dict(connection.execute("SELECT id, review_status FROM profile_items"))
 
@@ -151,7 +161,7 @@ def test_v7_upgrades_a_v6_fixture_and_remains_idempotent(tmp_path):
 
     runner = MigrationRunner(database)
     assert runner.current_version() == 6
-    assert runner.apply(create_backup=False) == [7]
+    assert runner.apply(create_backup=False) == [7, 8]
     assert runner.apply(create_backup=False) == []
     assert runner.verify() == []
 

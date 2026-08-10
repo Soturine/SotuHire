@@ -1271,6 +1271,193 @@ def _migration_007(connection: sqlite3.Connection) -> None:
     )
 
 
+def _migration_008(connection: sqlite3.Connection) -> None:
+    """Add the v2 evidence graph and human-approved Copilot state."""
+    _execute_script(
+        connection,
+        """
+        CREATE TABLE IF NOT EXISTS evidence_nodes (
+            node_id TEXT PRIMARY KEY,
+            node_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            summary TEXT NOT NULL DEFAULT '',
+            payload TEXT NOT NULL DEFAULT '{}',
+            source_refs TEXT NOT NULL DEFAULT '[]',
+            review_status TEXT NOT NULL DEFAULT 'candidate',
+            confidence REAL NOT NULL DEFAULT 0,
+            sensitive INTEGER NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            stale_at TEXT,
+            CHECK(review_status IN ('candidate','confirmed','rejected','stale')),
+            CHECK(confidence BETWEEN 0 AND 1),
+            CHECK(sensitive IN (0,1))
+        );
+        CREATE INDEX IF NOT EXISTS idx_evidence_nodes_review
+        ON evidence_nodes(review_status, node_type, updated_at DESC);
+        CREATE INDEX IF NOT EXISTS idx_evidence_nodes_title
+        ON evidence_nodes(title COLLATE NOCASE);
+
+        CREATE TABLE IF NOT EXISTS evidence_edges (
+            edge_id TEXT PRIMARY KEY,
+            source_id TEXT NOT NULL,
+            target_id TEXT NOT NULL,
+            relation_type TEXT NOT NULL,
+            evidence_refs TEXT NOT NULL DEFAULT '[]',
+            source_refs TEXT NOT NULL DEFAULT '[]',
+            review_status TEXT NOT NULL DEFAULT 'candidate',
+            confidence REAL NOT NULL DEFAULT 0,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            stale_at TEXT,
+            FOREIGN KEY(source_id) REFERENCES evidence_nodes(node_id) ON DELETE CASCADE,
+            FOREIGN KEY(target_id) REFERENCES evidence_nodes(node_id) ON DELETE CASCADE,
+            UNIQUE(source_id, target_id, relation_type),
+            CHECK(review_status IN ('candidate','confirmed','rejected','stale')),
+            CHECK(confidence BETWEEN 0 AND 1)
+        );
+        CREATE INDEX IF NOT EXISTS idx_evidence_edges_source
+        ON evidence_edges(source_id, review_status);
+        CREATE INDEX IF NOT EXISTS idx_evidence_edges_target
+        ON evidence_edges(target_id, review_status);
+
+        CREATE TABLE IF NOT EXISTS portfolio_items (
+            portfolio_item_id TEXT PRIMARY KEY,
+            title TEXT NOT NULL,
+            item_type TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            role TEXT NOT NULL DEFAULT '',
+            start_date TEXT,
+            end_date TEXT,
+            links TEXT NOT NULL DEFAULT '[]',
+            attachments TEXT NOT NULL DEFAULT '[]',
+            skills TEXT NOT NULL DEFAULT '[]',
+            tools TEXT NOT NULL DEFAULT '[]',
+            evidence_refs TEXT NOT NULL DEFAULT '[]',
+            source_refs TEXT NOT NULL DEFAULT '[]',
+            review_status TEXT NOT NULL DEFAULT 'candidate',
+            visibility TEXT NOT NULL DEFAULT 'private',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            stale_at TEXT,
+            CHECK(review_status IN ('candidate','confirmed','rejected','stale')),
+            CHECK(visibility IN ('private','exportable','public-link'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_portfolio_items_status
+        ON portfolio_items(review_status, updated_at DESC);
+
+        CREATE TABLE IF NOT EXISTS career_state_snapshots (
+            snapshot_id TEXT PRIMARY KEY,
+            profile_id TEXT NOT NULL DEFAULT '',
+            dependency_hash TEXT NOT NULL,
+            payload TEXT NOT NULL,
+            trigger TEXT NOT NULL DEFAULT 'manual',
+            created_at TEXT NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_career_state_profile
+        ON career_state_snapshots(profile_id, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS proposed_actions (
+            proposal_id TEXT PRIMARY KEY,
+            action_type TEXT NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            reason TEXT NOT NULL,
+            source TEXT NOT NULL,
+            evidence_refs TEXT NOT NULL DEFAULT '[]',
+            affected_entities TEXT NOT NULL DEFAULT '[]',
+            before_snapshot TEXT NOT NULL DEFAULT '{}',
+            after_preview TEXT NOT NULL DEFAULT '{}',
+            risk TEXT NOT NULL DEFAULT 'low',
+            reversible INTEGER NOT NULL DEFAULT 0,
+            undo_strategy TEXT NOT NULL DEFAULT '',
+            status TEXT NOT NULL DEFAULT 'proposed',
+            dependency_hash TEXT NOT NULL DEFAULT '',
+            idempotency_key TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL,
+            approved_at TEXT,
+            executed_at TEXT,
+            rejected_at TEXT,
+            expires_at TEXT,
+            CHECK(risk IN ('low','medium','high')),
+            CHECK(reversible IN (0,1)),
+            CHECK(status IN ('proposed','reviewing','approved','rejected','executed','failed',
+                             'undone','expired','stale'))
+        );
+        CREATE INDEX IF NOT EXISTS idx_proposed_actions_queue
+        ON proposed_actions(status, created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS action_executions (
+            execution_id TEXT PRIMARY KEY,
+            proposal_id TEXT NOT NULL,
+            status TEXT NOT NULL,
+            result TEXT NOT NULL DEFAULT '{}',
+            before_snapshot TEXT NOT NULL DEFAULT '{}',
+            after_snapshot TEXT NOT NULL DEFAULT '{}',
+            executed_at TEXT NOT NULL,
+            undone_at TEXT,
+            FOREIGN KEY(proposal_id) REFERENCES proposed_actions(proposal_id) ON DELETE CASCADE,
+            CHECK(status IN ('executed','failed','undone'))
+        );
+
+        CREATE TABLE IF NOT EXISTS copilot_plans (
+            plan_id TEXT PRIMARY KEY,
+            intent TEXT NOT NULL,
+            title TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'draft',
+            context_summary TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            CHECK(status IN ('draft','active','paused','completed','cancelled','stale'))
+        );
+        CREATE TABLE IF NOT EXISTS copilot_plan_steps (
+            step_id TEXT PRIMARY KEY,
+            plan_id TEXT NOT NULL,
+            position INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            status TEXT NOT NULL DEFAULT 'pending',
+            proposal_id TEXT,
+            payload TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            FOREIGN KEY(plan_id) REFERENCES copilot_plans(plan_id) ON DELETE CASCADE,
+            FOREIGN KEY(proposal_id) REFERENCES proposed_actions(proposal_id) ON DELETE SET NULL,
+            UNIQUE(plan_id, position),
+            CHECK(status IN ('pending','ready','blocked','completed','cancelled'))
+        );
+
+        CREATE TABLE IF NOT EXISTS copilot_audit_events (
+            event_id TEXT PRIMARY KEY,
+            actor TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            proposal_id TEXT,
+            evidence_refs TEXT NOT NULL DEFAULT '[]',
+            reason TEXT NOT NULL DEFAULT '',
+            before_snapshot TEXT NOT NULL DEFAULT '{}',
+            after_snapshot TEXT NOT NULL DEFAULT '{}',
+            payload TEXT NOT NULL DEFAULT '{}',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(proposal_id) REFERENCES proposed_actions(proposal_id) ON DELETE SET NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_copilot_audit_created
+        ON copilot_audit_events(created_at DESC);
+
+        CREATE TABLE IF NOT EXISTS copilot_feedback (
+            feedback_id TEXT PRIMARY KEY,
+            proposal_id TEXT,
+            rating TEXT NOT NULL,
+            reason TEXT NOT NULL DEFAULT '',
+            created_at TEXT NOT NULL,
+            FOREIGN KEY(proposal_id) REFERENCES proposed_actions(proposal_id) ON DELETE SET NULL,
+            CHECK(rating IN ('useful','not_useful','edited','rejected'))
+        );
+
+        INSERT INTO schema_metadata(key, value) VALUES ('schema_version', '8')
+        ON CONFLICT(key) DO UPDATE SET value = excluded.value;
+        """,
+    )
+
+
 MIGRATIONS = (
     Migration(
         version=1,
@@ -1408,6 +1595,30 @@ MIGRATIONS = (
             "ou arquivos legados."
         ),
         created_at="2026-08-09T00:00:00Z",
+    ),
+    Migration(
+        version=8,
+        description=(
+            "Evidence Graph, portfolio, Career State snapshots e Copilot sob aprovacao humana."
+        ),
+        up=_migration_008,
+        validation=_validate_tables(
+            "evidence_nodes",
+            "evidence_edges",
+            "portfolio_items",
+            "career_state_snapshots",
+            "proposed_actions",
+            "action_executions",
+            "copilot_plans",
+            "copilot_plan_steps",
+            "copilot_audit_events",
+            "copilot_feedback",
+        ),
+        rollback_strategy=(
+            "Restaurar o backup pre-migracao v8. Tabelas v1 e stores legados permanecem "
+            "inalterados durante o upgrade."
+        ),
+        created_at="2026-08-10T00:00:00Z",
     ),
 )
 
