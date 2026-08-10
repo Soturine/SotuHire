@@ -35,8 +35,15 @@ test("evidence review, portfolio and command palette are keyboard reachable", as
 
 test("v2 mobile cockpit and Copilot have no page overflow", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 800 });
-  for (const path of ["/dashboard", "/evidence", "/portfolio", "/approvals"]) {
+  const routes = [
+    ["/dashboard", "Cockpit de carreira"],
+    ["/evidence", "Caixa de evidências"],
+    ["/portfolio", "Portfólio"],
+    ["/approvals", "Aguardando sua aprovação"],
+  ] as const;
+  for (const [path, heading] of routes) {
     await page.goto(path);
+    await expect(page.getByRole("heading", { name: heading }).first()).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
     expect(overflow).toBeLessThanOrEqual(2);
   }
