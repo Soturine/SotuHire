@@ -1,10 +1,22 @@
 import io
 import json
 
-import fitz
 import pytest
 from docx import Document
 from modules.parsers.document_ingestion import LocalDocumentIngestionPipeline
+from pypdf import PdfReader, PdfWriter
+from reportlab.pdfgen import canvas
+
+
+def _pdf_bytes(text: str = "", *, rectangle: bool = False) -> bytes:
+    output = io.BytesIO()
+    pdf = canvas.Canvas(output, invariant=1)
+    if text:
+        pdf.drawString(72, 770, text)
+    if rectangle:
+        pdf.rect(20, 20, 80, 80, fill=1)
+    pdf.save()
+    return output.getvalue()
 
 
 def test_ingestion_is_deterministic_and_preserves_provenance():
@@ -31,10 +43,9 @@ def test_ingestion_removes_script_content_from_html():
 
 
 def test_ingestion_supports_pdf_and_docx():
-    pdf = fitz.open()
-    pdf.new_page().insert_text((72, 72), "Curriculo PDF")
-    pdf_result = LocalDocumentIngestionPipeline().ingest("resume.pdf", pdf.tobytes())
-    pdf.close()
+    pdf_result = LocalDocumentIngestionPipeline().ingest(
+        "resume.pdf", _pdf_bytes("Curriculo PDF")
+    )
 
     docx = Document()
     docx.add_paragraph("Curriculo DOCX")
@@ -72,24 +83,19 @@ def test_ingestion_rejects_spoofed_paths_mime_and_encrypted_pdf():
     with pytest.raises(ValueError, match="extensão"):
         pipeline.ingest("resume.pdf", b"texto comum")
 
-    encrypted = fitz.open()
-    encrypted.new_page().insert_text((72, 72), "privado")
-    payload = encrypted.tobytes(
-        encryption=5,
-        owner_pw="owner-fixture",
-        user_pw="user-fixture",
-    )
-    encrypted.close()
+    writer = PdfWriter()
+    writer.append_pages_from_reader(PdfReader(io.BytesIO(_pdf_bytes("privado"))))
+    writer.encrypt("user-fixture", "owner-fixture")
+    encrypted = io.BytesIO()
+    writer.write(encrypted)
     with pytest.raises(ValueError, match="criptografado"):
-        pipeline.ingest("resume.pdf", payload)
+        pipeline.ingest("resume.pdf", encrypted.getvalue())
 
 
 def test_image_only_pdf_is_reviewable_without_hidden_ocr():
-    pdf = fitz.open()
-    page = pdf.new_page()
-    page.draw_rect(fitz.Rect(20, 20, 100, 100), fill=(0, 0, 0))
-    result = LocalDocumentIngestionPipeline().ingest("scan.pdf", pdf.tobytes())
-    pdf.close()
+    result = LocalDocumentIngestionPipeline().ingest(
+        "scan.pdf", _pdf_bytes(rectangle=True)
+    )
 
     assert result.status == "needs_review"
     assert any("OCR não é executado" in warning for warning in result.warnings)

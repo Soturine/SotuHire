@@ -4,10 +4,10 @@ import base64
 import io
 from typing import cast
 
-import fitz
 from docx import Document
 from modules.application_lab.export import prepare_resume_export
 from modules.application_lab.models import MasterResume, ResumeEntry, ResumeSection
+from pypdf import PdfReader
 
 
 def _resume() -> MasterResume:
@@ -53,9 +53,9 @@ def test_pdf_docx_and_json_resume_preserve_enabled_canonical_content() -> None:
 
     pdf_bytes = base64.b64decode(cast(str, pdf_payload["content_base64"]))
     docx_bytes = base64.b64decode(cast(str, docx_payload["content_base64"]))
-    with fitz.open(stream=pdf_bytes, filetype="pdf") as pdf:
-        pdf_text = "\n".join(cast(str, page.get_text()) for page in pdf)
-        assert (pdf.metadata or {}).get("author", "") == ""
+    pdf = PdfReader(io.BytesIO(pdf_bytes))
+    pdf_text = "\n".join(page.extract_text() or "" for page in pdf.pages)
+    assert (pdf.metadata or {}).get("/Author", "") == ""
     document = Document(io.BytesIO(docx_bytes))
     docx_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
 
@@ -78,19 +78,17 @@ def test_pdf_page_size_matches_a4_and_letter_contracts() -> None:
     _, a4_payload = prepare_resume_export(resume, export_format="pdf", page_size="A4")
     _, letter_payload = prepare_resume_export(resume, export_format="pdf", page_size="Letter")
 
-    with fitz.open(
-        stream=base64.b64decode(cast(str, a4_payload["content_base64"])), filetype="pdf"
-    ) as a4:
-        a4_rect = a4[0].rect
-    with fitz.open(
-        stream=base64.b64decode(cast(str, letter_payload["content_base64"])), filetype="pdf"
-    ) as letter:
-        letter_rect = letter[0].rect
+    a4_rect = PdfReader(
+        io.BytesIO(base64.b64decode(cast(str, a4_payload["content_base64"])))
+    ).pages[0].mediabox
+    letter_rect = PdfReader(
+        io.BytesIO(base64.b64decode(cast(str, letter_payload["content_base64"])))
+    ).pages[0].mediabox
 
-    assert round(a4_rect.width) == 595
-    assert round(a4_rect.height) == 842
-    assert round(letter_rect.width) == 612
-    assert round(letter_rect.height) == 792
+    assert round(float(a4_rect.width)) == 595
+    assert round(float(a4_rect.height)) == 842
+    assert round(float(letter_rect.width)) == 612
+    assert round(float(letter_rect.height)) == 792
 
 
 def test_professional_registration_has_its_own_json_resume_extension() -> None:
@@ -128,11 +126,8 @@ def test_professional_registration_has_its_own_json_resume_extension() -> None:
             "sourceRefs": ["fixture://registration/123"],
         }
     ]
-    with fitz.open(
-        stream=base64.b64decode(cast(str, pdf_payload["content_base64"])),
-        filetype="pdf",
-    ) as pdf:
-        pdf_text = "\n".join(cast(str, page.get_text()) for page in pdf)
+    pdf = PdfReader(io.BytesIO(base64.b64decode(cast(str, pdf_payload["content_base64"]))))
+    pdf_text = "\n".join(page.extract_text() or "" for page in pdf.pages)
     document = Document(io.BytesIO(base64.b64decode(cast(str, docx_payload["content_base64"]))))
     docx_text = "\n".join(paragraph.text for paragraph in document.paragraphs)
     assert "REGISTROS PROFISSIONAIS" in pdf_text

@@ -41,7 +41,8 @@ Dependências sugeridas para o MVP:
 ```text
 streamlit
 google-genai
-pymupdf
+pypdf
+reportlab
 pydantic
 python-dotenv
 pytest
@@ -86,7 +87,7 @@ ruff format .
 
 ### PDF sem texto
 
-O currículo pode estar como imagem. Nesse caso, PyMuPDF pode não extrair texto útil.
+O currículo pode estar como imagem. Nesse caso, pypdf pode não extrair texto útil.
 
 ### Chave de API ausente
 

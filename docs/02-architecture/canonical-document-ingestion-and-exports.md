@@ -26,6 +26,6 @@ executado. Não há interpretação silenciosa nem fallback para documento vazio
 ## Exports
 
 DOCX é gerado por `python-docx` com headings e parágrafos sem tabelas de layout. PDF é gerado por
-PyMuPDF, em A4 ou Letter, sem LibreOffice, navegador, rede ou dependência de sistema operacional.
+ReportLab, em A4 ou Letter, sem LibreOffice, navegador, rede ou dependência de sistema operacional.
 O endpoint devolve o binário em base64 com MIME, tamanho, page size e hash canônico; JSON Resume
 permanece objeto JSON interoperável e inclui metadados de evidência SotuHire.

@@ -50,7 +50,7 @@ Controla a interface Streamlit. Deve ser fino e fácil de ler.
 
 ### `cv_parser.py`
 
-Extrai texto de currículos. No MVP, começa com PDF usando PyMuPDF. Futuramente pode suportar DOCX.
+Extrai texto de currículos. PDF usa pypdf e DOCX usa python-docx.
 
 ### `ats_analyzer.py`
 

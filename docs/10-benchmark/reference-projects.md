@@ -27,7 +27,7 @@ form filling ou arquitetura SaaS. Nenhum código dessas referências foi incorpo
 
 ## Bibliotecas de documento
 
-- [PyMuPDF 1.28 docs](https://pymupdf.readthedocs.io/en/latest/): extração/rendering PDF em
+- [pypdf](https://pypi.org/project/pypdf/) e [ReportLab](https://pypi.org/project/reportlab/): extração e rendering PDF em
   memória e texto selecionável. O projeto é AGPL/comercial; o uso e redistribuição devem continuar
   sob revisão de licença. Não se usa o suporte Pro de Office nem se promete layout fiel do original.
 - [python-docx 1.2 docs](https://python-docx.readthedocs.io/en/latest/user/quickstart.html) e

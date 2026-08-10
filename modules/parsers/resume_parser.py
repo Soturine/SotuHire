@@ -561,12 +561,14 @@ def parse_resume_text(text: str, source_type: str = "text") -> ResumeProfileSche
 
 def _extract_pdf_text(content: bytes) -> str:
     try:
-        fitz = importlib.import_module("fitz")
+        pypdf = importlib.import_module("pypdf")
     except ImportError as exc:
-        raise RuntimeError("Instale pymupdf para ler currículos PDF.") from exc
+        raise RuntimeError("Instale pypdf para ler currículos PDF.") from exc
 
-    with fitz.open(stream=content, filetype="pdf") as document:
-        return "\n".join(page.get_text() for page in document)
+    document = pypdf.PdfReader(io.BytesIO(content))
+    if document.is_encrypted:
+        raise ValueError("PDF criptografado ou protegido por senha não é aceito.")
+    return "\n".join(page.extract_text() or "" for page in document.pages)
 
 
 def _extract_docx_text(content: bytes) -> str:

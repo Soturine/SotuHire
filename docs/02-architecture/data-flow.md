@@ -60,7 +60,7 @@ A descrição da vaga pode ser:
 
 ### Extração de texto
 
-O sistema usa PyMuPDF ou biblioteca equivalente para converter PDF em texto.
+O sistema usa pypdf para extrair texto de PDF e ReportLab para renderizar exports PDF.
 
 Cuidados:
 

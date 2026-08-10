@@ -7,7 +7,7 @@ ZIP/DOCX suspeito, HTML ativo ou payload acima dos limites falham explicitamente
 
 | Formato | Extração | Proteção específica |
 |---|---|---|
-| PDF | PyMuPDF, por página/bloco | máximo de páginas; documento somente-imagem vira `needs_review`; sem OCR silencioso |
+| PDF | pypdf, por página/bloco | máximo de páginas; documento somente-imagem vira `needs_review`; sem OCR silencioso |
 | DOCX | python-docx, parágrafos/tabelas | assinatura ZIP, total descompactado, razão de compressão e relacionamentos externos ignorados |
 | HTML | parser stdlib | scripts, iframes, objetos, embeds, estilos e handlers removidos; sem rede |
 | TXT | UTF-8/decodificação segura | limite de caracteres e rejeição de conteúdo binário |

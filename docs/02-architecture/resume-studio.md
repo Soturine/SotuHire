@@ -22,7 +22,7 @@ HTML e rejeição de PDF criptografado. O review diferencia `sourced`, `confirme
 e `stale`; PDF somente-imagem pede revisão porque OCR automático não faz parte do fluxo.
 
 JSON Resume inclui somente entradas habilitadas e permitidas. PDF real é renderizado com
-PyMuPDF; DOCX real, com python-docx. Ambos são baixados pelo frontend como bytes, em A4 ou
+pypdf; DOCX real, com python-docx. Ambos são baixados pelo frontend como bytes, em A4 ou
 Letter, e compartilham a mesma árvore do preview e do JSON. Nenhum formato inclui trace,
 segredo ou caminho local.
 

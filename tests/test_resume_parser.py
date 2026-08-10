@@ -1,8 +1,8 @@
 import io
 
-import fitz
 from docx import Document
 from modules.parsers.resume_parser import parse_resume_file, parse_resume_text
+from reportlab.pdfgen import canvas
 
 
 def test_resume_parser_accepts_empty_text():
@@ -60,13 +60,15 @@ def test_resume_parser_reads_docx_file():
 
 
 def test_resume_parser_reads_pdf_file():
-    document = fitz.open()
-    page = document.new_page()
-    page.insert_text((72, 72), "Pessoa Exemplo\nSkills\nPython e SQL")
-    content = document.tobytes()
-    document.close()
+    buffer = io.BytesIO()
+    document = canvas.Canvas(buffer, invariant=1)
+    text = document.beginText(72, 770)
+    for line in ("Pessoa Exemplo", "Skills", "Python e SQL"):
+        text.textLine(line)
+    document.drawText(text)
+    document.save()
 
-    profile = parse_resume_file("resume.pdf", content)
+    profile = parse_resume_file("resume.pdf", buffer.getvalue())
 
     assert profile.source_type == "pdf"
     assert {"Python", "SQL"} <= set(profile.skills)

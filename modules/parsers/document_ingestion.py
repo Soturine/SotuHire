@@ -167,20 +167,20 @@ def _extract(
     document_type: DocumentType,
 ) -> tuple[list[DocumentPage], str, list[str], dict[str, Any]]:
     if document_type == "pdf":
-        fitz = importlib.import_module("fitz")
-        with fitz.open(stream=content, filetype="pdf") as document:
-            if document.needs_pass:
-                raise ValueError("PDF criptografado ou protegido por senha não é aceito.")
-            if document.page_count > MAX_PDF_PAGES:
-                raise ValueError("PDF excede o limite de 200 páginas.")
-            pages = [
-                DocumentPage(number=index + 1, text=page.get_text("text"))
-                for index, page in enumerate(document)
-            ]
+        pypdf = importlib.import_module("pypdf")
+        document = pypdf.PdfReader(io.BytesIO(content))
+        if document.is_encrypted:
+            raise ValueError("PDF criptografado ou protegido por senha não é aceito.")
+        if len(document.pages) > MAX_PDF_PAGES:
+            raise ValueError("PDF excede o limite de 200 páginas.")
+        pages = [
+            DocumentPage(number=index + 1, text=page.extract_text() or "")
+            for index, page in enumerate(document.pages)
+        ]
         warnings = _empty_warning(pages)
         if warnings:
             warnings.append("PDF possivelmente baseado em imagem; OCR não é executado.")
-        return pages, "pymupdf_text", warnings, {}
+        return pages, "pypdf_text", warnings, {}
     if document_type == "docx":
         zip_warnings = _validate_docx_container(content)
         document_module = importlib.import_module("docx")

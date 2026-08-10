@@ -10,9 +10,10 @@ import re
 import textwrap
 from typing import Any, Literal
 
-import fitz
 from docx import Document
 from docx.shared import Inches
+from reportlab.lib.pagesizes import A4, LETTER
+from reportlab.pdfgen import canvas
 
 from modules.application_lab.canonical_document import (
     CanonicalDocumentEntry,
@@ -195,23 +196,25 @@ def _render_docx(document: CanonicalProfessionalDocument) -> bytes:
 
 
 def _render_pdf(document: CanonicalProfessionalDocument, *, page_size: PageSize) -> bytes:
-    result = fitz.open()
-    rectangle = fitz.paper_rect("a4" if page_size == "A4" else "letter")
+    output = io.BytesIO()
+    dimensions = A4 if page_size == "A4" else LETTER
+    result = canvas.Canvas(output, pagesize=dimensions, pageCompression=1, invariant=1)
+    result.setAuthor("")
+    result.setCreator("SotuHire")
+    result.setTitle(document.title)
     lines = _pdf_lines(document)
     per_page = 49 if page_size == "A4" else 46
     for offset in range(0, max(1, len(lines)), per_page):
-        page = result.new_page(width=rectangle.width, height=rectangle.height)
         page_lines = lines[offset : offset + per_page]
-        page.insert_textbox(
-            fitz.Rect(50, 45, rectangle.width - 50, rectangle.height - 45),
-            "\n".join(page_lines),
-            fontname="helv",
-            fontsize=10,
-            lineheight=1.3,
-        )
-    content = result.tobytes(garbage=4, deflate=True)
-    result.close()
-    return content
+        text = result.beginText(50, dimensions[1] - 45)
+        text.setFont("Helvetica", 10)
+        text.setLeading(13)
+        for line in page_lines:
+            text.textLine(line)
+        result.drawText(text)
+        result.showPage()
+    result.save()
+    return output.getvalue()
 
 
 def _pdf_lines(document: CanonicalProfessionalDocument) -> list[str]:

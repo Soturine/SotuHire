@@ -964,7 +964,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
                 source: "local_upload",
                 source_ref: `fixture://document/${fileName}`,
                 extraction_method:
-                  demoDocumentType(fileName) === "pdf" ? "pymupdf_text" : "local_parser",
+                  demoDocumentType(fileName) === "pdf" ? "pypdf_text" : "local_parser",
                 location: { file_name: fileName, page: 1 },
               },
             ],

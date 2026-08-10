@@ -39,7 +39,7 @@ O parser usa labels, expressões regulares, catálogo leve de skills e normaliza
 Suporta:
 
 - TXT por UTF-8 com fallback de caracteres;
-- PDF com PyMuPDF;
+- PDF com pypdf;
 - DOCX com python-docx.
 
 Extrai nome, resumo, formação, experiências, projetos, skills, links e keywords. O conteúdo bruto permanece apenas na sessão atual e não é salvo pelo tracker.

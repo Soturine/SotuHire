@@ -3,7 +3,6 @@ from __future__ import annotations
 import base64
 import io
 
-import fitz
 from docx import Document
 from modules.application_lab.export import prepare_resume_export
 from modules.application_lab.models import (
@@ -20,6 +19,7 @@ from modules.professional_assets import ProfessionalAssetRepository
 from modules.storage.applications import ApplicationRepository
 from modules.storage.database import connect_database
 from modules.storage.snapshots import JobSnapshot, SnapshotStore
+from pypdf import PdfReader
 
 
 class EmptyContextEngine:
@@ -290,8 +290,8 @@ def test_json_resume_pdf_and_docx_share_canonical_document() -> None:
     docx_bytes = base64.b64decode(str(docx_payload["content_base64"]))
     assert pdf_bytes.startswith(b"%PDF-")
     assert docx_bytes.startswith(b"PK")
-    with fitz.open(stream=pdf_bytes, filetype="pdf") as pdf:
-        pdf_text = "\n".join(str(page.get_text()) for page in pdf)
+    pdf = PdfReader(io.BytesIO(pdf_bytes))
+    pdf_text = "\n".join(page.extract_text() or "" for page in pdf.pages)
     docx_text = "\n".join(
         str(paragraph.text) for paragraph in Document(io.BytesIO(docx_bytes)).paragraphs
     )

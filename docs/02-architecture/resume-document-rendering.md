@@ -6,7 +6,7 @@ tamanho de página participam do `dependency_hash`, permitindo detectar artefato
 
 ## PDF
 
-PyMuPDF gera um PDF real em memória, A4 ou Letter, com texto selecionável, margens estáveis,
+ReportLab gera um PDF real em memória, A4 ou Letter, com texto selecionável, margens estáveis,
 headings e quebras previsíveis. Não depende de navegador, LibreOffice, rede ou impressora. O
 retorno inclui MIME, bytes em base64, tamanho e SHA-256; metadados não contêm caminho local.
 
