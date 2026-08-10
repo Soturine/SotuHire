@@ -16,7 +16,14 @@ PATTERNS = (
     re.compile(rb"(?<![0-9A-Za-z_-])AIza[0-9A-Za-z_-]{20,}"),
     re.compile(rb"(?<![0-9A-Za-z_-])sk-(?:proj-)?[A-Za-z0-9_-]{20,}"),
 )
-EXCLUDED_PARTS = {".git", ".venv", "node_modules", "__pycache__", ".pytest_cache"}
+EXCLUDED_PARTS = {
+    ".git",
+    ".tmp",
+    ".venv",
+    "node_modules",
+    "__pycache__",
+    ".pytest_cache",
+}
 MAX_BYTES = 10 * 1024 * 1024
 
 

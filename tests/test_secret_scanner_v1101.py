@@ -8,7 +8,7 @@ from modules.security.credentials import (
     looks_like_modern_gemini_key,
     redact_provider_secrets,
 )
-from scripts.scan_secrets import has_secret_pattern
+from scripts.scan_secrets import candidate_files, has_secret_pattern
 
 
 def _synthetic_modern_gemini_key() -> str:
@@ -44,3 +44,11 @@ def test_secret_scanner_checks_zip_members_without_exposing_value(tmp_path: Path
         archive.writestr("runtime.js", f"// gemini credential: {secret}")
 
     assert has_secret_pattern(bundle)
+
+
+def test_secret_scanner_ignores_generated_temporary_test_directories(tmp_path: Path) -> None:
+    generated = tmp_path / ".tmp" / "pytest-fixture" / "runtime.js"
+    generated.parent.mkdir(parents=True)
+    generated.write_text("generated test artifact", encoding="utf-8")
+
+    assert generated not in candidate_files([tmp_path])

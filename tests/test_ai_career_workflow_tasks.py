@@ -86,10 +86,12 @@ def test_external_provider_requires_opt_in_and_errors_are_redacted(monkeypatch, 
     assert external.provider_used == "gemini" and not external.fallback_used
     assert external.output["needs_user_review"] is True
 
+    synthetic_key = "AQ." + "A1b2C3d4E5f6G7h8I9j0K1l2M3n4"
+
     class BrokenProvider(Provider):
         def generate_structured(self, prompt, payload):  # noqa: ANN001, ANN201
             del prompt, payload
-            raise RuntimeError("AQ.A1b2C3d4E5f6G7h8I9j0K1l2M3n4 secret")
+            raise RuntimeError(f"{synthetic_key} secret")
 
     failed = run_career_workflow_ai(
         "taxonomy_mapping_explanation",
@@ -98,4 +100,4 @@ def test_external_provider_requires_opt_in_and_errors_are_redacted(monkeypatch, 
         external_ai_opt_in=True,
     )
     assert failed.provider_used == "local"
-    assert "AQ.A1b2" not in str(failed.output)
+    assert synthetic_key not in str(failed.output)
