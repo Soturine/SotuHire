@@ -33,7 +33,7 @@ from modules.ai.task_registry import default_ai_task_registry
 from modules.public_exams import PublicExamImportInput, PublicExamService
 from modules.radar.wishlist_draft import build_local_wishlist_draft
 
-APP_VERSION = "1.9.9"
+APP_VERSION = "1.10.1"
 DATASET_VERSION = "v1.9.7-1"
 EXTERNAL_CALL_CAP = 20
 RELEASE_SMOKE_CALL_CAP = 12

@@ -107,7 +107,7 @@ def test_companion_handshake_negotiates_current_and_old_extension(
 
     assert status == 200
     assert current["extension_version"] == "0.10.0"
-    assert current["companion_version"] == "1.9.9"
+    assert current["companion_version"] == "1.10.1"
     assert current["compatible"] is True
     capabilities = cast(list[str], current["capabilities"])
     assert "queue.retry" in capabilities

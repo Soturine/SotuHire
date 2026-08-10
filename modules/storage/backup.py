@@ -20,7 +20,7 @@ from modules.storage.database import default_data_dir
 from modules.storage.migrations import MigrationRunner
 from modules.storage.migrations.versions import LATEST_SCHEMA_VERSION
 
-APP_VERSION = "1.9.9"
+APP_VERSION = "1.10.1"
 EXCLUDED_PARTS = {
     "secrets",
     "secret",
