@@ -128,6 +128,18 @@ Detalhes: [arquitetura v2](docs/02-architecture/data-flow.md),
 | --- | --- |
 | ![Portfólio](docs/assets/screenshots/v2/08-portfolio.png) | ![Cockpit mobile](docs/assets/screenshots/v2/19-mobile-cockpit.png) |
 
+### Extensão Chrome
+
+A extensão assistiva continua sendo parte importante do fluxo: captura a página aberta sob ação explícita,
+prepara vagas para o Application Lab e conversa com o Local Companion sem automatizar candidatura ou login.
+
+| Popup principal | Preparar candidatura |
+| --- | --- |
+| ![Popup principal da extensão](docs/assets/screenshots/extension/popup-main.png) | ![Preparar candidatura pela extensão](docs/assets/screenshots/extension/prepare-application-lab.png) |
+
+Veja o [guia completo da extensão](browser-extension/README.md) para captura de vagas/editais, análise pública de GitHub,
+providers próprios, fila offline, permissões e limites de segurança.
+
 Galeria completa e roteiro: [demo de 3–5 minutos](docs/09-portfolio/demo-script.md).
 
 ## Instalação
