@@ -12,7 +12,9 @@ def test_readme_references_only_current_v2_product_visuals() -> None:
         Path("docs/assets/screenshots/v2/08-portfolio.png"),
         Path("docs/assets/screenshots/v2/19-mobile-cockpit.png"),
         Path("docs/assets/screenshots/extension/popup-main.png"),
-        Path("docs/assets/screenshots/extension/prepare-application-lab.png"),
+        Path("docs/assets/screenshots/extension/capture-job.png"),
+        Path("docs/assets/screenshots/extension/github-analysis-modal.png"),
+        Path("docs/assets/screenshots/extension/ai-provider-setup.png"),
     ]
 
     for screenshot in screenshots:
