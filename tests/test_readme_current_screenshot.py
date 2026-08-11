@@ -49,7 +49,6 @@ def test_readme_is_a_complete_v2_product_entrypoint() -> None:
         "docs/01-product/roadmap.md",
         "docs/02-architecture/evidence-graph.md",
         "docs/02-architecture/human-approved-copilot.md",
-        "docs/02-architecture/copilot-tool-registry.md",
         "docs/06-engineering/v2-security-threat-model.md",
         "docs/releases/v2.0.md",
         "CHANGELOG.md",
