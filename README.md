@@ -130,15 +130,28 @@ Detalhes: [arquitetura v2](docs/02-architecture/data-flow.md),
 
 ### Extensão Chrome
 
-A extensão assistiva continua sendo parte importante do fluxo: captura a página aberta sob ação explícita,
-prepara vagas para o Application Lab e conversa com o Local Companion sem automatizar candidatura ou login.
+A extensão assistiva é uma parte importante do fluxo fora do app: trabalha sobre a página que a pessoa abriu,
+captura vagas e editais sob ação explícita, prepara oportunidades para o Application Lab, envia itens ao Tracker
+e conversa com o Local Companion sem automatizar candidatura, login ou navegação.
 
-| Popup principal | Preparar candidatura |
+Ela também possui **análise pública de GitHub/portfólio**. Em páginas de repositórios públicos, o SotuHire coleta
+somente sinais públicos — como README, descrição, linguagens, topics, arquivos centrais e commits públicos — e
+pode produzir uma análise revisável de stack, documentação, arquitetura, manutenção, pontos fortes, gaps,
+recomendações e evidências que podem ser aproveitadas no currículo após revisão humana. O modo Deep analysis
+amplia a amostra pública, sem acessar repositórios privados, cookies ou sessões autenticadas.
+
+| Popup principal | Captura de vaga |
 | --- | --- |
-| ![Popup principal da extensão](docs/assets/screenshots/extension/popup-main.png) | ![Preparar candidatura pela extensão](docs/assets/screenshots/extension/prepare-application-lab.png) |
+| ![Popup principal da extensão](docs/assets/screenshots/extension/popup-main.png) | ![Captura de vaga pela extensão](docs/assets/screenshots/extension/capture-job.png) |
 
-Veja o [guia completo da extensão](browser-extension/README.md) para captura de vagas/editais, análise pública de GitHub,
-providers próprios, fila offline, permissões e limites de segurança.
+| Análise pública de GitHub | Configuração de IA |
+| --- | --- |
+| ![Análise pública de GitHub pela extensão](docs/assets/screenshots/extension/github-analysis-modal.png) | ![Configuração de provider de IA na extensão](docs/assets/screenshots/extension/ai-provider-setup.png) |
+
+A extensão pode usar análise local determinística, a IA configurada no backend local ou, quando a pessoa escolhe
+explicitamente, uma chave própria Gemini/OpenAI mantida isolada no service worker. Veja o
+[guia completo da extensão](browser-extension/README.md) para detalhes de providers, armazenamento de chaves,
+fila offline, permissões, captura de editais, integração com o Application Lab e limites de segurança.
 
 Galeria completa e roteiro: [demo de 3–5 minutos](docs/09-portfolio/demo-script.md).
 
