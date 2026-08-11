@@ -5,7 +5,7 @@ ser usado sem IA externa ou extensão.
 
 ## 1. Inicie o ambiente local
 
-Siga as instruções do [README](../../README.md#instalação) para instalar o backend e o frontend. No
+Siga as instruções do [README no GitHub](https://github.com/Soturine/SotuHire#instalação) para instalar o backend e o frontend. No
 modo API Real, o navegador conversa com a FastAPI em loopback; no modo Demo, todos os dados são
 fictícios e ficam claramente identificados.
 
@@ -50,7 +50,7 @@ candidatos mais importantes e observe:
 - marcação de dado sensível.
 
 Os estados `candidate`, `confirmed`, `rejected` e `stale` são explicados no
-[guia da jornada](career-workflow.md#estados-de-revisão).
+[guia da jornada](career-workflow.md#estados-de-revisao).
 
 ## 5. Abra o Career Cockpit
 
@@ -72,7 +72,7 @@ Quando houver escrita local:
 proposta → preview → impacto → aprovação → execução → audit → undo, quando suportado
 ```
 
-Leia [Copilot, propostas e aprovações](career-workflow.md#copilot-propostas-e-aprovações) antes da
+Leia [Copilot, propostas e aprovações](career-workflow.md#copilot-propostas-e-aprovacoes) antes da
 primeira execução.
 
 ## 7. IA e extensão são opcionais
@@ -81,7 +81,8 @@ O caminho determinístico local continua disponível sem Gemini, OpenAI, Ollama 
 provider pode ajudar com explicações e drafts, mas não confirma evidências nem controla regras.
 
 A extensão 0.10.0 captura a página visível mediante ação do usuário. Ela não lê automaticamente
-currículos locais e não habilita auto-apply. Consulte o [guia da extensão](../../browser-extension/README.md).
+currículos locais e não habilita auto-apply. Consulte o
+[guia da extensão no GitHub](https://github.com/Soturine/SotuHire/blob/main/browser-extension/README.md).
 
 ## 8. Privacidade básica
 

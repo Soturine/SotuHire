@@ -16,6 +16,27 @@ seguem sempre **prévia → evidências → impacto → aprovação humana → e
 
 ![SotuHire v2 — Human-Approved Career Copilot](docs/assets/screenshots/sotuhire-v2-human-approved-career-copilot.gif)
 
+## Destaques de engenharia
+
+- Evidence Graph tipado em SQLite, com proveniência, revisão independente de nós/edges e stale.
+- Career State e Next Best Actions determinísticos; IA explica e redige, mas não controla regras.
+- Human-Approved Copilot com planos persistentes, preview, impacto, aprovação, idempotência, audit e undo.
+- Arquitetura local-first e privacy-first, com contexto mínimo e providers externos opt-in.
+- Frontend React/TypeScript, API FastAPI/Pydantic e extensão Chrome MV3 ligada ao Local Companion.
+- Qualidade automatizada com análise estática, testes de integração/E2E cross-browser, CodeQL e SBOM.
+
+## Stack
+
+| Camada | Tecnologias |
+| --- | --- |
+| Frontend | React, TypeScript, Vite |
+| Backend | Python, FastAPI, Pydantic |
+| Dados | SQLite, migrations, snapshots e audit |
+| IA | Local determinístico, Gemini, OpenAI, Ollama, LM Studio e endpoints compatíveis |
+| Browser | Chrome Extension MV3 e Local Companion |
+| QA | Pytest, Vitest, Playwright, Ruff e Pyright |
+| Segurança/release | GitHub Actions, CodeQL, secret scan e CycloneDX SBOM |
+
 ## Por que existe
 
 Ferramentas isoladas não respondem “onde estou?”, “o que está faltando?” ou “por que devo fazer

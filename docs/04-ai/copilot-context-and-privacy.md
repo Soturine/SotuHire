@@ -87,4 +87,4 @@ para serviço externo e deve respeitar sensibilidade/visibilidade ao apresentar 
 - [Evidence Graph](../02-architecture/evidence-graph.md)
 - [Threat model v2](../06-engineering/v2-security-threat-model.md)
 - [Estratégia de providers](provider-strategy.md)
-- [Guia do usuário](../05-user-guide/career-workflow.md#privacidade-e-segurança)
+- [Guia do usuário](../05-user-guide/career-workflow.md#privacidade-e-seguranca)

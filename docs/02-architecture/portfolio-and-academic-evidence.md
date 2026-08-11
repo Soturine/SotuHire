@@ -109,6 +109,6 @@ O item pode ser útil no Career State mesmo privado; a skill candidata não vira
 ## Links relacionados
 
 - [Evidence Graph](evidence-graph.md)
-- [Guia da jornada e portfólio](../05-user-guide/career-workflow.md#portfólio)
+- [Guia da jornada e portfólio](../05-user-guide/career-workflow.md#portfolio)
 - [GitHub como fonte de portfólio](../05-data-sources/github-portfolio-analyzer.md)
 - [Privacidade do contexto](../04-ai/copilot-context-and-privacy.md)
