@@ -13,7 +13,3 @@ class GitHubUrlError(GitHubAnalyzerError, ValueError):
 
 class GitHubApiError(GitHubAnalyzerError):
     """Raised when GitHub API or raw content requests fail."""
-
-
-class GitHubAnalysisUnavailable(GitHubAnalyzerError):
-    """Raised when a full analysis cannot be produced from available evidence."""

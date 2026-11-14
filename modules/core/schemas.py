@@ -64,15 +64,3 @@ class ScoreBreakdown:
     portfolio_score: int | None = None
     lattes_score: int | None = None
     readiness_score: int | None = None
-
-
-@dataclass(slots=True)
-class AnalysisReport:
-    recommendation: str
-    scores: ScoreBreakdown
-    strengths: list[str] = field(default_factory=list)
-    gaps: list[str] = field(default_factory=list)
-    missing_keywords: list[str] = field(default_factory=list)
-    evidence: list[str] = field(default_factory=list)
-    risk_flags: list[str] = field(default_factory=list)
-    next_actions: list[str] = field(default_factory=list)

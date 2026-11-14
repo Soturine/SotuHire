@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Literal
 
-from modules.ai.providers.openai_provider import DEFAULT_OPENAI_MODEL
 from modules.ai.setup import DEFAULT_GEMINI_MODEL
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -148,12 +147,3 @@ class AiModelsRefreshRequest(BaseModel):
 
     provider: Literal["gemini", "openai"]
     request_id: str = Field(default="", max_length=120)
-
-
-def default_model_for_provider(provider: AiProvider) -> str:
-    """Small schema helper reused by OpenAPI docs/tests."""
-    if provider == "local":
-        return "local"
-    if provider == "openai":
-        return DEFAULT_OPENAI_MODEL
-    return DEFAULT_GEMINI_MODEL

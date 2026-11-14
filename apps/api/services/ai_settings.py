@@ -16,7 +16,6 @@ from modules.ai import model_catalog
 from modules.ai import setup as ai_setup
 from modules.ai.providers import AIProvider, GeminiProvider, MockProvider, OpenAIProvider
 from modules.ai.providers.openai_provider import DEFAULT_OPENAI_MODEL
-from pydantic import ValidationError
 
 from apps.api.schemas.settings import (
     AiModelsRefreshRequest,
@@ -640,11 +639,3 @@ def provider_label(provider: str) -> str:
 
 def _utc_now() -> str:
     return datetime.now(UTC).isoformat(timespec="seconds")
-
-
-def validate_safe_response(data: dict[str, Any]) -> AiSettingsResponse:
-    """Small helper used by tests and future integrations."""
-    try:
-        return AiSettingsResponse.model_validate(data)
-    except ValidationError as exc:
-        raise ValueError("AI settings response contains unsafe or invalid fields.") from exc

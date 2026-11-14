@@ -24,8 +24,3 @@ def rank_resume_sections(job_text: str, available_sections: list[str]) -> list[s
         if "work" in key or "exper" in key:
             scores[section] += 2
     return sorted(available_sections, key=lambda section: scores[section], reverse=True)
-
-
-def rank_sections(job_text: str, available_sections: list[str]) -> list[str]:
-    """Backward-compatible alias for section ranking."""
-    return rank_resume_sections(job_text, available_sections)

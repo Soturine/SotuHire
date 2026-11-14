@@ -69,11 +69,3 @@ def connect_readonly_database(path: str | Path) -> sqlite3.Connection:
     connection.execute("PRAGMA foreign_keys = ON")
     connection.execute("PRAGMA busy_timeout = 5000")
     return connection
-
-
-def database_path_for(connection: sqlite3.Connection) -> Path | None:
-    """Return the main database path for a connection when it is file-backed."""
-    row = connection.execute("PRAGMA database_list").fetchone()
-    if row is None or not row[2]:
-        return None
-    return Path(str(row[2]))

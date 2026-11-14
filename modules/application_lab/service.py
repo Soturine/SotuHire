@@ -959,24 +959,6 @@ def _replace_in_sections(sections: list[Any], before: str, after: str) -> bool:
     return False
 
 
-def _job_requirements(data: dict[str, Any]) -> list[str]:
-    result: list[str] = []
-    for key in ("requirements", "required_skills", "mandatory_requirements", "qualifications"):
-        value = data.get(key)
-        if isinstance(value, list):
-            for item in value:
-                text = (
-                    item
-                    if isinstance(item, str)
-                    else str(item.get("name", ""))
-                    if isinstance(item, dict)
-                    else ""
-                )
-                if text.strip():
-                    result.append(text.strip())
-    return list(dict.fromkeys(result))
-
-
 def _kit_snapshot_id(snapshot_ids: list[str], snapshots: SnapshotStore) -> str:
     for snapshot_id in reversed(snapshot_ids):
         snapshot = snapshots.get_analysis(snapshot_id)

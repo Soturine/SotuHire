@@ -216,36 +216,6 @@ def _reference_index(
     return matches
 
 
-def _consumer_references(
-    prompt_id: str,
-    roots: list[Path],
-    *,
-    excluded: set[Path] | None = None,
-) -> list[str]:
-    """Backward-compatible single-id wrapper for focused callers."""
-    return _consumer_reference_index(
-        {prompt_id},
-        roots,
-        excluded=excluded,
-    )[prompt_id]
-
-
-def _references(
-    needle: str,
-    roots: list[Path],
-    *,
-    excluded: set[Path] | None = None,
-    suffixes: set[str] | None = None,
-) -> list[str]:
-    """Backward-compatible single-id wrapper for focused callers."""
-    return _reference_index(
-        {needle},
-        roots,
-        excluded=excluded,
-        suffixes=suffixes,
-    )[needle]
-
-
 def render_catalog(rows: list[dict[str, Any]]) -> str:
     """Render a deterministic, implementation-backed Markdown catalog."""
     lines = [
