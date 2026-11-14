@@ -391,8 +391,8 @@ Cada capacidade registra um commit-base ancestral verificável; o manifesto não
 | `frontend_route` | `/privacy` |
 | `api_endpoints` | `GET /api/v1/data/health`<br>`GET /api/v1/data/backups`<br>`POST /api/v1/data/backups`<br>`GET /api/v1/data/backups/{archive_name}`<br>`POST /api/v1/data/restore` |
 | `backend_services` | `apps/api/services/data.py`<br>`modules/storage/backup.py`<br>`modules/storage/health.py`<br>`modules/storage/legacy_migration.py` |
-| `core_modules` | `modules/storage/database.py`<br>`modules/storage/repositories/base.py`<br>`modules/storage/migrations/runner.py` |
-| `stores` | `modules/storage/database.py`<br>`modules/storage/repositories/sqlite_repository.py` |
+| `core_modules` | `modules/storage/database.py`<br>`modules/storage/migrations/runner.py` |
+| `stores` | `modules/storage/database.py`<br>`modules/storage/snapshots.py` |
 | `profile_integration` | Migra e protege o perfil e demais entidades sem apagar os stores legados. |
 | `context_purpose` | — |
 | `ai_support` | enabled=false; prompts=nenhum; providers=local; fallback=Não aplicável; operações são transacionais e determinísticas |
