@@ -182,11 +182,20 @@ jobs:
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
-      - name: Browser smoke and data reliability E2E
+      # Every E2E spec in Chromium (copilot-v2 and application-lab included);
+      # release-capture specs skip themselves unless CAPTURE_* is set.
+      # Firefox/WebKit run in the release gate (npm run test:e2e:cross-browser).
+      - name: Browser E2E (Chromium, all specs)
         working-directory: apps/web
-        run: npx playwright test tests/e2e/smoke.spec.ts tests/e2e/data-reliability.spec.ts --project=chromium
+        run: npx playwright test --project=chromium
 
-      - name: npm audit report
+      - name: npm audit (blocking on critical)
+        working-directory: apps/web
+        run: npm audit --audit-level=critical
+
+      # High advisories are reported here and triaged in
+      # docs/assurance/DEPENDENCY_REVIEW.md (fix, defer with risk, or not reachable).
+      - name: npm audit report (high, triaged)
         continue-on-error: true
         working-directory: apps/web
         run: npm audit --audit-level=high
