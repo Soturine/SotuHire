@@ -8,7 +8,7 @@ from uuid import uuid4
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from modules.evidence import EvidenceReviewStatus
+from modules.evidence import EvidenceReviewStatus, reconcile_review_status
 
 ProfileConfidence = Literal["low", "medium", "high"]
 
@@ -49,14 +49,11 @@ class ProfileItem(BaseModel):
 
     @model_validator(mode="after")
     def normalize_review_status(self) -> ProfileItem:
-        if self.confirmed_by_user:
-            self.review_status = EvidenceReviewStatus.CONFIRMED
-        elif self.review_status == EvidenceReviewStatus.CONFIRMED:
-            self.confirmed_by_user = True
-        elif self.review_status == EvidenceReviewStatus.CANDIDATE and self.source_ref:
-            self.review_status = EvidenceReviewStatus.SOURCED
-        if self.review_status in {EvidenceReviewStatus.REJECTED, EvidenceReviewStatus.STALE}:
-            self.confirmed_by_user = False
+        self.review_status, self.confirmed_by_user = reconcile_review_status(
+            self.review_status,
+            confirmed_by_user=self.confirmed_by_user,
+            has_source=bool(self.source_ref),
+        )
         return self
 
 
