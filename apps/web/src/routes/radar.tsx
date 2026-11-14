@@ -448,7 +448,7 @@ function RadarPage() {
       <div className="space-y-6">
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
           <div className="flex items-start gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent-strong">
               <RadioTower className="h-5 w-5" />
             </div>
             <div>
@@ -463,7 +463,7 @@ function RadarPage() {
           {mode === "demo" && (
             <span
               data-testid="radar-demo-badge"
-              className="rounded-full bg-warning/15 px-3 py-1 text-[11px] font-semibold text-warning"
+              className="rounded-full bg-warning/15 px-3 py-1 text-[11px] font-semibold text-warning-strong"
             >
               Dados de demonstração
             </span>
@@ -518,7 +518,7 @@ function RadarPage() {
           id="radar-ai-wishlist"
           title={
             <span className="flex items-center gap-2">
-              <WandSparkles className="h-4 w-4 text-accent" />
+              <WandSparkles className="h-4 w-4 text-accent-strong" />
               Criar wishlist com IA
             </span>
           }
@@ -549,7 +549,7 @@ function RadarPage() {
               {useProfileContext && (
                 <span
                   data-testid="radar-profile-context-badge"
-                  className="inline-flex rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent"
+                  className="inline-flex rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent-strong"
                 >
                   Contexto do perfil aplicado
                 </span>
@@ -635,7 +635,7 @@ function RadarPage() {
             id="radar-wishlist"
             title={
               <span className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-accent" />
+                <Target className="h-4 w-4 text-accent-strong" />
                 Wishlist
               </span>
             }
@@ -740,7 +740,7 @@ function RadarPage() {
             id="radar-alerts"
             title={
               <span className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-accent" />
+                <Bell className="h-4 w-4 text-accent-strong" />
                 Alertas
               </span>
             }
@@ -782,7 +782,7 @@ function RadarPage() {
             id="radar-schedules"
             title={
               <span className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-accent" />
+                <Bell className="h-4 w-4 text-accent-strong" />
                 Agendamentos
               </span>
             }
@@ -967,7 +967,7 @@ function RadarPage() {
           id="radar-sources"
           title={
             <span className="flex items-center gap-2">
-              <RadioTower className="h-4 w-4 text-accent" />
+              <RadioTower className="h-4 w-4 text-accent-strong" />
               Fontes do Radar
             </span>
           }
@@ -1008,7 +1008,7 @@ function RadarPage() {
             id="radar-results"
             title={
               <span className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-accent" />
+                <Search className="h-4 w-4 text-accent-strong" />
                 Resultados do Radar
               </span>
             }
@@ -1017,6 +1017,7 @@ function RadarPage() {
               <select
                 value={sourceFilter}
                 onChange={(event) => setSourceFilter(event.target.value)}
+                aria-label="Filtrar oportunidades por fonte"
                 data-testid="radar-source-filter"
                 className="h-8 rounded-md border border-input bg-card px-2 text-xs outline-none"
               >
@@ -1090,7 +1091,7 @@ function RadarPage() {
           id="radar-settings"
           title={
             <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-accent" />
+              <ShieldCheck className="h-4 w-4 text-accent-strong" />
               Segurança e próximos passos
             </span>
           }
@@ -1139,7 +1140,7 @@ function WishlistCard({ wishlist }: { wishlist: JobWishlist }) {
           <div className="font-semibold">{wishlist.name}</div>
           <div className="text-muted-foreground">Score mínimo {wishlist.min_match_score}%</div>
         </div>
-        <span className="rounded-full bg-success/15 px-2 py-0.5 font-medium text-success">
+        <span className="rounded-full bg-success/15 px-2 py-0.5 font-medium text-success-strong">
           Ativa
         </span>
       </div>
@@ -1188,7 +1189,7 @@ function SourceBox({ source }: { source: RadarSource }) {
       </div>
       {source.notes && <p className="mt-3 text-xs text-muted-foreground">{source.notes}</p>}
       {source.last_error && (
-        <p className="mt-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
+        <p className="mt-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive-strong">
           {source.last_error}
         </p>
       )}
@@ -1361,7 +1362,7 @@ function ResultCard({
             href={result.url}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-medium text-accent-strong hover:underline"
           >
             Ver fonte <ExternalLink className="h-3 w-3" />
           </a>
@@ -1437,9 +1438,9 @@ function Badge({
     <span
       className={cn(
         "rounded-full px-2 py-0.5 text-[11px] font-medium",
-        tone === "success" && "bg-success/15 text-success",
-        tone === "warning" && "bg-warning/15 text-warning",
-        tone === "error" && "bg-destructive/15 text-destructive",
+        tone === "success" && "bg-success/15 text-success-strong",
+        tone === "warning" && "bg-warning/15 text-warning-strong",
+        tone === "error" && "bg-destructive/15 text-destructive-strong",
         tone === "muted" && "bg-muted text-muted-foreground",
       )}
     >
@@ -1480,7 +1481,7 @@ function InfoBox({
       href={to}
       className="rounded-lg border border-border bg-muted/30 p-4 transition-colors hover:bg-muted"
     >
-      <Icon className="h-4 w-4 text-accent" />
+      <Icon className="h-4 w-4 text-accent-strong" />
       <div className="mt-2 text-sm font-semibold">{title}</div>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{text}</p>
     </a>

@@ -110,7 +110,7 @@ function CareerPage() {
                 key={task.task_id}
                 className="flex items-start gap-3 rounded-lg border border-border p-3"
               >
-                <CheckCircle2 className="mt-0.5 h-4 w-4 text-accent" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 text-accent-strong" />
                 <div className="min-w-0 flex-1">
                   <strong className="text-sm">{task.title}</strong>
                   <p className="text-xs text-muted-foreground">

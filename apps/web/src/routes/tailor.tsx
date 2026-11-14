@@ -71,7 +71,7 @@ function TailorPage() {
     >
       <SectionCard>
         <div className="mb-4 flex items-start gap-3 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
-          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+          <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" />
           <div>
             <div className="font-medium">Anti-invenção</div>
             <div className="text-xs text-muted-foreground">
@@ -125,7 +125,7 @@ function TailorPage() {
             <SectionCard
               title={
                 <span className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-accent" /> Bullets seguros
+                  <Sparkles className="h-4 w-4 text-accent-strong" /> Bullets seguros
                 </span>
               }
               description="Baseados na sua evidência. Pode usar à vontade."
@@ -180,7 +180,7 @@ function TailorPage() {
                         key={i}
                         className="rounded-lg border border-warning/30 bg-warning/5 p-3 text-sm"
                       >
-                        <div className="text-xs font-medium uppercase tracking-wider text-warning">
+                        <div className="text-xs font-medium uppercase tracking-wider text-warning-strong">
                           se: {c.keyword}
                         </div>
                         <p className="mt-1">{c.text}</p>
@@ -235,7 +235,7 @@ function TailorPage() {
                       key={i}
                       className="flex gap-2 rounded-md border border-warning/30 bg-warning/10 p-3"
                     >
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" />
                       <span>{w}</span>
                     </li>
                   ))}

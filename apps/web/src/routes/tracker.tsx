@@ -374,17 +374,17 @@ function JobCard({
       </div>
       <div className="mt-3 flex items-center gap-1.5">
         {job.match_score !== undefined && (
-          <span className="inline-flex items-center gap-1 rounded bg-chart-1/15 px-1.5 py-0.5 text-[10px] font-medium text-chart-1 tabular-nums">
-            <span className="opacity-70">Comp.</span> {job.match_score}
+          <span className="inline-flex items-center gap-1 rounded bg-chart-1/15 px-1.5 py-0.5 text-[10px] font-semibold text-foreground tabular-nums">
+            <span className="font-normal">Comp.</span> {job.match_score}
           </span>
         )}
         {job.ats_score !== undefined && (
-          <span className="inline-flex items-center gap-1 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium text-accent tabular-nums">
-            <span className="opacity-70">ATS</span> {job.ats_score}
+          <span className="inline-flex items-center gap-1 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium text-accent-strong tabular-nums">
+            <span className="font-normal">ATS</span> {job.ats_score}
           </span>
         )}
         {job.job_snapshot_id && (
-          <span className="inline-flex items-center rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">
+          <span className="inline-flex items-center rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success-strong">
             anúncio preservado
           </span>
         )}
@@ -461,12 +461,12 @@ function ListView({
               <td className="px-4 py-2.5">
                 <div className="flex justify-end gap-1.5 text-[10px]">
                   {j.match_score !== undefined && (
-                    <span className="rounded bg-chart-1/15 px-1.5 py-0.5 font-medium text-chart-1 tabular-nums">
+                    <span className="rounded bg-chart-1/15 px-1.5 py-0.5 font-semibold text-foreground tabular-nums">
                       C {j.match_score}
                     </span>
                   )}
                   {j.ats_score !== undefined && (
-                    <span className="rounded bg-accent/15 px-1.5 py-0.5 font-medium text-accent tabular-nums">
+                    <span className="rounded bg-accent/15 px-1.5 py-0.5 font-medium text-accent-strong tabular-nums">
                       A {j.ats_score}
                     </span>
                   )}

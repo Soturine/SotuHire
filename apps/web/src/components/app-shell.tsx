@@ -153,7 +153,7 @@ function SidebarBody({ pathname, onNavigate }: { pathname: string; onNavigate?: 
       <nav className="flex-1 overflow-y-auto px-3 pb-6" aria-label={t("shell.navigation")}>
         {nav.map((g) => (
           <div key={g.group} className="mb-5">
-            <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+            <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/65">
               {t(g.group)}
             </div>
             <ul className="space-y-0.5">
@@ -192,7 +192,7 @@ function SidebarBody({ pathname, onNavigate }: { pathname: string; onNavigate?: 
       </nav>
 
       <div className="flex items-start gap-1.5 border-t border-sidebar-border px-4 py-3 text-[10px] leading-tight text-sidebar-foreground/55">
-        <Activity className="h-3 w-3 shrink-0 text-accent" />
+        <Activity className="h-3 w-3 shrink-0 text-accent-strong" />
         <span>
           SotuHire · v{APP_VERSION}
           <br />

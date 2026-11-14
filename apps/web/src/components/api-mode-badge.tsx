@@ -58,12 +58,12 @@ export function ApiModeBadge({ className }: { className?: string }) {
     offline: {
       icon: WifiOff,
       label: "API REAL · OFFLINE",
-      cls: "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20",
+      cls: "border-destructive/40 bg-destructive/10 text-destructive-strong hover:bg-destructive/20",
     },
     error: {
       icon: WifiOff,
       label: "API REAL · ERRO",
-      cls: "border-destructive/40 bg-destructive/10 text-destructive hover:bg-destructive/20",
+      cls: "border-destructive/40 bg-destructive/10 text-destructive-strong hover:bg-destructive/20",
     },
   }[status];
   const Icon = config.icon;

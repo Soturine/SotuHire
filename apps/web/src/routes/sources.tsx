@@ -108,7 +108,7 @@ function SourcesPage() {
     >
       <div className="space-y-6">
         <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/5 p-4">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-warning/15 text-warning">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-warning/15 text-warning-strong">
             <ShieldAlert className="h-4 w-4" />
           </div>
           <div className="text-sm">
@@ -125,7 +125,7 @@ function SourcesPage() {
           id="opportunity-inbox"
           title={
             <span className="flex items-center gap-2">
-              <Database className="h-4 w-4 text-accent" />
+              <Database className="h-4 w-4 text-accent-strong" />
               Caixa de Entrada de Oportunidades
             </span>
           }
@@ -144,7 +144,7 @@ function SourcesPage() {
           id="local-extension"
           title={
             <span className="flex items-center gap-2">
-              <PlugZap className="h-4 w-4 text-accent" />
+              <PlugZap className="h-4 w-4 text-accent-strong" />
               Extensão Local
             </span>
           }
@@ -157,7 +157,7 @@ function SourcesPage() {
           id="authenticated-browser"
           title={
             <span className="flex items-center gap-2">
-              <Monitor className="h-4 w-4 text-accent" />
+              <Monitor className="h-4 w-4 text-accent-strong" />
               Navegador autenticado autorizado
             </span>
           }
@@ -174,7 +174,7 @@ function SourcesPage() {
                   key={step}
                   className="relative rounded-lg border border-border bg-muted/30 p-3 text-xs"
                 >
-                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-accent">
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-accent-strong">
                     Etapa {i + 1}
                   </div>
                   <div className="font-medium leading-snug">{step}</div>
@@ -524,12 +524,12 @@ function OpportunityInboxPanel() {
         {mode === "demo" ? (
           <span
             data-testid="demo-data-badge"
-            className="rounded-md border border-warning/30 bg-warning/10 px-2 py-1 font-medium text-warning"
+            className="rounded-md border border-warning/30 bg-warning/10 px-2 py-1 font-medium text-warning-strong"
           >
             Dados de demonstração
           </span>
         ) : (
-          <span className="rounded-md border border-success/30 bg-success/10 px-2 py-1 font-medium text-success">
+          <span className="rounded-md border border-success/30 bg-success/10 px-2 py-1 font-medium text-success-strong">
             API Real conectada à base local
           </span>
         )}
@@ -565,6 +565,7 @@ function OpportunityInboxPanel() {
           <textarea
             value={text}
             onChange={(event) => setText(event.target.value)}
+            aria-label="Texto da vaga para importar"
             className="mt-3 min-h-28 w-full rounded-md border border-input bg-background px-3 py-2 text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
           />
           <button
@@ -588,6 +589,7 @@ function OpportunityInboxPanel() {
               <textarea
                 value={csvText}
                 onChange={(event) => setCsvText(event.target.value)}
+                aria-label="Conteúdo CSV de oportunidades"
                 data-testid="source-csv-input"
                 className="min-h-32 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-[11px] outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
               />
@@ -605,6 +607,7 @@ function OpportunityInboxPanel() {
               <textarea
                 value={jsonText}
                 onChange={(event) => setJsonText(event.target.value)}
+                aria-label="Conteúdo JSON de oportunidades"
                 data-testid="source-json-input"
                 className="min-h-32 w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-[11px] outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
               />
@@ -689,7 +692,7 @@ function OpportunityInboxPanel() {
                   </div>
                 </div>
                 {filePreview.error ? (
-                  <p data-testid="source-upload-error" className="mt-2 text-destructive">
+                  <p data-testid="source-upload-error" className="mt-2 text-destructive-strong">
                     {filePreview.error}
                   </p>
                 ) : (
@@ -709,11 +712,13 @@ function OpportunityInboxPanel() {
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Buscar cargo, empresa, link, tag ou origem"
+          aria-label="Buscar oportunidades capturadas"
           className="min-w-[220px] flex-1 rounded-md border border-input bg-background px-3 py-2 text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
         />
         <select
           value={statusFilter}
           onChange={(event) => setStatusFilter(event.target.value as typeof statusFilter)}
+          aria-label="Filtrar por status"
           className="rounded-md border border-input bg-background px-3 py-2 text-xs"
         >
           <option value="all">Todas</option>
@@ -727,6 +732,7 @@ function OpportunityInboxPanel() {
         <select
           value={originFilter}
           onChange={(event) => setOriginFilter(event.target.value as typeof originFilter)}
+          aria-label="Filtrar por origem"
           className="rounded-md border border-input bg-background px-3 py-2 text-xs"
         >
           <option value="all">Toda origem</option>
@@ -885,7 +891,7 @@ function SourceDirectoryPanel({
       </div>
 
       {warnings.length > 0 && (
-        <div className="mt-3 rounded-md border border-warning/30 bg-warning/5 p-2 text-xs text-warning">
+        <div className="mt-3 rounded-md border border-warning/30 bg-warning/5 p-2 text-xs text-warning-strong">
           {warnings[0]}
         </div>
       )}
@@ -923,7 +929,7 @@ function SourceDirectoryPanel({
               </dl>
               <p className="mt-2 text-muted-foreground">{source.observation}</p>
               {source.requires_manual_review && (
-                <span className="mt-2 inline-flex rounded-md bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning">
+                <span className="mt-2 inline-flex rounded-md bg-warning/10 px-2 py-0.5 text-[10px] font-semibold text-warning-strong">
                   Revisão manual necessária
                 </span>
               )}
@@ -993,7 +999,7 @@ function OpportunityInboxRow({
             </span>
             <span
               className={`rounded-md px-2 py-0.5 text-[10px] font-semibold ${
-                duplicate ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
+                duplicate ? "bg-warning/10 text-warning-strong" : "bg-muted text-muted-foreground"
               }`}
             >
               {captureStatusLabel(item.status)}
@@ -1007,7 +1013,7 @@ function OpportunityInboxRow({
               data-testid="source-duplicate-panel"
               className="mt-2 rounded-md border border-warning/30 bg-warning/5 p-3 text-xs"
             >
-              <div className="font-semibold text-warning">
+              <div className="font-semibold text-warning-strong">
                 Esta vaga parece duplicada de outra oportunidade já salva.
               </div>
               <div className="mt-2 grid gap-2 md:grid-cols-2">
@@ -1104,7 +1110,7 @@ function OpportunityInboxRow({
               href={item.job_url}
               target="_blank"
               rel="noreferrer"
-              className="mt-2 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-accent hover:underline"
+              className="mt-2 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-accent-strong hover:underline"
             >
               <ExternalLink className="h-3 w-3 shrink-0" />
               <span className="truncate">{item.job_url}</span>
@@ -1424,9 +1430,9 @@ function LocalExtensionPanel() {
         >
           <div className="flex items-start gap-2">
             {statusQ.isFetching ? (
-              <RefreshCw className="mt-0.5 h-4 w-4 animate-spin text-warning" />
+              <RefreshCw className="mt-0.5 h-4 w-4 animate-spin text-warning-strong" />
             ) : (
-              <Database className="mt-0.5 h-4 w-4 text-success" />
+              <Database className="mt-0.5 h-4 w-4 text-success-strong" />
             )}
             <div>
               <div className="text-sm font-semibold">
@@ -1466,7 +1472,7 @@ function LocalExtensionPanel() {
             />
           </div>
           {handshakeQ.data?.warnings.map((warning) => (
-            <p key={warning} className="mt-2 text-xs text-warning">
+            <p key={warning} className="mt-2 text-xs text-warning-strong">
               {warning}
             </p>
           ))}
@@ -1627,7 +1633,7 @@ function ExtensionCaptureRow({
               Perfil: {capture.profile_candidate_count ?? 0} candidato(s)
             </span>
             {capture.snapshot_id && (
-              <span className="rounded-md bg-success/10 px-2 py-0.5 text-success">
+              <span className="rounded-md bg-success/10 px-2 py-0.5 text-success-strong">
                 Snapshot preservado
               </span>
             )}
@@ -1642,7 +1648,7 @@ function ExtensionCaptureRow({
               href={capture.url}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-accent hover:underline"
+              className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-accent-strong hover:underline"
             >
               <ExternalLink className="h-3 w-3 shrink-0" />
               <span className="truncate">{capture.url}</span>
@@ -1661,7 +1667,7 @@ function ExtensionCaptureRow({
               onClick={onPrepareApplication}
               disabled={busy}
               data-testid="prepare-capture-application"
-              className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent hover:bg-accent/15 disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent-strong hover:bg-accent/15 disabled:opacity-50"
             >
               <FlaskConical className="h-3 w-3" />
               Preparar candidatura
@@ -1672,7 +1678,7 @@ function ExtensionCaptureRow({
             onClick={onProfileCandidates}
             disabled={busy || isPublicExam}
             data-testid="view-extension-profile-candidates"
-            className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent hover:bg-accent/15 disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent-strong hover:bg-accent/15 disabled:opacity-50"
           >
             <CheckCircle2 className="h-3 w-3" />
             {isPublicExam
@@ -1697,7 +1703,7 @@ function ExtensionCaptureRow({
               onClick={onImportPublicExam}
               disabled={busy}
               data-testid="import-capture-public-exam"
-              className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent hover:bg-accent/15 disabled:opacity-50"
+              className="inline-flex items-center gap-1 rounded-md border border-accent/40 bg-accent/10 px-2.5 py-1 text-[11px] font-medium text-accent-strong hover:bg-accent/15 disabled:opacity-50"
             >
               <ArrowRight className="h-3 w-3" />
               Importar como Edital/Concurso
@@ -2032,7 +2038,7 @@ function AuthenticatedBrowserPanel() {
               key={step}
               className="flex gap-3 rounded-lg border border-border bg-muted/30 p-3 text-xs"
             >
-              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-accent/15 text-[10px] font-semibold text-accent">
+              <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-accent/15 text-[10px] font-semibold text-accent-strong">
                 {index + 1}
               </span>
               <span className="leading-relaxed text-muted-foreground">{step}</span>
@@ -2059,7 +2065,7 @@ function AuthenticatedBrowserPanel() {
           <ul className="space-y-2">
             {AUTH_BROWSER_LIMITS.map((limit) => (
               <li key={limit} className="flex gap-2 text-xs text-muted-foreground">
-                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success" />
+                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-success-strong" />
                 <span>{limit}</span>
               </li>
             ))}
@@ -2110,9 +2116,9 @@ function AuthenticatedStatusSummary({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-2">
           {isBusy ? (
-            <RefreshCw className="mt-0.5 h-4 w-4 animate-spin text-warning" />
+            <RefreshCw className="mt-0.5 h-4 w-4 animate-spin text-warning-strong" />
           ) : isReady ? (
-            <CheckCircle2 className="mt-0.5 h-4 w-4 text-success" />
+            <CheckCircle2 className="mt-0.5 h-4 w-4 text-success-strong" />
           ) : (
             <AlertTriangle className="mt-0.5 h-4 w-4 text-muted-foreground" />
           )}
@@ -2191,7 +2197,7 @@ function AuthenticatedResultSummary({
                     href={opportunity.source_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-accent hover:underline"
+                    className="mt-1 inline-flex max-w-full items-center gap-1 truncate text-[11px] text-accent-strong hover:underline"
                   >
                     <ExternalLink className="h-3 w-3 shrink-0" />
                     <span className="truncate">{opportunity.source_url}</span>

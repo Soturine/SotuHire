@@ -9,6 +9,10 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- Resume Studio monta o Currículo Mestre a partir do Perfil Universal (só fatos confirmados e não
+  sensíveis, com a origem de cada entrada) em vez de pedir o currículo de novo, e lista fatos
+  confirmados depois no Perfil para a pessoa escolher quais entram. Nada volta da variante para o
+  Perfil. Ver `docs/00-audit/2026-11-data-authority-map.md`.
 - Provider Anthropic (Claude) com Claude Haiku 5.5 como modelo padrão: saída estruturada validada
   pelo schema do prompt, chave só no backend (Configurações → IA ou `ANTHROPIC_API_KEY`), mesma
   política de opt-in, erros e novas tentativas dos outros providers. Validado por testes de contrato;
@@ -46,6 +50,12 @@ Nenhuma versão ou tag foi criada.
   (OpenAI seria chamado com `gemini-2.5-flash`); agora vale o padrão do provider escolhido.
 - `.env.example` listava 24 variáveis, das quais só 4 eram lidas pelo código, e omitia outras em uso
   (`SOTUHIRE_DATA_DIR`, `OPENAI_MODEL`, configuração da API local); agora lista só o que existe.
+- Resume Studio sem Currículo Mestre mostrava erro com "tentar novamente" em vez do primeiro uso.
+- Um rascunho antigo guardado no navegador substituía a variante salva no servidor ao reabrir o
+  Resume Studio; agora só vence se for da mesma variante e mais novo, e é apagado ao salvar.
+- Acessibilidade: o axe (WCAG 2.x A/AA) apontava 20 nós críticos e 309 sérios em 22 rotas; agora
+  zero. Texto em cores semânticas usa tokens de contraste próprios, campos ganharam nome acessível
+  e a busca universal usa o texto visível como nome.
 - `due_at` de tarefas agora exige fuso horário e é normalizado para UTC na API e no frontend.
 - Fingerprint do Career State passa a incluir oportunidades e resultados recentes.
 - Página Carreira: lembrete pede a tarefa relacionada explicitamente; o modo demo mostra o que foi

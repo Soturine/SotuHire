@@ -163,14 +163,18 @@ function InsightGroup({
     success: {
       icon: CheckCircle2,
       cls: "border-success/30 bg-success/5",
-      iconCls: "text-success",
+      iconCls: "text-success-strong",
     },
-    warning: { icon: Lightbulb, cls: "border-warning/30 bg-warning/5", iconCls: "text-warning" },
-    accent: { icon: Lightbulb, cls: "border-accent/30 bg-accent/5", iconCls: "text-accent" },
+    warning: {
+      icon: Lightbulb,
+      cls: "border-warning/30 bg-warning/5",
+      iconCls: "text-warning-strong",
+    },
+    accent: { icon: Lightbulb, cls: "border-accent/30 bg-accent/5", iconCls: "text-accent-strong" },
     destructive: {
       icon: ShieldAlert,
       cls: "border-destructive/30 bg-destructive/5",
-      iconCls: "text-destructive",
+      iconCls: "text-destructive-strong",
     },
     default: {
       icon: ArrowRight,
@@ -180,7 +184,7 @@ function InsightGroup({
     integrity: {
       icon: ShieldAlert,
       cls: "border-warning/30 bg-warning/5",
-      iconCls: "text-warning",
+      iconCls: "text-warning-strong",
     },
   }[tone];
   const Icon = cfg.icon;

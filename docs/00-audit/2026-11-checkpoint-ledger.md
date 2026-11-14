@@ -84,6 +84,19 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | mutação depois | `6a09b16ecff534d062793e26dd80329cfe43c5213037bfd1d9a8615278a1752f` |
 | reteste da atribuição | `9d993536c74451be7d221334fe78563cb537f3ce54099ede5513f0fbf8457c82` |
 
+## CP-FE00 / CP-DATA01 / CP-FE01a — evidência de UX, autoridade dos dados e acessibilidade
+
+| Campo | Registro |
+| --- | --- |
+| Pergunta | O que a pessoa informa uma vez chega ao currículo sem redigitação? A interface é operável por tecnologia assistiva? |
+| Baseline | `86ea930` (spec de captura, axe dev-only); capturas antes em `8b9e82a`: 20 críticos, 309 sérios, 0 estouro, 0 erro de console |
+| Achados | primeiro uso do Resume Studio era tela de erro (o modo demo escondia); currículo não derivava do Perfil; rascunho do navegador vencia o servidor; terceira cópia da regra de confirmação em `ResumeEntry`; cores semânticas usadas como texto |
+| Correções | projeção Perfil → Mestre com revisão; onboarding; painel de atualizações; precedência de rascunho; tokens `-strong` calculados e calibrados contra o axe; rótulos |
+| Testes | pytest 805 passed / 4 skipped; Vitest 22; Chromium E2E 29 passed, 0 failed (53 skipped são capturas condicionadas); E2E novo falha com a rota anterior (controle negativo válido; o primeiro controle saiu inconclusivo por gravação em UTF-16 e foi refeito) |
+| Depois | 0 críticos, 0 sérios, 0 estouro, 0 erro de console nas 22 rotas × 2 viewports |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (mapa de autoridade, documento de UX com pares antes/depois, CHANGELOG, mkdocs) |
+| Pendente | redesign visual amplo; componente `Field`; leitor de tela; edição de fatos já projetados; retirada de `LocalStore` |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |

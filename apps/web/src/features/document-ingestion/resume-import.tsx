@@ -106,7 +106,7 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
     <section className="rounded-2xl border bg-card p-5 shadow-[var(--shadow-soft)]">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-strong">
             Ingestão segura
           </p>
           <h2 className="mt-1 text-display text-lg">Importar e revisar</h2>
@@ -156,7 +156,7 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
           <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
             <span className="inline-flex items-center gap-1.5 font-semibold">
               {result.document.status === "accepted" ? (
-                <CheckCircle2 className="h-4 w-4 text-success" />
+                <CheckCircle2 className="h-4 w-4 text-success-strong" />
               ) : (
                 <AlertTriangle className="h-4 w-4 text-warning-foreground" />
               )}
@@ -190,7 +190,7 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
                   />
                   <span>
                     <strong>{entry.title || section.title}</strong>
-                    <span className="ml-2 rounded bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent">
+                    <span className="ml-2 rounded bg-accent/10 px-1.5 py-0.5 text-[10px] text-accent-strong">
                       sourced · confirmar ou rejeitar
                     </span>
                     <span className="mt-1 block whitespace-pre-wrap">{entry.content}</span>

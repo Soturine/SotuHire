@@ -47,7 +47,7 @@ function HelpPage() {
                 <p className="text-sm leading-6 text-muted-foreground">{t(route.description)}</p>
                 <a
                   href={route.path}
-                  className="mt-4 inline-flex text-sm font-medium text-accent underline-offset-4 hover:underline"
+                  className="mt-4 inline-flex text-sm font-medium text-accent-strong underline-offset-4 hover:underline"
                 >
                   {t("help.center.openTopic")}
                 </a>

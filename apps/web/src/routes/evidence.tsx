@@ -37,7 +37,7 @@ function EvidenceInbox() {
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="rounded-2xl border bg-card p-5">
           <div className="flex items-center gap-3">
-            <Search className="h-5 w-5 text-accent" />
+            <Search className="h-5 w-5 text-accent-strong" />
             <div>
               <h2 className="font-semibold">
                 {pt ? "Por que isto está aqui?" : "Why is this here?"}
@@ -74,7 +74,7 @@ function EvidenceInbox() {
                       className="rounded-xl border bg-card p-4 shadow-[var(--shadow-soft)]"
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <Inbox className="mt-0.5 h-4 w-4 text-accent" />
+                        <Inbox className="mt-0.5 h-4 w-4 text-accent-strong" />
                         <span className="text-[11px] uppercase text-muted-foreground">
                           {item.node_type}
                         </span>

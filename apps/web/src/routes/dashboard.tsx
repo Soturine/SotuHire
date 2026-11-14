@@ -75,7 +75,7 @@ function CareerCockpit() {
         <section className="trajectory-surface overflow-hidden rounded-3xl border p-6 md:p-8">
           <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
             <div>
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent">
+              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent-strong">
                 <Compass className="h-4 w-4" /> {t.eyebrow}
               </p>
               <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
@@ -133,7 +133,10 @@ function CareerCockpit() {
           <div className="rounded-2xl border bg-card p-5 shadow-[var(--shadow-soft)] md:p-6">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-xl font-semibold">{t.priorities}</h2>
-              <ShieldCheck className="h-5 w-5 text-accent" aria-label="Human approval required" />
+              <ShieldCheck
+                className="h-5 w-5 text-accent-strong"
+                aria-label="Human approval required"
+              />
             </div>
             <ol className="space-y-3">
               {state.data?.recommendation_candidates.map((action, index) => (
@@ -199,7 +202,7 @@ function Signal({
       className="group rounded-2xl border bg-card p-5 shadow-[var(--shadow-soft)] transition-transform hover:-translate-y-0.5"
     >
       <div className="flex items-center justify-between">
-        <Icon className="h-5 w-5 text-accent" />
+        <Icon className="h-5 w-5 text-accent-strong" />
         <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
       </div>
       <div className="mt-5 text-3xl font-semibold tabular-nums">{value}</div>
@@ -224,7 +227,7 @@ function ListPanel({
         {items.slice(0, 5).map((item) => (
           <li key={item} className="flex gap-2 text-sm">
             <CheckCircle2
-              className={`mt-0.5 h-4 w-4 shrink-0 ${positive ? "text-accent" : "text-warning"}`}
+              className={`mt-0.5 h-4 w-4 shrink-0 ${positive ? "text-accent-strong" : "text-warning-strong"}`}
             />
             {item}
           </li>

@@ -175,19 +175,19 @@ function AtsPage() {
             <div className="grid gap-6 lg:grid-cols-3">
               <KeywordBlock
                 title="Presentes"
-                icon={<CheckCircle2 className="h-4 w-4 text-success" />}
+                icon={<CheckCircle2 className="h-4 w-4 text-success-strong" />}
                 items={r.present}
                 tone="success"
               />
               <KeywordBlock
                 title="Adicionáveis (se verdadeiras)"
-                icon={<MinusCircle className="h-4 w-4 text-warning" />}
+                icon={<MinusCircle className="h-4 w-4 text-warning-strong" />}
                 items={r.missing_but_safe_to_add_if_true}
                 tone="warning"
               />
               <KeywordBlock
                 title="Sem evidência"
-                icon={<XCircle className="h-4 w-4 text-destructive" />}
+                icon={<XCircle className="h-4 w-4 text-destructive-strong" />}
                 items={r.missing_without_evidence}
                 tone="destructive"
               />
@@ -241,7 +241,7 @@ function AtsPage() {
                       key={i}
                       className="flex gap-2 rounded-md border border-warning/30 bg-warning/10 p-3"
                     >
-                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                      <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" />
                       <span>{w}</span>
                     </li>
                   ))}
@@ -310,9 +310,11 @@ function Stat({
   value: number;
   tone: "success" | "warning" | "destructive";
 }) {
-  const cls = { success: "text-success", warning: "text-warning", destructive: "text-destructive" }[
-    tone
-  ];
+  const cls = {
+    success: "text-success-strong",
+    warning: "text-warning-strong",
+    destructive: "text-destructive-strong",
+  }[tone];
   return (
     <div className="rounded-lg border border-border bg-muted/30 px-3 py-3">
       <div className={`text-display text-2xl tabular-nums ${cls}`}>{value}</div>

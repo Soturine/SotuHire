@@ -96,7 +96,7 @@ function GhPage() {
                     href={r.repo.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs font-medium text-accent hover:underline"
+                    className="text-xs font-medium text-accent-strong hover:underline"
                   >
                     Abrir no GitHub →
                   </a>
@@ -156,7 +156,7 @@ function GhPage() {
                       key={i}
                       className="flex gap-2 rounded-md border border-success/30 bg-success/5 p-3"
                     >
-                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success-strong" />
                       {s}
                     </li>
                   ))}
@@ -172,7 +172,7 @@ function GhPage() {
                         key={i}
                         className="flex gap-2 rounded-md border border-warning/30 bg-warning/5 p-3"
                       >
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" />
                         {s}
                       </li>
                     ))}
@@ -184,7 +184,7 @@ function GhPage() {
             <SectionCard
               title={
                 <span className="flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-accent" /> Recomendações para portfólio
+                  <Lightbulb className="h-4 w-4 text-accent-strong" /> Recomendações para portfólio
                 </span>
               }
             >

@@ -135,7 +135,7 @@ export function ProfessionalAssetsPanel() {
     >
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-strong">
             Professional Assets
           </p>
           <h2 className="mt-1 text-display text-lg">Biblioteca reutilizável</h2>
@@ -212,11 +212,11 @@ export function ProfessionalAssetsPanel() {
                   <span
                     className={cn(
                       "rounded-full px-2 py-1 text-[10px] font-bold uppercase",
-                      asset.status === "confirmed" && "bg-success/15 text-success",
+                      asset.status === "confirmed" && "bg-success/15 text-success-strong",
                       asset.status === "stale" && "bg-warning/15 text-warning-foreground",
                       asset.status === "archived" && "bg-muted text-muted-foreground",
                       (asset.status === "draft" || asset.status === "review") &&
-                        "bg-accent/10 text-accent",
+                        "bg-accent/10 text-accent-strong",
                     )}
                   >
                     {STATUS_LABELS[asset.status]}

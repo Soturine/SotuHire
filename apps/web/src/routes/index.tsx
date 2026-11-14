@@ -137,7 +137,7 @@ function Landing() {
             <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
               {["Local-first", "Sem login", "Sem rastreio", "Código aberto"].map((t) => (
                 <span key={t} className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-accent" /> {t}
+                  <CheckCircle2 className="h-3.5 w-3.5 text-accent-strong" /> {t}
                 </span>
               ))}
             </div>
@@ -191,7 +191,7 @@ function Landing() {
           </div>
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-strong hover:underline"
           >
             Abrir fluxo no dashboard <ArrowRight className="h-3.5 w-3.5" />
           </Link>
@@ -214,7 +214,7 @@ function Landing() {
               key={f.title}
               className="group rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elevated)]"
             >
-              <div className="grid h-10 w-10 place-items-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent/15 group-hover:text-accent">
+              <div className="grid h-10 w-10 place-items-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent/15 group-hover:text-accent-strong">
                 <f.icon className="h-5 w-5" />
               </div>
               <h3 className="mt-4 text-base font-semibold">{f.title}</h3>
@@ -229,7 +229,7 @@ function Landing() {
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-20 md:grid-cols-2 md:items-center">
           <div>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium">
-              <ShieldCheck className="h-3 w-3 text-accent" /> Local-first by design
+              <ShieldCheck className="h-3 w-3 text-accent-strong" /> Local-first by design
             </span>
             <h2 className="text-display mt-4 text-4xl">
               Seu currículo não vira{" "}
@@ -254,7 +254,7 @@ function Landing() {
                 ["Código aberto", "Você pode auditar cada rota antes de confiar."],
               ].map(([t, d]) => (
                 <li key={t} className="flex gap-3">
-                  <Lock className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                  <Lock className="mt-0.5 h-4 w-4 shrink-0 text-accent-strong" />
                   <div>
                     <div className="font-medium">{t}</div>
                     <div className="text-xs text-muted-foreground">{d}</div>

@@ -220,7 +220,7 @@ function PublicExamsPage() {
           data-testid="public-exams-official-warning"
           className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/5 p-4"
         >
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-warning/15 text-warning">
+          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-warning/15 text-warning-strong">
             <ShieldCheck className="h-4 w-4" />
           </div>
           <div>
@@ -233,7 +233,7 @@ function PublicExamsPage() {
           <SectionCard
             title={
               <span className="flex items-center gap-2">
-                <ScrollText className="h-4 w-4 text-accent" />
+                <ScrollText className="h-4 w-4 text-accent-strong" />
                 Importar edital por texto
               </span>
             }
@@ -668,7 +668,7 @@ function WarningsList({ warnings }: { warnings: string[] }) {
           key={warning}
           className="flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs text-muted-foreground"
         >
-          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning" />
+          <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-warning-strong" />
           <span>{warning}</span>
         </div>
       ))}
@@ -738,7 +738,7 @@ function InfoTile({
 }) {
   return (
     <div className="rounded-lg border border-border bg-card p-4">
-      <Icon className="h-4 w-4 text-accent" />
+      <Icon className="h-4 w-4 text-accent-strong" />
       <div className="mt-2 text-xs text-muted-foreground">{label}</div>
       <div className="mt-1 truncate text-sm font-semibold">{value}</div>
     </div>
@@ -874,7 +874,7 @@ function Badge({
       : tone === "warning"
         ? "border-warning/30 bg-warning/10 text-warning-foreground"
         : tone === "error"
-          ? "border-destructive/30 bg-destructive/10 text-destructive"
+          ? "border-destructive/30 bg-destructive/10 text-destructive-strong"
           : "border-border bg-muted text-muted-foreground";
   return (
     <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", cls)}>

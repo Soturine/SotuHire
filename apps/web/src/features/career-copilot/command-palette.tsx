@@ -56,10 +56,12 @@ export function CommandPalette() {
         variant="outline"
         size="sm"
         onClick={() => setOpen(true)}
-        aria-label={pt ? "Abrir busca universal" : "Open universal search"}
+        aria-keyshortcuts="Control+K"
+        title={pt ? "Busca universal (Ctrl+K)" : "Universal search (Ctrl+K)"}
       >
-        <Search />
-        <span className="hidden lg:inline">{pt ? "Buscar" : "Search"}</span>
+        <Search aria-hidden />
+        {/* The visible word is the accessible name (WCAG 2.5.3); below lg it stays for screen readers. */}
+        <span className="sr-only lg:not-sr-only">{pt ? "Buscar" : "Search"}</span>
         <kbd className="hidden rounded border px-1.5 text-[10px] text-muted-foreground sm:inline">
           Ctrl K
         </kbd>

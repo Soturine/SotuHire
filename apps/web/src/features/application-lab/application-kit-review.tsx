@@ -110,9 +110,9 @@ export function ApplicationKitReview({
                 <span
                   className={cn(
                     "rounded-full px-2 py-1 text-[10px] font-bold uppercase",
-                    item.status === "accepted" && "bg-success/15 text-success",
-                    item.status === "edited" && "bg-accent/15 text-accent",
-                    item.status === "rejected" && "bg-destructive/10 text-destructive",
+                    item.status === "accepted" && "bg-success/15 text-success-strong",
+                    item.status === "edited" && "bg-accent/15 text-accent-strong",
+                    item.status === "rejected" && "bg-destructive/10 text-destructive-strong",
                     (item.status === "pending" || item.status === "stale") &&
                       "bg-warning/15 text-warning-foreground",
                   )}

@@ -32,6 +32,11 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  /* Text-on-surface variants of the semantic fills (WCAG AA on card, background and 15-20% tints). */
+  --color-accent-strong: var(--accent-strong);
+  --color-success-strong: var(--success-strong);
+  --color-warning-strong: var(--warning-strong);
+  --color-destructive-strong: var(--destructive-strong);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -90,6 +95,13 @@
   --warning: oklch(0.78 0.15 75);
   --warning-foreground: oklch(0.22 0.06 60);
 
+  /* Fills above are for backgrounds, icons and borders; text uses the -strong variants
+     (contrast computed in OKLCH with gamma-correct blending, calibrated against axe). */
+  --accent-strong: oklch(0.46 0.124 183);
+  --success-strong: oklch(0.46 0.152 160);
+  --warning-strong: oklch(0.46 0.143 75);
+  --destructive-strong: oklch(0.46 0.209 25);
+
   --border: oklch(0.92 0.008 250);
   --input: oklch(0.92 0.008 250);
   --ring: oklch(0.63 0.13 183);
@@ -135,6 +147,10 @@
   --accent-foreground: oklch(0.14 0.04 200);
   --border: oklch(1 0 0 / 8%);
   --input: oklch(1 0 0 / 12%);
+  --accent-strong: oklch(0.84 0.104 183);
+  --success-strong: oklch(0.84 0.128 160);
+  --warning-strong: oklch(0.84 0.12 75);
+  --destructive-strong: oklch(0.84 0.176 25);
 }
 
 @layer components {

@@ -40,7 +40,7 @@ function ApprovalQueue() {
     >
       <div className="mx-auto max-w-5xl space-y-5">
         <div className="flex items-center gap-3 rounded-2xl border border-accent/20 bg-accent/5 p-4">
-          <ShieldCheck className="h-6 w-6 text-accent" />
+          <ShieldCheck className="h-6 w-6 text-accent-strong" />
           <p className="text-sm">
             {pt
               ? "Não existe Aprovar tudo. Cada alteração importante precisa da sua decisão individual."

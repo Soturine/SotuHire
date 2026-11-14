@@ -19,9 +19,9 @@ export function StatCard({
 }) {
   const toneCls = {
     default: "text-foreground",
-    accent: "text-accent",
-    warning: "text-warning",
-    destructive: "text-destructive",
+    accent: "text-accent-strong",
+    warning: "text-warning-strong",
+    destructive: "text-destructive-strong",
   }[tone];
 
   return (
@@ -34,7 +34,7 @@ export function StatCard({
           <p className={cn("text-display text-3xl tabular-nums leading-none", toneCls)}>{value}</p>
         </div>
         {Icon && (
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent/15 group-hover:text-accent">
+          <div className="grid h-9 w-9 place-items-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent/15 group-hover:text-accent-strong">
             <Icon className="h-4 w-4" />
           </div>
         )}

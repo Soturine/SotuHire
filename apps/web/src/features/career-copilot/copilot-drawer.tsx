@@ -55,7 +55,7 @@ export function CopilotDrawer({ pathname }: { pathname: string }) {
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <Compass className="text-accent" />
+            <Compass className="text-accent-strong" />
             {pt ? "Copilot sob sua aprovação" : "Human-approved Copilot"}
           </SheetTitle>
           <SheetDescription>
@@ -67,7 +67,7 @@ export function CopilotDrawer({ pathname }: { pathname: string }) {
         <div className="mt-6 space-y-5">
           <div className="rounded-xl border bg-muted/30 p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Eye className="h-4 w-4 text-accent" />
+              <Eye className="h-4 w-4 text-accent-strong" />
               {pt ? "O que foi considerado" : "What was considered"}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
@@ -89,7 +89,7 @@ export function CopilotDrawer({ pathname }: { pathname: string }) {
               {state.data?.recommendation_candidates.slice(0, 4).map((action) => (
                 <article key={action.action_id} className="rounded-xl border p-4">
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent-strong" />
                     <div className="min-w-0 flex-1">
                       <h4 className="text-sm font-semibold">{action.type.replaceAll("_", " ")}</h4>
                       <p className="mt-1 text-xs text-muted-foreground">{action.reason}</p>

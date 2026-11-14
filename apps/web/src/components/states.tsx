@@ -26,7 +26,7 @@ export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () =>
   const message = error instanceof Error ? error.message : String(error ?? "Erro desconhecido.");
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 px-6 py-10 text-center">
-      <AlertTriangle className="h-6 w-6 text-destructive" />
+      <AlertTriangle className="h-6 w-6 text-destructive-strong" />
       <div className="space-y-1">
         <p className="text-sm font-medium">Não foi possível carregar.</p>
         <p className="text-xs text-muted-foreground">{message}</p>

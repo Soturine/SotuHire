@@ -312,7 +312,7 @@ function IntelPage() {
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-medium">{g.name}</span>
-                    <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-[10px] uppercase tracking-wider text-destructive">
+                    <span className="rounded-full bg-destructive/20 px-2 py-0.5 text-[10px] uppercase tracking-wider text-destructive-strong">
                       {g.severity}
                     </span>
                   </div>

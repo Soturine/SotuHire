@@ -33,26 +33,26 @@ export function ProviderBadge({
     ai: {
       icon: Sparkles,
       label: "Analise com IA",
-      cls: "border-accent/30 bg-accent/10 text-accent",
+      cls: "border-accent/30 bg-accent/10 text-accent-strong",
       title: providerLabel(provider, model),
     },
     configured: {
       icon: KeyRound,
       label: "Provider configurado",
-      cls: "border-success/30 bg-success/10 text-success",
+      cls: "border-success/30 bg-success/10 text-success-strong",
       title: providerLabel(provider, model),
     },
     analyzing: {
       icon: Loader2,
       label: "Analisando com IA",
-      cls: "border-accent/30 bg-accent/10 text-accent",
+      cls: "border-accent/30 bg-accent/10 text-accent-strong",
       title: providerLabel(provider, model),
       spin: true,
     },
     fallback: {
       icon: TriangleAlert,
       label: "Fallback local",
-      cls: "border-warning/30 bg-warning/10 text-warning",
+      cls: "border-warning/30 bg-warning/10 text-warning-strong",
     },
     disabled: {
       icon: WifiOff,
@@ -62,22 +62,22 @@ export function ProviderBadge({
     unconfigured: {
       icon: TriangleAlert,
       label: "Provider nao configurado",
-      cls: "border-warning/30 bg-warning/10 text-warning",
+      cls: "border-warning/30 bg-warning/10 text-warning-strong",
     },
     provider_error: {
       icon: TriangleAlert,
       label: "Limite/erro do provider",
-      cls: "border-destructive/30 bg-destructive/10 text-destructive",
+      cls: "border-destructive/30 bg-destructive/10 text-destructive-strong",
     },
     provider_timeout: {
       icon: TriangleAlert,
       label: "Timeout do provider",
-      cls: "border-warning/30 bg-warning/10 text-warning",
+      cls: "border-warning/30 bg-warning/10 text-warning-strong",
     },
     invalid_key: {
       icon: KeyRound,
       label: "Chave invalida",
-      cls: "border-destructive/30 bg-destructive/10 text-destructive",
+      cls: "border-destructive/30 bg-destructive/10 text-destructive-strong",
     },
   }[effectiveMode];
   const Icon = cfg.icon;
@@ -189,7 +189,7 @@ export function AnalysisStateNote({
             </div>
           </dl>
           {trace.fallback_reason && (
-            <p className="mt-2 text-warning">Fallback: {trace.fallback_reason}</p>
+            <p className="mt-2 text-warning-strong">Fallback: {trace.fallback_reason}</p>
           )}
           {trace.evidence_used && trace.evidence_used.length > 0 && (
             <div className="mt-2">

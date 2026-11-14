@@ -470,7 +470,7 @@ function LabStart({
         <div className="grid gap-8 md:grid-cols-[1fr_280px] md:items-center">
           <div>
             <span className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs">
-              <FlaskConical className="h-3.5 w-3.5 text-accent" /> Application Lab
+              <FlaskConical className="h-3.5 w-3.5 text-accent-strong" /> Application Lab
             </span>
             <h2 className="mt-5 text-display text-3xl leading-tight sm:text-4xl">
               Da vaga ao Tracker, com cada mudança sob seu controle.
@@ -483,7 +483,7 @@ function LabStart({
           <div className="grid grid-cols-2 gap-2 text-xs">
             {["10 etapas reais", "3 perspectivas", "0 auto-apply", "Local-first"].map((item) => (
               <div key={item} className="rounded-xl border border-white/10 bg-white/5 p-3">
-                <CheckCircle2 className="mb-2 h-4 w-4 text-accent" /> {item}
+                <CheckCircle2 className="mb-2 h-4 w-4 text-accent-strong" /> {item}
               </div>
             ))}
           </div>
@@ -582,7 +582,7 @@ function StartCard({
         <span
           className={cn(
             "rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
-            ready ? "bg-success/15 text-success" : "bg-warning/15 text-warning-foreground",
+            ready ? "bg-success/15 text-success-strong" : "bg-warning/15 text-warning-foreground",
           )}
         >
           {ready ? "Pronto" : "Pendente"}
@@ -635,7 +635,7 @@ function LabStepper({
                   className={cn(
                     "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[10px] font-bold",
                     active && "border-white/30 bg-white/10",
-                    complete && !active && "border-success/30 bg-success/15 text-success",
+                    complete && !active && "border-success/30 bg-success/15 text-success-strong",
                     stale && !active && "border-warning/30 bg-warning/15 text-warning-foreground",
                   )}
                 >
@@ -656,13 +656,15 @@ function SessionStatus({ detail }: { detail: ApplicationLabDetail }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3 text-xs">
       <div className="flex items-center gap-2">
-        <Save className="h-4 w-4 text-accent" />
+        <Save className="h-4 w-4 text-accent-strong" />
         <span>
           Sessão <code>{session.session_id.slice(0, 8)}</code> · {session.status}
         </span>
       </div>
       <div className="flex flex-wrap gap-2">
-        <span className="rounded-full bg-success/10 px-2 py-1 text-success">local-first</span>
+        <span className="rounded-full bg-success/10 px-2 py-1 text-success-strong">
+          local-first
+        </span>
         <span className="rounded-full bg-muted px-2 py-1">
           {report?.provider_metadata.provider_used === "local" ? "análise local" : "provider"}
         </span>
@@ -688,7 +690,7 @@ function AnalysisProgress() {
   return (
     <div className="rounded-2xl border bg-card p-6 shadow-[var(--shadow-soft)]" aria-live="polite">
       <div className="flex items-center gap-3">
-        <Loader2 className="h-5 w-5 animate-spin text-accent" />
+        <Loader2 className="h-5 w-5 animate-spin text-accent-strong" />
         <div>
           <h2 className="font-semibold">Análise consolidada em andamento</h2>
           <p className="text-xs text-muted-foreground">{REAL_PROGRESS[active]}</p>
@@ -704,7 +706,11 @@ function AnalysisProgress() {
               index <= active ? "border-accent/30 bg-accent/5" : "text-muted-foreground",
             )}
           >
-            {index < active ? <Check className="h-3.5 w-3.5 text-success" /> : <span>○</span>}
+            {index < active ? (
+              <Check className="h-3.5 w-3.5 text-success-strong" />
+            ) : (
+              <span>○</span>
+            )}
             {step}
           </li>
         ))}
@@ -790,7 +796,7 @@ function StepPanel({
         <div className="grid gap-3 sm:grid-cols-2">
           {detail.session.selected_context_refs.map((ref) => (
             <div key={ref} className="rounded-lg border bg-muted/30 p-3 text-xs">
-              <ShieldCheck className="mb-2 h-4 w-4 text-success" />
+              <ShieldCheck className="mb-2 h-4 w-4 text-success-strong" />
               <code className="break-all">{ref}</code>
               <p className="mt-2 text-muted-foreground">Confirmada e incluída nesta sessão.</p>
             </div>
@@ -865,7 +871,7 @@ function StepPanel({
       <Panel title="Relatório de prontidão" eyebrow="Etapa 5">
         {!report ? (
           <div className="py-8 text-center">
-            <ClipboardCheck className="mx-auto h-8 w-8 text-accent" />
+            <ClipboardCheck className="mx-auto h-8 w-8 text-accent-strong" />
             <h3 className="mt-3 font-semibold">Pronto para uma análise consolidada</h3>
             <p className="mx-auto mt-2 max-w-lg text-xs text-muted-foreground">
               O score é determinístico. A explicação separa cobertura, evidência insuficiente e
@@ -912,7 +918,7 @@ function StepPanel({
       <Panel title="Variante e diff" eyebrow="Etapa 7">
         {!detail.variant ? (
           <div className="py-8 text-center">
-            <FileDiff className="mx-auto h-8 w-8 text-accent" />
+            <FileDiff className="mx-auto h-8 w-8 text-accent-strong" />
             <p className="mt-3 text-sm">Crie uma cópia apenas com sugestões aprovadas.</p>
             <PrimaryAction onClick={onVariant} pending={pending} label="Criar variante" />
           </div>
@@ -948,7 +954,7 @@ function StepPanel({
       <Panel title="Kit de candidatura" eyebrow="Etapa 8">
         {!detail.kit ? (
           <div className="py-8 text-center">
-            <Sparkles className="mx-auto h-8 w-8 text-accent" />
+            <Sparkles className="mx-auto h-8 w-8 text-accent-strong" />
             <p className="mt-3 text-sm">Gere rascunhos factuais para revisar e copiar.</p>
             <PrimaryAction onClick={onKit} pending={pending} label="Criar kit" />
           </div>
@@ -969,7 +975,7 @@ function StepPanel({
       <Panel title="Plano de ação" eyebrow="Etapa 9">
         {!detail.action_plan ? (
           <div className="py-8 text-center">
-            <ClipboardCheck className="mx-auto h-8 w-8 text-accent" />
+            <ClipboardCheck className="mx-auto h-8 w-8 text-accent-strong" />
             <p className="mt-3 text-sm">Transforme bloqueadores reais em tarefas de 7 dias.</p>
             <PrimaryAction onClick={onPlan} pending={pending} label="Criar plano de 7 dias" />
           </div>
@@ -996,7 +1002,7 @@ function StepPanel({
     <Panel title="Salvar no Tracker" eyebrow="Etapa 10">
       {detail.session.status === "completed" ? (
         <div className="py-8 text-center">
-          <CheckCircle2 className="mx-auto h-10 w-10 text-success" />
+          <CheckCircle2 className="mx-auto h-10 w-10 text-success-strong" />
           <h3 className="mt-3 text-lg font-semibold">Candidatura salva</h3>
           <p className="mt-2 text-xs text-muted-foreground">
             Tracker <code>{detail.session.tracker_application_id}</code> com vaga, currículo,
@@ -1057,7 +1063,9 @@ function Panel({
 }) {
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-[var(--shadow-soft)] sm:p-6">
-      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent">{eyebrow}</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-accent-strong">
+        {eyebrow}
+      </p>
       <h2 className="mt-1 mb-5 text-display text-xl">{title}</h2>
       {children}
     </div>
@@ -1128,7 +1136,7 @@ function ReadinessReport({
               <ul className="mt-3 space-y-2 text-xs">
                 {perspective.findings.map((finding) => (
                   <li key={finding} className="flex gap-2">
-                    <span className="text-accent">•</span> {finding}
+                    <span className="text-accent-strong">•</span> {finding}
                   </li>
                 ))}
               </ul>
@@ -1168,7 +1176,7 @@ function AnalysisBundleSummary({
     <section className="space-y-3" data-testid="application-analysis-bundle">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-accent-strong">
             Application Analysis Bundle
           </p>
           <h3 className="text-sm font-semibold">Quatro produtos independentes e rastreáveis</h3>
@@ -1177,7 +1185,7 @@ function AnalysisBundleSummary({
           className={cn(
             "rounded-full px-2 py-1 text-[10px] font-semibold",
             bundle.status === "current"
-              ? "bg-success/15 text-success"
+              ? "bg-success/15 text-success-strong"
               : "bg-warning/15 text-warning-foreground",
           )}
         >
@@ -1306,7 +1314,7 @@ function SuggestionCard({
               type="button"
               onClick={() => onReview("reject")}
               disabled={pending}
-              className="rounded-md border px-3 py-1.5 text-xs font-semibold text-destructive"
+              className="rounded-md border px-3 py-1.5 text-xs font-semibold text-destructive-strong"
             >
               Rejeitar
             </button>
@@ -1374,9 +1382,9 @@ function StatusMark({ status }: { status: string }) {
     <span
       className={cn(
         "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px]",
-        status === "met" && "bg-success/15 text-success",
+        status === "met" && "bg-success/15 text-success-strong",
         status === "partial" && "bg-warning/15 text-warning-foreground",
-        status === "missing" && "bg-destructive/10 text-destructive",
+        status === "missing" && "bg-destructive/10 text-destructive-strong",
         status === "not_applicable" && "bg-muted text-muted-foreground",
       )}
     >
@@ -1403,8 +1411,8 @@ function StatusPill({ status }: { status: SuggestionStatus }) {
       className={cn(
         "rounded-full px-2 py-1 text-[10px] font-semibold",
         status === "pending" && "bg-muted",
-        (status === "accepted" || status === "edited") && "bg-success/15 text-success",
-        status === "rejected" && "bg-destructive/10 text-destructive",
+        (status === "accepted" || status === "edited") && "bg-success/15 text-success-strong",
+        status === "rejected" && "bg-destructive/10 text-destructive-strong",
       )}
     >
       {labels[status]}

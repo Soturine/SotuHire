@@ -77,7 +77,7 @@ export function Onboarding() {
         className="max-w-xl"
       >
         <DialogHeader>
-          <p className="text-xs font-semibold uppercase tracking-wider text-accent">
+          <p className="text-xs font-semibold uppercase tracking-wider text-accent-strong">
             {t("onboarding.progress", { current: stepIndex + 1, total: STEPS.length })}
           </p>
           <DialogTitle>{t(step.title)}</DialogTitle>
@@ -89,7 +89,7 @@ export function Onboarding() {
           <Link
             to={step.to}
             onClick={completeOnboarding}
-            className="w-fit text-sm font-medium text-accent underline-offset-4 hover:underline"
+            className="w-fit text-sm font-medium text-accent-strong underline-offset-4 hover:underline"
           >
             {t("onboarding.openStep", { page: t(step.page) })}
           </Link>

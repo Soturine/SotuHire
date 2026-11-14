@@ -118,11 +118,15 @@ function SettingsPage() {
             </div>
 
             <div className="mt-5">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label
+                htmlFor="settings-api-base-url"
+                className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
                 Base URL da API
               </label>
               <div className="mt-1.5 flex gap-2">
                 <input
+                  id="settings-api-base-url"
                   value={baseUrl}
                   onChange={(e) => setBaseUrl(e.target.value)}
                   className="flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-sm outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
@@ -187,7 +191,7 @@ function SettingsPage() {
               </p>
               <Link
                 to="/privacy"
-                className="mt-4 inline-flex text-sm font-medium text-accent hover:underline"
+                className="mt-4 inline-flex text-sm font-medium text-accent-strong hover:underline"
               >
                 Abrir controles de privacidade
               </Link>
@@ -198,7 +202,10 @@ function SettingsPage() {
               title="Dados"
               description="Backup, exportação, restore e saúde do armazenamento local."
             >
-              <Link to="/privacy" className="text-sm font-medium text-accent hover:underline">
+              <Link
+                to="/privacy"
+                className="text-sm font-medium text-accent-strong hover:underline"
+              >
                 Gerenciar dados locais
               </Link>
             </SectionCard>
@@ -208,7 +215,10 @@ function SettingsPage() {
               title="Extensão"
               description="Pareamento e captura assistida com identidade explícita."
             >
-              <Link to="/sources" className="text-sm font-medium text-accent hover:underline">
+              <Link
+                to="/sources"
+                className="text-sm font-medium text-accent-strong hover:underline"
+              >
                 Ver extensão e fontes
               </Link>
             </SectionCard>
@@ -218,7 +228,7 @@ function SettingsPage() {
               title="Notificações"
               description="Lembretes locais e ações sempre revisáveis."
             >
-              <Link to="/career" className="text-sm font-medium text-accent hover:underline">
+              <Link to="/career" className="text-sm font-medium text-accent-strong hover:underline">
                 Gerenciar tarefas e lembretes
               </Link>
             </SectionCard>
@@ -228,7 +238,7 @@ function SettingsPage() {
               title="Ajuda"
               description="Guias por fluxo, limites e solução de problemas."
             >
-              <Link to="/help" className="text-sm font-medium text-accent hover:underline">
+              <Link to="/help" className="text-sm font-medium text-accent-strong hover:underline">
                 Abrir central de ajuda
               </Link>
             </SectionCard>
@@ -440,7 +450,7 @@ function LocalAiInteropCard() {
       {check.isError && (
         <p
           role="alert"
-          className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive"
+          className="mt-4 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive-strong"
         >
           Não foi possível validar o endpoint informado.
         </p>
@@ -491,7 +501,7 @@ function ApiStatusPanel({
   const cfg = {
     demo: {
       Icon: Beaker,
-      cls: "border-warning/30 bg-warning/10 text-warning",
+      cls: "border-warning/30 bg-warning/10 text-warning-strong",
       title: "Modo Demo ativo",
     },
     checking: {
@@ -499,15 +509,19 @@ function ApiStatusPanel({
       cls: "border-border bg-muted/40 text-muted-foreground",
       title: "Verificando…",
     },
-    online: { Icon: Activity, cls: "border-success/30 bg-success/5 text-success", title: "Online" },
+    online: {
+      Icon: Activity,
+      cls: "border-success/30 bg-success/5 text-success-strong",
+      title: "Online",
+    },
     offline: {
       Icon: WifiOff,
-      cls: "border-destructive/30 bg-destructive/5 text-destructive",
+      cls: "border-destructive/30 bg-destructive/5 text-destructive-strong",
       title: "Offline",
     },
     error: {
       Icon: ShieldAlert,
-      cls: "border-destructive/30 bg-destructive/5 text-destructive",
+      cls: "border-destructive/30 bg-destructive/5 text-destructive-strong",
       title: "Erro de CORS/API",
     },
   }[status];
@@ -778,7 +792,7 @@ function AiProvidersCard() {
       className="lg:col-span-2"
       title={
         <span className="flex items-center gap-2">
-          <Brain className="h-4 w-4 text-accent" /> IA e Providers
+          <Brain className="h-4 w-4 text-accent-strong" /> IA e Providers
         </span>
       }
       description="Escolha um preset simples. A API key vai apenas para o backend local e nunca é salva no frontend."
@@ -897,6 +911,7 @@ function AiProvidersCard() {
                   setCustomModel("");
                 }}
                 disabled={provider === "local"}
+                aria-label="Modelo de IA"
                 data-testid="ai-model-select"
                 className="min-w-0 flex-1 rounded-md border border-input bg-background px-3 py-2 font-mono text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20 disabled:opacity-50"
               >
@@ -961,7 +976,7 @@ function AiProvidersCard() {
               type="button"
               onClick={() => deleteMutation.mutate()}
               disabled={busy}
-              className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-1.5 text-xs font-medium text-destructive hover:bg-destructive/10"
+              className="inline-flex items-center gap-1.5 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-1.5 text-xs font-medium text-destructive-strong hover:bg-destructive/10"
             >
               <Trash2 className="h-3.5 w-3.5" /> Remover chave
             </button>
@@ -978,7 +993,10 @@ function AiProvidersCard() {
           </p>
           {[...(settingsQ.data?.warnings ?? []), ...(modelsQ.data?.warnings ?? [])].map(
             (warning) => (
-              <p key={warning} className="rounded-md bg-warning/10 p-2 text-[11px] text-warning">
+              <p
+                key={warning}
+                className="rounded-md bg-warning/10 p-2 text-[11px] text-warning-strong"
+              >
                 {warning}
               </p>
             ),
@@ -1098,7 +1116,7 @@ function AiProvidersCard() {
             </div>
           </details>
           <div className="mt-2 flex items-start gap-2 rounded-lg border border-warning/30 bg-warning/5 p-3 text-xs">
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning" />
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" />
             <p className="text-muted-foreground">
               A chave de IA nunca é salva no frontend, localStorage ou sessionStorage. O backend
               local executa Gemini/OpenAI e usa fallback local quando necessário.
@@ -1129,10 +1147,10 @@ function StatusPill({ status }: { status: AiUiStatus }) {
   const cfg = {
     idle: { cls: "bg-muted text-muted-foreground", label: "Não configurado" },
     testing: { cls: "bg-muted text-muted-foreground", label: "Testando…" },
-    ready: { cls: "bg-success/15 text-success", label: "Pronto local" },
-    configured: { cls: "bg-success/15 text-success", label: "Configurado" },
-    planned: { cls: "bg-warning/15 text-warning", label: "Planejado" },
-    error: { cls: "bg-destructive/15 text-destructive", label: "Erro" },
+    ready: { cls: "bg-success/15 text-success-strong", label: "Pronto local" },
+    configured: { cls: "bg-success/15 text-success-strong", label: "Configurado" },
+    planned: { cls: "bg-warning/15 text-warning-strong", label: "Planejado" },
+    error: { cls: "bg-destructive/15 text-destructive-strong", label: "Erro" },
   }[status];
   return (
     <span
@@ -1305,13 +1323,13 @@ function ModeCard({
     >
       <div className="flex items-center gap-2">
         <div
-          className={`grid h-7 w-7 place-items-center rounded-md ${tone === "warning" ? "bg-warning/20 text-warning" : "bg-success/20 text-success"}`}
+          className={`grid h-7 w-7 place-items-center rounded-md ${tone === "warning" ? "bg-warning/20 text-warning-strong" : "bg-success/20 text-success-strong"}`}
         >
           {icon}
         </div>
         <span className="font-semibold">{title}</span>
         {active && (
-          <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider text-accent">
+          <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider text-accent-strong">
             Ativo
           </span>
         )}
