@@ -10,7 +10,6 @@ import ast
 from pathlib import Path
 
 import pytest
-
 from modules.security import contains_secret_field
 from modules.security.credentials import SECRET_FIELD_MARKERS
 

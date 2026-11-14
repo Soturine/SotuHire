@@ -7,7 +7,7 @@ import random
 import time
 from collections.abc import Callable
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, get_args
 
 from pydantic import BaseModel
 
@@ -26,7 +26,7 @@ from modules.ai.schema_repair import (
     validate_with_single_repair,
 )
 from modules.ai.setup import gemini_api_key, gemini_model
-from modules.schemas.job_analysis import JobAnalysisSchema
+from modules.schemas.job_analysis import JobAnalysisSchema, Recommendation
 from modules.schemas.user_preferences import UserPreferences
 
 GeminiTransport = Callable[[dict[str, Any]], Any]
@@ -343,7 +343,7 @@ class GeminiProvider(AIProvider):
                 "risk_score": score,
                 "recommendation": {
                     "type": "string",
-                    "enum": ["apply", "apply_with_adjustments", "save_for_later", "ignore"],
+                    "enum": list(get_args(Recommendation)),
                 },
                 "strengths": string_list,
                 "gaps": string_list,

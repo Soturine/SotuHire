@@ -27,7 +27,11 @@ from modules.core.opportunity_identity import (
 )
 from modules.github_analyzer import analyze_github_repository, project_report_from_github_analysis
 from modules.github_analyzer.exceptions import GitHubAnalyzerError
-from modules.local_api.compatibility import APP_VERSION, compatible_extension
+from modules.local_api.compatibility import (
+    APP_VERSION,
+    ENABLED_EXTENSION_FLOWS,
+    compatible_extension,
+)
 from modules.local_api.origins import companion_origin_allowed
 from modules.local_api.schemas import (
     ApplicationBatchPayload,
@@ -226,7 +230,7 @@ class LocalCompanionService:
                 if profile_available
                 else "Perfil local ainda sem resumo seguro ativo."
             ),
-            enabled_flows=["job", "public_exam", "github", "profile_evidence"],
+            enabled_flows=list(ENABLED_EXTENSION_FLOWS),
             ai_provider_status="configured" if provider not in {"", "local"} else "local",
             warnings=(
                 [

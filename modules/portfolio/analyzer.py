@@ -7,7 +7,7 @@ from typing import Literal, cast
 from modules.core.text_utils import normalize_text
 from modules.portfolio.commit_analysis import analyze_commits
 from modules.portfolio.file_sampler import prioritize_paths
-from modules.portfolio.schemas import ProjectAnalysisPayload, ProjectAnalysisReport
+from modules.portfolio.schemas import Grade, ProjectAnalysisPayload, ProjectAnalysisReport
 
 STACK_SIGNALS = {
     "Python": ("python", "pyproject.toml", "requirements.txt"),
@@ -163,7 +163,7 @@ def _average(*values: int) -> int:
     return round(sum(values) / len(values))
 
 
-def _grade(score: int) -> Literal["A", "B", "C", "D", "F"]:
+def _grade(score: int) -> Grade:
     grade = (
         "A"
         if score >= 85

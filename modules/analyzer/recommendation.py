@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Literal
-
 from modules.core.scoring import clamp_score
 from modules.core.text_utils import normalize_text
-
-Recommendation = Literal["apply", "apply_with_adjustments", "save_for_later", "ignore"]
+from modules.schemas.job_analysis import Recommendation
 
 
 def detect_risk_flags(job_text: str, resume_text: str = "") -> list[str]:

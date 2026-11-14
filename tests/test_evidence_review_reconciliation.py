@@ -5,7 +5,6 @@ from __future__ import annotations
 import itertools
 
 import pytest
-
 from modules.evidence import EvidenceReviewStatus, reconcile_review_status
 from modules.profile.context import ProfileContextItem
 from modules.profile.models import ProfileItem

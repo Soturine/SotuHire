@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import get_args
+
 from fastapi import APIRouter
 from modules.matching import DomainMatchingPolicy, policy_for_domain
 from modules.matching.domain_weights import CareerDomain
@@ -12,21 +14,7 @@ from apps.api.schemas.common import ApiEnvelope
 
 router = APIRouter(prefix="/api/v1/career-intelligence", tags=["career-intelligence"])
 
-DOMAINS: tuple[CareerDomain, ...] = (
-    "technology",
-    "engineering",
-    "healthcare",
-    "education",
-    "law",
-    "research",
-    "administration",
-    "finance",
-    "design",
-    "tourism_services",
-    "public_exams",
-    "early_career",
-    "career_transition",
-)
+DOMAINS: tuple[CareerDomain, ...] = get_args(CareerDomain)
 
 
 class DomainScoreRequest(BaseModel):
