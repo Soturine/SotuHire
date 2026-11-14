@@ -156,6 +156,37 @@ def test_concurrent_execute_applies_effect_once(tmp_path: Path) -> None:
     assert _count(database, "SELECT COUNT(*) FROM career_tasks") == 1
 
 
+def test_concurrent_writer_cannot_change_state_between_check_and_effect(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The dependency check and the effect must see the same state (no TOCTOU window)."""
+    database = tmp_path / "sotuhire.db"
+    copilot = CareerCopilot(database)
+    proposal = _task_proposal(copilot)
+    copilot.approve(proposal.proposal_id)
+    original_build = copilot.state_engine.build
+    writer_done = threading.Event()
+
+    def writer() -> None:
+        CopilotRepository(database).save_node(_node("written-during-check"))
+        writer_done.set()
+
+    def build_then_race(*args: object, **kwargs: object):
+        state = original_build(*args, **kwargs)
+        thread = threading.Thread(target=writer, daemon=True)
+        thread.start()
+        # A writer racing the check must wait for the execution's write lock.
+        assert not writer_done.wait(timeout=1.0), "state changed after the dependency check"
+        return state
+
+    monkeypatch.setattr(copilot.state_engine, "build", build_then_race)
+
+    copilot.execute(proposal.proposal_id)
+
+    assert writer_done.wait(timeout=10)
+    assert copilot.repository.get_node("written-during-check") is not None
+
+
 # SH-AUD-003 --------------------------------------------------------------------
 
 
