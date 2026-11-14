@@ -37,17 +37,23 @@ entregue.
 
 ## PRs do Dependabot
 
-Estado em 2026-11-14 (nenhuma foi mesclada nesta auditoria; a integração em `main` segue o fluxo
-de PR do repositório):
+Integradas na branch `fix/copilot-execution-integrity` em 2026-11-14 (CP-DEP01), com validação local; as
+PRs do Dependabot ficam supersedidas quando a branch entrar em `main` e devem ser fechadas sem merge.
 
-| PR | Atualização | Decisão |
+| PR | Atualização | Decisão e evidência |
 | --- | --- | --- |
-| #56 | Ruff 0.16.1 → 0.17.3 | `UPDATE`: mesclar junto com `rev` do pre-commit, depois de rodar `ruff check`/`format` (regras novas podem mudar o diff) |
-| #51, #52, #53 | CodeQL init/analyze/autobuild 4.35.3 → 4.38.3 | `GROUP`: as três precisam andar juntas; o novo grupo `codeql` substitui as três PRs |
-| #49 | upload-artifact 7.0.1 → 7.0.2 | `MERGE` após CI verde |
-| #34 | deploy-pages 5.0.0 → 5.0.1 | `MERGE` após CI verde |
-| #14, #16, #17, #18 | tailwindcss, radix tabs/label, prettier (`apps/web`) | `SUPERSEDE`: em conflito com o lockfile novo; o grupo `web-minor-patch` reabre de forma consolidada |
-| #15 | globals 15 → 17 (major) | `DEFER`: avaliar com a configuração do ESLint |
+| #56 | Ruff 0.16.1 → 0.17.3 | `UPDATE`: pin do extra `dev` e `rev` do pre-commit juntos; `ruff check` e `ruff format --check` passam no repositório inteiro sem nenhuma mudança |
+| #51, #52, #53 | CodeQL init/analyze/autobuild 4.35.3 → 4.38.3 | `GROUP`: os três juntos; SHA `24c54180…` conferido contra a tag `v4.38.3` pela API do GitHub |
+| #49 | upload-artifact 7.0.1 → 7.0.2 | `UPDATE`: SHA `cf430e03…` conferido contra a tag |
+| #34 | deploy-pages 5.0.0 → 5.0.1 | `UPDATE`: SHA `368f8252…` conferido contra a tag |
+| #14 | tailwindcss → ^4.3.3 | `UPDATE` junto com `@tailwindcss/vite` (a PR só subia um dos dois); resolvido 4.3.5 |
+| #16, #17 | radix tabs ^1.1.21, label ^2.1.15 | `UPDATE`; resolvidos 1.2.1 e 2.1.17 |
+| #18 | prettier ^3.9.6 | `UPDATE`; resolvido 3.10.1, que reformata 2 arquivos (quebra de linha em uniões e arrow functions), aplicados no mesmo commit |
+| #15 | globals 15 → 17 (major) | `DEFER`: muda o conjunto de globais do ESLint; avaliar com a configuração do lint em um passo próprio |
+
+Validação local após o conjunto: `tsc` 0, Vitest 22, `vite build`, ESLint sem erro além do `␍` do
+checkout local, Chromium E2E 29 passed, `npm audit --audit-level=critical` passa. CI remoto ainda não
+rodou nessa revisão (orçamento: só no gate final).
 
 PRs fechadas sem merge (#37–#48, #50, #54, #55) são versões intermediárias do mesmo Ruff/CodeQL
 superadas pelas seguintes; não reabrir.

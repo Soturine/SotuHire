@@ -74,6 +74,9 @@ Nenhuma versão ou tag foi criada.
 - CI roda todas as specs E2E em Chromium, a instalação limpa realmente cria um venv novo e
   `npm audit` bloqueia em severidade crítica.
 - Dependabot agrupa CodeQL e atualizações minor/patch por ecossistema.
+- Atualizações de dependências revisadas: Ruff 0.17.3, CodeQL 4.38.3, upload-artifact 7.0.2,
+  deploy-pages 5.0.1 (pins por SHA conferidos contra as tags), Tailwind 4.3, Radix tabs/label e
+  Prettier 3.10; `@axe-core/playwright` como dependência só de desenvolvimento.
 
 ### Obsoleto
 

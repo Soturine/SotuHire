@@ -128,15 +128,13 @@ function move<T>(items: T[], id: string, key: keyof T, direction: -1 | 1): T[] {
 function normalizePositions(variant: ResumeVariant): ResumeVariant {
   return {
     ...variant,
-    sections: variant.sections.map(
-      (section, sectionPosition): ResumeSection => ({
-        ...section,
-        position: sectionPosition,
-        entries: section.entries.map((entry, entryPosition) => ({
-          ...entry,
-          position: entryPosition,
-        })),
-      }),
-    ),
+    sections: variant.sections.map((section, sectionPosition): ResumeSection => ({
+      ...section,
+      position: sectionPosition,
+      entries: section.entries.map((entry, entryPosition) => ({
+        ...entry,
+        position: entryPosition,
+      })),
+    })),
   };
 }

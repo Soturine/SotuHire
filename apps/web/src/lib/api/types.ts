@@ -1242,12 +1242,7 @@ export interface RadarResult {
   source_name?: string;
   source_type: RadarSourceType;
   opportunity_type?:
-    | "job"
-    | "public_exam"
-    | "academic_call"
-    | "scholarship"
-    | "residency"
-    | "internship_public";
+    "job" | "public_exam" | "academic_call" | "scholarship" | "residency" | "internship_public";
   wishlist_id?: string;
   title: string;
   company?: string;
@@ -1519,13 +1514,7 @@ export interface OutcomeSummary {
 }
 
 export type ApplicationLabStatus =
-  | "draft"
-  | "ready"
-  | "analyzing"
-  | "review"
-  | "completed"
-  | "cancelled"
-  | "failed";
+  "draft" | "ready" | "analyzing" | "review" | "completed" | "cancelled" | "failed";
 export type SuggestionStatus = "pending" | "accepted" | "edited" | "rejected";
 export type KitItemStatus = SuggestionStatus | "stale";
 export type ResumeExportFormat = "json_resume" | "pdf" | "docx";
