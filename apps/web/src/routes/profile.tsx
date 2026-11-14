@@ -78,7 +78,11 @@ function ProfilePage() {
     setForm(profileToForm(profile));
   }, [profile]);
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ["profile"] });
+  const invalidate = () => {
+    // Confirmed profile facts feed the Master Resume; its pending-updates list must refresh too.
+    void qc.invalidateQueries({ queryKey: ["resume-studio-profile-updates"] });
+    return qc.invalidateQueries({ queryKey: ["profile"] });
+  };
 
   const saveProfile = useMutation({
     mutationFn: () =>
@@ -207,7 +211,7 @@ function ProfilePage() {
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-5">
         <section className="rounded-xl border border-border bg-card p-4">
-          <div className="flex items-center gap-2 text-sm font-medium text-accent">
+          <div className="flex items-center gap-2 text-sm font-medium text-accent-strong">
             <UserRound className="h-4 w-4" />
             Perfil Profissional Universal
           </div>
@@ -366,10 +370,14 @@ function ProfilePage() {
         >
           <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
             <div className="space-y-3">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <label
+                htmlFor="profile-import-source-type"
+                className="block text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+              >
                 Tipo de fonte
               </label>
               <select
+                id="profile-import-source-type"
                 value={sourceType}
                 onChange={(event) => setSourceType(event.target.value)}
                 className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
@@ -419,7 +427,7 @@ function ProfilePage() {
             title="Itens extraídos para revisão"
             description="Itens de IA/fallback começam como não confirmados. Adicione apenas o que for verdadeiro."
             actions={
-              <span className="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent">
+              <span className="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-xs font-medium text-accent-strong">
                 {draft.analysis_mode === "ai"
                   ? "IA"
                   : draft.analysis_mode === "fallback"
@@ -529,6 +537,7 @@ function ProfilePage() {
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
                     <select
+                      aria-label="Filtrar candidatos do Lattes por tipo"
                       value={lattesFilter}
                       onChange={(event) => setLattesFilter(event.target.value)}
                       className="rounded-md border border-input bg-background px-2.5 py-2 text-xs font-semibold"
@@ -628,6 +637,7 @@ function ProfilePage() {
               <select
                 value={typeFilter}
                 onChange={(event) => setTypeFilter(event.target.value)}
+                aria-label="Filtrar itens do perfil por tipo"
                 data-testid="profile-type-filter"
                 className="rounded-md border border-input bg-background px-2.5 py-2 text-xs font-semibold"
               >
@@ -780,7 +790,7 @@ function ProfileItemRow({
             className={cn(
               "inline-flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold",
               danger
-                ? "border-destructive/40 text-destructive hover:bg-destructive/10"
+                ? "border-destructive/40 text-destructive-strong hover:bg-destructive/10"
                 : "border-success/40 text-success-foreground hover:bg-success/10",
             )}
           >

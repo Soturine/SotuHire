@@ -1934,3 +1934,17 @@ export interface ProfessionalAssetsResult {
   limit: number;
   offset: number;
 }
+
+/** A confirmed Universal Profile fact the Master Resume does not contain yet. */
+export interface ProfileUpdateItem {
+  item_id: string;
+  item_type: string;
+  title: string;
+  subtitle: string;
+  section_title: string;
+}
+
+export interface ProfileUpdatesResult {
+  master_resume_id: string;
+  items: ProfileUpdateItem[];
+}

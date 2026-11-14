@@ -24,6 +24,9 @@ import {
 } from "@/components/resume-editor-state";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { ResumeImport } from "@/features/document-ingestion/resume-import";
+import { MasterOnboarding, ProfileUpdatesPanel } from "@/features/resume-studio/profile-sync";
+import { isNotFound } from "@/lib/api/client";
+import { draftKey, pickDraft, readDraft, safeStorage } from "@/features/resume-studio/draft";
 import { ProfessionalAssetsPanel } from "@/features/professional-assets/professional-assets-panel";
 import { downloadResumeExport } from "@/features/resume-studio/resume-download";
 import { useApi } from "@/lib/api/hooks";
@@ -82,16 +85,14 @@ function ResumeStudioPage() {
 
   useEffect(() => {
     if (loaded || !masterQ.data?.resume || !variantsQ.data) return;
-    const storageKey = `sotuhire:resume-draft:${masterQ.data.resume.master_resume_id}`;
-    const stored = localStorage.getItem(storageKey);
-    let selected = variantsQ.data.items[0] ?? variantFromMaster(masterQ.data.resume);
-    if (stored) {
-      try {
-        selected = JSON.parse(stored) as ResumeVariant;
-      } catch {
-        localStorage.removeItem(storageKey);
-      }
-    }
+    const storageKey = draftKey(masterQ.data.resume.master_resume_id);
+    const server = variantsQ.data.items[0] ?? variantFromMaster(masterQ.data.resume);
+    const { variant: selected, restoredDraft } = pickDraft(readDraft(storageKey), server);
+    if (!restoredDraft) safeStorage(() => localStorage.removeItem(storageKey));
+    else
+      toast.info(
+        "Rascunho local mais recente que o salvo foi restaurado; ele será salvo em seguida.",
+      );
     dispatch({ type: "replace", variant: selected });
     setLoaded(true);
   }, [loaded, masterQ.data, variantsQ.data]);
@@ -106,7 +107,11 @@ function ResumeStudioPage() {
             validation_warnings: variant.validation_warnings,
           })
         : api.resumeStudioSaveVariant(variant),
-    onSuccess: () => dispatch({ type: "saved" }),
+    onSuccess: (_result, variant) => {
+      dispatch({ type: "saved" });
+      // The server now holds this state: a stale browser copy must not win on the next visit.
+      safeStorage(() => localStorage.removeItem(draftKey(variant.master_resume_id)));
+    },
     onError: (error: Error) => toast.warning(`Rascunho salvo no navegador. API: ${error.message}`),
   });
 
@@ -114,8 +119,10 @@ function ResumeStudioPage() {
     if (!loaded || !state.dirty) return;
     window.clearTimeout(autosaveTimer.current);
     autosaveTimer.current = window.setTimeout(() => {
-      const storageKey = `sotuhire:resume-draft:${state.present.master_resume_id}`;
-      localStorage.setItem(storageKey, JSON.stringify(state.present));
+      const draft = { ...state.present, updated_at: new Date().toISOString() };
+      safeStorage(() =>
+        localStorage.setItem(draftKey(draft.master_resume_id), JSON.stringify(draft)),
+      );
       if (navigator.onLine) autosave.mutate(state.present);
     }, 650);
     return () => window.clearTimeout(autosaveTimer.current);
@@ -158,13 +165,20 @@ function ResumeStudioPage() {
             </>
           ) : (
             <>
-              <CheckCircle2 className="h-3.5 w-3.5 text-success" /> Salvo
+              <CheckCircle2 className="h-3.5 w-3.5 text-success-strong" /> Salvo
             </>
           )}
         </div>
       }
     >
-      {masterQ.isLoading || variantsQ.isLoading || templatesQ.isLoading || !loaded ? (
+      {masterQ.isError && isNotFound(masterQ.error) ? (
+        <MasterOnboarding
+          onCreated={(resume) => {
+            queryClient.setQueryData(["resume-studio-master", mode, baseUrl], { resume });
+            void queryClient.invalidateQueries({ queryKey: ["resume-studio-variants"] });
+          }}
+        />
+      ) : masterQ.isLoading || variantsQ.isLoading || templatesQ.isLoading || !loaded ? (
         <LoadingState label="Abrindo seu estúdio local…" />
       ) : masterQ.isError ? (
         <ErrorState error={masterQ.error} onRetry={() => masterQ.refetch()} />
@@ -212,6 +226,11 @@ function ResumeStudioPage() {
 
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
             <div className="min-w-0 space-y-4">
+              <ProfileUpdatesPanel
+                onApplied={(resume) =>
+                  queryClient.setQueryData(["resume-studio-master", mode, baseUrl], { resume })
+                }
+              />
               <MasterBanner master={masterQ.data.resume} variant={state.present} />
               {view === "editor" ? (
                 <ResumeEditor variant={state.present} dispatch={dispatch} validation={validation} />
@@ -368,7 +387,7 @@ function MasterBanner({ master, variant }: { master: MasterResume; variant: Resu
     <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-accent">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-accent-strong">
             Variante ativa
           </p>
           <h2 className="mt-1 font-semibold">{variant.title}</h2>
@@ -376,7 +395,7 @@ function MasterBanner({ master, variant }: { master: MasterResume; variant: Resu
             Derivada de “{master.title}”. Remover daqui nunca remove do mestre.
           </p>
         </div>
-        <span className="rounded-full bg-success/15 px-2 py-1 text-[10px] font-semibold text-success">
+        <span className="rounded-full bg-success/15 px-2 py-1 text-[10px] font-semibold text-success-strong">
           {variant.source_profile_item_ids.length} vínculo(s) de origem
         </span>
       </div>

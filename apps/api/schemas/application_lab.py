@@ -131,6 +131,30 @@ class MasterResumeResponse(LabApiModel):
     resume: MasterResume
 
 
+class MasterResumeFromProfileRequest(LabApiModel):
+    request_id: str = Field(default="", max_length=120)
+
+
+class ProfileUpdateItem(LabApiModel):
+    """A confirmed profile fact the Master Resume does not contain yet."""
+
+    item_id: str
+    item_type: str
+    title: str
+    subtitle: str = ""
+    section_title: str
+
+
+class ProfileUpdatesResponse(LabApiModel):
+    master_resume_id: str
+    items: list[ProfileUpdateItem] = Field(default_factory=list)
+
+
+class ProfileUpdatesApplyRequest(LabApiModel):
+    item_ids: list[str] = Field(min_length=1, max_length=200)
+    request_id: str = Field(default="", max_length=120)
+
+
 class ResumeIngestionRequest(LabApiModel):
     file_name: str = Field(min_length=1, max_length=240)
     content_base64: str = Field(min_length=1, max_length=14_000_000)

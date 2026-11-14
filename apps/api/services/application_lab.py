@@ -15,7 +15,15 @@ from modules.application_lab.models import (
     MasterResume,
     ResumeVariant,
 )
+from modules.application_lab.profile_projection import (
+    SECTION_LAYOUT,
+    apply_profile_updates,
+    master_resume_from_profile,
+    profile_updates,
+)
 from modules.application_lab.service import ApplicationLabService
+from modules.profile.json_resume import section_for_item
+from modules.profile.service import UniversalCareerProfileService
 
 from apps.api.schemas.application_lab import (
     ApplicationLabAnalyzeResponse,
@@ -24,6 +32,8 @@ from apps.api.schemas.application_lab import (
     ApplicationLabSessionPage,
     MasterResumeResponse,
     PaginationMeta,
+    ProfileUpdateItem,
+    ProfileUpdatesResponse,
     ResumeExportResponse,
     ResumeIngestionResponse,
     ResumeTemplatesResponse,
@@ -142,6 +152,49 @@ class ApplicationLabApiService:
         if resume is None:
             raise HTTPException(status_code=404, detail="Currículo Mestre ainda não foi criado.")
         return MasterResumeResponse(resume=resume)
+
+    def master_from_profile(self) -> MasterResumeResponse:
+        """Create the Master Resume from confirmed profile facts instead of a second import."""
+        if self.repository.get_master_resume() is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Currículo Mestre já existe; use as atualizações do Perfil para trazer itens novos.",
+            )
+        profile = UniversalCareerProfileService().get_profile()
+        resume = master_resume_from_profile(profile)
+        if not resume.sections:
+            raise HTTPException(
+                status_code=422,
+                detail="O Perfil ainda não tem itens confirmados para montar o Currículo Mestre.",
+            )
+        return MasterResumeResponse(resume=self._call(self.repository.save_master_resume, resume))
+
+    def profile_updates(self) -> ProfileUpdatesResponse:
+        master = self.master().resume
+        profile = UniversalCareerProfileService().get_profile()
+        layout = {source: title for source, _section_type, title in SECTION_LAYOUT}
+        return ProfileUpdatesResponse(
+            master_resume_id=master.master_resume_id,
+            items=[
+                ProfileUpdateItem(
+                    item_id=item.item_id,
+                    item_type=item.type,
+                    title=item.title,
+                    subtitle=item.organization or item.institution or "",
+                    section_title=layout[section_for_item(item)],
+                )
+                for item in profile_updates(profile, master)
+            ],
+        )
+
+    def apply_profile_updates(self, item_ids: list[str]) -> MasterResumeResponse:
+        master = self.master().resume
+        profile = UniversalCareerProfileService().get_profile()
+        try:
+            updated = apply_profile_updates(master, profile, item_ids)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        return MasterResumeResponse(resume=self._call(self.repository.save_master_resume, updated))
 
     def save_master(self, resume: MasterResume) -> MasterResumeResponse:
         prepared = resume.model_copy(update={"updated_at": datetime.now(UTC)})

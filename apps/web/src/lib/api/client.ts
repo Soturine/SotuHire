@@ -104,6 +104,7 @@ import type {
   ResumeExportResult,
   ResumeIngestionResult,
   MasterResume,
+  ProfileUpdatesResult,
   ResumeProfile,
   ResumeTailor,
   ResumeTailorResult,
@@ -166,6 +167,21 @@ import type { ApiMode } from "./mode";
 import { getActiveDemoPersona } from "@/mocks/personas";
 import { pairedApiFetch } from "@/features/local-security/api-pairing";
 
+/** An HTTP error from the local API; ``status`` lets screens tell "not created yet" from failures. */
+export class ApiHttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiHttpError";
+  }
+}
+
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiHttpError && error.status === 404;
+}
+
 type JsonRecord = Record<string, unknown>;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -199,7 +215,7 @@ async function call<T>(
     } catch {
       /* API may return an empty body for transport-level failures. */
     }
-    throw new Error(detail || `Erro HTTP ${res.status} ao chamar ${path}`);
+    throw new ApiHttpError(res.status, detail || `Erro HTTP ${res.status} ao chamar ${path}`);
   }
 
   const json = (await res.json()) as ApiEnvelope<unknown>;
@@ -929,6 +945,41 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
       call<{ resume: MasterResume }>(mode, baseUrl, "/resume-studio/master", undefined, {
         resume: mockMasterResume,
       }),
+    resumeStudioMasterFromProfile: () =>
+      call<{ resume: MasterResume }>(
+        mode,
+        baseUrl,
+        "/resume-studio/master/from-profile",
+        { method: "POST", body: JSON.stringify({}) },
+        { resume: mockMasterResume },
+      ),
+    resumeStudioProfileUpdates: () =>
+      call<ProfileUpdatesResult>(
+        mode,
+        baseUrl,
+        "/resume-studio/master/profile-updates",
+        undefined,
+        {
+          master_resume_id: mockMasterResume.master_resume_id,
+          items: [
+            {
+              item_id: "profile-demo-language",
+              item_type: "language",
+              title: "Inglês intermediário (DEMO)",
+              subtitle: "",
+              section_title: "Idiomas",
+            },
+          ],
+        },
+      ),
+    resumeStudioApplyProfileUpdates: (itemIds: string[]) =>
+      call<{ resume: MasterResume }>(
+        mode,
+        baseUrl,
+        "/resume-studio/master/profile-updates",
+        { method: "POST", body: JSON.stringify({ item_ids: itemIds }) },
+        { resume: mockMasterResume },
+      ),
     resumeStudioSaveMaster: (resume: MasterResume) =>
       call<{ resume: MasterResume }>(
         mode,

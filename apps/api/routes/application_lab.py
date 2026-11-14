@@ -23,8 +23,11 @@ from apps.api.schemas.application_lab import (
     ApplicationLabSessionDetail,
     ApplicationLabSessionPage,
     ApplicationLabSessionUpdateRequest,
+    MasterResumeFromProfileRequest,
     MasterResumeResponse,
     MasterResumeUpsertRequest,
+    ProfileUpdatesApplyRequest,
+    ProfileUpdatesResponse,
     RequestMetadata,
     ResumeExportRequest,
     ResumeExportResponse,
@@ -298,6 +301,34 @@ def ingest_resume(
         service.ingest_resume(payload.file_name, payload.content_base64),
         request_id=payload.request_id,
     )
+
+
+@resume_studio_router.post(
+    "/master/from-profile", response_model=ApiEnvelope[MasterResumeResponse], status_code=201
+)
+def create_master_from_profile(
+    payload: MasterResumeFromProfileRequest, service: LabDependency
+) -> ApiEnvelope[MasterResumeResponse]:
+    """Build the Master Resume from confirmed Universal Profile facts (no second import)."""
+    return ok(service.master_from_profile(), request_id=payload.request_id)
+
+
+@resume_studio_router.get(
+    "/master/profile-updates", response_model=ApiEnvelope[ProfileUpdatesResponse]
+)
+def list_profile_updates(service: LabDependency) -> ApiEnvelope[ProfileUpdatesResponse]:
+    """Confirmed profile facts the Master Resume does not contain yet; nothing is changed."""
+    return ok(service.profile_updates())
+
+
+@resume_studio_router.post(
+    "/master/profile-updates", response_model=ApiEnvelope[MasterResumeResponse]
+)
+def apply_master_profile_updates(
+    payload: ProfileUpdatesApplyRequest, service: LabDependency
+) -> ApiEnvelope[MasterResumeResponse]:
+    """Append the chosen profile facts to the Master Resume after the user's review."""
+    return ok(service.apply_profile_updates(payload.item_ids), request_id=payload.request_id)
 
 
 @resume_studio_router.put("/master", response_model=ApiEnvelope[MasterResumeResponse])
