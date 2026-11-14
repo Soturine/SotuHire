@@ -483,3 +483,18 @@ def test_overdue_detection_is_correct_for_non_utc_deadlines(tmp_path: Path) -> N
     state = CareerStateEngine(database).build()
 
     assert state.overdue_tasks == 1
+
+
+# SH-AUD-015: characterization, so semantic planning is never claimed without a test ----
+
+
+def test_plan_steps_do_not_depend_on_intent_text(tmp_path: Path) -> None:
+    copilot = CareerCopilot(tmp_path / "sotuhire.db")
+    copilot.repository.save_node(_node("pending-1", ReviewStatus.CANDIDATE))
+
+    first = copilot.plan("Quero migrar para gestão de projetos")
+    second = copilot.plan("Preparar entrevista de pesquisa acadêmica")
+
+    assert first.intent != second.intent
+    assert [step.title for step in first.steps] == [step.title for step in second.steps]
+    assert all(step.proposal_id is None for step in first.steps + second.steps)

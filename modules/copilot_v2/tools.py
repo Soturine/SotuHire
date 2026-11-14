@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any, Literal
@@ -60,7 +59,8 @@ class CopilotTool:
     risk_level: Literal["low", "medium", "high"]
     domain: str
     category: Literal["read", "draft", "write-local", "export"]
-    handler: Callable[..., dict[str, Any]] | None = None
+    # Execution is dispatched by CareerCopilot._execute_local on tool_id; there is no
+    # per-tool handler (an unused ``handler`` field was removed, SH-AUD-020).
 
 
 class ToolRegistry:

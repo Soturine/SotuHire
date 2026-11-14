@@ -241,6 +241,12 @@ class CareerCopilot:
             raise ValueError("Undo conflict: the evidence changed after execution")
 
     def plan(self, intent: str) -> CopilotPlan:
+        """Record ``intent`` and list the current deterministic next-best actions as steps.
+
+        The intent is stored for the human's reference; it is not interpreted. The same career
+        state yields the same steps for any intent (SH-AUD-015): this is a review checklist,
+        not semantic planning, and it never creates proposals.
+        """
         if not intent.strip():
             raise ValueError("Intent is required")
         state = self.state_engine.build()
