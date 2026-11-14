@@ -4,10 +4,9 @@ from __future__ import annotations
 
 from typing import Literal
 
-from modules.ai.setup import DEFAULT_GEMINI_MODEL
 from pydantic import BaseModel, ConfigDict, Field
 
-AiProvider = Literal["local", "gemini", "openai", "openai_future"]
+AiProvider = Literal["local", "gemini", "openai", "anthropic", "openai_future"]
 AiSettingsStatus = Literal["ready", "configured", "not_configured", "planned", "error"]
 AiSettingsPreset = Literal["local_safe", "basic", "complete", "custom"]
 AiModelSource = Literal["cache", "provider_api", "builtin"]
@@ -48,7 +47,8 @@ class AiSettingsUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     provider: AiProvider = "local"
-    model: str = Field(default=DEFAULT_GEMINI_MODEL, max_length=120)
+    # Empty means the selected provider's default (resolved by the settings service).
+    model: str = Field(default="", max_length=120)
     api_key: str | None = Field(default=None, max_length=5000)
     preset: AiSettingsPreset = "custom"
     use_ai: bool = False
@@ -98,7 +98,7 @@ class AiProviderInfo(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    id: Literal["local", "gemini", "openai"]
+    id: Literal["local", "gemini", "openai", "anthropic"]
     label: str
     status: str = "available"
     requires_api_key: bool = False
@@ -133,7 +133,7 @@ class AiModelsResponse(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    provider: Literal["local", "gemini", "openai"]
+    provider: Literal["local", "gemini", "openai", "anthropic"]
     models: list[AiModelInfo] = Field(default_factory=list)
     source: AiModelSource = "builtin"
     updated_at: str = ""
@@ -145,5 +145,5 @@ class AiModelsRefreshRequest(BaseModel):
 
     model_config = ConfigDict(extra="forbid")
 
-    provider: Literal["gemini", "openai"]
+    provider: Literal["gemini", "openai", "anthropic"]
     request_id: str = Field(default="", max_length=120)

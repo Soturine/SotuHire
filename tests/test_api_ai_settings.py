@@ -208,3 +208,59 @@ def test_ai_settings_openai_future_alias_migrates_safely(tmp_path: Path, monkeyp
     assert payload["provider"] == "openai"
     assert payload["status"] == "not_configured"
     assert "planned" not in json.dumps(payload).lower()
+
+
+def test_ai_settings_anthropic_saves_key_backend_side_tests_and_routes(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    pings: list[tuple[str, str]] = []
+
+    class FakeAnthropicProvider:
+        name = "anthropic"
+
+        def __init__(self, api_key: str | None = None, model: str | None = None) -> None:
+            self.api_key = api_key or ""
+            self.model = model or "claude-haiku-5-5"
+
+        def ping(self) -> str:
+            pings.append((self.api_key, self.model))
+            return "ok"
+
+    monkeypatch.setattr("apps.api.services.ai_settings.AnthropicProvider", FakeAnthropicProvider)
+    client = api_client()
+
+    before = client.get("/api/v1/settings/ai/providers").json()["data"]["providers"]
+    saved = client.post(
+        "/api/v1/settings/ai",
+        json={"provider": "anthropic", "api_key": FAKE_KEY, "use_ai": True, "preset": "basic"},
+    )
+    tested = client.post("/api/v1/settings/ai/test", json={"provider": "anthropic"})
+    models = client.get("/api/v1/settings/ai/models", params={"provider": "anthropic"})
+
+    entry = next(item for item in before if item["id"] == "anthropic")
+    assert entry["status"] == "not_configured" and entry["requires_api_key"] is True
+    data = saved.json()["data"]
+    assert data["provider"] == "anthropic" and data["configured"] is True
+    assert data["model"] == "claude-haiku-5-5"  # default model when none is chosen
+    assert FAKE_KEY not in json.dumps(saved.json()) and FAKE_KEY not in json.dumps(tested.json())
+    assert tested.json()["data"]["success"] is True
+    assert pings == [(FAKE_KEY, "claude-haiku-5-5")]
+    assert [m["id"] for m in models.json()["data"]["models"]][0] == "claude-haiku-5-5"
+
+    from apps.api.services.ai_settings import get_ai_runtime
+
+    runtime = get_ai_runtime("job")
+    assert runtime.provider_name == "anthropic" and runtime.configured is True
+
+
+def test_saving_a_provider_without_a_model_uses_that_providers_default(
+    tmp_path: Path, monkeypatch
+) -> None:
+    # The update schema used to default every provider's model to Gemini's, so OpenAI saved
+    # without a model would have been called with "gemini-2.5-flash".
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    client = api_client()
+    for provider, expected in (("openai", "gpt-5-mini"), ("gemini", "gemini-2.5-flash")):
+        saved = client.post("/api/v1/settings/ai", json={"provider": provider, "use_ai": True})
+        assert saved.json()["data"]["model"] == expected, provider

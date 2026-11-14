@@ -472,7 +472,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeAiModels,
       ),
 
-    aiModelsRefresh: (provider: "gemini" | "openai") =>
+    aiModelsRefresh: (provider: "gemini" | "openai" | "anthropic") =>
       call<AiModelsResult>(
         mode,
         baseUrl,
@@ -3800,7 +3800,10 @@ function normalizeAiSettingsTest(value: unknown): AiSettingsTestResult {
 function mockSavedAiSettings(payload: AiSettingsPayload): AiSettings {
   const configured =
     payload.provider === "local" ||
-    ((payload.provider === "gemini" || payload.provider === "openai") && Boolean(payload.api_key));
+    ((payload.provider === "gemini" ||
+      payload.provider === "openai" ||
+      payload.provider === "anthropic") &&
+      Boolean(payload.api_key));
   return {
     ...mockAiSettings,
     provider: payload.provider === "openai_future" ? "openai" : payload.provider,
@@ -3854,6 +3857,14 @@ function mockAiProviders(): AiProvidersResult {
         key_url: "https://platform.openai.com/api-keys",
         supports_model_catalog: true,
       },
+      {
+        id: "anthropic",
+        label: "Anthropic (Claude)",
+        status: "not_configured",
+        requires_api_key: true,
+        key_url: "https://platform.claude.com/settings/keys",
+        supports_model_catalog: false,
+      },
     ],
   };
 }
@@ -3881,6 +3892,25 @@ function mockAiModels(provider: AiProvider): AiModelsResult {
           recommended_for: ["reasoning", "review"],
         },
       ],
+    };
+  }
+  if (provider === "anthropic") {
+    return {
+      provider: "anthropic",
+      source: "builtin",
+      models: [
+        { id: "claude-haiku-5-5", label: "Claude Haiku 5.5" },
+        { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5" },
+        { id: "claude-opus-5-5", label: "Claude Opus 5.5" },
+      ].map((model) => ({
+        ...model,
+        status: "known",
+        supports_structured_output: true,
+        supports_json: true,
+        recommended_for: [],
+      })),
+      updated_at: "",
+      warnings: [],
     };
   }
   if (provider === "gemini") {
@@ -3940,7 +3970,9 @@ function mockAiSettingsTest(payload: AiSettingsTestPayload): AiSettingsTestResul
 
 function normalizeAiProvider(value: unknown): AiProvider {
   if (value === "openai_future") return "openai";
-  return value === "gemini" || value === "openai" || value === "local" ? value : "local";
+  return value === "gemini" || value === "openai" || value === "anthropic" || value === "local"
+    ? value
+    : "local";
 }
 
 function normalizeAiPreset(value: unknown): AiSettings["preset"] {
@@ -3952,11 +3984,13 @@ function normalizeAiPreset(value: unknown): AiSettings["preset"] {
 function defaultAiModel(provider: AiProvider): string {
   if (provider === "local") return "local";
   if (provider === "openai" || provider === "openai_future") return "gpt-5-mini";
+  if (provider === "anthropic") return "claude-haiku-5-5";
   return "gemini-2.5-flash";
 }
 
-function providerDisplayName(provider: "local" | "gemini" | "openai"): string {
+function providerDisplayName(provider: "local" | "gemini" | "openai" | "anthropic"): string {
   if (provider === "gemini") return "Gemini";
+  if (provider === "anthropic") return "Anthropic (Claude)";
   if (provider === "openai") return "OpenAI";
   return "Local seguro";
 }
@@ -3998,8 +4032,8 @@ function normalizeAiModels(value: unknown): AiModelsResult {
   };
 }
 
-function normalizeCatalogProvider(value: unknown): "local" | "gemini" | "openai" {
-  if (value === "gemini" || value === "openai") return value;
+function normalizeCatalogProvider(value: unknown): "local" | "gemini" | "openai" | "anthropic" {
+  if (value === "gemini" || value === "openai" || value === "anthropic") return value;
   return "local";
 }
 

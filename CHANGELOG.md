@@ -7,6 +7,13 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 Trabalho da auditoria independente de 2026-11 (ver `docs/00-audit/2026-11-independent-assurance-audit.md`).
 Nenhuma versão ou tag foi criada.
 
+### Adicionado
+
+- Provider Anthropic (Claude) com Claude Haiku 5.5 como modelo padrão: saída estruturada validada
+  pelo schema do prompt, chave só no backend (Configurações → IA ou `ANTHROPIC_API_KEY`), mesma
+  política de opt-in, erros e novas tentativas dos outros providers. Validado por testes de contrato;
+  nenhuma chamada real foi feita nesta revisão.
+
 ### Segurança
 
 - O Copilot revalida status, expiração e `dependency_hash` da proposta dentro da mesma transação
@@ -35,6 +42,10 @@ Nenhuma versão ou tag foi criada.
   `portfolio_gap_analysis_v1` como implementados; o único arquivo que os chamava não era importado por
   nada. Agora aparecem como registrados sem consumidor, e o gerador só conta como consumidor um
   arquivo que o código de produção importa.
+- Salvar um provider de IA sem escolher modelo gravava o modelo do Gemini para qualquer provider
+  (OpenAI seria chamado com `gemini-2.5-flash`); agora vale o padrão do provider escolhido.
+- `.env.example` listava 24 variáveis, das quais só 4 eram lidas pelo código, e omitia outras em uso
+  (`SOTUHIRE_DATA_DIR`, `OPENAI_MODEL`, configuração da API local); agora lista só o que existe.
 - `due_at` de tarefas agora exige fuso horário e é normalizado para UTC na API e no frontend.
 - Fingerprint do Career State passa a incluir oportunidades e resultados recentes.
 - Página Carreira: lembrete pede a tarefa relacionada explicitamente; o modo demo mostra o que foi

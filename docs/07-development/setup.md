@@ -41,7 +41,7 @@ extras são opcionais:
 
 | Extra | Para quê |
 | --- | --- |
-| `ai` | SDK do Gemini (a análise local não precisa dele) |
+| `ai` | SDKs do Gemini e da Anthropic (a análise local não precisa deles) |
 | `browser` | Captura assistida em um Chromium aberto pela própria pessoa (Playwright via CDP) |
 | `legacy-ui` | Interface Streamlit legada (`streamlit run app.py`) |
 | `docs` | Build do MkDocs |

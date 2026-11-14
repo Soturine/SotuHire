@@ -278,6 +278,7 @@ def default_ai_task_registry(prompts: PromptRegistry | None = None) -> AiTaskReg
                     "local",
                     "gemini",
                     "openai",
+                    "anthropic",
                     "ollama",
                     "lm_studio",
                     "openai_compatible",

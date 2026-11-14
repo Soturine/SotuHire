@@ -14,7 +14,14 @@ from typing import Any, Literal, cast
 
 from modules.ai import model_catalog
 from modules.ai import setup as ai_setup
-from modules.ai.providers import AIProvider, GeminiProvider, MockProvider, OpenAIProvider
+from modules.ai.providers import (
+    AIProvider,
+    AnthropicProvider,
+    GeminiProvider,
+    MockProvider,
+    OpenAIProvider,
+)
+from modules.ai.providers.anthropic_provider import DEFAULT_ANTHROPIC_MODEL
 from modules.ai.providers.openai_provider import DEFAULT_OPENAI_MODEL
 
 from apps.api.schemas.settings import (
@@ -181,7 +188,7 @@ class AiSettingsStore:
         }
 
         cleaned_key = (payload.api_key or "").strip()
-        if normalized_provider in {"gemini", "openai"} and cleaned_key:
+        if normalized_provider in {"gemini", "openai", "anthropic"} and cleaned_key:
             self._write_secret(provider=normalized_provider, api_key=cleaned_key)
 
         self._write_json(self.paths.settings, metadata)
@@ -214,11 +221,12 @@ class AiSettingsStore:
                 message="Nao foi possivel testar o provider. Verifique a chave e o modelo.",
             )
 
-        diagnostic = (
-            self._test_gemini(api_key=api_key, model=model)
-            if provider == "gemini"
-            else self._test_openai(api_key=api_key, model=model)
-        )
+        if provider == "gemini":
+            diagnostic = self._test_gemini(api_key=api_key, model=model)
+        elif provider == "anthropic":
+            diagnostic = self._test_ping(AnthropicProvider(api_key=api_key, model=model))
+        else:
+            diagnostic = self._test_openai(api_key=api_key, model=model)
         success = bool(getattr(diagnostic, "success", False))
         return AiSettingsTestResponse(
             provider=provider,
@@ -246,6 +254,7 @@ class AiSettingsStore:
         configured = {
             "gemini": bool(self._read_secret_for_provider("gemini")),
             "openai": bool(self._read_secret_for_provider("openai")),
+            "anthropic": bool(self._read_secret_for_provider("anthropic")),
         }
         return AiProvidersResponse.model_validate(
             {
@@ -313,11 +322,13 @@ class AiSettingsStore:
                 warnings=tuple(warnings),
             )
 
-        provider = (
-            GeminiProvider(api_key=api_key, model=settings.model)
-            if secret_provider == "gemini"
-            else OpenAIProvider(api_key=api_key, model=settings.model)
-        )
+        provider: GeminiProvider | OpenAIProvider | AnthropicProvider
+        if secret_provider == "gemini":
+            provider = GeminiProvider(api_key=api_key, model=settings.model)
+        elif secret_provider == "anthropic":
+            provider = AnthropicProvider(api_key=api_key, model=settings.model)
+        else:
+            provider = OpenAIProvider(api_key=api_key, model=settings.model)
         return AiRuntime(
             provider=provider,
             provider_name=provider.name,
@@ -337,7 +348,7 @@ class AiSettingsStore:
         model = _default_model(provider, str(metadata.get("model", "")))
         secret_provider = "openai" if provider == "openai_future" else provider
         configured = provider == "local" or (
-            secret_provider in {"gemini", "openai"}
+            secret_provider in {"gemini", "openai", "anthropic"}
             and bool(self._read_secret_for_provider(secret_provider))
         )
         warnings: list[str] = []
@@ -347,6 +358,12 @@ class AiSettingsStore:
             status = "configured" if configured else "not_configured"
             if not configured:
                 warnings.append("Gemini selecionado, mas nenhuma chave foi salva no backend local.")
+        elif provider == "anthropic":
+            status = "configured" if configured else "not_configured"
+            if not configured:
+                warnings.append(
+                    "Anthropic selecionado, mas nenhuma chave foi salva no backend local."
+                )
         elif provider in {"openai", "openai_future"}:
             status = "configured" if configured else "not_configured"
             if raw_provider.strip().lower() == "openai_future":
@@ -394,8 +411,11 @@ class AiSettingsStore:
             executor.shutdown(wait=False, cancel_futures=True)
 
     def _test_openai(self, *, api_key: str, model: str):
+        return self._test_ping(OpenAIProvider(api_key=api_key, model=model))
+
+    def _test_ping(self, provider: OpenAIProvider | AnthropicProvider):
         executor = ThreadPoolExecutor(max_workers=1)
-        future = executor.submit(OpenAIProvider(api_key=api_key, model=model).ping)
+        future = executor.submit(provider.ping)
         try:
             future.result(timeout=AI_TEST_TIMEOUT_SECONDS)
             return _DiagnosticSuccess()
@@ -493,7 +513,7 @@ def _provider(value: object) -> AiProvider:
     raw = str(value or "local").strip().lower()
     if raw == "openai_future":
         return "openai"
-    if raw in {"local", "gemini", "openai"}:
+    if raw in {"local", "gemini", "openai", "anthropic"}:
         return raw  # type: ignore[return-value]
     return "local"
 
@@ -506,6 +526,8 @@ def _default_model(provider: AiProvider, model: str | None = None) -> str:
         return cleaned or ai_setup.DEFAULT_GEMINI_MODEL
     if provider in {"openai", "openai_future"}:
         return cleaned or DEFAULT_OPENAI_MODEL
+    if provider == "anthropic":
+        return cleaned or DEFAULT_ANTHROPIC_MODEL
     return cleaned or "local"
 
 
@@ -634,6 +656,8 @@ def provider_label(provider: str) -> str:
         return "OpenAI"
     if provider == "gemini":
         return "Gemini"
+    if provider == "anthropic":
+        return "Anthropic"
     return "Provider local"
 
 

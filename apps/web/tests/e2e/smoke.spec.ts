@@ -173,6 +173,32 @@ test("settings AI flow uses backend status shape and never stores secrets in bro
   expect(storage.session).not.toContain(fakeKey);
 });
 
+test("Claude can be chosen as provider with Haiku 5.5 as the default model and a backend-only key", async ({
+  page,
+}) => {
+  const fakeKey = "test-playwright-anthropic-secret";
+  await page.goto("/settings");
+
+  await expect(page.getByTestId("ai-key-link-anthropic")).toHaveAttribute(
+    "href",
+    "https://platform.claude.com/settings/keys",
+  );
+  const keyInput = page.getByTestId("ai-api-key-input");
+  await expect(async () => {
+    await page.getByTestId("ai-provider-anthropic").click();
+    await expect(page.getByTestId("ai-model-select")).toHaveValue("claude-haiku-5-5", {
+      timeout: 1_000,
+    });
+    await expect(keyInput).toBeEnabled({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
+  await keyInput.fill(fakeKey);
+  await page.getByRole("button", { name: /Salvar no backend local/i }).click();
+  await expect(keyInput).toHaveValue("");
+
+  const storage = await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }));
+  expect(storage).not.toContain(fakeKey);
+});
+
 test("demo personas stay coherent and can be restored without touching real data", async ({
   page,
 }) => {

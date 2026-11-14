@@ -658,7 +658,8 @@ function AiProvidersCard() {
     });
   }, [settingsQ.data]);
 
-  const providerAllowsKey = provider === "gemini" || provider === "openai";
+  const providerAllowsKey =
+    provider === "gemini" || provider === "openai" || provider === "anthropic";
   const selectedProviderInfo = providersQ.data?.providers.find((item) => item.id === provider);
   const modelOptions = modelsQ.data?.models ?? [];
   const selectedModel = provider === "local" ? "local" : customModel.trim() || model;
@@ -738,7 +739,7 @@ function AiProvidersCard() {
 
   const refreshModels = useMutation({
     mutationFn: () =>
-      provider === "gemini" || provider === "openai"
+      provider === "gemini" || provider === "openai" || provider === "anthropic"
         ? api.aiModelsRefresh(provider)
         : api.aiModels(provider),
     onSuccess: (data) => {
@@ -814,8 +815,8 @@ function AiProvidersCard() {
             <label className="block text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               Provider
             </label>
-            <div className="mt-1.5 grid grid-cols-3 gap-2">
-              {(["local", "gemini", "openai"] as AiProvider[]).map((item) => (
+            <div className="mt-1.5 grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {(["local", "gemini", "openai", "anthropic"] as AiProvider[]).map((item) => (
                 <button
                   key={item}
                   type="button"
@@ -880,6 +881,7 @@ function AiProvidersCard() {
             <div className="mt-2 flex flex-wrap gap-2">
               <ProviderKeyLink provider="gemini" />
               <ProviderKeyLink provider="openai" />
+              <ProviderKeyLink provider="anthropic" />
             </div>
           </div>
 
@@ -1189,11 +1191,14 @@ function ToggleGroup({ title, children }: { title: string; children: ReactNode }
   );
 }
 
-function ProviderKeyLink({ provider }: { provider: "gemini" | "openai" }) {
-  const href =
-    provider === "gemini"
-      ? "https://aistudio.google.com/app/apikey"
-      : "https://platform.openai.com/api-keys";
+const PROVIDER_KEY_URLS = {
+  gemini: "https://aistudio.google.com/app/apikey",
+  openai: "https://platform.openai.com/api-keys",
+  anthropic: "https://platform.claude.com/settings/keys",
+} as const;
+
+function ProviderKeyLink({ provider }: { provider: keyof typeof PROVIDER_KEY_URLS }) {
+  const href = PROVIDER_KEY_URLS[provider];
   return (
     <a
       href={href}
@@ -1203,7 +1208,7 @@ function ProviderKeyLink({ provider }: { provider: "gemini" | "openai" }) {
       className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-2.5 py-1 text-[11px] font-medium hover:bg-muted"
     >
       <ExternalLink className="h-3 w-3" />
-      Obter chave {provider === "gemini" ? "Gemini" : "OpenAI"}
+      Obter chave {providerLabel(provider)}
     </a>
   );
 }
@@ -1319,12 +1324,14 @@ function ModeCard({
 function providerLabel(provider: AiProvider): string {
   if (provider === "openai" || provider === "openai_future") return "OpenAI";
   if (provider === "gemini") return "Gemini";
+  if (provider === "anthropic") return "Claude";
   return "Local";
 }
 
 function defaultModel(provider: AiProvider): string {
   if (provider === "local") return "local";
   if (provider === "gemini") return "gemini-2.5-flash";
+  if (provider === "anthropic") return "claude-haiku-5-5";
   return "gpt-5-mini";
 }
 
@@ -1348,7 +1355,7 @@ function aiStatusMessage(status: AiUiStatus, provider: AiProvider): string {
   if (status === "configured")
     return "Provider configurado: a chave fica somente no backend local.";
   if (status === "planned")
-    return "Provider legado detectado; use Gemini ou OpenAI no backend local.";
+    return "Provider legado detectado; use Gemini, OpenAI ou Claude no backend local.";
   if (status === "error") {
     return "Limite, timeout, chave invalida ou erro do provider: use fallback local e revise a configuracao.";
   }

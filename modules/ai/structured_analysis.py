@@ -7,7 +7,14 @@ import os
 from pydantic import BaseModel, ConfigDict, Field
 
 from modules.ai.diagnostics import GeminiDiagnostic, diagnose_gemini_error
-from modules.ai.providers import AIProvider, GeminiProvider, MockProvider, OpenAIProvider
+from modules.ai.providers import (
+    AIProvider,
+    AnthropicProvider,
+    GeminiProvider,
+    MockProvider,
+    OpenAIProvider,
+)
+from modules.ai.providers.anthropic_provider import DEFAULT_ANTHROPIC_MODEL
 from modules.ai.providers.openai_provider import DEFAULT_OPENAI_MODEL
 from modules.ai.setup import (
     default_ai_provider,
@@ -56,6 +63,11 @@ def get_provider(
         return OpenAIProvider(
             api_key=api_key or os.getenv("OPENAI_API_KEY", ""),
             model=model or os.getenv("OPENAI_MODEL", DEFAULT_OPENAI_MODEL),
+        )
+    if provider_name == "anthropic":
+        return AnthropicProvider(
+            api_key=api_key or os.getenv("ANTHROPIC_API_KEY", ""),
+            model=model or os.getenv("ANTHROPIC_MODEL", DEFAULT_ANTHROPIC_MODEL),
         )
     return MockProvider()
 

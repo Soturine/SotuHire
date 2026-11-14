@@ -99,7 +99,7 @@ export interface AnalysisMeta {
   warnings?: string[];
 }
 
-export type AiProvider = "local" | "gemini" | "openai" | "openai_future";
+export type AiProvider = "local" | "gemini" | "openai" | "anthropic" | "openai_future";
 export type AiSettingsStatus = "ready" | "configured" | "not_configured" | "planned" | "error";
 export type AiSettingsPreset = "local_safe" | "basic" | "complete" | "custom";
 
@@ -166,7 +166,7 @@ export interface AiSettingsTestResult {
 }
 
 export interface AiProviderInfo {
-  id: "local" | "gemini" | "openai";
+  id: "local" | "gemini" | "openai" | "anthropic";
   label: string;
   status: string;
   requires_api_key: boolean;
@@ -189,7 +189,7 @@ export interface AiModelInfo {
 }
 
 export interface AiModelsResult {
-  provider: "local" | "gemini" | "openai";
+  provider: "local" | "gemini" | "openai" | "anthropic";
   models: AiModelInfo[];
   source: "cache" | "provider_api" | "builtin";
   updated_at?: string;
