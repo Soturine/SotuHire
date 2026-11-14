@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=70.1"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,25 +8,30 @@ version = "2.0.0"
 description = "Local-first, human-approved career copilot with typed evidence and portfolio intelligence."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "Apache-2.0" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 authors = [
   { name = "Soturine" }
 ]
 dependencies = [
   "fastapi>=0.115.0",
   "httpx>=0.27.0",
-  "pandas>=2.2.0",
   "pydantic>=2.7.0",
   "pypdf>=6.21.4,<7.0.0",
   "python-docx>=1.1.0",
   "python-dotenv>=1.2.2",
   "reportlab>=5.0.0,<6.0.0",
-  "streamlit>=1.35.0",
   "uvicorn[standard]>=0.30.0",
 ]
 
 [project.optional-dependencies]
+# The Streamlit UI (app.py, modules/ui) is the legacy/dev mode since v1.4; the product is
+# apps/web over apps/api. Only this extra installs Streamlit and what it pulls in.
+legacy-ui = [
+  "streamlit>=1.35.0",
+]
 dev = [
+  "streamlit>=1.35.0",
   "mkdocs>=1.6.0",
   "mkdocs-material>=9.5.0",
   "packaging>=24.0",
@@ -40,6 +45,14 @@ dev = [
 ]
 ai = [
   "google-genai>=1.0.0,<3.0.0",
+]
+# Authenticated-browser source capture attaches to a Chromium the user started (CDP).
+browser = [
+  "playwright>=1.55.0",
+]
+docs = [
+  "mkdocs>=1.6.0",
+  "mkdocs-material>=9.5.0",
 ]
 
 [tool.pytest.ini_options]

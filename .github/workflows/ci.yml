@@ -194,7 +194,7 @@ jobs:
         run: npm audit --audit-level=critical
 
       # High advisories are reported here and triaged in
-      # docs/assurance/DEPENDENCY_REVIEW.md (fix, defer with risk, or not reachable).
+      # docs/00-audit/2026-11-dependency-review.md (fix, defer with risk, or not reachable).
       - name: npm audit report (high, triaged)
         continue-on-error: true
         working-directory: apps/web

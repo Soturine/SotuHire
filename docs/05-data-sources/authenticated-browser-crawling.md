@@ -11,7 +11,7 @@ login sob controle humano.
 Instale as dependências opcionais:
 
 ```bash
-pip install -r docs/requirements/requirements-scraping.txt
+pip install -e ".[browser]"
 playwright install chromium
 ```
 

@@ -251,9 +251,7 @@ class GeminiProvider(AIProvider):
             genai = importlib.import_module("google.genai")
             types = importlib.import_module("google.genai.types")
         except ImportError as exc:
-            raise ProviderUnavailableError(
-                "Instale com: pip install -r docs/requirements/requirements-ai.txt"
-            ) from exc
+            raise ProviderUnavailableError('Instale com: pip install -e ".[ai]"') from exc
         client = genai.Client(api_key=self.api_key)
         sdk_config = types.GenerateContentConfig(**config)
         return client.models.generate_content(

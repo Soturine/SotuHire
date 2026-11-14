@@ -123,9 +123,11 @@ ele. Logs locais ficam em `.sotuhire/logs/`.
 
 ## Streamlit
 
-O Streamlit continua disponivel como modo legado/dev/debug local:
+O Streamlit continua disponivel como modo legado/dev/debug local. Desde 2026-11 ele nao faz parte da
+instalacao padrao; instale o extra `legacy-ui` (ja incluido em `dev`):
 
 ```powershell
+pip install -e ".[legacy-ui]"
 streamlit run app.py
 ```
 

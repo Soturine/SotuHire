@@ -2048,7 +2048,7 @@ function AuthenticatedBrowserPanel() {
             Comandos locais
           </div>
           <div className="space-y-1.5 font-mono text-[11px]">
-            <Command text="pip install -r docs/requirements/requirements-scraping.txt" />
+            <Command text='pip install -e ".[browser]"' />
             <Command text="playwright install chromium" />
             <Command text="python scripts/run_api.py" />
           </div>

@@ -31,7 +31,7 @@ source .venv/bin/activate
 Instalar:
 
 ```bash
-pip install -r docs/requirements/requirements.txt
+pip install -e ".[dev]"
 ```
 
 Atualizar pip:
@@ -54,9 +54,10 @@ Sem abrir navegador:
 .\start-sotuhire.ps1 -NoBrowser
 ```
 
-Rodar Streamlit legado/dev:
+Rodar Streamlit legado/dev (exige o extra `legacy-ui`, já incluído em `dev`):
 
 ```powershell
+pip install -e ".[legacy-ui]"
 streamlit run app.py
 ```
 
