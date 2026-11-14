@@ -324,21 +324,18 @@ class AnthropicProvider(AIProvider):
         attempt: int = 1,
         retry_history: list[dict[str, Any]] | None = None,
     ) -> None:
-        usage = (response or {}).get("usage") or {}
-        input_tokens = usage.get("input_tokens") if isinstance(usage, dict) else None
-        output_tokens = usage.get("output_tokens") if isinstance(usage, dict) else None
-        known = [value for value in (input_tokens, output_tokens) if isinstance(value, int)]
-        response_id = str((response or {}).get("id", ""))
+        reply = response or {}
+        tokens = _usage_tokens(reply.get("usage"))
+        response_id = str(reply.get("id", ""))
+        failure = provider_error.model_dump(mode="json") if provider_error is not None else None
         self.last_call_metadata = {
             "started_at": started_at,
             "finished_at": datetime.now(UTC),
             "latency_ms": round((time.perf_counter() - started_monotonic) * 1000),
-            "model_used": str((response or {}).get("model") or self.model),
-            "input_tokens": input_tokens if isinstance(input_tokens, int) else None,
-            "output_tokens": output_tokens if isinstance(output_tokens, int) else None,
-            "total_tokens": sum(known) if known else None,
+            "model_used": str(reply.get("model") or self.model),
+            **tokens,
             "estimated_cost": None,
-            "stop_reason": (response or {}).get("stop_reason"),
+            "stop_reason": reply.get("stop_reason"),
             "error_type": provider_error.error_type if provider_error else error_type,
             "request_id": provider_error.request_id if provider_error else response_id,
             "response_id": response_id,
@@ -346,10 +343,22 @@ class AnthropicProvider(AIProvider):
             "max_attempts": self.retry_policy.max_attempts,
             "retries": max(0, attempt - 1),
             "retry_history": retry_history or [],
-            "provider_error": (
-                provider_error.model_dump(mode="json") if provider_error is not None else None
-            ),
+            "provider_error": failure,
         }
+
+
+def _usage_tokens(usage: object) -> dict[str, int | None]:
+    """Input/output/total tokens from a Messages API usage block; None when not reported."""
+    values = usage if isinstance(usage, dict) else {}
+    counts = {
+        key: value if isinstance(value, int) else None
+        for key, value in (
+            ("input_tokens", values.get("input_tokens")),
+            ("output_tokens", values.get("output_tokens")),
+        )
+    }
+    known = [value for value in counts.values() if value is not None]
+    return {**counts, "total_tokens": sum(known) if known else None}
 
 
 __all__ = ["DEFAULT_ANTHROPIC_MODEL", "AnthropicProvider"]

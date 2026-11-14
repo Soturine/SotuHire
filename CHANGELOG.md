@@ -35,6 +35,9 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Local Companion: as rotas autenticadas viraram uma tabela explícita, testada rota a rota (só
+  `/health` e o pareamento são públicos); rota conhecida com método errado responde 405 e rota
+  desconhecida continua escondida atrás da autenticação.
 - Application Lab: aceitar uma sugestão sem edição falha quando o texto afirma registro profissional
   (os 26 conselhos e registros conhecidos, como CRM, OAB e COREN) ou pós-graduação (doutorado, mestrado, MBA,
   especialização) que não aparece no texto substituído nem no Currículo Mestre confirmado. Antes, bastava

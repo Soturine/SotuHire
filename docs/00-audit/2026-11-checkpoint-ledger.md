@@ -97,6 +97,16 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (mapa de autoridade, documento de UX com pares antes/depois, CHANGELOG, mkdocs) |
 | Pendente | redesign visual amplo; componente `Field`; leitor de tela; edição de fatos já projetados; retirada de `LocalStore` |
 
+## CP-DEP01 e CP-CX01 — Dependabot integrado; triagem de alta complexidade
+
+- `6583492`: atualizações revisadas integradas (pins conferidos contra as tags); `globals` 17 adiado.
+  Detalhe em [dependências](2026-11-dependency-review.md).
+- CP-CX01: 68 candidatos `HIGH_COMPLEXITY` com decisão (ver [triagem](2026-11-dead-dedupe-triage.md)).
+  `LocalCompanionApp.handle` (fronteira de autenticação, 34 caminhos) virou tabela de rotas, 21
+  caminhos, com teste de caracterização escrito antes (32 casos; o de 405 falha no código antigo). O
+  próprio ciclo tinha introduzido 3 funções acima do limiar; 2 foram simplificadas.
+- `CHANGELOG_GATE: PASS` · `DOCS_GATE: PASS` · pytest 837 passed / 4 skipped.
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |

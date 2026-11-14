@@ -9,8 +9,8 @@ fora do repositório; SHA-256 em [dogfood](2026-11-dogfood-and-external-research
 ## Resultado
 
 Os 170 candidatos de duplicação (152 `DUPLICATE_TABLE` + 18 `DUPLICATE_BODY`) e os 36
-`UNREFERENCED_DEFINITION` têm decisão individual no apêndice. Os 65 `HIGH_COMPLEXITY` não foram
-triados neste ciclo (`NOT_RUN`).
+`UNREFERENCED_DEFINITION` têm decisão individual no apêndice. Os candidatos `HIGH_COMPLEXITY` estão triados na
+seção própria abaixo.
 
 | Sinal | Decisão | Qtde |
 | --- | --- | --- |
@@ -66,6 +66,82 @@ importlib/uvicorn e pacotes-pai) a partir de `apps/api/main.py`, rotas, `modules
 - `config/capabilities.json` declarava como store da capacidade `data_reliability` um arquivo do
   repositório genérico sem consumidor.
 
+
+## Alta complexidade (`ENG-MAINT-COMPLEXITY`)
+
+Medido com `derivanta-engine inspect --maintainability` em clone da branch (limiar: 15 caminhos de decisão). 68 candidatos: DEFER 42, KEEP 25, REFACTORED 1.
+Complexidade alta é um indutor de refatoração, não defeito; só foi refatorado onde concentra risco (fronteira de autenticação). Das 3 funções novas que este ciclo trouxe acima do limiar, 2 foram simplificadas e 1 ficou com justificativa.
+
+| Caminhos | Candidato | Decisão | Motivo |
+| --- | --- | --- | --- |
+| 43 | `modules/application_lab/readiness.py` `build_readiness_report` | DEFER | maior complexidade (43); regra de prontidão com testes; refatorar com caracterização num ciclo próprio |
+| 42 | `scripts/validate_capabilities.py` `validate_manifest` | KEEP | ferramenta de desenvolvimento/release coberta por testes de geração |
+| 41 | `modules/storage/legacy_migration.py` `_map_payload` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 39 | `modules/ui/pages.py` `_render_result_content` | KEEP | UI Streamlit legada, congelada no extra `legacy-ui` |
+| 33 | `scripts/run_ai_benchmark.py` `_aggregate_group` | KEEP | ferramenta de desenvolvimento/release coberta por testes de geração |
+| 32 | `modules/ai/provider_errors.py` `classify_gemini_error` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 30 | `modules/ui/memory_page.py` `render_memory_page` | KEEP | UI Streamlit legada, congelada no extra `legacy-ui` |
+| 30 | `modules/radar/service.py` `JobRadarService.run` | DEFER | orquestração do Radar (30); módulo ainda não auditado semanticamente |
+| 29 | `modules/storage/legacy_migration.py` `_semantic_identity` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 29 | `modules/profile/json_resume.py` `_entry_from_item` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 28 | `modules/radar/scheduler.py` `ScheduledRadarService.run_schedule` | DEFER | agendamento (28); mesmo motivo |
+| 28 | `apps/api/services/analysis.py` `_trace_metadata` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 26 | `modules/ai/structured_job_extractor.py` `_job_output_from_local` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 25 | `modules/radar/service.py` `_score_opportunity` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 23 | `scripts/run_ai_benchmark.py` `main` | KEEP | ferramenta de desenvolvimento/release coberta por testes de geração |
+| 23 | `modules/local_api/app.py` `LocalCompanionService.capture_job` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 22 | `scripts/run_ai_benchmark.py` `_run_case` | KEEP | ferramenta de desenvolvimento/release coberta por testes de geração |
+| 22 | `modules/ui/pages.py` `render_resume_step` | KEEP | UI Streamlit legada, congelada no extra `legacy-ui` |
+| 22 | `modules/github_analyzer/tree_builder.py` `detect_repository_signals` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 22 | `modules/ai/tracing.py` `record_ai_run` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 22 | `modules/ai/structured_resume_extractor.py` `_resume_output_from_local` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 21 | `modules/ui/layout.py` `render_sidebar` | KEEP | UI Streamlit legada, congelada no extra `legacy-ui` |
+| 21 | `modules/storage/health.py` `_check_legacy_files` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 21 | `modules/local_api/app.py` `LocalCompanionApp.handle` | REFACTORED | tabela de rotas autenticadas; fronteira testada rota a rota; 34 → 21 |
+| 21 | `apps/api/services/ai_quality.py` `quality_providers` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 20 | `modules/matching/explanation_builder.py` `build_match_explanation` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 20 | `modules/domain_intelligence/domain_classifier.py` `classify_domain` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 20 | `modules/ai/provider_errors.py` `_openai_category` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 19 | `modules/tracker/job_tracker.py` `JobTracker.add_analysis` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 19 | `modules/public_exams/scoring.py` `score_exam_fit` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 19 | `modules/domain_intelligence/requirement_types.py` `classify_requirement` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 19 | `modules/context/formatters.py` `profile_context_from_career_context` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 19 | `modules/context/formatters.py` `format_context_for_prompt` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 19 | `modules/application_lab/service.py` `ApplicationLabService._suggestions` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 19 | `modules/ai/diagnostics.py` `diagnose_gemini_error` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 19 | `apps/api/services/ai_quality.py` `quality_summary` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 18 | `scripts/build_sbom.py` `_python_components` | KEEP | ferramenta de desenvolvimento/release coberta por testes de geração |
+| 18 | `modules/storage/backup.py` `restore_backup` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 18 | `modules/storage/applications.py` `_from_row` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 18 | `modules/opportunities/intelligence.py` `_rank` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 18 | `modules/memory/memory_scoring.py` `score_memory_item` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 18 | `modules/matching/score_calculator.py` `calculate_match_scores` | KEEP | mapeamento/classificação por dados: muitos ramos por natureza; tabela só com teste de caracterização |
+| 18 | `modules/application_lab/service.py` `ApplicationLabService.create_kit` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/ui/scraping_page.py` `render_scraping_page` | KEEP | UI Streamlit legada, congelada no extra `legacy-ui` |
+| 17 | `modules/tracker/career_analytics.py` `build_career_analytics` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/storage/health.py` `_check_database` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/scraping/http_safety.py` `validate_public_url` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/resume_tailor/section_ranker.py` `rank_resume_sections` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/radar/service.py` `JobRadarService._result_from_opportunity` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/profile/json_resume.py` `profile_to_json_resume` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/github_analyzer/github_client.py` `GitHubClient.get_metadata` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/copilot_v2/career_state.py` `NextBestActionEngine.candidates` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/copilot_v2/career_state.py` `CareerStateEngine.build` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/application_lab/export.py` `_pdf_lines` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/application_lab/export.py` `_entry_payload` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 17 | `modules/ai/local_interop.py` `validate_local_ai_endpoint` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 16 | `scripts/verify_sbom.py` `verify_sbom` | KEEP | ferramenta de desenvolvimento/release coberta por testes de geração |
+| 16 | `scripts/generate_prompt_catalog.py` `prompt_rows` | KEEP | 16 (limiar 15): montagem de linha do catálogo; dividir não reduz risco |
+| 16 | `modules/ui/extension_page.py` `render_extension_page` | KEEP | UI Streamlit legada, congelada no extra `legacy-ui` |
+| 16 | `modules/tracker/job_tracker.py` `JobTracker._persist_reliable_state` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 16 | `modules/storage/migrations/runner.py` `MigrationRunner.verify` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 16 | `modules/public_exams/scoring.py` `_matches` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 16 | `modules/public_exams/scoring.py` `_match_requirement` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 16 | `modules/parsers/document_ingestion.py` `_extract` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 16 | `modules/parsers/document_ingestion.py` `LocalDocumentIngestionPipeline.ingest` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 16 | `modules/application_lab/analysis_pipeline.py` `build_local_analysis_products` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 16 | `apps/api/services/analysis.py` `analyze_match` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
+| 16 | `apps/api/services/analysis.py` `analyze_github_repo` | DEFER | fluxo de domínio; refatorar só com caracterização e motivo de risco |
 
 ## Apêndice — decisão por candidato
 

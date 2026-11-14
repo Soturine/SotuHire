@@ -8,10 +8,11 @@ import os
 import re
 import threading
 from copy import deepcopy
+from dataclasses import dataclass
 from pathlib import Path
 from typing import cast
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from modules.ai.structured_analysis import analyze_structured, get_provider
 from modules.context import (
@@ -652,6 +653,35 @@ class LocalCompanionService:
             return CompanionAnalysisContext()
 
 
+@dataclass(frozen=True)
+class _Route:
+    method: str
+    handler: str  # LocalCompanionService method
+    request_model: type[BaseModel] | None = None
+
+
+_PROJECT_ROUTE = _Route("POST", "analyze_project_capture", ProjectAnalysisPayload)
+# Every route here requires a credential; only /health and /pairing/* are public (handled above
+# the authentication check in LocalCompanionApp.handle). tests/test_local_api_route_boundary.py
+# walks this table.
+_AUTHENTICATED_ROUTES: dict[str, _Route] = {
+    "/capture/status": _Route("GET", "context_summary"),
+    "/capture/context-summary": _Route("GET", "context_summary"),
+    "/handshake": _Route("POST", "handshake", CompanionHandshakeRequest),
+    "/capture/job": _Route("POST", "capture_job", BrowserCapturePayload),
+    "/capture/public-exam": _Route("POST", "capture_public_exam", BrowserCapturePayload),
+    "/capture/analyze": _Route("POST", "analyze_capture", CaptureActionRequest),
+    "/capture/tracker": _Route("POST", "track_capture", CaptureActionRequest),
+    "/capture/applications": _Route("POST", "import_applications", ApplicationBatchPayload),
+    "/capture/github-profile": _PROJECT_ROUTE,
+    "/capture/github-repo": _PROJECT_ROUTE,
+    "/capture/portfolio": _PROJECT_ROUTE,
+    "/capture/project": _PROJECT_ROUTE,
+    "/capture/repo-analysis": _PROJECT_ROUTE,
+    "/capture/commit-analysis": _PROJECT_ROUTE,
+}
+
+
 class LocalCompanionApp:
     """Minimal request router shared by HTTP and unit tests."""
 
@@ -719,42 +749,19 @@ class LocalCompanionApp:
             )
             if not authenticated:
                 return 401, {"ok": False, "message": "Pareamento local obrigatório."}
+            route = _AUTHENTICATED_ROUTES.get(path)
+            if route is None:
+                return 404, {"ok": False, "message": "Endpoint não encontrado."}
+            if method != route.method:
+                return 405, {"ok": False, "message": f"Use {route.method} em {path}."}
+            if route.request_model is None:  # reads: no idempotency
+                return 200, getattr(self.service, route.handler)().model_dump(mode="json")
             replay = self._idempotency_replay(path, body, idempotency_key)
             if replay is not None:
                 return replay
-            if method == "GET" and path in {"/capture/status", "/capture/context-summary"}:
-                return 200, self.service.context_summary().model_dump(mode="json")
-            if method == "POST" and path == "/handshake":
-                response = self.service.handshake(CompanionHandshakeRequest.model_validate(payload))
-            elif method == "POST" and path == "/capture/job":
-                response = self.service.capture_job(BrowserCapturePayload.model_validate(payload))
-            elif method == "POST" and path == "/capture/public-exam":
-                response = self.service.capture_public_exam(
-                    BrowserCapturePayload.model_validate(payload)
-                )
-            elif method == "POST" and path == "/capture/analyze":
-                response = self.service.analyze_capture(
-                    CaptureActionRequest.model_validate(payload)
-                )
-            elif method == "POST" and path == "/capture/tracker":
-                response = self.service.track_capture(CaptureActionRequest.model_validate(payload))
-            elif method == "POST" and path == "/capture/applications":
-                response = self.service.import_applications(
-                    ApplicationBatchPayload.model_validate(payload)
-                )
-            elif method == "POST" and path in {
-                "/capture/github-profile",
-                "/capture/github-repo",
-                "/capture/portfolio",
-                "/capture/project",
-                "/capture/repo-analysis",
-                "/capture/commit-analysis",
-            }:
-                response = self.service.analyze_project_capture(
-                    ProjectAnalysisPayload.model_validate(payload)
-                )
-            else:
-                return 404, {"ok": False, "message": "Endpoint não encontrado."}
+            response = getattr(self.service, route.handler)(
+                route.request_model.model_validate(payload)
+            )
             result = cast(dict[str, object], response.model_dump(mode="json"))
             self._remember_idempotent_response(path, body, idempotency_key, result)
             return 200, result

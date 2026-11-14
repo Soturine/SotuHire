@@ -169,7 +169,6 @@ def _production_reachable(root: Path) -> set[str]:
     unreachable module still counts. It is enough to stop a file that nothing imports (and a
     prompt id string inside it) from being reported as an executable consumer.
     """
-    import ast
 
     production = [
         path
@@ -179,22 +178,8 @@ def _production_reachable(root: Path) -> set[str]:
     ]
     imported: set[str] = set()
     for path in production:
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except (OSError, SyntaxError, UnicodeDecodeError):
-            continue
         package = ".".join(path.relative_to(root).with_suffix("").parts[:-1])
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Import):
-                imported.update(alias.name for alias in node.names)
-            elif isinstance(node, ast.ImportFrom):
-                base = node.module or ""
-                if node.level:
-                    parts = package.split(".")
-                    parts = parts[: len(parts) - node.level + 1]
-                    base = ".".join([*parts, base] if base else parts)
-                imported.add(base)
-                imported.update(f"{base}.{alias.name}" for alias in node.names)
+        imported |= _imported_modules(path, package)
     reachable: set[str] = set()
     for path in production:
         relative = path.relative_to(root).as_posix()
@@ -202,6 +187,36 @@ def _production_reachable(root: Path) -> set[str]:
         if relative.startswith("apps/api/routes/") or module in imported:
             reachable.add(relative)
     return reachable
+
+
+def _imported_modules(path: Path, package: str) -> set[str]:
+    """Dotted names a Python file imports (relative imports resolved against ``package``)."""
+    import ast
+
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+    except (OSError, SyntaxError, UnicodeDecodeError):
+        return set()
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            names.update(alias.name for alias in node.names)
+        elif isinstance(node, ast.ImportFrom):
+            base = _absolute_module(node, package)
+            names.add(base)
+            names.update(f"{base}.{alias.name}" for alias in node.names)
+    return names
+
+
+def _absolute_module(node: object, package: str) -> str:
+    import ast
+
+    assert isinstance(node, ast.ImportFrom)
+    if not node.level:
+        return node.module or ""
+    parts = package.split(".")
+    parts = parts[: len(parts) - node.level + 1]
+    return ".".join([*parts, node.module] if node.module else parts)
 
 
 def _consumer_reference_index(
