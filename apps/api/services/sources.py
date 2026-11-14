@@ -15,6 +15,7 @@ from modules.scraping.browser_inputs import validate_browser_start_url, validate
 from modules.scraping.browser_session import inspect_browser_session, launch_authenticated_browser
 from modules.scraping.collection import collect_authenticated_source
 from modules.scraping.schemas import ScrapingSource
+from modules.security.credentials import contains_secret_field
 from modules.sources.imports import SourceImportAiContext, SourceImportService
 
 from apps.api.schemas.sources import (
@@ -125,7 +126,7 @@ def authenticated_assisted_capture(
     """Save visible authenticated page text for user review without secrets."""
     if not request.user_review_required:
         raise HTTPException(status_code=422, detail="Captura assistida exige revisao humana.")
-    if _contains_secret_field(request.metadata):
+    if contains_secret_field(request.metadata):
         raise HTTPException(
             status_code=422,
             detail="Metadata de captura nao pode conter cookies, tokens, sessao ou segredos.",
@@ -533,16 +534,3 @@ def _safe_profile_capture_signals(text: str) -> dict[str, object]:
         "possible_gaps": gaps,
         "confidence": "low" if not confirmed_titles else "medium",
     }
-
-
-def _contains_secret_field(value: object) -> bool:
-    secret_markers = {"api_key", "apikey", "secret", "token", "cookie", "session", "headers"}
-    if isinstance(value, dict):
-        for key, nested in value.items():
-            if any(marker in str(key).lower() for marker in secret_markers):
-                return True
-            if _contains_secret_field(nested):
-                return True
-    if isinstance(value, list):
-        return any(_contains_secret_field(item) for item in value)
-    return False

@@ -77,8 +77,32 @@ def _shannon_entropy(value: str) -> float:
     return -sum((count / length) * math.log2(count / length) for count in counts.values())
 
 
+# Key fragments that mark a field as carrying credentials or raw request state. Payloads
+# bound for an AI provider or a store are rejected when any nested key contains one.
+SECRET_FIELD_MARKERS = frozenset(
+    {"api_key", "apikey", "secret", "token", "cookie", "session", "headers"}
+)
+
+
+def contains_secret_field(value: object) -> bool:
+    """Return whether any key of a nested dict/list payload names a credential-like field."""
+    if isinstance(value, dict):
+        for key, nested in value.items():
+            normalized = str(key).lower()
+            if any(marker in normalized for marker in SECRET_FIELD_MARKERS):
+                return True
+            if contains_secret_field(nested):
+                return True
+        return False
+    if isinstance(value, list | tuple):
+        return any(contains_secret_field(item) for item in value)
+    return False
+
+
 __all__ = [
+    "SECRET_FIELD_MARKERS",
     "contains_provider_secret",
+    "contains_secret_field",
     "looks_like_modern_gemini_key",
     "redact_provider_secrets",
 ]

@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from modules.ai.prompt_loader import default_prompt_registry
 from modules.ai.tracing import record_ai_run, runtime_model, runtime_trace_kwargs
 from modules.public_exams import PublicExamImportInput, PublicExamService
+from modules.security.credentials import contains_secret_field
 
 from apps.api.schemas.public_exams import (
     PublicExamAnalyzeRequest,
@@ -26,7 +27,7 @@ def public_exams_import(
 ) -> tuple[PublicExamImportResponse, list[str]]:
     """Extract a public exam draft without saving it."""
     payload = PublicExamImportInput.model_validate(request.model_dump(exclude={"request_id"}))
-    if _contains_secret_field(payload.model_dump()):
+    if contains_secret_field(payload.model_dump()):
         raise HTTPException(status_code=422, detail="Payload contém campo inseguro.")
     service = PublicExamService()
     if not request.use_ai:
@@ -141,16 +142,3 @@ def public_exams_study_plan(
     except KeyError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
     return PublicExamStudyPlanResponse.model_validate(result.model_dump())
-
-
-def _contains_secret_field(value: object) -> bool:
-    secret_markers = {"api_key", "apikey", "secret", "token", "cookie", "session", "headers"}
-    if isinstance(value, dict):
-        for key, nested in value.items():
-            if any(marker in str(key).lower() for marker in secret_markers):
-                return True
-            if _contains_secret_field(nested):
-                return True
-    if isinstance(value, list):
-        return any(_contains_secret_field(item) for item in value)
-    return False

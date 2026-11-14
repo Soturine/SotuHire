@@ -2,6 +2,7 @@
 
 from .credentials import (
     contains_provider_secret,
+    contains_secret_field,
     looks_like_modern_gemini_key,
     redact_provider_secrets,
 )
@@ -22,6 +23,7 @@ __all__ = [
     "RequestPolicy",
     "SessionCredentials",
     "contains_provider_secret",
+    "contains_secret_field",
     "looks_like_modern_gemini_key",
     "redact_provider_secrets",
 ]
