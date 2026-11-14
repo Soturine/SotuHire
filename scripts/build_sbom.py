@@ -49,7 +49,7 @@ def _marker_applies(requirement: Requirement, extras: set[str]) -> bool:
 
 def _python_components(
     project: dict[str, Any],
-) -> tuple[list[dict[str, Any]], list[dict[str, Any]], bool]:
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]], bool, list[str]]:
     declared = project["project"].get("dependencies", [])
     optional = project["project"].get("optional-dependencies", {})
     roots: list[tuple[Requirement, str]] = [(Requirement(item), "required") for item in declared]
@@ -59,6 +59,7 @@ def _python_components(
     components: dict[str, dict[str, Any]] = {}
     edges: dict[str, set[str]] = {}
     complete = True
+    missing: dict[str, str] = {}
     queue: list[tuple[Requirement, str]] = list(roots)
     requested_extras: dict[str, set[str]] = {}
     while queue:
@@ -76,8 +77,11 @@ def _python_components(
             distribution = metadata.distribution(requirement.name)
             version = distribution.version
         except metadata.PackageNotFoundError:
-            complete = False
-            components.setdefault(key, _python_component(key, "not-installed", scope))
+            # A missing runtime requirement makes the inventory incomplete; a missing
+            # optional extra (e.g. ``ai`` in a dev-only install) is reported, not invented.
+            if scope == "required":
+                complete = False
+            missing[key] = scope
             continue
         components.setdefault(key, _python_component(key, version, scope))
         ref = components[key]["bom-ref"]
@@ -96,7 +100,7 @@ def _python_components(
         {"ref": ref, "dependsOn": sorted(by_name[name] for name in children if name in by_name)}
         for ref, children in sorted(edges.items())
     ]
-    return list(components.values()), dependencies, complete
+    return list(components.values()), dependencies, complete, sorted(missing)
 
 
 def _python_component(name: str, version: str, scope: str) -> dict[str, Any]:
@@ -178,7 +182,9 @@ def build_sbom() -> dict[str, Any]:
     project = tomllib.loads(PYPROJECT.read_text(encoding="utf-8"))
     lock = json.loads(PACKAGE_LOCK.read_text(encoding="utf-8"))
     app_version = str(project["project"]["version"])
-    python_components, python_dependencies, python_complete = _python_components(project)
+    python_components, python_dependencies, python_complete, python_missing = _python_components(
+        project
+    )
     web_components, web_dependencies, web_paths = _web_components(lock)
     components = [*python_components, *web_components]
     components.sort(key=lambda item: (item["purl"].casefold(), item["version"]))
@@ -224,6 +230,10 @@ def build_sbom() -> dict[str, Any]:
                 {
                     "name": "sotuhire:sbom:python-complete",
                     "value": "true" if python_complete else "false",
+                },
+                {
+                    "name": "sotuhire:sbom:python-not-installed",
+                    "value": ",".join(python_missing),
                 },
             ],
         },

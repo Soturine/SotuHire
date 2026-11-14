@@ -42,6 +42,41 @@ def test_sbom_covers_transitive_dependencies_and_verifies() -> None:
     assert verify_sbom(sbom, project=project, lock=lock) == []
 
 
+@pytest.mark.parametrize(
+    ("absent", "expected_ok"),
+    [("google-genai", True), ("fastapi", False)],
+)
+def test_sbom_completeness_depends_on_runtime_requirements_only(
+    monkeypatch: pytest.MonkeyPatch, absent: str, expected_ok: bool
+) -> None:
+    """A dev-only install (no ``ai`` extra) is complete; a missing runtime dep is not."""
+    import json
+    import tomllib
+    from importlib import metadata
+
+    import scripts.build_sbom as builder
+    from scripts.verify_sbom import verify_sbom
+
+    real = metadata.distribution
+
+    def distribution(name: str):
+        if builder.canonicalize_name(name) == absent:
+            raise metadata.PackageNotFoundError(name)
+        return real(name)
+
+    monkeypatch.setattr(builder.metadata, "distribution", distribution)
+    sbom = builder.build_sbom()
+    properties = {item["name"]: item["value"] for item in sbom["metadata"]["properties"]}
+    errors = verify_sbom(
+        sbom,
+        project=tomllib.loads(builder.PYPROJECT.read_text(encoding="utf-8")),
+        lock=json.loads(builder.PACKAGE_LOCK.read_text(encoding="utf-8")),
+    )
+
+    assert absent in properties["sotuhire:sbom:python-not-installed"].split(",")
+    assert (errors == []) is expected_ok
+
+
 def test_sbom_verifier_rejects_version_drift_and_missing_lock_entries() -> None:
     import json
     import tomllib
