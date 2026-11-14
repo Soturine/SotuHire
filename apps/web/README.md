@@ -183,7 +183,7 @@ GET/PUT /api/v1/profile
 POST /api/v1/profile/items
 PATCH/DELETE /api/v1/profile/items/{id}
 POST /api/v1/profile/import-text
-POST /api/v1/profile/import-lattes
+POST /api/v1/profile/import-lattes   # deprecated alias of lattes/draft
 POST /api/v1/profile/lattes/draft
 POST /api/v1/profile/lattes/confirm
 POST /api/v1/profile/deduplicate
