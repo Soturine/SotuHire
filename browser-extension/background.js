@@ -46,12 +46,55 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
-chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
-  handleMessage(message)
+// Messages that manage secrets or pairing are accepted only from the extension's own
+// pages (popup). Content scripts run inside third-party pages and are less trusted.
+const EXTENSION_PAGE_ONLY = new Set([
+  "SOTUHIRE_COMPANION_PAIR",
+  "SOTUHIRE_AI_SAVE_KEY",
+  "SOTUHIRE_AI_REMOVE_KEY",
+]);
+// Every Local Companion route the extension uses; anything else never leaves the worker.
+const COMPANION_PATH =
+  /^\/(?:health|handshake|pairing\/(?:start|complete)|capture\/[a-z][a-z-]{1,40})$/;
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  authorizeMessage(message, sender)
+    .then(() => handleMessage(message))
     .then((payload) => sendResponse({ ok: true, ...payload }))
     .catch((error) => sendResponse({ ok: false, error: safeError(error) }));
   return true;
 });
+
+function isExtensionPage(sender) {
+  return Boolean(
+    sender &&
+      sender.id === chrome.runtime.id &&
+      !sender.tab &&
+      typeof sender.url === "string" &&
+      sender.url.startsWith(chrome.runtime.getURL("")),
+  );
+}
+
+async function authorizeMessage(message, sender) {
+  if (!sender || sender.id !== chrome.runtime.id) {
+    throw new Error("Origem da mensagem não reconhecida.");
+  }
+  if (EXTENSION_PAGE_ONLY.has(message?.type) && !isExtensionPage(sender)) {
+    throw new Error("Esta ação só pode ser feita pelo popup da extensão.");
+  }
+}
+
+function companionUrl(path) {
+  const value = String(path || "");
+  if (!COMPANION_PATH.test(value)) {
+    throw new Error("Rota do Local Companion não permitida.");
+  }
+  const url = new URL(value, COMPANION_API);
+  if (url.origin !== new URL(COMPANION_API).origin) {
+    throw new Error("Rota do Local Companion não permitida.");
+  }
+  return url.toString();
+}
 
 async function handleMessage(message) {
   if (message.type === "SOTUHIRE_COMPANION_PAIR") return pairCompanion();
@@ -138,7 +181,7 @@ async function companionFetch(path, body, sessionToken, idempotencyKey = "") {
   const safeIdempotencyKey = /^[a-z0-9-]{12,120}$/i.test(idempotencyKey)
     ? idempotencyKey
     : "";
-  const response = await fetch(`${COMPANION_API}${path}`, {
+  const response = await fetch(companionUrl(path), {
     method: body === undefined ? "GET" : "POST",
     headers: {
       ...(body === undefined ? {} : { "Content-Type": "application/json" }),

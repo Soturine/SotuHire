@@ -34,6 +34,26 @@ def test_queue_runtime_deduplicates_retries_and_exports_safely() -> None:
     }
 
 
+def test_service_worker_rejects_untrusted_routes_and_privileged_senders() -> None:
+    result = _run_node("background_security_harness.js")
+
+    # A crafted path must never turn the loopback URL into another host (token leak).
+    assert result["userinfoHost"] is False
+    assert result["absoluteUrl"] is False
+    assert result["protocolRelative"] is False
+    assert result["traversal"] is False
+    assert result["unknownRoute"] is False
+    assert result["allowedRoute"] is True
+    assert result["fetchedHosts"] == ["127.0.0.1:8765"]
+    assert result["tokenSentOutsideLoopback"] is False
+    # Secrets and pairing are managed only from the extension's own pages.
+    assert result["saveKeyFromContentScript"] is False
+    assert result["removeKeyFromContentScript"] is False
+    assert result["pairFromContentScript"] is False
+    assert result["statusFromOtherExtension"] is False
+    assert result["statusFromPopup"] is True
+
+
 def test_content_runtime_prioritizes_nested_schema_org_jobposting() -> None:
     capture = _run_node("content_jobposting_harness.js")
 
