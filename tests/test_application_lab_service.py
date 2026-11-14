@@ -297,3 +297,63 @@ def test_json_resume_pdf_and_docx_share_canonical_document() -> None:
     )
     assert "protocolos de qualidade" in pdf_text.casefold()
     assert "protocolos de qualidade" in docx_text.casefold()
+
+
+def _session_with_suggestion(tmp_path, after: str, before: str = ""):
+    service = _service(tmp_path)
+    master = service.repository.save_master_resume(_master())
+    job = _job(service.snapshots)
+    session = service.create_session(
+        ApplicationLabSession(
+            master_resume_id=master.master_resume_id,
+            job_snapshot_id=job.snapshot_id,
+            selected_context_refs=["fixture://experience"],
+        )
+    )
+    suggestion = ApplicationSuggestion(
+        suggestion_id="ai-claim",
+        session_id=session.session_id,
+        suggestion_type="summary",
+        before=before,
+        after=after,
+        evidence_used=["fixture://experience"],  # scope evidence is present
+    )
+    service.repository.save_suggestions([suggestion])
+    return service, session, suggestion
+
+
+def test_accepting_a_credential_the_confirmed_resume_does_not_hold_is_refused(tmp_path) -> None:
+    # SH-NEW-014: evidence_used is the session scope, not proof of the sentence; a suggestion
+    # that asserts a registry or degree absent from the confirmed master resume must not pass.
+    service, session, suggestion = _session_with_suggestion(
+        tmp_path, "Profissional com registro ativo no CRM e doutorado em processos."
+    )
+    try:
+        service.review_suggestion(session.session_id, suggestion.suggestion_id, "accepted")
+    except ValueError as exc:
+        message = str(exc)
+        assert "CRM" in message and "doutorado" in message
+    else:
+        raise AssertionError("Unsupported credential claim was accepted")
+    stored = service.repository.get_suggestion(suggestion.suggestion_id)
+    assert stored is not None and stored.status == "pending"
+
+
+def test_a_credential_already_in_the_confirmed_resume_or_replaced_text_can_be_accepted(
+    tmp_path,
+) -> None:
+    service, session, suggestion = _session_with_suggestion(
+        tmp_path,
+        "Profissional com registro ativo no CRM, foco em protocolos de qualidade.",
+        before="Registro ativo no CRM.",
+    )
+    reviewed = service.review_suggestion(session.session_id, suggestion.suggestion_id, "accepted")
+    assert reviewed.status == "accepted"
+
+
+def test_a_claim_without_credentials_keeps_the_existing_acceptance(tmp_path) -> None:
+    service, session, suggestion = _session_with_suggestion(
+        tmp_path, "Aplicação de protocolos de qualidade com foco em melhoria contínua."
+    )
+    reviewed = service.review_suggestion(session.session_id, suggestion.suggestion_id, "accepted")
+    assert reviewed.status == "accepted"
