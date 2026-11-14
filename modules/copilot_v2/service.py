@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 from uuid import uuid4
 
-from modules.storage.database import connect_database
+from modules.career_actions.models import CareerTask
 
 from .career_state import CareerStateEngine
 from .models import (
@@ -21,7 +21,7 @@ from .models import (
     ReviewStatus,
 )
 from .repository import CopilotRepository, utc_now
-from .tools import ToolRegistry, default_tool_registry
+from .tools import CreateTaskInput, ToolRegistry, default_tool_registry
 
 
 class CareerCopilot:
@@ -65,8 +65,16 @@ class CareerCopilot:
             raise ValueError("Read-only tools do not create proposals")
         validated = self.registry.validate_input(tool_id, payload).model_dump(mode="json")
         state = self.state_engine.build()
+        # Identity of the business intent the human approves: tool, exact payload, the
+        # evidence offered as justification and the state it was derived from. ``reason`` is
+        # explanatory text and deliberately not part of the identity.
         canonical = json.dumps(
-            {"tool": tool_id, "payload": validated, "state": state.dependency_hash},
+            {
+                "tool": tool_id,
+                "payload": validated,
+                "evidence_refs": sorted(set(evidence_refs or [])),
+                "state": state.dependency_hash,
+            },
             sort_keys=True,
             separators=(",", ":"),
         )
@@ -116,46 +124,121 @@ class CareerCopilot:
         )
 
     def execute(self, proposal_id: str) -> dict[str, Any]:
-        proposal = self.repository.get_proposal(proposal_id)
-        if proposal is None:
-            raise KeyError(proposal_id)
-        if proposal.status != ProposalStatus.APPROVED:
-            raise PermissionError("Execution requires an approved proposal")
-        self.registry.validate_input(proposal.action_type, proposal.after_preview)
-        result = self._execute_local(proposal)
-        self.repository.record_execution(
-            proposal, status="executed", result=result, after_snapshot=result
-        )
-        updated = self.repository.transition_proposal(
-            proposal_id,
-            expected={ProposalStatus.APPROVED},
-            target=ProposalStatus.EXECUTED,
-            timestamp_field="executed_at",
-        )
+        """Apply an approved proposal, re-checking every approval condition at the effect.
+
+        Inside one ``BEGIN IMMEDIATE`` transaction: the proposal must still be approved, not
+        expired, and its dependency hash must match the career state as it is *now*. The local
+        effect, the execution record, the status transition and the audit event then commit
+        together, so a crash cannot leave an effect without its lifecycle (or the reverse) and
+        a concurrent second ``execute`` finds the proposal already executed.
+        """
+        rejection = ""
+        updated: ProposedAction | None = None
+        result: dict[str, Any] = {}
+        with self.repository.write_transaction() as connection:
+            proposal = self.repository._proposal_in(connection, proposal_id)
+            if proposal is None:
+                raise KeyError(proposal_id)
+            if proposal.status != ProposalStatus.APPROVED:
+                raise PermissionError("Execution requires an approved proposal")
+            self.registry.validate_input(proposal.action_type, proposal.after_preview)
+            # The write lock is held, so no other writer can change the state between this
+            # check and the effect below (WAL readers see the same committed snapshot).
+            current_hash = self.state_engine.build().dependency_hash
+            closed: ProposedAction | None = None
+            if proposal.expires_at and proposal.expires_at <= utc_now():
+                closed = self.repository._set_proposal_status(
+                    connection, proposal, ProposalStatus.EXPIRED
+                )
+                rejection = "Proposal expired before execution; propose it again"
+            elif proposal.dependency_hash and proposal.dependency_hash != current_hash:
+                closed = self.repository._set_proposal_status(
+                    connection, proposal, ProposalStatus.STALE
+                )
+                rejection = "Proposal is stale: its career-state dependencies changed"
+            if closed is not None:
+                self.repository._insert_audit(
+                    connection,
+                    "system",
+                    f"proposal_{closed.status}",
+                    proposal=closed,
+                    reason=rejection,
+                )
+            else:
+                result = self._execute_local(connection, proposal)
+                self.repository._insert_execution(
+                    connection, proposal, status="executed", result=result, after_snapshot=result
+                )
+                updated = self.repository._set_proposal_status(
+                    connection, proposal, ProposalStatus.EXECUTED, timestamp_field="executed_at"
+                )
+                self.repository._insert_audit(
+                    connection, "human", "proposal_executed", proposal=updated
+                )
+        if rejection or updated is None:
+            raise PermissionError(rejection or "Execution did not complete")
         return {"proposal": updated.model_dump(mode="json"), "result": result}
 
     def undo(self, proposal_id: str) -> ProposedAction:
-        proposal = self.repository.get_proposal(proposal_id)
-        if proposal is None:
-            raise KeyError(proposal_id)
-        if proposal.status != ProposalStatus.EXECUTED or not proposal.reversible:
-            raise PermissionError("Only executed reversible proposals can be undone")
-        if proposal.action_type == "create_task":
-            task_id = self._task_id(proposal)
-            with connect_database(self.repository.database_path) as connection:
-                connection.execute("DELETE FROM career_tasks WHERE task_id=?", (task_id,))
-        elif proposal.action_type == "archive_evidence":
-            old = proposal.before_snapshot.get("review_status", "candidate")
-            self.repository.review_node(proposal.after_preview["node_id"], ReviewStatus(old))
-        else:
-            raise PermissionError("Undo strategy is not executable")
-        updated = self.repository.transition_proposal(
-            proposal_id,
-            expected={ProposalStatus.EXECUTED},
-            target=ProposalStatus.UNDONE,
-        )
-        self.repository.audit("human", "proposal_undone", proposal=updated)
+        """Revert an executed proposal only if its effect is still exactly as it left it.
+
+        The execution record holds the row version the effect produced. If the evidence or
+        task was changed afterwards (by the user or another action) the undo is refused as a
+        conflict instead of overwriting the newer decision (no lost update).
+        """
+        with self.repository.write_transaction() as connection:
+            proposal = self.repository._proposal_in(connection, proposal_id)
+            if proposal is None:
+                raise KeyError(proposal_id)
+            if proposal.status != ProposalStatus.EXECUTED or not proposal.reversible:
+                raise PermissionError("Only executed reversible proposals can be undone")
+            execution = self.repository.last_execution(connection, proposal_id)
+            effect = execution["result"] if execution else {}
+            if proposal.action_type == "create_task":
+                self._undo_task(connection, proposal, effect)
+            elif proposal.action_type == "archive_evidence":
+                self._undo_archive(connection, proposal, effect)
+            else:
+                raise PermissionError("Undo strategy is not executable")
+            self.repository._insert_execution(
+                connection,
+                proposal,
+                status="undone",
+                result={"undone": True},
+                after_snapshot=proposal.before_snapshot,
+            )
+            updated = self.repository._set_proposal_status(
+                connection, proposal, ProposalStatus.UNDONE
+            )
+            self.repository._insert_audit(connection, "human", "proposal_undone", proposal=updated)
         return updated
+
+    def _undo_task(self, connection: Any, proposal: ProposedAction, effect: dict[str, Any]) -> None:
+        if not effect.get("created"):
+            raise ValueError("Undo conflict: the task was not created by this proposal")
+        cursor = connection.execute(
+            "DELETE FROM career_tasks WHERE task_id=? AND status='pending' AND updated_at=?",
+            (self._task_id(proposal), effect.get("updated_at")),
+        )
+        if cursor.rowcount != 1:
+            raise ValueError("Undo conflict: the task changed after execution")
+
+    @staticmethod
+    def _undo_archive(connection: Any, proposal: ProposedAction, effect: dict[str, Any]) -> None:
+        old = ReviewStatus(proposal.before_snapshot.get("review_status", "candidate"))
+        cursor = connection.execute(
+            """UPDATE evidence_nodes SET review_status=?, updated_at=?
+            WHERE node_id=? AND review_status=? AND updated_at=?""",
+            (
+                old,
+                utc_now().isoformat(),
+                proposal.after_preview["node_id"],
+                effect.get("review_status"),
+                effect.get("updated_at"),
+            ),
+        )
+        if cursor.rowcount != 1:
+            raise ValueError("Undo conflict: the evidence changed after execution")
 
     def plan(self, intent: str) -> CopilotPlan:
         if not intent.strip():
@@ -201,34 +284,58 @@ class CareerCopilot:
         self.repository.audit("human", f"plan_{target}", payload={"plan_id": plan_id})
         return plan
 
-    def _execute_local(self, proposal: ProposedAction) -> dict[str, Any]:
+    def _execute_local(self, connection: Any, proposal: ProposedAction) -> dict[str, Any]:
+        """Write the effect on the caller's transaction; never commits on its own."""
         if proposal.action_type == "create_task":
-            task_id = self._task_id(proposal)
-            payload = proposal.after_preview
-            now = utc_now().isoformat()
-            with connect_database(self.repository.database_path) as connection:
-                connection.execute(
-                    """INSERT INTO career_tasks
-                    (task_id,task_type,title,status,priority,due_at,payload,created_at,updated_at)
-                    VALUES (?,?,?,'pending',?,?,?, ?, ?)
-                    ON CONFLICT(task_id) DO NOTHING""",
-                    (
-                        task_id,
-                        payload["task_type"],
-                        payload["title"],
-                        payload["priority"],
-                        payload.get("due_at"),
-                        "{}",
-                        now,
-                        now,
-                    ),
-                )
-            return {"task_id": task_id, "created": True}
-        if proposal.action_type == "archive_evidence":
-            node = self.repository.review_node(
-                proposal.after_preview["node_id"], ReviewStatus.STALE
+            # Same row shape as CareerWorkflowRepository.save_task, so /api/career/tasks
+            # (which rebuilds CareerTask from ``payload``) can read Copilot-created tasks.
+            payload = CreateTaskInput.model_validate(proposal.after_preview)
+            task = CareerTask(
+                task_id=self._task_id(proposal),
+                task_type=payload.task_type,
+                title=payload.title,
+                priority=payload.priority,
+                due_at=payload.due_at,
+                related_refs=[f"proposal:{proposal.proposal_id}", *proposal.evidence_refs],
             )
-            return {"node_id": node.node_id, "review_status": node.review_status}
+            serialized = task.model_dump(mode="json")
+            cursor = connection.execute(
+                """INSERT INTO career_tasks
+                (task_id,task_type,title,status,priority,due_at,payload,created_at,updated_at)
+                VALUES (?,?,?,?,?,?,?,?,?)
+                ON CONFLICT(task_id) DO NOTHING""",
+                (
+                    task.task_id,
+                    task.task_type,
+                    task.title,
+                    task.status,
+                    task.priority,
+                    task.due_at.isoformat() if task.due_at else None,
+                    task.model_dump_json(),
+                    serialized["created_at"],
+                    serialized["updated_at"],
+                ),
+            )
+            created = cursor.rowcount == 1
+            return {
+                "task_id": task.task_id,
+                "created": created,
+                "updated_at": serialized["updated_at"] if created else None,
+            }
+        if proposal.action_type == "archive_evidence":
+            node_id = proposal.after_preview["node_id"]
+            updated_at = utc_now().isoformat()
+            cursor = connection.execute(
+                "UPDATE evidence_nodes SET review_status=?, updated_at=? WHERE node_id=?",
+                (ReviewStatus.STALE, updated_at, node_id),
+            )
+            if cursor.rowcount != 1:
+                raise KeyError(node_id)
+            return {
+                "node_id": node_id,
+                "review_status": ReviewStatus.STALE.value,
+                "updated_at": updated_at,
+            }
         if proposal.action_type.startswith("draft_"):
             return {"draft": proposal.after_preview, "local_only": True}
         raise PermissionError(f"Tool has no safe local executor: {proposal.action_type}")

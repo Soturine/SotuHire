@@ -4,20 +4,38 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import AwareDatetime, BaseModel, ConfigDict, Field, field_validator
+
+TaskType = Literal[
+    "follow_up",
+    "interview",
+    "application",
+    "document",
+    "certification",
+    "project",
+    "study",
+    "networking",
+    "custom",
+]
+TaskPriority = Literal["low", "medium", "high"]
 
 
 class CreateTaskInput(BaseModel):
     model_config = ConfigDict(extra="forbid")
     title: str = Field(min_length=1, max_length=240)
-    task_type: str = Field(
-        default="custom",
-        pattern="^(follow_up|interview|application|document|certification|project|study|networking|custom)$",
-    )
-    priority: str = Field(default="medium", pattern="^(low|medium|high)$")
-    due_at: str | None = None
+    # Same vocabulary as CareerTask: a Copilot task must be a valid Career task.
+    task_type: TaskType = "custom"
+    priority: TaskPriority = "medium"
+    # Timezone-aware only: a naive "2026-12-01T12:00" is ambiguous for a deadline.
+    due_at: AwareDatetime | None = None
+
+    @field_validator("due_at")
+    @classmethod
+    def normalize_due_at(cls, value: datetime | None) -> datetime | None:
+        return value.astimezone(UTC) if value is not None else None
 
 
 class ArchiveEvidenceInput(BaseModel):

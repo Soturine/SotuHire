@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
+import sqlite3
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -28,6 +32,12 @@ from .models import (
 
 def utc_now() -> datetime:
     return datetime.now(UTC)
+
+
+OPEN_PROPOSAL_STATUSES = frozenset(
+    {ProposalStatus.PROPOSED, ProposalStatus.REVIEWING, ProposalStatus.APPROVED}
+)
+_PROPOSAL_TIMESTAMPS = frozenset({"approved_at", "executed_at", "rejected_at"})
 
 
 def _json(value: Any) -> str:
@@ -130,6 +140,11 @@ class CopilotRepository:
         return self.save_node(updated)
 
     def save_edge(self, edge: EvidenceEdge) -> EvidenceEdge:
+        """Upsert by (source, target, relation) and return the row actually persisted.
+
+        The natural key wins over a caller-supplied ``edge_id``: when the relation already
+        exists its original identity is kept, so the response must be read back.
+        """
         self._ensure()
         with connect_database(self.database_path) as connection:
             connection.execute(
@@ -155,7 +170,12 @@ class CopilotRepository:
                     edge.stale_at.isoformat() if edge.stale_at else None,
                 ),
             )
-        return edge
+            row = connection.execute(
+                """SELECT * FROM evidence_edges
+                WHERE source_id=? AND target_id=? AND relation_type=?""",
+                (edge.source_id, edge.target_id, edge.relation_type),
+            ).fetchone()
+        return self._edge(row)
 
     def list_edges(self, *, node_id: str = "", limit: int = 500) -> list[EvidenceEdge]:
         self._ensure()
@@ -219,14 +239,31 @@ class CopilotRepository:
         return [self._portfolio(row) for row in rows]
 
     def save_proposal(self, proposal: ProposedAction) -> ProposedAction:
+        """Persist a proposal, deduplicating retries of the same still-open intent.
+
+        ``idempotency_key`` identifies a business intent (tool, payload, evidence and career
+        state). A retry while a proposal with that key is still open returns it unchanged.
+        Once that proposal is closed (rejected, expired, stale, executed, undone, failed) the
+        same intent is a new decision: it gets a fresh proposal under a derived generation key,
+        so a rejection is never silently returned as the answer to a new request.
+        """
         self._ensure()
+        base_key = proposal.idempotency_key
         with connect_database(self.database_path) as connection:
-            existing = connection.execute(
-                "SELECT * FROM proposed_actions WHERE idempotency_key=?",
-                (proposal.idempotency_key,),
-            ).fetchone()
-            if existing:
-                return self._proposal(existing)
+            connection.execute("BEGIN IMMEDIATE")
+            generation = 0
+            key = base_key
+            while True:
+                existing = connection.execute(
+                    "SELECT * FROM proposed_actions WHERE idempotency_key=?", (key,)
+                ).fetchone()
+                if existing is None:
+                    break
+                if ProposalStatus(existing["status"]) in OPEN_PROPOSAL_STATUSES:
+                    return self._proposal(existing)
+                generation += 1
+                key = hashlib.sha256(f"{base_key}:{generation}".encode()).hexdigest()
+            proposal = proposal.model_copy(update={"idempotency_key": key})
             connection.execute(
                 """INSERT INTO proposed_actions
                 (proposal_id,action_type,title,description,reason,source,evidence_refs,
@@ -258,7 +295,9 @@ class CopilotRepository:
                     proposal.expires_at.isoformat() if proposal.expires_at else None,
                 ),
             )
-        self.audit("system", "proposal_created", proposal=proposal, reason=proposal.reason)
+            self._insert_audit(
+                connection, "system", "proposal_created", proposal=proposal, reason=proposal.reason
+            )
         return proposal
 
     def get_proposal(self, proposal_id: str) -> ProposedAction | None:
@@ -291,38 +330,85 @@ class CopilotRepository:
         timestamp_field: str = "",
         current_dependency_hash: str | None = None,
     ) -> ProposedAction:
-        proposal = self.get_proposal(proposal_id)
-        if proposal is None:
-            raise KeyError(proposal_id)
-        if ProposalStatus(proposal.status) not in expected:
-            raise ValueError(f"Invalid proposal transition: {proposal.status} -> {target}")
-        now = utc_now()
-        if proposal.expires_at and proposal.expires_at <= now:
-            target = ProposalStatus.EXPIRED
-        elif (
-            current_dependency_hash is not None
-            and proposal.dependency_hash
-            and proposal.dependency_hash != current_dependency_hash
-        ):
-            target = ProposalStatus.STALE
-        with connect_database(self.database_path) as connection:
-            assignments = ["status=?"]
-            values: list[object] = [target]
-            if timestamp_field:
-                assignments.append(f"{timestamp_field}=?")
-                values.append(now.isoformat())
-            values.extend([proposal_id, proposal.status])
-            cursor = connection.execute(
-                f"UPDATE proposed_actions SET {', '.join(assignments)} "
-                "WHERE proposal_id=? AND status=?",
-                values,
+        with self.write_transaction() as connection:
+            proposal = self._proposal_in(connection, proposal_id)
+            if proposal is None:
+                raise KeyError(proposal_id)
+            if ProposalStatus(proposal.status) not in expected:
+                raise ValueError(f"Invalid proposal transition: {proposal.status} -> {target}")
+            if proposal.expires_at and proposal.expires_at <= utc_now():
+                target, timestamp_field = ProposalStatus.EXPIRED, ""
+            elif (
+                current_dependency_hash is not None
+                and proposal.dependency_hash
+                and proposal.dependency_hash != current_dependency_hash
+            ):
+                target, timestamp_field = ProposalStatus.STALE, ""
+            updated = self._set_proposal_status(
+                connection, proposal, target, timestamp_field=timestamp_field
             )
-            if cursor.rowcount != 1:
-                raise ValueError("Concurrent proposal transition rejected")
-        updated = self.get_proposal(proposal_id)
-        assert updated is not None
-        self.audit("human", f"proposal_{target}", proposal=updated)
+            self._insert_audit(connection, "human", f"proposal_{target}", proposal=updated)
         return updated
+
+    @contextmanager
+    def write_transaction(self) -> Iterator[sqlite3.Connection]:
+        """One SQLite write transaction holding the write lock from its first statement.
+
+        ``BEGIN IMMEDIATE`` serializes concurrent writers, so a check made inside the block
+        (status, expiry, dependency hash, current row version) still holds when the effect is
+        written. Everything in the block commits together or rolls back together.
+        """
+        self._ensure()
+        with connect_database(self.database_path) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            yield connection
+
+    def _proposal_in(
+        self, connection: sqlite3.Connection, proposal_id: str
+    ) -> ProposedAction | None:
+        row = connection.execute(
+            "SELECT * FROM proposed_actions WHERE proposal_id=?", (proposal_id,)
+        ).fetchone()
+        return self._proposal(row) if row else None
+
+    def _set_proposal_status(
+        self,
+        connection: sqlite3.Connection,
+        proposal: ProposedAction,
+        target: ProposalStatus,
+        *,
+        timestamp_field: str = "",
+    ) -> ProposedAction:
+        assignments = ["status=?"]
+        values: list[object] = [target]
+        if timestamp_field:
+            if timestamp_field not in _PROPOSAL_TIMESTAMPS:
+                raise ValueError(f"Unsupported proposal timestamp: {timestamp_field}")
+            assignments.append(f"{timestamp_field}=?")
+            values.append(utc_now().isoformat())
+        values.extend([proposal.proposal_id, proposal.status])
+        cursor = connection.execute(
+            f"UPDATE proposed_actions SET {', '.join(assignments)} "
+            "WHERE proposal_id=? AND status=?",
+            values,
+        )
+        if cursor.rowcount != 1:
+            raise ValueError("Concurrent proposal transition rejected")
+        updated = self._proposal_in(connection, proposal.proposal_id)
+        assert updated is not None
+        return updated
+
+    def last_execution(
+        self, connection: sqlite3.Connection, proposal_id: str
+    ) -> dict[str, Any] | None:
+        row = connection.execute(
+            """SELECT * FROM action_executions WHERE proposal_id=? AND status='executed'
+            ORDER BY executed_at DESC LIMIT 1""",
+            (proposal_id,),
+        ).fetchone()
+        if row is None:
+            return None
+        return {"execution_id": row["execution_id"], "result": _loads(row["result"])}
 
     def record_execution(
         self,
@@ -332,22 +418,35 @@ class CopilotRepository:
         result: dict[str, Any],
         after_snapshot: dict[str, Any],
     ) -> str:
-        execution_id = uuid4().hex
         with connect_database(self.database_path) as connection:
-            connection.execute(
-                """INSERT INTO action_executions
-                (execution_id,proposal_id,status,result,before_snapshot,after_snapshot,executed_at)
-                VALUES (?,?,?,?,?,?,?)""",
-                (
-                    execution_id,
-                    proposal.proposal_id,
-                    status,
-                    _json(result),
-                    _json(proposal.before_snapshot),
-                    _json(after_snapshot),
-                    utc_now().isoformat(),
-                ),
+            return self._insert_execution(
+                connection, proposal, status=status, result=result, after_snapshot=after_snapshot
             )
+
+    @staticmethod
+    def _insert_execution(
+        connection: sqlite3.Connection,
+        proposal: ProposedAction,
+        *,
+        status: str,
+        result: dict[str, Any],
+        after_snapshot: dict[str, Any],
+    ) -> str:
+        execution_id = uuid4().hex
+        connection.execute(
+            """INSERT INTO action_executions
+            (execution_id,proposal_id,status,result,before_snapshot,after_snapshot,executed_at)
+            VALUES (?,?,?,?,?,?,?)""",
+            (
+                execution_id,
+                proposal.proposal_id,
+                status,
+                _json(result),
+                _json(proposal.before_snapshot),
+                _json(after_snapshot),
+                utc_now().isoformat(),
+            ),
+        )
         return execution_id
 
     def audit(
@@ -361,23 +460,37 @@ class CopilotRepository:
     ) -> None:
         self._ensure()
         with connect_database(self.database_path) as connection:
-            connection.execute(
-                """INSERT INTO copilot_audit_events
-                (event_id,actor,event_type,proposal_id,evidence_refs,reason,before_snapshot,
-                 after_snapshot,payload,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (
-                    uuid4().hex,
-                    actor,
-                    event_type,
-                    proposal.proposal_id if proposal else None,
-                    _json(proposal.evidence_refs if proposal else []),
-                    reason,
-                    _json(proposal.before_snapshot if proposal else {}),
-                    _json(proposal.after_preview if proposal else {}),
-                    _json(payload or {}),
-                    utc_now().isoformat(),
-                ),
+            self._insert_audit(
+                connection, actor, event_type, proposal=proposal, reason=reason, payload=payload
             )
+
+    @staticmethod
+    def _insert_audit(
+        connection: sqlite3.Connection,
+        actor: str,
+        event_type: str,
+        *,
+        proposal: ProposedAction | None = None,
+        reason: str = "",
+        payload: dict[str, Any] | None = None,
+    ) -> None:
+        connection.execute(
+            """INSERT INTO copilot_audit_events
+            (event_id,actor,event_type,proposal_id,evidence_refs,reason,before_snapshot,
+             after_snapshot,payload,created_at) VALUES (?,?,?,?,?,?,?,?,?,?)""",
+            (
+                uuid4().hex,
+                actor,
+                event_type,
+                proposal.proposal_id if proposal else None,
+                _json(proposal.evidence_refs if proposal else []),
+                reason,
+                _json(proposal.before_snapshot if proposal else {}),
+                _json(proposal.after_preview if proposal else {}),
+                _json(payload or {}),
+                utc_now().isoformat(),
+            ),
+        )
 
     def save_career_state(
         self, profile_id: str, dependency_hash: str, payload: dict[str, Any], trigger: str

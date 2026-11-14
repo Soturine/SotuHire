@@ -33,7 +33,12 @@ function CareerPage() {
 
   const saveTask = useMutation({
     mutationFn: () =>
-      api.saveTask({ title: taskTitle, task_type: "custom", due_at: dueAt || null }),
+      api.saveTask({
+        title: taskTitle,
+        task_type: "custom",
+        // datetime-local has no zone; send the user's local wall time as an explicit instant.
+        due_at: dueAt ? new Date(dueAt).toISOString() : null,
+      }),
     onSuccess: async () => {
       setTaskTitle("");
       setDueAt("");
