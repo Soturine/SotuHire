@@ -170,14 +170,18 @@ O executor chama um application service local depois da aprovação. Ele não en
 direto ao SQLite, filesystem ou browser. O resultado da execução e os snapshots relevantes são
 registrados separadamente da proposta.
 
-Idempotência evita efeitos duplicados em retries. Repetir a mesma intenção enquanto a proposta
-compatível ainda existe retorna o mesmo identificador em vez de multiplicar ações.
+Idempotência evita efeitos duplicados em retries. Repetir a mesma intenção (tool, payload,
+evidence refs e estado) enquanto a proposta ainda está aberta retorna o mesmo identificador; depois
+de rejeitada, expirada, stale ou executada, a mesma intenção abre uma proposta nova em vez de
+devolver a decisão antiga. A execução revalida status, expiry e dependency hash na mesma transação
+que grava o efeito.
 
 ## Undo
 
 Ações reversíveis precisam declarar uma estratégia executável antes de serem propostas. Undo usa o
 snapshot anterior para restaurar o estado suportado, mas não apaga o evento original. Executar e
-desfazer são dois fatos do histórico.
+desfazer são dois fatos do histórico. O undo é condicional: se a evidência ou a tarefa mudou depois
+da execução, ele é recusado como conflito em vez de sobrescrever a decisão mais recente.
 
 Nem toda ação seria reversível no mundo externo; por isso tools de submit, e-mail ou pagamento não
 fazem parte da v2.0. O undo existente se limita a efeitos locais que o SotuHire controla.

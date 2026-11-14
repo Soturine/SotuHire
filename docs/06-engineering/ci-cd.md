@@ -50,7 +50,7 @@ a GitHub Release é criada manualmente depois dos gates verdes.
 - CodeQL analisa Python e JavaScript/TypeScript;
 - Dependabot propõe atualizações pequenas e revisáveis;
 - `pip-audit` bloqueia vulnerabilidade Python não triada e `npm audit` exige triagem contextual;
-- o SBOM CycloneDX inventaria dependências diretas Python/web e acompanha os assets de release;
+- o SBOM CycloneDX inventaria todas as dependências resolvidas no `package-lock.json` e o fechamento transitivo Python do ambiente instalado (sem lockfile Python), é verificado por `scripts/verify_sbom.py` e o upload falha se o arquivo faltar;
 - chamadas reais de IA e scraping de sites reais não rodam no CI;
 - nenhum secret é necessário no workflow padrão.
 

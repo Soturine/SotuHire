@@ -23,7 +23,7 @@ seguem sempre **prévia → evidências → impacto → aprovação humana → e
 - Human-Approved Copilot com planos persistentes, preview, impacto, aprovação, idempotência, audit e undo.
 - Arquitetura local-first e privacy-first, com contexto mínimo e providers externos opt-in.
 - Frontend React/TypeScript, API FastAPI/Pydantic e extensão Chrome MV3 ligada ao Local Companion.
-- Qualidade automatizada com análise estática, testes de integração/E2E cross-browser, CodeQL e SBOM.
+- Qualidade automatizada com análise estática, testes de integração, E2E Chromium no CI (Firefox/WebKit sob demanda: `npm run test:e2e:cross-browser`), CodeQL e SBOM verificado.
 
 ## Stack
 

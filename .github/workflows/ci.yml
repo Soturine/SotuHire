@@ -184,7 +184,7 @@ jobs:
 
       # Every E2E spec in Chromium (copilot-v2 and application-lab included);
       # release-capture specs skip themselves unless CAPTURE_* is set.
-      # Firefox/WebKit run in the release gate (npm run test:e2e:cross-browser).
+      # Firefox/WebKit are not in CI; run npm run test:e2e:cross-browser before a release.
       - name: Browser E2E (Chromium, all specs)
         working-directory: apps/web
         run: npx playwright test --project=chromium

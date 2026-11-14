@@ -63,6 +63,9 @@ nav:
       - Aceite: 09-testing/v2.0-acceptance-matrix.md
       - Release notes: releases/v2.0.md
   - Auditoria:
+      - Assurance independente 2026-11: 00-audit/2026-11-independent-assurance-audit.md
+      - Dependências 2026-11: 00-audit/2026-11-dependency-review.md
+      - Dogfood e pesquisa 2026-11: 00-audit/2026-11-dogfood-and-external-research.md
       - Baseline v2.0: 00-audit/v2.0-baseline-full-repository-audit.md
       - Arquitetura/dead code v2.0: 00-audit/v2.0-dead-code-dedup-and-architecture-audit.md
       - Wiring Copilot v2.0: 00-audit/v2.0-ai-and-copilot-wiring-audit.md
