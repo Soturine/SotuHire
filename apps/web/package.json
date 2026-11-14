@@ -71,6 +71,7 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@emnapi/core": "^1.11.2",
     "@emnapi/runtime": "^1.11.2",
     "@eslint/js": "^10.0.1",
