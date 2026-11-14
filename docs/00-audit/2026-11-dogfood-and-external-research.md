@@ -52,10 +52,21 @@ validou os gates do Engine.
 
 As três branches foram enviadas ao remoto em 2026-11-14 (sem PR, sem tag, sem release).
 
+## Ciclo agent-led do adendo v4 (CP-04)
+
+O ciclo pergunta → execução → contraprova → correção → reteste foi feito sobre um defeito real do produto
+(SH-NEW-014) e deixou três correções nos repositórios donos, cada uma retestada no SotuHire:
+Assertiva `fee2c44` (erros de coleta atribuídos ao ambiente não preparado; a primeira versão quebrava a
+auditoria e o reteste cruzado pegou), Engine `35f9951` (orientação para comparar antes/depois com clones;
+o `DIFFERENT_TARGET` com worktree era limite intencional, não bug) e Framework `7e1ecba` (controle só
+alcançado por testes é proteção não ligada). O Engine foi chamado também pelo servidor MCP, com as mesmas
+218 impressões digitais da CLI. Recibo completo, com hashes: [ledger de checkpoints](2026-11-checkpoint-ledger.md).
+
 ## Lacunas das ferramentas ainda abertas
 
-- **Assertiva**: classifica como `FAIL` de projeto um build que falhou por dependência do
-  backend ausente no interpretador usado pelo auditor; deveria ser `BLOCKED_ENVIRONMENT`.
+- **Assertiva**: um build que falhou por dependência do backend ausente no interpretador do auditor
+  ainda aparece como `FAIL` de artefato (`ARTIFACT_QUALIFICATION_FAILED`); a parte de coleta de testes foi
+  corrigida em `fee2c44`, a de artefato continua aberta.
 - **Assertiva**: não tem sinal para "transição de ciclo de vida não exercitada" (aprovar → mudar
   dependência → executar). Os defeitos P0 desta auditoria passaram por todos os sinais estáticos.
 - **Engine**: o sinal de não-referenciado é preciso, mas é só Python; consumidores TS/JS de

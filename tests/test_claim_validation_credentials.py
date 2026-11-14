@@ -42,3 +42,18 @@ def test_only_claims_missing_from_every_evidence_text_are_unsupported():
     assert unsupported_credential_claims(text, evidence) == ["MBA"]
     assert unsupported_credential_claims(text, []) == ["CRM", "doutorado", "MBA"]
     assert unsupported_credential_claims("Atendimento ao cliente", []) == []
+
+
+def test_a_statement_without_evidence_is_flagged_like_a_claim():
+    # Cosmic Ray (via Assertiva --mutate) showed `claim or statement` -> `claim and statement`
+    # survived: no test used the `statement` key.
+    from modules.ai.claim_validation import validate_forbidden_claims
+
+    result = validate_forbidden_claims(
+        {"items": [{"statement": "Possui OAB ativa", "evidence": []}]}, []
+    )
+    assert result.unsupported_paths == ["items[0]"]
+    supported = validate_forbidden_claims(
+        {"items": [{"statement": "Possui OAB ativa", "evidence": ["doc#1"]}]}, []
+    )
+    assert supported.unsupported_paths == []
