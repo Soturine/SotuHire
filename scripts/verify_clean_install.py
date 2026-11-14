@@ -89,7 +89,13 @@ def main() -> None:
             env = {**os.environ, "SOTUHIRE_E2E_PORT": "57325"}
             _run([npm, "run", "test:e2e", "--", "--project=chromium"], web, env=env)
 
-        print(f"Clean install verified from commit archive: {checkout}")
+        mode = (
+            "clean install (fresh venv, pip install -e .[dev])"
+            if args.install
+            else "archive validation only (reused the calling interpreter's packages)"
+        )
+        e2e = "Chromium E2E skipped" if args.skip_e2e else "Chromium E2E run"
+        print(f"Verified from commit archive: {mode}; {e2e}: {checkout}")
 
 
 def _require(command: str) -> None:

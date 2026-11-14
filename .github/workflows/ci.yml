@@ -81,8 +81,10 @@ jobs:
           python scripts/check_data_health.py
           # The dedicated frontend job installs Chromium and runs E2E. Keep
           # this archive validation browser-independent to avoid duplicating
-          # a large browser install in the Python quality job.
-          python scripts/verify_clean_install.py --skip-e2e
+          # a large browser install in the Python quality job. --install makes
+          # it a real clean install: a fresh venv from the commit archive, not
+          # the packages this job already installed.
+          python scripts/verify_clean_install.py --install --skip-e2e
 
       - name: Measure coverage baseline
         run: pytest --cov=modules --cov=apps/api --cov-report=term-missing --cov-report=json:coverage.json
@@ -92,6 +94,7 @@ jobs:
         with:
           name: python-coverage
           path: coverage.json
+          if-no-files-found: error
 
       - name: Secret pattern scan
         run: python scripts/scan_secrets.py --paths . data dist site outputs benchmarks
@@ -99,13 +102,15 @@ jobs:
       - name: Dependency audit and CycloneDX SBOM
         run: |
           pip-audit
-          python scripts/build_sbom.py
+          python scripts/build_sbom.py --output dist/sotuhire-sbom.cdx.json
+          python scripts/verify_sbom.py dist/sotuhire-sbom.cdx.json
 
       - name: Upload CycloneDX SBOM
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: sotuhire-sbom
-          path: dist/sotuhire-sbom-v1.11.0.cdx.json
+          path: dist/sotuhire-sbom.cdx.json
+          if-no-files-found: error
 
   ai-quality:
     name: AI golden, injection and local regression
@@ -210,3 +215,4 @@ jobs:
         with:
           name: sotuhire-extension
           path: dist/sotuhire-extension-*.zip
+          if-no-files-found: error
