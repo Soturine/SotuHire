@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Literal, cast
+from typing import Any, cast, get_args
 
 from pydantic import BaseModel, Field
 
@@ -11,11 +11,14 @@ from modules.ai.prompt_loader import default_prompt_registry
 from modules.ai.prompt_registry import PromptRegistry
 from modules.ai.schemas.common import ConfidenceSummary, CredentialSignal, StrictSchema
 from modules.ai.schemas.job_extraction import (
+    JobContractType,
     JobDomainClassification,
     JobExtractionOutput,
     JobIdentity,
     JobRequirement,
     JobSeniority,
+    JobSeniorityLevel,
+    JobWorkModel,
     RedFlag,
     RequirementCategory,
     RequirementCriticality,
@@ -28,32 +31,6 @@ from modules.domain_intelligence.domain_classifier import classify_domain
 from modules.domain_intelligence.requirement_types import classify_requirement
 from modules.parsers.job_description_parser import parse_job_description
 from modules.schemas.job_posting import JobPostingSchema
-
-JobWorkModel = Literal["remote", "hybrid", "onsite", "field", "unknown"]
-JobContractType = Literal[
-    "clt",
-    "pj",
-    "internship",
-    "temporary",
-    "freelance",
-    "trainee",
-    "apprentice",
-    "public_sector",
-    "unknown",
-]
-JobSeniorityLevel = Literal[
-    "intern",
-    "apprentice",
-    "assistant",
-    "junior",
-    "mid",
-    "senior",
-    "specialist",
-    "coordinator",
-    "manager",
-    "director",
-    "unknown",
-]
 
 
 class StructuredJobExtractionResult(StrictSchema):
@@ -257,26 +234,7 @@ def _requirement_from_text(
     classification = classify_requirement(text)
     category = (
         classification.category
-        if classification.category
-        in {
-            "education",
-            "hard_skill",
-            "soft_skill",
-            "tool",
-            "software",
-            "equipment",
-            "certification",
-            "professional_license",
-            "language",
-            "experience",
-            "methodology",
-            "regulation",
-            "responsibility",
-            "availability",
-            "location",
-            "portfolio",
-            "other",
-        }
+        if classification.category in get_args(RequirementCategory)
         else "other"
     )
     requirement_importance = (
@@ -284,7 +242,7 @@ def _requirement_from_text(
     )
     criticality = (
         classification.criticality
-        if classification.criticality in {"low", "medium", "high", "knockout"}
+        if classification.criticality in get_args(RequirementCriticality)
         else "medium"
     )
     return JobRequirement(

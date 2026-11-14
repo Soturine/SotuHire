@@ -44,13 +44,13 @@ Execuções (relatórios brutos fora do repositório; SHA-256 de cada um abaixo)
 | --- | --- | --- | --- |
 | Derivanta (Framework) | `feat/approval-consumption-and-required-artifacts` | `security/AI_AGENT_SECURITY.md`: "Approval consumption at the point of effect" (revalidar e consumir a aprovação atomicamente com o efeito, undo condicional, testes que provam). `checklists/RELEASE.md`: artefato obrigatório falha quando falta, nome derivado do manifest, escopo do SBOM declarado e verificado, audit `continue-on-error` não é gate. | `scripts/tests` 26 passed; checks de links/estrutura com a mesma saída antes e depois (4 e 54 itens pré-existentes) |
 | Derivanta Engine | `feat/ci-workflow-checks` | `core/ci_workflows.py` (puro): `ENG-CI-ARTIFACT-OPTIONAL` e `ENG-CI-NONBLOCKING-AUDIT`; leitura limitada no `service`. | suíte própria 951 passed; no SotuHire: `8ea37d7` → 4 candidatos, 4 verdadeiros; HEAD → 1 (o relatório "high" mantido não-bloqueante por política, `ACCEPTED_RISK`) |
-| Assertiva | `fix/precommit-hook-tool-identity` | hooks remotos conhecidos (`ruff-pre-commit`: `ruff`, `ruff-check`, `ruff-format`) mapeados para a ferramenta que rodam, só para aquele repositório; limitação registra que o comando foi inferido. | `tests/test_pre_commit_known_hooks.py`: 3 falham sem o patch, 4 passam com ele. Suíte completa: 1.329 passed; 2 falhas (`test_execution_integrity`, `test_provisioning`) também falham sem o patch neste Windows. A suíte também pegou a falta do template pt-BR da limitação nova, corrigida antes do commit. |
+| Assertiva | `fix/precommit-hook-tool-identity` | hooks remotos conhecidos (`ruff-pre-commit`: `ruff`, `ruff-check`, `ruff-format`) mapeados para a ferramenta que rodam, só para aquele repositório; limitação registra que o comando foi inferido. | `tests/test_pre_commit_known_hooks.py`: 3 falham sem o patch, 4 passam com ele. A suíte também pegou a falta do template pt-BR da limitação nova, corrigida antes do commit. As 2 falhas de Windows (`test_execution_integrity`, `test_provisioning`) eram dos testes (sinal 1 = `CTRL_BREAK_EVENT`; lock liberado de forma assíncrona) e foram corrigidas em `b0dec09`. Suíte completa em `b0dec09`: 1.332 passed, 1 falha só do ambiente (`%TEMP%` bloqueado para a suíte interna; passa com `TEMP` redirecionado). |
 
 As próprias regras de arquitetura do Engine pegaram meu primeiro patch (I/O dentro de `core`,
 regra fora do catálogo de rastreabilidade, módulo fora do mapa de arquitetura) — o dogfood também
 validou os gates do Engine.
 
-Nada disso foi publicado: as branches existem só localmente e não há tag nem release.
+As três branches foram enviadas ao remoto em 2026-11-14 (sem PR, sem tag, sem release).
 
 ## Lacunas das ferramentas ainda abertas
 

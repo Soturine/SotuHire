@@ -4,6 +4,62 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+Trabalho da auditoria independente de 2026-11 (ver `docs/00-audit/2026-11-independent-assurance-audit.md`).
+Nenhuma versão ou tag foi criada.
+
+### Segurança
+
+- O Copilot revalida status, expiração e `dependency_hash` da proposta dentro da mesma transação
+  `BEGIN IMMEDIATE` que grava o efeito, o registro de execução, o status e o audit; aprovar e depois
+  mudar o estado de carreira ou deixar expirar não executa mais a ação.
+- `undo` de arquivamento é condicional: se a evidência foi editada depois da execução, retorna
+  conflito em vez de sobrescrever a edição.
+- O service worker da extensão aceita mensagens privilegiadas só das páginas da própria extensão e
+  monta URLs apenas para rotas conhecidas do Local Companion na origem pareada; um content script não
+  consegue mais desviar o token para outra URL.
+- Pisos de dependências vulneráveis elevados (`pypdf>=6.21.4`, `python-dotenv>=1.2.2`) e lockfile
+  web corrigido por `npm audit fix` (incluindo a crítica em `seroval`).
+- A checagem de campos com cara de credencial antes de chamadas de IA e capturas tem um único dono
+  (`modules/security`); duas das quatro cópias não bloqueavam `headers`.
+
+### Corrigido
+
+- Tarefas criadas pelo Copilot quebravam a listagem de tarefas da Career API (HTTP 500).
+- `create_task` retornava `created: true` mesmo quando a tarefa já existia; propostas rejeitadas ou
+  expiradas eram devolvidas ao repropor; a aresta salva retornava um id diferente do persistido.
+- `due_at` de tarefas agora exige fuso horário e é normalizado para UTC na API e no frontend.
+- Fingerprint do Career State passa a incluir oportunidades e resultados recentes.
+- Página Carreira: lembrete pede a tarefa relacionada explicitamente; o modo demo mostra o que foi
+  salvo na sessão em vez de não fazer nada.
+
+### Alterado
+
+- Instalação padrão sem Streamlit e sem pandas: a interface Streamlit (modo legado/dev desde a
+  v1.4) vai para o extra `legacy-ui`; o fechamento de runtime caiu de 51 para 28 pacotes.
+- Dependências vivem só no `pyproject.toml` com extras `ai`, `browser`, `docs`, `legacy-ui` e `dev`;
+  as mensagens de instalação da UI e da API apontam para eles.
+- Licença declarada como expressão SPDX com `LICENSE` dentro do wheel (o formato antigo deixa de
+  ser aceito pelo setuptools em 2027-02-18).
+- SBOM CycloneDX inventaria o fechamento transitivo Python e todo o lockfile npm, com arestas de
+  dependência, e é verificado no CI; uploads de artefatos obrigatórios falham se o arquivo faltar.
+- CI roda todas as specs E2E em Chromium, a instalação limpa realmente cria um venv novo e
+  `npm audit` bloqueia em severidade crítica.
+- Dependabot agrupa CodeQL e atualizações minor/patch por ecossistema.
+
+### Obsoleto
+
+- `POST /api/v1/profile/import-lattes` é alias de `POST /api/v1/profile/lattes/draft` e aparece como
+  `deprecated` no OpenAPI.
+
+### Removido
+
+- `docs/requirements/*.txt` (duplicavam o `pyproject.toml` e já divergiam dele).
+- Código sem nenhum consumidor: `modules/storage/repositories` (CRUD genérico nunca adotado),
+  `modules/alerts`, `modules/sources/registry.py`, módulos de tracker/currículo/perfil/busca sem
+  importador, dez métricas de avaliação de IA e helpers isolados. Detalhes e prova por item em
+  `docs/00-audit/2026-11-dead-dedupe-triage.md`.
+- Scripts de captura de screenshots de versões passadas (v1.1, v1.9.8, v1.9.9, v1.10.1, v1.11.0).
+
 ## [2.0.0] - 2026-08-10
 
 ### Adicionado

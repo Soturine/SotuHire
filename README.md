@@ -185,6 +185,10 @@ pip install -e ".[dev]"
 cd apps/web && npm ci && cd ../..
 ```
 
+`dev` traz testes, lint, docs e a interface Streamlit legada. Fora dele a instalação padrão
+(`pip install -e .`) só tem API e núcleo; extras opcionais: `ai` (SDK Gemini), `browser`
+(captura assistida via Playwright/CDP), `legacy-ui` (Streamlit) e `docs` (MkDocs).
+
 Em dois terminais:
 
 ```bash

@@ -34,6 +34,32 @@ RequirementCategory = Literal[
     "other",
 ]
 RequirementImportance = Literal["required", "preferred", "optional", "unclear"]
+JobWorkModel = Literal["remote", "hybrid", "onsite", "field", "unknown"]
+JobContractType = Literal[
+    "clt",
+    "pj",
+    "internship",
+    "temporary",
+    "freelance",
+    "trainee",
+    "apprentice",
+    "public_sector",
+    "unknown",
+]
+JobSeniorityLevel = Literal[
+    "intern",
+    "apprentice",
+    "assistant",
+    "junior",
+    "mid",
+    "senior",
+    "specialist",
+    "coordinator",
+    "manager",
+    "director",
+    "unknown",
+]
+
 RequirementCriticality = Literal["low", "medium", "high", "knockout"]
 
 
@@ -55,18 +81,8 @@ class JobIdentity(StrictSchema):
     source: str = ""
     url: str = ""
     location: str = ""
-    work_model: Literal["remote", "hybrid", "onsite", "field", "unknown"] = "unknown"
-    contract_type: Literal[
-        "clt",
-        "pj",
-        "internship",
-        "temporary",
-        "freelance",
-        "trainee",
-        "apprentice",
-        "public_sector",
-        "unknown",
-    ] = "unknown"
+    work_model: JobWorkModel = "unknown"
+    contract_type: JobContractType = "unknown"
     salary: SalaryInfo = Field(default_factory=SalaryInfo)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
 
@@ -85,19 +101,7 @@ class JobDomainClassification(StrictSchema):
 class JobSeniority(StrictSchema):
     """Job seniority requirement."""
 
-    level: Literal[
-        "intern",
-        "apprentice",
-        "assistant",
-        "junior",
-        "mid",
-        "senior",
-        "specialist",
-        "coordinator",
-        "manager",
-        "director",
-        "unknown",
-    ] = "unknown"
+    level: JobSeniorityLevel = "unknown"
     evidence: list[str] = Field(default_factory=list)
     confidence: float = Field(default=0.0, ge=0.0, le=1.0)
 
