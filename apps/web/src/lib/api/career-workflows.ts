@@ -106,6 +106,22 @@ const demoTasks: CareerTask[] = [
   },
 ];
 
+// Demo mode keeps what the user creates for the session, so a save is visible in the
+// list instead of silently vanishing (the API mode never touches this store).
+const demoStore = {
+  interviews: [...demoInterviews],
+  starStories: [] as StarStory[],
+  followUps: [] as FollowUpDraft[],
+  tasks: [...demoTasks],
+  reminders: [] as Reminder[],
+  plans: [] as CareerPlan[],
+};
+
+function demoSave<T>(mode: ApiMode, list: T[], item: T): T {
+  if (mode === "demo") list.unshift(item);
+  return item;
+}
+
 async function request<T>(
   mode: ApiMode,
   baseUrl: string,
@@ -132,66 +148,109 @@ async function request<T>(
 
 export function makeCareerWorkflowApi(mode: ApiMode, baseUrl: string) {
   return {
-    interviews: () => request(mode, baseUrl, "/interviews", undefined, demoInterviews),
+    interviews: () => request(mode, baseUrl, "/interviews", undefined, [...demoStore.interviews]),
     saveInterview: (payload: Partial<InterviewSession>) =>
-      request(mode, baseUrl, "/interviews", post(payload), {
-        ...demoInterviews[0],
-        ...payload,
-        session_id: crypto.randomUUID(),
-      }),
+      request(
+        mode,
+        baseUrl,
+        "/interviews",
+        post(payload),
+        demoSave(mode, demoStore.interviews, {
+          ...demoInterviews[0],
+          ...payload,
+          session_id: crypto.randomUUID(),
+        }),
+      ),
     starStories: () =>
-      request<StarStory[]>(mode, baseUrl, "/interviews/star-stories", undefined, []),
+      request<StarStory[]>(mode, baseUrl, "/interviews/star-stories", undefined, [
+        ...demoStore.starStories,
+      ]),
     saveStarStory: (payload: Partial<StarStory>) =>
-      request(mode, baseUrl, "/interviews/star-stories", post(payload), {
-        story_id: crypto.randomUUID(),
-        title: payload.title ?? "",
-        situation: payload.situation ?? "",
-        task: payload.task ?? "",
-        action: payload.action ?? "",
-        result: payload.result ?? "",
-        evidence_refs: payload.evidence_refs ?? [],
-        review_status: "candidate",
-        created_at: now,
-      }),
+      request(
+        mode,
+        baseUrl,
+        "/interviews/star-stories",
+        post(payload),
+        demoSave(mode, demoStore.starStories, {
+          story_id: crypto.randomUUID(),
+          title: payload.title ?? "",
+          situation: payload.situation ?? "",
+          task: payload.task ?? "",
+          action: payload.action ?? "",
+          result: payload.result ?? "",
+          evidence_refs: payload.evidence_refs ?? [],
+          review_status: "candidate",
+          created_at: now,
+        }),
+      ),
     followUps: () =>
-      request<FollowUpDraft[]>(mode, baseUrl, "/interviews/follow-ups", undefined, []),
+      request<FollowUpDraft[]>(mode, baseUrl, "/interviews/follow-ups", undefined, [
+        ...demoStore.followUps,
+      ]),
     saveFollowUp: (payload: Partial<FollowUpDraft>) =>
-      request(mode, baseUrl, "/interviews/follow-ups", post(payload), {
-        follow_up_id: crypto.randomUUID(),
-        interview_session_id: payload.interview_session_id ?? "",
-        follow_up_type: payload.follow_up_type ?? "status_request",
-        subject: payload.subject ?? "",
-        body: payload.body ?? "",
-        status: "draft",
-        created_at: now,
-      }),
-    tasks: () => request(mode, baseUrl, "/career/tasks", undefined, demoTasks),
+      request(
+        mode,
+        baseUrl,
+        "/interviews/follow-ups",
+        post(payload),
+        demoSave(mode, demoStore.followUps, {
+          follow_up_id: crypto.randomUUID(),
+          interview_session_id: payload.interview_session_id ?? "",
+          follow_up_type: payload.follow_up_type ?? "status_request",
+          subject: payload.subject ?? "",
+          body: payload.body ?? "",
+          status: "draft",
+          created_at: now,
+        }),
+      ),
+    tasks: () => request(mode, baseUrl, "/career/tasks", undefined, [...demoStore.tasks]),
     saveTask: (payload: Partial<CareerTask>) =>
-      request(mode, baseUrl, "/career/tasks", post(payload), {
-        ...demoTasks[0],
-        ...payload,
-        task_id: crypto.randomUUID(),
-      }),
-    reminders: () => request<Reminder[]>(mode, baseUrl, "/career/reminders", undefined, []),
+      request(
+        mode,
+        baseUrl,
+        "/career/tasks",
+        post(payload),
+        demoSave(mode, demoStore.tasks, {
+          ...demoTasks[0],
+          description: "",
+          ...payload,
+          task_id: crypto.randomUUID(),
+        }),
+      ),
+    reminders: () =>
+      request<Reminder[]>(mode, baseUrl, "/career/reminders", undefined, [...demoStore.reminders]),
     saveReminder: (payload: Partial<Reminder>) =>
-      request(mode, baseUrl, "/career/reminders", post(payload), {
-        reminder_id: crypto.randomUUID(),
-        task_id: payload.task_id ?? "",
-        remind_at: payload.remind_at ?? now,
-        title: payload.title ?? "",
-        status: "scheduled",
-      }),
-    plans: () => request<CareerPlan[]>(mode, baseUrl, "/career/plans", undefined, []),
+      request(
+        mode,
+        baseUrl,
+        "/career/reminders",
+        post(payload),
+        demoSave(mode, demoStore.reminders, {
+          reminder_id: crypto.randomUUID(),
+          task_id: payload.task_id ?? "",
+          remind_at: payload.remind_at ?? now,
+          title: payload.title ?? "",
+          status: "scheduled",
+        }),
+      ),
+    plans: () =>
+      request<CareerPlan[]>(mode, baseUrl, "/career/plans", undefined, [...demoStore.plans]),
     savePlan: (payload: Partial<CareerPlan>) =>
-      request(mode, baseUrl, "/career/plans", post(payload), {
-        plan_id: crypto.randomUUID(),
-        title: payload.title ?? "",
-        status: "draft",
-        goals: [],
-        certifications: [],
-        gap_projects: [],
-        created_at: now,
-      }),
+      request(
+        mode,
+        baseUrl,
+        "/career/plans",
+        post(payload),
+        demoSave(mode, demoStore.plans, {
+          plan_id: crypto.randomUUID(),
+          title: payload.title ?? "",
+          status: "draft",
+          goals: [],
+          certifications: [],
+          gap_projects: [],
+          created_at: now,
+        }),
+      ),
     exportCalendar: (payload: Record<string, unknown>) =>
       request<CalendarExport>(mode, baseUrl, "/career/calendar/export", post(payload), {
         file_name: "sotuhire-demo.ics",

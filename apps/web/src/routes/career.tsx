@@ -29,6 +29,8 @@ function CareerPage() {
   const [dueAt, setDueAt] = useState("");
   const [reminderTitle, setReminderTitle] = useState("");
   const [remindAt, setRemindAt] = useState("");
+  // Explicit choice: a reminder is linked to a task only when the user picks one.
+  const [reminderTaskId, setReminderTaskId] = useState("");
   const [planTitle, setPlanTitle] = useState("");
 
   const saveTask = useMutation({
@@ -48,13 +50,14 @@ function CareerPage() {
   const saveReminder = useMutation({
     mutationFn: () =>
       api.saveReminder({
-        task_id: tasks.data?.[0]?.task_id ?? "",
+        task_id: reminderTaskId,
         title: reminderTitle,
         remind_at: new Date(remindAt).toISOString(),
       }),
     onSuccess: async () => {
       setReminderTitle("");
       setRemindAt("");
+      setReminderTaskId("");
       await queryClient.invalidateQueries({ queryKey: ["career-reminders", mode, baseUrl] });
     },
   });
@@ -150,6 +153,21 @@ function CareerPage() {
               type="datetime-local"
               required
             />
+            <label className="grid gap-1 text-sm">
+              <span className="font-medium">Tarefa relacionada (opcional)</span>
+              <select
+                value={reminderTaskId}
+                onChange={(event) => setReminderTaskId(event.target.value)}
+                className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Nenhuma tarefa</option>
+                {tasks.data?.map((task) => (
+                  <option key={task.task_id} value={task.task_id}>
+                    {task.title}
+                  </option>
+                ))}
+              </select>
+            </label>
             <button className="inline-flex items-center justify-center gap-2 rounded-md border border-input px-3 py-2 text-sm font-medium hover:bg-muted">
               <Bell className="h-4 w-4" /> Agendar lembrete local
             </button>
