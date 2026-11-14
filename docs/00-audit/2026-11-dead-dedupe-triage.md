@@ -51,9 +51,9 @@ importlib/uvicorn e pacotes-pai) a partir de `apps/api/main.py`, rotas, `modules
 
 | Módulo | Alcance | Decisão |
 | --- | --- | --- |
-| `modules/ai/claim_validation.py` | só testes | **Achado SH-NEW-014**: a validação de afirmações proibidas/sem evidência não roda em produção, embora o teste se chame `..._runs_after_schema`. Tratado no próximo CP. |
-| `modules/ai/guidance.py`, `modules/ai/provider.py`, `modules/rag/*`, `modules/sources/base.py`, `modules/search_intelligence/source_ranker.py`, `modules/memory/memory_index.py`, `modules/matching/exceptions.py` | inalcançável | `DEFER`: sem importador de produção nem de teste; remover no próximo CP após checar docs que os citam |
-| `modules/core/schemas.py`, `modules/portfolio/portfolio_score.py`, `modules/search_intelligence/post_detector.py`, `modules/search_intelligence/query_generator.py` | só testes | `DEFER`: decidir entre ligar ao produto ou remover junto com os testes |
+| `modules/ai/claim_validation.py` | só testes | **Achado SH-NEW-014**: a validação de afirmações proibidas/sem evidência não rodava em produção, embora o teste se chame `..._runs_after_schema`. **Ligada no CP-04** (`4b5bbe1`) ao aceite de sugestões do Application Lab. |
+| `modules/ai/guidance.py`, `modules/ai/provider.py`, `modules/rag/*`, `modules/sources/base.py`, `modules/search_intelligence/source_ranker.py`, `modules/memory/memory_index.py`, `modules/matching/exceptions.py` | inalcançável | **REMOVED no CP-05**. `guidance.py` era o "consumidor" declarado de 3 prompts no catálogo (SH-NEW-015, corrigido no gerador). O `compare` do Engine entre clones (8ea37d7 → 4b5bbe1) mostrou os mesmos itens como NEW `ENG-MAINT-UNREFERENCED`: dois instrumentos independentes concordam. |
+| `modules/core/schemas.py`, `modules/portfolio/portfolio_score.py`, `modules/search_intelligence/post_detector.py`, `modules/search_intelligence/query_generator.py` | só testes | **REMOVED no CP-05** junto com os 3 testes que só os exercitavam; a busca real usa `query_builder.py` e `source_plan.py`. |
 
 ## Outros achados desta triagem
 

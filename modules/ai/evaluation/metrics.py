@@ -250,25 +250,10 @@ def _normalize(value: object) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", str(value).casefold()).split())
 
 
-def _normalize_date(value: object) -> str:
-    digits = re.sub(r"[^0-9]", "", str(value))
-    return digits[:8]
-
-
 def _normalized_sets(
     expected: Iterable[object], actual: Iterable[object]
 ) -> tuple[set[str], set[str]]:
     return ({_normalize(value) for value in expected}, {_normalize(value) for value in actual})
-
-
-def _paired_accuracy(expected: Iterable[str], actual: Iterable[str]) -> float:
-    expected_items, actual_items = list(expected), list(actual)
-    if len(expected_items) != len(actual_items):
-        return 0.0
-    return rate(
-        _normalize(left) == _normalize(right)
-        for left, right in zip(expected_items, actual_items, strict=True)
-    )
 
 
 def _same_length(left: Sequence[object], right: Sequence[object]) -> None:

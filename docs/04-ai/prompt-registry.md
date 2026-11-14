@@ -75,7 +75,7 @@ class PromptRegistry:
 - `github_profile_analysis_v1`;
 - `portfolio_gap_analysis_v1`.
 
-Os 16 prompts de produção pertencem a um único `AiTask`. `career_advice_v1` passou a ter consumidor seguro em `modules/ai/guidance.py`; não há prompt de produção órfão. Documentos conceituais fora do registry não são tratados como prompts ativos.
+Os 16 prompts de produção pertencem a um único `AiTask`. `career_advice_v1`, `github_profile_analysis_v1` e `portfolio_gap_analysis_v1` estão registrados mas **sem consumidor de produção**: o único arquivo que os chamava (`modules/ai/guidance.py`) não era importado por nenhuma rota ou serviço e foi removido na auditoria de 2026-11. O catálogo agora só conta como consumidor um arquivo que o código de produção importa. Documentos conceituais fora do registry não são tratados como prompts ativos.
 
 Conteúdo interpolado é delimitado como não confiável e recebe uma system policy comum contra prompt injection. Cada tarefa declara providers, structured output, fallback, finalidade de contexto, política sensível, suíte e métricas padrão.
 

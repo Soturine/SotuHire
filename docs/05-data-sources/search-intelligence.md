@@ -49,6 +49,9 @@ flowchart LR
 
 ## Módulos sugeridos
 
+> Proposta original. Em 2026-11, `query_generator.py`, `source_ranker.py` e `post_detector.py` foram
+> removidos sem nunca terem sido ligados ao produto; a busca usa `query_builder.py` e `source_plan.py`.
+
 ```text
 modules/search_intelligence/
 ├── __init__.py

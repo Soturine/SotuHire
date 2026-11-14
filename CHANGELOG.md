@@ -24,9 +24,17 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Application Lab: aceitar uma sugestão sem edição falha quando o texto afirma registro profissional
+  (os 26 conselhos e registros conhecidos, como CRM, OAB e COREN) ou pós-graduação (doutorado, mestrado, MBA,
+  especialização) que não aparece no texto substituído nem no Currículo Mestre confirmado. Antes, bastava
+  a sessão ter alguma evidência selecionada. Um texto editado pela pessoa continua sendo dela.
 - Tarefas criadas pelo Copilot quebravam a listagem de tarefas da Career API (HTTP 500).
 - `create_task` retornava `created: true` mesmo quando a tarefa já existia; propostas rejeitadas ou
   expiradas eram devolvidas ao repropor; a aresta salva retornava um id diferente do persistido.
+- O catálogo de prompts marcava `career_advice_v1`, `github_profile_analysis_v1` e
+  `portfolio_gap_analysis_v1` como implementados; o único arquivo que os chamava não era importado por
+  nada. Agora aparecem como registrados sem consumidor, e o gerador só conta como consumidor um
+  arquivo que o código de produção importa.
 - `due_at` de tarefas agora exige fuso horário e é normalizado para UTC na API e no frontend.
 - Fingerprint do Career State passa a incluir oportunidades e resultados recentes.
 - Página Carreira: lembrete pede a tarefa relacionada explicitamente; o modo demo mostra o que foi
@@ -58,6 +66,10 @@ Nenhuma versão ou tag foi criada.
   `modules/alerts`, `modules/sources/registry.py`, módulos de tracker/currículo/perfil/busca sem
   importador, dez métricas de avaliação de IA e helpers isolados. Detalhes e prova por item em
   `docs/00-audit/2026-11-dead-dedupe-triage.md`.
+- Segunda camada de código sem consumidor, exposta pelas remoções anteriores: `modules/ai/guidance.py`,
+  o reexport `modules/ai/provider.py`, `modules/rag`, `modules/sources/base.py`,
+  `modules/core/schemas.py`, `matching/exceptions.py`, `memory/memory_index.py` e módulos de busca e
+  portfólio usados só por testes (`query_generator`, `post_detector`, `source_ranker`, `portfolio_score`).
 - Scripts de captura de screenshots de versões passadas (v1.1, v1.9.8, v1.9.9, v1.10.1, v1.11.0).
 
 ## [2.0.0] - 2026-08-10

@@ -40,9 +40,6 @@ FALLBACKS = {
 }
 STATUS_OVERRIDES = {
     "domain_classification_v1": "implementado sem fluxo integrado",
-    "career_advice_v1": "implementado",
-    "github_profile_analysis_v1": "implementado",
-    "portfolio_gap_analysis_v1": "implementado",
     "interview_question_generation_v1": "implementado",
     "interview_answer_drafting_v1": "implementado",
     "star_story_structuring_v1": "implementado",
@@ -54,9 +51,6 @@ STATUS_OVERRIDES = {
     "taxonomy_mapping_explanation_v1": "implementado",
 }
 INDIRECT_CONSUMERS = {
-    "career_advice_v1": ["modules/ai/guidance.py"],
-    "github_profile_analysis_v1": ["modules/ai/guidance.py"],
-    "portfolio_gap_analysis_v1": ["modules/ai/guidance.py"],
     "interview_question_generation_v1": ["modules/ai/career_workflows.py"],
     "interview_answer_drafting_v1": ["modules/ai/career_workflows.py"],
     "star_story_structuring_v1": ["modules/ai/career_workflows.py"],
@@ -95,6 +89,15 @@ def prompt_rows(root: Path = ROOT) -> list[dict[str, Any]]:
         excluded={DEFAULT_OUTPUT},
         suffixes={".md"},
     )
+    reachable = _production_reachable(root)
+    unreachable_indirect = sorted(
+        {path for paths in INDIRECT_CONSUMERS.values() for path in paths} - reachable
+    )
+    if unreachable_indirect:
+        raise ValueError(
+            "INDIRECT_CONSUMERS names files no production module imports: "
+            + ", ".join(unreachable_indirect)
+        )
     rows: list[dict[str, Any]] = []
     golden_by_task = _golden_case_index(root / "tests" / "golden")
     baseline_providers = [
@@ -105,7 +108,11 @@ def prompt_rows(root: Path = ROOT) -> list[dict[str, Any]]:
     for spec in specs:
         task = tasks.for_prompt(spec.prompt_id)
         consumers = sorted(
-            set(consumers_by_id[spec.prompt_id] + INDIRECT_CONSUMERS.get(spec.prompt_id, []))
+            path
+            for path in set(
+                consumers_by_id[spec.prompt_id] + INDIRECT_CONSUMERS.get(spec.prompt_id, [])
+            )
+            if path in reachable
         )
         tests = tests_by_id[spec.prompt_id]
         docs = docs_by_id[spec.prompt_id]
@@ -153,6 +160,48 @@ def _golden_case_index(root: Path) -> dict[str, list[str]]:
         if task_id and case_id:
             cases.setdefault(task_id, []).append(case_id)
     return cases
+
+
+def _production_reachable(root: Path) -> set[str]:
+    """Files that count as consumers: API routes and modules some other production file imports.
+
+    One level of the import graph, not full reachability: a module imported only by another
+    unreachable module still counts. It is enough to stop a file that nothing imports (and a
+    prompt id string inside it) from being reported as an executable consumer.
+    """
+    import ast
+
+    production = [
+        path
+        for base in ("apps", "modules", "scripts")
+        for path in (root / base).rglob("*.py")
+        if "__pycache__" not in path.parts and "web" not in path.parts
+    ]
+    imported: set[str] = set()
+    for path in production:
+        try:
+            tree = ast.parse(path.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError, UnicodeDecodeError):
+            continue
+        package = ".".join(path.relative_to(root).with_suffix("").parts[:-1])
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported.update(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                base = node.module or ""
+                if node.level:
+                    parts = package.split(".")
+                    parts = parts[: len(parts) - node.level + 1]
+                    base = ".".join([*parts, base] if base else parts)
+                imported.add(base)
+                imported.update(f"{base}.{alias.name}" for alias in node.names)
+    reachable: set[str] = set()
+    for path in production:
+        relative = path.relative_to(root).as_posix()
+        module = relative[: -len(".py")].replace("/", ".").removesuffix(".__init__")
+        if relative.startswith("apps/api/routes/") or module in imported:
+            reachable.add(relative)
+    return reachable
 
 
 def _consumer_reference_index(
