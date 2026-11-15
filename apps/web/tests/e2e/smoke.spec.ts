@@ -635,6 +635,9 @@ test("public UI does not contain common mojibake sequences", async ({ page }) =>
 });
 
 test("kanban creates and moves a fake application", async ({ page }) => {
+  // both columns on screen: Playwright scrolls to the target mid-drag, which cancels an HTML5
+  // drop (a person gets the browser's edge auto-scroll, and the status select as an alternative)
+  await page.setViewportSize({ width: 1440, height: 1600 });
   await page.goto("/tracker");
 
   await page.getByTestId("new-application-button").first().click();
@@ -649,11 +652,14 @@ test("kanban creates and moves a fake application", async ({ page }) => {
 
   const firstCard = page.getByTestId("kanban-card").first();
   await expect(firstCard).toBeVisible();
-  await firstCard.dragTo(page.getByTestId("kanban-column-interview"));
+  // grab the card by its title row: its centre is the status <select>, which takes the press
+  await firstCard.dragTo(page.getByTestId("kanban-column-interview"), {
+    sourcePosition: { x: 24, y: 14 },
+  });
   await expect(page.getByTestId("kanban-column-interview")).toContainText("Backend Python E2E");
   await page.getByRole("button", { name: /Lista/i }).click();
   await page.getByTestId("application-status-select").first().selectOption("interview");
-  await expect(page.locator("body")).toContainText(/Última análise|Sem análise/);
+  await expect(page.locator("body")).toContainText(/Atualizada|Última análise|Sem análise/);
 });
 
 test("responsive layouts avoid page-level horizontal overflow", async ({ page }, testInfo) => {

@@ -26,7 +26,6 @@ import { useMemo, useState } from "react";
 import { toast } from "@/lib/notify";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
-import { StatCard } from "@/components/stat-card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
 import { useApiMode } from "@/lib/api/mode";
@@ -446,29 +445,80 @@ function RadarPage() {
       }
     >
       <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
-          <div className="flex items-start gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent-strong">
-              <RadioTower className="h-5 w-5" />
+        <section
+          id="radar-summary"
+          data-testid="radar-summary"
+          aria-labelledby="radar-summary-title"
+          className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-soft)]"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3 p-5">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-accent text-accent-strong">
+                <RadioTower aria-hidden className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h2 id="radar-summary-title" className="font-semibold">
+                  Radar local-first com revisão manual
+                </h2>
+                <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                  O Radar consulta somente fontes configuradas por você, como RSS público ou páginas
+                  públicas simples. APIs oficiais ficam preparadas por adapter e nada vai para
+                  Candidaturas sem sua ação.
+                </p>
+              </div>
             </div>
-            <div>
-              <div className="font-semibold">Radar local-first com revisão manual</div>
-              <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground">
-                O Radar consulta somente fontes configuradas por você, como RSS público ou páginas
-                públicas simples. APIs oficiais ficam preparadas por adapter e nada vai para
-                Candidaturas sem sua ação.
-              </p>
-            </div>
+            {mode === "demo" && (
+              <span
+                data-testid="radar-demo-badge"
+                className="rounded-full bg-highlight px-3 py-1 text-[11px] font-semibold text-highlight-foreground"
+              >
+                Dados de demonstração
+              </span>
+            )}
           </div>
-          {mode === "demo" && (
-            <span
-              data-testid="radar-demo-badge"
-              className="rounded-full bg-warning/15 px-3 py-1 text-[11px] font-semibold text-warning-strong"
-            >
-              Dados de demonstração
-            </span>
-          )}
-        </div>
+          {/* One strip, not four look-alike cards: each figure jumps to where it is handled.
+              "—" when the numbers did not load, never a zero that looks like data. */}
+          <ul className="grid grid-cols-2 border-t bg-surface-muted/60 sm:grid-cols-4 sm:divide-x">
+            {(
+              [
+                ["Fontes ativas", statsQ.data?.active_sources, "#radar-sources", RadioTower, ""],
+                [
+                  "Resultados",
+                  statsQ.data?.total_results,
+                  "#radar-results",
+                  FileSearch,
+                  "text-accent-strong",
+                ],
+                [
+                  "Alertas novos",
+                  statsQ.data?.unread_alerts ??
+                    (statsQ.isError
+                      ? undefined
+                      : shownAlerts.filter((a) => a.status === "unread").length),
+                  "#radar-alerts",
+                  Bell,
+                  "text-seal-strong",
+                ],
+                ["Duplicatas", statsQ.data?.duplicates, "#radar-results", Filter, ""],
+              ] as const
+            ).map(([label, value, href, Icon, tone]) => (
+              <li key={label}>
+                <a
+                  href={href}
+                  className="group flex items-center gap-3 px-5 py-3.5 transition-colors duration-(--duration-1) hover:bg-surface-muted"
+                >
+                  <Icon aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0">
+                    <span className={cn("text-metric block text-2xl", (value ?? 0) > 0 && tone)}>
+                      {value ?? "—"}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">{label}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {hasRealEmpty && (
           <div
@@ -486,33 +536,6 @@ function RadarPage() {
             simples sempre ficam sob revisão manual.
           </div>
         )}
-
-        <section
-          id="radar-summary"
-          data-testid="radar-summary"
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-        >
-          <StatCard
-            label="Fontes ativas"
-            value={statsQ.data?.active_sources ?? 0}
-            icon={RadioTower}
-          />
-          <StatCard
-            label="Resultados"
-            value={statsQ.data?.total_results ?? 0}
-            icon={FileSearch}
-            tone="accent"
-          />
-          <StatCard
-            label="Alertas novos"
-            value={
-              statsQ.data?.unread_alerts ?? shownAlerts.filter((a) => a.status === "unread").length
-            }
-            icon={Bell}
-            tone="warning"
-          />
-          <StatCard label="Duplicatas" value={statsQ.data?.duplicates ?? 0} icon={Filter} />
-        </section>
 
         <SectionCard
           id="radar-ai-wishlist"

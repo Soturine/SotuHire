@@ -40,6 +40,7 @@ import type {
 import { SOURCE_CARDS, SOURCE_FLOW } from "@/mocks/sources";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
+import { cn } from "@/lib/utils";
 import { isGitHubWebUrl } from "@/lib/security/url";
 
 export const Route = createFileRoute("/sources")({
@@ -107,19 +108,37 @@ function SourcesPage() {
       description="Importe, cole ou capture vagas com controle do usuário. O SotuHire organiza e analisa sem automatizar ações em contas de terceiros."
     >
       <div className="space-y-6">
-        <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-warning/5 p-4">
-          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-warning/15 text-warning-strong">
-            <ShieldAlert className="h-4 w-4" />
-          </div>
-          <div className="text-sm">
-            <div className="font-medium">Aviso de segurança</div>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+        <div className="flex items-start gap-3 rounded-xl border border-warning/40 bg-highlight/40 px-4 py-3">
+          <ShieldAlert aria-hidden className="mt-0.5 h-4 w-4 shrink-0 text-warning-strong" />
+          <p className="text-sm">
+            <strong className="font-semibold">Aviso de segurança.</strong>{" "}
+            <span className="text-muted-foreground">
               O SotuHire não automatiza login, candidatura ou ações em contas de terceiros. A
               captura assistida depende de ação manual do usuário e serve apenas para organizar e
               analisar informações visíveis.
-            </p>
-          </div>
+            </span>
+          </p>
         </div>
+
+        <nav aria-label="Seções de Fontes e Captura" className="flex flex-wrap gap-1.5">
+          {(
+            [
+              ["#opportunity-inbox", "Caixa de entrada"],
+              ["#source-kinds", "Tipos de fonte"],
+              ["#local-extension", "Extensão"],
+              ["#authenticated-browser", "Navegador autorizado"],
+              ["#source-flow", "Fluxo"],
+            ] as const
+          ).map(([href, label]) => (
+            <a
+              key={href}
+              href={href}
+              className="rounded-full border bg-card px-3 py-1 text-xs font-medium text-muted-foreground transition-colors duration-(--duration-1) hover:border-foreground/30 hover:text-foreground"
+            >
+              {label}
+            </a>
+          ))}
+        </nav>
 
         <SectionCard
           id="opportunity-inbox"
@@ -134,7 +153,7 @@ function SourcesPage() {
           <OpportunityInboxPanel />
         </SectionCard>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div id="source-kinds" className="grid scroll-mt-40 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {SOURCE_CARDS.map((c) => (
             <SourceCardItem key={c.id} card={c} />
           ))}
@@ -166,7 +185,7 @@ function SourcesPage() {
           <AuthenticatedBrowserPanel />
         </SectionCard>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div id="source-flow" className="grid scroll-mt-40 gap-6 lg:grid-cols-3">
           <SectionCard className="lg:col-span-2" title="Fluxo recomendado">
             <ol className="grid gap-3 sm:grid-cols-5">
               {SOURCE_FLOW.map((step, i) => (
@@ -513,12 +532,24 @@ function OpportunityInboxPanel() {
 
   return (
     <div className="space-y-5">
-      <div className="grid gap-3 md:grid-cols-4">
-        <InfoTile label="Itens" value={String(statsQ.data?.total ?? items.length)} />
-        <InfoTile label="Duplicadas" value={String(statsQ.data?.duplicates ?? 0)} />
-        <InfoTile label="Salvas" value={String(statsQ.data?.saved_to_tracker ?? 0)} />
-        <InfoTile label="Erros" value={String(statsQ.data?.errors ?? 0)} />
-      </div>
+      {/* "—" when the stats did not load: a zero there would read as a fact about the inbox */}
+      <ul className="grid grid-cols-2 overflow-hidden rounded-xl border bg-surface-muted/60 sm:grid-cols-4 sm:divide-x">
+        {(
+          [
+            ["Itens", statsQ.data?.total ?? (statsQ.isError ? undefined : items.length), ""],
+            ["Duplicadas", statsQ.data?.duplicates, "text-warning-strong"],
+            ["Salvas no Tracker", statsQ.data?.saved_to_tracker, "text-accent-strong"],
+            ["Erros", statsQ.data?.errors, "text-destructive-strong"],
+          ] as const
+        ).map(([label, value, tone]) => (
+          <li key={label} className="px-4 py-3">
+            <span className={cn("text-metric block text-2xl", (value ?? 0) > 0 && tone)}>
+              {value ?? "—"}
+            </span>
+            <span className="block text-xs text-muted-foreground">{label}</span>
+          </li>
+        ))}
+      </ul>
 
       <div className="flex flex-wrap items-center gap-2 text-xs">
         {mode === "demo" ? (

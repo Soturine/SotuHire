@@ -9,6 +9,14 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- Radar, Fontes e Tracker recompostos (CP-UX03). Tracker: funil com proporção e filtro por etapa,
+  follow-ups vencidos em destaque, cartões sem informação repetida e com "Preparar candidatura" quando
+  o anúncio foi preservado, filtro sem acento, lista como padrão no celular com troca de visualização
+  visível. Radar: um painel com a explicação e uma faixa de indicadores que leva às seções, no lugar de
+  4 cartões iguais. Fontes: navegação por seções e indicadores da caixa de entrada sem zero falso.
+- Busca nos dados (`/api/v2/search`) sem acento, com todas as palavras, sobre evidências, portfólio,
+  fatos do Perfil (exceto sensíveis) e candidaturas; resultados ordenados por relevância. A paleta
+  mostra o tipo e o subtítulo de cada resultado.
 - Perfil e Resume Studio recompostos (CP-UX02). Perfil: hero com nome, headline, áreas e parcela de
   fatos confirmados; abas "Fatos e evidências", "Identidade e objetivos" e "Importar" com link direto
   (`/profile?tab=…`); fatos com tipo e origem legíveis, estado de confirmação, "Confirmar" para o que
@@ -89,6 +97,10 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Tracker em lista: o seletor de status de cada candidatura não tinha nome acessível.
+- API Real: criar candidatura pelo Tracker respondia 422 sempre (o frontend enviava `source`, que o
+  contrato não aceita; o campo da API é `source_url`). Corpo montado com os campos do contrato e
+  teste que falha se um campo desconhecido voltar.
 - Configurações de IA: escolher um provider antes de a configuração salva carregar (ou durante um
   refetch) era desfeito e o campo da chave voltava a ficar desabilitado.
 - Resume Studio: erro diferente de 404 ao abrir ficava em "Abrindo…" para sempre; rascunho do

@@ -675,7 +675,13 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         mode,
         baseUrl,
         "/tracker/jobs",
-        { method: "POST", body: JSON.stringify({ privacy_acknowledged: true, ...payload }) },
+        {
+          method: "POST",
+          // The API contract forbids unknown fields; the frontend's `source` is the API's
+          // `source_url` (read back as `source` by normalizeTrackerJob). Sending the frontend
+          // object as-is answered 422 for every manual application in API Real mode.
+          body: JSON.stringify(trackerCreateBody(payload)),
+        },
         {
           job: {
             id: `job_${Math.random().toString(36).slice(2, 8)}`,
@@ -5626,3 +5632,20 @@ function mockProfessionalAssets(): ProfessionalAsset[] {
 }
 
 export type Api = ReturnType<typeof makeApi>;
+
+/** Body of POST /tracker/jobs with only the fields of TrackerJobCreateRequest. */
+export function trackerCreateBody(payload: Partial<TrackerJob>): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    title: payload.title ?? "",
+    company: payload.company ?? "",
+    status: payload.status ?? "found",
+    notes: payload.notes ?? "",
+    requirements: payload.requirements ?? [],
+    privacy_acknowledged: true,
+  };
+  if (payload.source) body.source_url = payload.source;
+  if (payload.match_score !== undefined) body.match_score = payload.match_score;
+  if (payload.ats_score !== undefined) body.ats_score = payload.ats_score;
+  if (payload.source_capture_id) body.source_capture_id = payload.source_capture_id;
+  return body;
+}

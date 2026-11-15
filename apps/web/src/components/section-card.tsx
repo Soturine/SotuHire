@@ -22,7 +22,7 @@ export function SectionCard({
     <section
       id={id}
       className={cn(
-        "overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-soft)]",
+        "scroll-mt-40 overflow-hidden rounded-xl border border-border bg-card shadow-[var(--shadow-soft)]",
         className,
       )}
     >

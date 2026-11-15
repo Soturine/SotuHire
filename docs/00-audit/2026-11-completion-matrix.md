@@ -40,10 +40,10 @@ nada aqui é "verde no CI".
 | UX-01 | Baseline pré-redesign reproduzível | DONE | `459ffa9`, 250 telas + 10 estados, manifesto com hashes | — |
 | UX-02 | Identidade e design system | PARTIAL | tokens híbridos (CP-UX01B: barra marinho, superfícies, gradientes), fontes, marca, estados, ADR 006 revisado | aplicação nas telas restantes |
 | UX-03 | Navegação por jornada desktop/tablet/mobile | DONE | registro único, barra lateral, barra mobile, E2E `journey-shell` | — |
-| UX-04 | Busca e autocomplete reais | PARTIAL | telas sem acento, recentes, dados locais (evidência, portfólio) | busca de dados no backend sem acento e sobre Perfil e vagas (CP-UX03) |
+| UX-04 | Busca e autocomplete reais | DONE | telas e dados sem acento, todas as palavras, ranking; evidência, portfólio, Perfil (sem sensíveis), candidaturas; tipos legíveis; resposta atrasada não substitui a atual | — |
 | UX-05 | Motion e microinterações com reduced-motion | PARTIAL | tokens de duração, entrada de página, abertura de jornada | interações das telas de produto |
 | UX-06 | Perfil e Resume Studio | DONE | CP-UX02: composição nova, `Field`, versões de variante, fatos alterados reconciliados, E2E demo e API real, 0 nós axe | reimportação sem aviso (dados) |
-| UX-07 | Radar, fontes, Tracker | NOT_RUN | — | CP-UX03 |
+| UX-07 | Radar, fontes, Tracker | PARTIAL | CP-UX03: painel do Radar, funil e cartões do Tracker, lista no celular, Fontes com navegação; 0 nós axe; jornada do Tracker contra a API real | comparação de vagas lado a lado |
 | UX-08 | Lab, Copilot, aprovações, Configurações | NOT_RUN | — | CP-UX04 |
 | UX-09 | Demais rotas e limpeza de estilos | NOT_RUN | — | CP-UX05 |
 | UX-10 | Tema escuro e en-US medidos | DONE | escuro 0 nós, en-US 0 nós nas larguras capturadas | — |

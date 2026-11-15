@@ -206,6 +206,14 @@ const demoApprovals: ProposedAction[] = [
   },
 ];
 
+export type SearchResult = {
+  entity_type: string;
+  entity_id: string;
+  title: string;
+  subtitle?: string;
+  route: string;
+};
+
 async function request<T>(baseUrl: string, path: string, init?: RequestInit): Promise<T> {
   const response = await pairedApiFetch(
     baseUrl,
@@ -272,21 +280,23 @@ export const v2Api = (mode: ApiMode, baseUrl: string) => ({
           method: "POST",
           body: JSON.stringify(payload),
         }),
-  search: (query: string, signal?: AbortSignal) =>
-    mode === "demo"
-      ? Promise.resolve(
-          [...demoEvidence, ...demoPortfolio]
-            .filter((item) => normalize(item.title).includes(normalize(query)))
-            .map((item) => ({
-              entity_type: "node_id" in item ? "evidence" : "portfolio",
-              entity_id: "node_id" in item ? item.node_id : item.portfolio_item_id,
-              title: item.title,
-              route: "node_id" in item ? "/evidence" : "/portfolio",
-            })),
-        )
-      : request<Array<{ entity_type: string; entity_id: string; title: string; route: string }>>(
-          baseUrl,
-          `/search?query=${encodeURIComponent(query)}`,
-          { signal },
-        ),
+  /** Accent-insensitive, every word must appear: the same rule as the API (copilot_v2/search.py). */
+  search: (query: string, signal?: AbortSignal) => {
+    if (mode !== "demo")
+      return request<SearchResult[]>(baseUrl, `/search?query=${encodeURIComponent(query)}`, {
+        signal,
+      });
+    const words = normalize(query).split(/\s+/).filter(Boolean);
+    return Promise.resolve(
+      [...demoEvidence, ...demoPortfolio]
+        .filter((item) => words.every((word) => normalize(item.title).includes(word)))
+        .map((item): SearchResult => ({
+          entity_type: "node_id" in item ? "evidence" : "portfolio",
+          entity_id: "node_id" in item ? item.node_id : item.portfolio_item_id,
+          title: item.title,
+          subtitle: "",
+          route: "node_id" in item ? "/evidence" : "/portfolio",
+        })),
+    );
+  },
 });

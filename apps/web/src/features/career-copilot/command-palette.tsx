@@ -1,16 +1,42 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { Command as CommandPrimitive } from "cmdk";
-import { CircleDashed, CornerDownLeft, FileSearch, History, Loader2, Search } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  CircleDashed,
+  CornerDownLeft,
+  FileSearch,
+  FolderKanban,
+  History,
+  Loader2,
+  Search,
+  ShieldCheck,
+  UserRound,
+  type LucideIcon,
+} from "lucide-react";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { useApiMode } from "@/lib/api/mode";
+import type { TranslationKey } from "@/lib/i18n";
 import { NAV_ENTRIES } from "@/lib/navigation";
 import { usePreferences } from "@/lib/preferences";
 import { highlight, search } from "@/lib/search";
 import { cn } from "@/lib/utils";
 import { v2Api } from "./api";
+
+const ENTITY_ICON: Record<string, LucideIcon> = {
+  evidence: ShieldCheck,
+  portfolio: FolderKanban,
+  profile: UserRound,
+  application: BriefcaseBusiness,
+};
+const ENTITY_LABEL: Record<string, TranslationKey> = {
+  evidence: "search.entity.evidence",
+  portfolio: "search.entity.portfolio",
+  profile: "search.entity.profile",
+  application: "search.entity.application",
+};
 
 /**
  * One search for the whole app: every screen of the navigation registry (accent-insensitive,
@@ -271,12 +297,26 @@ export function CommandPalette() {
                     onSelect={() => go(item.route)}
                     className={itemClass}
                   >
-                    <FileSearch aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    <span className="flex-1 truncate">
-                      <Highlighted text={item.title} query={trimmed} />
+                    {(() => {
+                      const Icon = ENTITY_ICON[item.entity_type] ?? FileSearch;
+                      return (
+                        <Icon aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      );
+                    })()}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate">
+                        <Highlighted text={item.title} query={trimmed} />
+                      </span>
+                      {item.subtitle ? (
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {item.subtitle}
+                        </span>
+                      ) : null}
                     </span>
-                    <span className="font-mono text-[11px] text-muted-foreground">
-                      {item.entity_type}
+                    <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">
+                      {ENTITY_LABEL[item.entity_type]
+                        ? t(ENTITY_LABEL[item.entity_type])
+                        : item.entity_type}
                     </span>
                   </CommandPrimitive.Item>
                 ))}

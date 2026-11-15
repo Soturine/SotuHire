@@ -164,7 +164,21 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Testes | pytest 941 passed, 4 skipped (providers externos sem chave); 6 novos de reconciliação, o módulo nem importa no código anterior; Vitest 35/35; Chromium E2E 39 passed, 0 failed, 71 skipped (capturas e API real condicionadas); API real: 2 jornadas passam (fato → Mestre → autosave → JSON/PDF → edição reconciliada) |
 | Medidas | 0 nós axe, 0 estouro, 0 erro de console nas 8 combinações; onboarding 8 → 2 etapas |
 | Não é | Radar, Tracker, Lab, Copilot e Configurações recompostos (CP-UX03/04); reimportação do mesmo arquivo continua upsert sem aviso |
+| Commit | `2ec7fe2` (push confirmado com `ls-remote`) |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, mapa de autoridade, auditoria, galeria `2026-11-v5-ux02`, direção de design) |
+
+## CP-UX03 — Radar, Fontes, Tracker; busca nos dados
+
+| Campo | Registro |
+| --- | --- |
+| Hipótese | as telas de oportunidades repetiam 4 cartões genéricos, o Tracker não mostrava o funil nem servia no celular, e a busca de dados dependia de acento e ignorava Perfil e candidaturas |
+| Mudança | painel de estado do Radar, funil e cartões do Tracker, navegação de Fontes; busca de dados nova (`modules/copilot_v2/search.py`) |
+| Achados no caminho | SH-NEW-030, 031; o E2E de arraste do Kanban falhou com a mudança: o centro do cartão passou a cair no `select` e o destino fora da tela; as duas causas confirmadas por sonda e teste com o arquivo anterior |
+| Testes | pytest 945 passed, 4 skipped; 4 testes de busca (o de API falha no código anterior); Vitest 36/36 (novo: corpo do Tracker só com campos do contrato); Chromium E2E 43 passed, 0 failed, 72 skipped; spec novo `opportunities-ux.spec.ts` (4) |
+| Medidas | 0 nós axe, 0 estouro, 0 erro de console nas 8 combinações |
+| API real | 3 jornadas em diretório sintético passam; a do Tracker (criar → achar pela busca sem acento → mudar status → recarregar) achou SH-NEW-032 |
+| Não é | comparação lado a lado de vagas; alertas de duplicatas redesenhados; verificação sistemática dos ~30 corpos de requisição do cliente contra os schemas (pendência para o dogfood de contrato) |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, auditoria, galeria `2026-11-v5-ux03`) |
 
 ## Ferramentas (repositórios donos)
 

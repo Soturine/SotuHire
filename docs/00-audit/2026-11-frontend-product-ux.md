@@ -199,3 +199,30 @@ Resume exportado contém o fato e o PDF começa com `%PDF-`; a edição posterio
 diferença e é aplicada no Mestre a pedido.
 
 ![Resume Studio contra a API real](../assets/ux-comparison/2026-11-v5-ux02/real-api-resume-studio-after.webp)
+
+### CP-UX03 — Radar, Fontes, Tracker e busca nos dados
+
+Mesma matriz: **0** nós axe, 0 estouro, 0 erro de console em todas as combinações (a primeira captura
+achou 40 nós críticos `select-name` na lista do Tracker em mobile, defeito antigo que a lista como
+padrão no celular expôs; corrigido e recapturado). Hash do conjunto JSON:
+`37b20fcb2f9d89707714b1de922dab8eb742bad9405965fe777f5517d951555c`.
+
+| Estado | Baseline (`459ffa9`) | CP-UX03 | O que mudou |
+| --- | --- | --- | --- |
+| Tracker, desktop | ![](../assets/ux-comparison/2026-11-v5/tracker-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux03/tracker-desktop-after.webp) | Funil com proporção por etapa e filtro por etapa; follow-ups vencidos sinalizados; cartão sem origem repetida, datas legíveis, "Preparar candidatura" quando o anúncio foi preservado |
+| Tracker, mobile | ![](../assets/ux-comparison/2026-11-v5-ux03/tracker-mobile-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux03/tracker-mobile-after.webp) | Abre em lista (antes: quadro de 11 colunas com rolagem lateral e sem como trocar); cada status tem nome acessível |
+| Radar, desktop | ![](../assets/ux-comparison/2026-11-v5/radar-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux03/radar-desktop-after.webp) | Introdução e 4 cartões iguais viram um painel: explicação + faixa de indicadores que leva às seções; "—" se as estatísticas não carregam |
+| Radar, escuro | ![](../assets/ux-comparison/2026-11-v5-ux03/radar-desktop-dark-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux03/radar-desktop-dark-after.webp) | Mesma composição no escuro |
+| Fontes, desktop | ![](../assets/ux-comparison/2026-11-v5-ux03/sources-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux03/sources-desktop-after.webp) | Aviso de segurança compacto, navegação por seções, indicadores da caixa de entrada sem zero falso |
+| Busca por "currículo" | ![](../assets/ux-comparison/2026-11-v5/search-curriculo-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux03/search-curriculo-after.webp) | Resultados de dados com tipo legível e subtítulo |
+
+Busca nos dados (`GET /api/v2/search`): sem acento e sem caixa, todas as palavras precisam aparecer,
+título antes de descrição; cobre evidências, portfólio, fatos do Perfil (nunca os sensíveis) e
+candidaturas do Tracker. No código anterior, "clinica" não encontrava "Pesquisa Clínica" e Perfil e
+candidaturas não eram buscados. A paleta mostra o tipo ("Fato do Perfil", "Candidatura") e o
+subtítulo; uma resposta lenta a uma consulta mais antiga não substitui a atual (teste de regressão;
+a chave por termo do React Query já garantia isso).
+
+Contra a API real, em diretório sintético: criar uma candidatura pelo Tracker, achá-la na paleta por
+"enfermeira clinica", abrir, mudar o status e recarregar. A primeira execução falhou com 422 em
+`POST /tracker/jobs` (SH-NEW-032); depois da correção, as 3 jornadas reais passam.

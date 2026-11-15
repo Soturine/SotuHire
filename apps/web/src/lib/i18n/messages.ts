@@ -59,6 +59,10 @@ export const ptBRMessages = {
   "search.actionCopilot": "Perguntar ao Copilot sobre esta tela",
   "search.actionTheme": "Alternar tema claro/escuro",
   "search.hint": "↑↓ para escolher · Enter para abrir · Esc para fechar",
+  "search.entity.evidence": "Evidência",
+  "search.entity.portfolio": "Portfólio",
+  "search.entity.profile": "Fato do Perfil",
+  "search.entity.application": "Candidatura",
 
   "route.home.label": "Início",
   "route.home.title": "SotuHire",
@@ -287,6 +291,10 @@ export const enUSMessages = {
   "search.actionCopilot": "Ask the Copilot about this screen",
   "search.actionTheme": "Toggle light/dark theme",
   "search.hint": "↑↓ to choose · Enter to open · Esc to close",
+  "search.entity.evidence": "Evidence",
+  "search.entity.portfolio": "Portfolio",
+  "search.entity.profile": "Profile fact",
+  "search.entity.application": "Application",
 
   "route.home.label": "Home",
   "route.home.title": "SotuHire",

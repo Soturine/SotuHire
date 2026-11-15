@@ -128,4 +128,35 @@ test.describe("real local API", () => {
     await page.getByTestId("refresh-profile-facts").click();
     await expect(changed).toHaveCount(0);
   });
+
+  test("application created in the Tracker is found by the data search without accents", async ({
+    page,
+  }) => {
+    await pair(page, "/tracker");
+    await page.getByTestId("new-application-button").first().click();
+    const dialog = page.getByTestId("create-application-dialog");
+    await dialog.getByPlaceholder("Cargo").fill("Enfermeira Clínica Sintética");
+    await dialog.getByPlaceholder("Empresa").fill("Hospital Fictício");
+    await page.getByTestId("create-application-submit").click();
+    await expect(page.getByText("Enfermeira Clínica Sintética").first()).toBeVisible();
+
+    await page.keyboard.press("Control+K");
+    await page.getByRole("combobox").fill("enfermeira clinica");
+    const hit = page.getByRole("option", { name: /Enfermeira Clínica Sintética/ });
+    await expect(hit).toContainText("Candidatura");
+    await expect(hit).toContainText("Hospital Fictício");
+    await page.keyboard.press("Enter");
+    await expect(page).toHaveURL(/\/tracker$/);
+
+    await page.getByRole("button", { name: /Lista/ }).click();
+    await page
+      .getByRole("combobox", { name: "Status de Enfermeira Clínica Sintética" })
+      .selectOption("applied");
+    await expect(page.getByText(/Candidatura movida para/).first()).toBeVisible();
+    await page.reload();
+    await page.getByRole("button", { name: /Lista/ }).click();
+    await expect(
+      page.getByRole("combobox", { name: "Status de Enfermeira Clínica Sintética" }),
+    ).toHaveValue("applied");
+  });
 });
