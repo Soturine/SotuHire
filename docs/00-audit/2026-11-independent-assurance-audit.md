@@ -111,6 +111,7 @@ em `8ea37d7` e passa depois.
 | SH-NEW-036 | P2 | `VERIFIED` | Falsos verdes nos E2E achados por mutação de UI: "Aprovar tudo" checado antes de a fila carregar (2 specs); `toHaveCount(0)` sobre toasts transitórios, que repete até o toast sumir (3 specs). Mutantes antes sobreviventes agora morrem. |
 | SH-NEW-037 | P2 | `VERIFIED` | CLS 0,14 na tela inicial por troca de fonte; fallback com métricas medidas (a primeira tentativa, com só a Georgia regular, piorou para 0,23 e foi refeita). |
 | SH-NEW-038 | P1 | `VERIFIED` | API Real: `POST /profile/items` com o item de rascunho da importação (`item_id`, `confirmed_by_user`, datas) respondia 422; o fluxo de importação do Perfil nunca funcionava fora do demo. Achado pelo teste de contrato cliente × OpenAPI (10 escritas com objetos de domínio); confirmado contra a API; jornada real cobre o caminho. |
+| SH-NEW-039 | P1 | `VERIFIED` | Backup sobrescrito pelo backup de segurança da restauração quando ambos caíam no mesmo segundo (nome `…-AAAAMMDD-HHMMSS.zip`, `ZipFile("w")`): a pessoa podia perder o backup que escolheu; exportações do mesmo dia também se sobrescreviam. Achado pelo round-trip completo (Perfil, Mestre, variantes, Tracker, evidências); nomes únicos e criação exclusiva; testes falham no código anterior. |
 | SH-NEW-029 | P3 | `VERIFIED` | Captura de UX analisava a página 400 ms após `networkidle`, que não espera a latência simulada do demo (até 800 ms): nós "transitórios" de contraste no Application Lab. Espera de 1 s; 0 nós. |
 
 ## Eficácia dos testes (controles negativos)

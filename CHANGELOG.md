@@ -109,6 +109,11 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Backup: arquivos de backup tinham nome com resolução de segundo e eram sobrescritos sem aviso. Ao
+  restaurar um backup criado no mesmo segundo, o backup de segurança da própria restauração
+  substituía o arquivo escolhido (restauração falhava com "Arquivo ZIP inválido" ou trazia o estado
+  atual). Duas exportações no mesmo dia também se sobrescreviam. Nomes agora nunca colidem e um
+  arquivo existente nunca é sobrescrito.
 - API Real: "Adicionar ao perfil" a partir de um texto importado respondia 422 sempre (o cliente
   enviava o item de rascunho inteiro, com `item_id` e datas que o contrato não aceita). Achado pelo
   teste de contrato novo: `src/lib/api/contract.test.ts` envia os corpos das escritas que as telas

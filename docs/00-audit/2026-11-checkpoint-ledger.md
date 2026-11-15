@@ -229,6 +229,17 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Testes | Vitest 44/44 (controle negativo: o teste falha no código anterior; outro confere que pegaria SH-NEW-032); pytest 946 passed, 4 skipped; Chromium 49/0; API real 3/3 (inclui importar → adicionar) |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
 
+## CP-DATA02 — round-trip de backup e restauração
+
+| Campo | Registro |
+| --- | --- |
+| Pergunta | um backup feito pelo app devolve exatamente os dados de uma pessoa, e a restauração pode ser desfeita? |
+| Método | `tests/test_data_round_trip.py`: preencher Perfil, Mestre, variante, Tracker e evidências pela API; backup; mudar todos os stores; restaurar; comparar pelo que a API responde; restaurar o backup de segurança (rollback) e comparar com o estado alterado |
+| Achado | SH-NEW-039: o backup de segurança sobrescrevia o backup escolhido quando os dois caíam no mesmo segundo |
+| Migrações | v6 (backfill), v6→v7 e v7→v8 cobertas por `test_storage_migrations.py` e executadas no pytest completo deste ciclo |
+| Testes | os 2 testes novos falham no código anterior; dados: 8 passed |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |
