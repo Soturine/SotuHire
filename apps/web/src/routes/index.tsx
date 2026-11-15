@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
   ShieldCheck,
-  Sparkles,
   Target,
   ScanSearch,
   Github,
@@ -12,6 +11,7 @@ import {
   CheckCircle2,
   Lock,
 } from "lucide-react";
+import { BrandMark, BrandWordmark } from "@/components/brand";
 import { ApiModeBadge } from "@/components/api-mode-badge";
 import { GuidedFlow } from "@/components/guided-flow";
 import { API_LOCAL_HOST, APP_VERSION } from "@/lib/labels";
@@ -68,11 +68,8 @@ function Landing() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5">
-          <Link to="/" className="flex items-center gap-2">
-            <div className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Sparkles className="h-4 w-4" />
-            </div>
-            <span className="text-display text-xl">SotuHire</span>
+          <Link to="/" className="rounded-md" aria-label="SotuHire">
+            <BrandWordmark />
           </Link>
           <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
             <a href="#features" className="hover:text-foreground">
@@ -98,46 +95,45 @@ function Landing() {
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 grid-bg pointer-events-none" />
+      <section className="trajectory-surface">
         <div className="relative mx-auto max-w-7xl px-6 pt-20 pb-24 md:pt-28 md:pb-32">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-hero-foreground/20 bg-hero-foreground/10 px-3 py-1 text-xs font-medium text-hero-muted">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-success" />
               Análise de compatibilidade baseada em evidências
             </span>
             <h1 className="text-display mt-6 text-4xl leading-[1.08] sm:text-5xl md:text-[56px]">
               SotuHire: inteligência de carreira local-first
-              <span className="text-muted-foreground"> para decidir melhor onde aplicar.</span>
+              <span className="text-hero-muted"> para decidir melhor onde aplicar.</span>
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
+            <p className="mx-auto mt-5 max-w-2xl text-base text-hero-muted sm:text-lg">
               Analise currículo, vaga, ATS, GitHub, evidências, gaps e candidaturas com segurança —
               sem inventar experiência e sem expor seus dados.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 to="/dashboard"
-                className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-[var(--shadow-elevated)] transition-opacity hover:opacity-90"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-hero-foreground px-5 py-2.5 text-sm font-semibold text-sidebar shadow-[var(--shadow-elevated)] transition-opacity hover:opacity-90"
               >
                 Abrir dashboard <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 to="/match"
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-hero-foreground/25 px-5 py-2.5 text-sm font-semibold text-hero-foreground hover:bg-hero-foreground/10"
               >
                 Rodar demo
               </Link>
               <Link
                 to="/settings"
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-input bg-card px-5 py-2.5 text-sm font-semibold hover:bg-muted"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-hero-foreground/25 px-5 py-2.5 text-sm font-semibold text-hero-foreground hover:bg-hero-foreground/10"
               >
                 Configurar API local
               </Link>
             </div>
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-hero-muted">
               {["Local-first", "Sem login", "Sem rastreio", "Código aberto"].map((t) => (
                 <span key={t} className="inline-flex items-center gap-1.5">
-                  <CheckCircle2 className="h-3.5 w-3.5 text-accent-strong" /> {t}
+                  <CheckCircle2 className="h-3.5 w-3.5 text-hero-accent" /> {t}
                 </span>
               ))}
             </div>
@@ -145,8 +141,8 @@ function Landing() {
 
           {/* Hero preview */}
           <div className="relative mx-auto mt-16 max-w-5xl">
-            <div className="rounded-2xl border border-border bg-card p-2 shadow-[var(--shadow-elevated)]">
-              <div className="rounded-xl bg-gradient-to-br from-muted to-card p-8">
+            <div className="rounded-2xl border border-hero-foreground/15 bg-hero-foreground/10 p-2 shadow-[var(--shadow-elevated)]">
+              <div className="rounded-xl bg-background p-8 text-foreground">
                 <div className="grid gap-4 sm:grid-cols-3">
                   {[
                     { label: "Pontuação de compatibilidade", value: 78, tone: "text-chart-1" },
@@ -155,7 +151,7 @@ function Landing() {
                   ].map((s) => (
                     <div key={s.label} className="rounded-lg border border-border bg-card p-4">
                       <div className="text-xs text-muted-foreground">{s.label}</div>
-                      <div className="text-display mt-1 text-4xl tabular-nums">{s.value}</div>
+                      <div className="text-metric mt-1 text-4xl">{s.value}</div>
                       <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted">
                         <div
                           className="h-full rounded-full bg-accent"
@@ -269,8 +265,7 @@ function Landing() {
       <footer className="border-t border-border">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 py-8 text-xs text-muted-foreground sm:flex-row">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-3.5 w-3.5" /> SotuHire · v{APP_VERSION} · API local{" "}
-            {API_LOCAL_HOST}
+            <BrandMark className="h-4 w-4" /> SotuHire · v{APP_VERSION} · API local {API_LOCAL_HOST}
           </div>
           <div className="flex gap-4">
             <Link to="/privacy" className="hover:text-foreground">

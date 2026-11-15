@@ -9,6 +9,8 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- Tela inicial na identidade nova (CP-UX05): marca própria, hero marinho→petróleo, números em sans
+  tabular. `TextField` compartilhado substitui três cópias locais de campo.
 - Aprovações recompostas (CP-UX04): filtros por etapa da decisão, risco e status em português,
   prévia campo a campo (o que muda, hoje e depois de executar), como desfazer sempre visível, botões
   com estado pendente e falhas ditas. Copilot com os nomes e destinos do Cockpit e caminho até a
@@ -197,6 +199,7 @@ Nenhuma versão ou tag foi criada.
 
 ### Removido
 
+- Utilitários CSS `grid-bg` e `glass`, sem consumidor depois do CP-UX05.
 - `docs/requirements/*.txt` (duplicavam o `pyproject.toml` e já divergiam dele).
 - Código sem nenhum consumidor: `modules/storage/repositories` (CRUD genérico nunca adotado),
   `modules/alerts`, `modules/sources/registry.py`, módulos de tracker/currículo/perfil/busca sem

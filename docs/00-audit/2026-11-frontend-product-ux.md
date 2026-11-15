@@ -248,3 +248,24 @@ IA externa: nenhuma chamada a provider pago foi feita neste ciclo
 chave fica só no backend; o teste `settings say where the text goes…` e o teste existente que
 confere que a chave nunca vai para `localStorage`/`sessionStorage` cobrem o que é verificável sem
 chamada externa.
+
+### CP-UX05 — consistência global
+
+Matriz completa nos dois idiomas: 25 rotas × 4 larguras × claro/escuro × pt-BR/en-US = **400 telas**,
+0 nós axe, 0 estouro horizontal, 0 erro de console.
+
+| Estado | Baseline (`459ffa9`) | CP-UX05 | O que mudou |
+| --- | --- | --- | --- |
+| Tela inicial | ![](../assets/ux-comparison/2026-11-v5-ux05/home-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux05/home-desktop-after.webp) | Marca própria no lugar do ícone genérico; hero marinho→petróleo da identidade nova; números em sans tabular; fundo quadriculado legado removido |
+| Primeira visita | ![](../assets/ux-comparison/2026-11-v5/first-visit-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux05/first-visit-after.webp) | Onboarding de 2 etapas sobre a tela inicial nova |
+| Cockpit em en-US | ![](../assets/ux-comparison/2026-11-v5-ux05/dashboard-desktop-en-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux05/dashboard-desktop-en-after.webp) | Interface em inglês; os dados ficam no idioma em que foram registrados |
+
+Limpeza: utilitários `grid-bg` e `glass` removidos (sem consumidor); três cópias locais de `Field`
+(career, interviews, sources) substituídas por `TextField` compartilhado (rótulo ligado por
+`htmlFor`). A cópia de `tailor` é um invólucro diferente e ficou. Migrar todos os formulários para
+`Field` não foi feito: a regra `label` do axe dá 0 violações nas 400 telas, então não há necessidade
+comprovada.
+
+Lacuna registrada: Perfil, Resume Studio, Tracker, Radar, Fontes, Lab e outras telas têm a interface
+escrita em pt-BR no código (como antes do redesign); em en-US só o shell, a busca, o Cockpit, o
+Copilot e as Aprovações mudam de idioma.

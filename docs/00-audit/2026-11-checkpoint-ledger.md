@@ -193,7 +193,18 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | IA externa | `BLOCKED_EXTERNAL_CREDENTIALS`: nenhuma chamada paga feita |
 | Medidas | 0 nós axe, 0 estouro, 0 erro de console nas 8 combinações |
 | Não é | recomposição completa do Application Lab (1.445 linhas; só os pontos acima); Copilot conversacional |
+| Commit | `94539b2` (push confirmado com `ls-remote`) |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, auditoria, galeria `2026-11-v5-ux04`) |
+
+## CP-UX05 — consistência global
+
+| Campo | Registro |
+| --- | --- |
+| Mudança | tela inicial na identidade nova; `grid-bg`/`glass` removidos; `TextField` compartilhado no lugar de 3 cópias |
+| Testes | Chromium E2E 48 passed, 0 failed, 72 skipped (segunda execução completa); a primeira teve 1 falha em `API Real empty states…` que não reproduziu em 4 repetições isoladas nem em 12 paralelas (6 workers). Causa provável: compilação sob demanda do Vite de `sources.tsx` (2.300 linhas) logo após a edição, sob carga; registrada como intermitência observada, não como corrigida |
+| Medidas | 400 telas (pt-BR e en-US): 0 nós axe, 0 estouro, 0 erro de console |
+| Não é | tradução da interface das telas de produto (lacuna registrada na auditoria de UX); migração de todos os formulários para `Field` (sem necessidade comprovada pelo axe) |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, auditoria, galeria `2026-11-v5-ux05`) |
 
 ## Ferramentas (repositórios donos)
 

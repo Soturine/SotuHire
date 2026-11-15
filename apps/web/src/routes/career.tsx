@@ -8,6 +8,7 @@ import { SectionCard } from "@/components/section-card";
 import { useCareerWorkflowApi } from "@/lib/api/career-workflows";
 import { useApiMode } from "@/lib/api/mode";
 import { usePreferences } from "@/lib/preferences";
+import { TextField } from "@/components/field";
 
 export const Route = createFileRoute("/career")({
   head: () => ({ meta: [{ title: "Plano de carreira — SotuHire" }] }),
@@ -98,8 +99,13 @@ function CareerPage() {
               saveTask.mutate();
             }}
           >
-            <Field label="Tarefa" value={taskTitle} onChange={setTaskTitle} required />
-            <Field label="Prazo opcional" value={dueAt} onChange={setDueAt} type="datetime-local" />
+            <TextField label="Tarefa" value={taskTitle} onChange={setTaskTitle} required />
+            <TextField
+              label="Prazo opcional"
+              value={dueAt}
+              onChange={setDueAt}
+              type="datetime-local"
+            />
             <button className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground sm:col-span-2">
               <Plus className="h-4 w-4" /> Adicionar tarefa
             </button>
@@ -145,8 +151,8 @@ function CareerPage() {
               saveReminder.mutate();
             }}
           >
-            <Field label="Título" value={reminderTitle} onChange={setReminderTitle} required />
-            <Field
+            <TextField label="Título" value={reminderTitle} onChange={setReminderTitle} required />
+            <TextField
               label="Data e hora"
               value={remindAt}
               onChange={setRemindAt}
@@ -198,7 +204,7 @@ function CareerPage() {
             }}
           >
             <div className="flex-1">
-              <Field label="Nome do plano" value={planTitle} onChange={setPlanTitle} required />
+              <TextField label="Nome do plano" value={planTitle} onChange={setPlanTitle} required />
             </div>
             <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">
               Criar plano
@@ -218,32 +224,5 @@ function CareerPage() {
         </SectionCard>
       </div>
     </AppShell>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  type = "text",
-  required,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-  required?: boolean;
-}) {
-  return (
-    <label className="grid gap-1.5 text-sm font-medium">
-      {label}
-      <input
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        required={required}
-        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-      />
-    </label>
   );
 }

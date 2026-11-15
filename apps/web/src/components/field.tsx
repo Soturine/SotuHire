@@ -67,3 +67,40 @@ export const controlClass =
   "w-full rounded-lg border border-input bg-surface-raised px-3 py-2 text-sm shadow-[var(--shadow-soft)] outline-none transition-[border-color,box-shadow] duration-(--duration-1) placeholder:text-muted-foreground/80 hover:border-foreground/25 focus-visible:border-accent focus-visible:ring-3 focus-visible:ring-accent/20 aria-invalid:border-destructive aria-invalid:ring-destructive/15 disabled:opacity-60";
 
 export const textareaClass = cn(controlClass, "min-h-28 resize-y leading-relaxed");
+
+/** A labelled single-line input: the common case, so screens do not each keep their own copy. */
+export function TextField({
+  label,
+  value,
+  onChange,
+  type = "text",
+  required,
+  placeholder,
+  hint,
+  className,
+}: {
+  label: ReactNode;
+  value: string;
+  onChange: (value: string) => void;
+  type?: string;
+  required?: boolean;
+  placeholder?: string;
+  hint?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <Field label={label} hint={hint} className={className}>
+      {(control) => (
+        <input
+          {...control}
+          type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          required={required}
+          placeholder={placeholder}
+          className={controlClass}
+        />
+      )}
+    </Field>
+  );
+}

@@ -42,6 +42,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "@/lib/notify";
 import { cn } from "@/lib/utils";
 import { isGitHubWebUrl } from "@/lib/security/url";
+import { TextField } from "@/components/field";
 
 export const Route = createFileRoute("/sources")({
   head: () => ({
@@ -582,7 +583,7 @@ function OpportunityInboxPanel() {
             Importar texto ou link
           </div>
           <div className="grid gap-2 sm:grid-cols-[1fr_auto]">
-            <Field label="Link opcional" value={url} onChange={setUrl} />
+            <TextField label="Link opcional" value={url} onChange={setUrl} />
             <button
               type="button"
               onClick={() => importUrl.mutate()}
@@ -1999,14 +2000,14 @@ function AuthenticatedBrowserPanel() {
         />
 
         <div className="grid gap-3 sm:grid-cols-2">
-          <Field
+          <TextField
             label="URL inicial"
             value={startUrl}
             onChange={setStartUrl}
             placeholder="https://www.linkedin.com/jobs/"
           />
-          <Field label="CDP local" value={cdpUrl} onChange={setCdpUrl} />
-          <Field
+          <TextField label="CDP local" value={cdpUrl} onChange={setCdpUrl} />
+          <TextField
             label="Referencia da autorizacao"
             value={authorizationReference}
             onChange={setAuthorizationReference}
@@ -2261,32 +2262,6 @@ function MiniMetric({ label, value }: { label: string; value: number }) {
       </div>
       <div className="mt-1 font-mono text-lg font-semibold">{value}</div>
     </div>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string;
-}) {
-  return (
-    <label className="block">
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </span>
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
-      />
-    </label>
   );
 }
 

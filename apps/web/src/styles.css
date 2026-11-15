@@ -395,18 +395,8 @@
   );
 }
 
-@utility grid-bg {
-  background-image:
-    linear-gradient(to right, oklch(0.85 0.01 250 / 0.4) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.85 0.01 250 / 0.4) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
-}
-
-@utility glass {
-  background: color-mix(in oklab, var(--color-card) 70%, transparent);
-  backdrop-filter: blur(12px);
-}
+/* grid-bg and glass were removed in CP-UX05: no consumer left after the landing moved to the
+   hero plane. */
 
 @media (prefers-reduced-motion: reduce) {
   *,

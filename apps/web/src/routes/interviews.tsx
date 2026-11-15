@@ -8,6 +8,7 @@ import { SectionCard } from "@/components/section-card";
 import { useCareerWorkflowApi } from "@/lib/api/career-workflows";
 import { useApiMode } from "@/lib/api/mode";
 import { usePreferences } from "@/lib/preferences";
+import { TextField } from "@/components/field";
 
 export const Route = createFileRoute("/interviews")({
   head: () => ({ meta: [{ title: "Entrevistas — SotuHire" }] }),
@@ -88,8 +89,13 @@ function InterviewsPage() {
               saveInterview.mutate();
             }}
           >
-            <Field label="Organização" value={organization} onChange={setOrganization} required />
-            <Field label="Cargo" value={role} onChange={setRole} required />
+            <TextField
+              label="Organização"
+              value={organization}
+              onChange={setOrganization}
+              required
+            />
+            <TextField label="Cargo" value={role} onChange={setRole} required />
             <button
               type="submit"
               disabled={saveInterview.isPending}
@@ -133,8 +139,8 @@ function InterviewsPage() {
               saveStory.mutate();
             }}
           >
-            <Field label="Título" value={storyTitle} onChange={setStoryTitle} required />
-            <Field
+            <TextField label="Título" value={storyTitle} onChange={setStoryTitle} required />
+            <TextField
               label="Referência da evidência"
               value={storyEvidence}
               onChange={setStoryEvidence}
@@ -168,7 +174,7 @@ function InterviewsPage() {
               saveFollowUp.mutate();
             }}
           >
-            <Field label="Assunto" value={followSubject} onChange={setFollowSubject} required />
+            <TextField label="Assunto" value={followSubject} onChange={setFollowSubject} required />
             <label className="grid gap-1.5 text-sm font-medium">
               Mensagem
               <textarea
@@ -197,32 +203,5 @@ function InterviewsPage() {
         </SectionCard>
       </div>
     </AppShell>
-  );
-}
-
-function Field({
-  label,
-  value,
-  onChange,
-  required,
-  placeholder,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  required?: boolean;
-  placeholder?: string;
-}) {
-  return (
-    <label className="grid gap-1.5 text-sm font-medium">
-      {label}
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        required={required}
-        placeholder={placeholder}
-        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-      />
-    </label>
   );
 }

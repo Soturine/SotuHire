@@ -45,8 +45,8 @@ nada aqui é "verde no CI".
 | UX-06 | Perfil e Resume Studio | DONE | CP-UX02: composição nova, `Field`, versões de variante, fatos alterados reconciliados, E2E demo e API real, 0 nós axe | reimportação sem aviso (dados) |
 | UX-07 | Radar, fontes, Tracker | PARTIAL | CP-UX03: painel do Radar, funil e cartões do Tracker, lista no celular, Fontes com navegação; 0 nós axe; jornada do Tracker contra a API real | comparação de vagas lado a lado |
 | UX-08 | Lab, Copilot, aprovações, Configurações | PARTIAL | CP-UX04: Aprovações recompostas, Copilot alinhado ao Cockpit, demo com máquina de estados, destino do texto da IA, orientação × mudança no Lab; E2E de ciclo, erro e undo | recomposição completa do Lab; chamadas reais a providers (`BLOCKED_EXTERNAL_CREDENTIALS`) |
-| UX-09 | Demais rotas e limpeza de estilos | NOT_RUN | — | CP-UX05 |
-| UX-10 | Tema escuro e en-US medidos | DONE | escuro 0 nós, en-US 0 nós nas larguras capturadas | — |
+| UX-09 | Demais rotas e limpeza de estilos | PARTIAL | CP-UX05: tela inicial na identidade nova, utilitários órfãos removidos, `TextField` compartilhado; 400 telas sem violação | interface das telas de produto só em pt-BR |
+| UX-10 | Tema escuro e en-US medidos | DONE | CP-UX05: 400 telas, claro/escuro × pt-BR/en-US × 4 larguras, 0 nós axe | tradução das telas de produto está em UX-09 |
 | UX-11 | Fluxos com API real | PARTIAL | pareamento, Cockpit, busca; Perfil → Mestre → autosave → exportação → reconciliação contra a API real | vagas, Tracker, Lab |
 | UX-12 | Desempenho e matriz de navegadores | PARTIAL | bundle medido | LCP/CLS/INP de produção, Firefox, WebKit (CP-UX06) |
 | v3/v4 | Dados informados uma vez | PARTIAL | projeção Perfil → Mestre com revisão | edição de fato já projetado; retirada de `LocalStore` |

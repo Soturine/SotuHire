@@ -20,7 +20,9 @@ from PIL import Image
 
 # (gallery id, path inside the capture folder, crop height or None for the whole image)
 SELECTION: list[tuple[str, str, int | None]] = [
+    ("home-desktop", "home/desktop.png", 900),
     ("dashboard-desktop", "dashboard/desktop.png", 900),
+    ("dashboard-desktop-en", "dashboard/desktop-en-US.png", 900),
     ("dashboard-desktop-dark", "dashboard/desktop-dark.png", 900),
     ("dashboard-mobile", "dashboard/mobile.png", 844),
     ("dashboard-tablet", "dashboard/tablet.png", 768),
