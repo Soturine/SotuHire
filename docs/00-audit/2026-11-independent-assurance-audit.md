@@ -96,6 +96,13 @@ em `8ea37d7` e passa depois.
 | SH-NEW-020 | P1 | `VERIFIED` | Modo API Real: toda chamada do Career Copilot v2 falhava antes da rede (URL `/api/v2` rejeitada pelo normalizador do pareamento, desde `880a5f1`). Os E2E só usavam o modo demo. Teste unitário falha no código anterior; jornada contra a API real passa. |
 | SH-NEW-021 | P1 | `VERIFIED` | Rejeições do `LocalSecurityMiddleware` (externo ao CORS) saíam sem cabeçalhos CORS; o navegador escondia o 401 que inicia o pareamento web. Teste falha no código anterior; o log da API real mostra 401 → csrf → pairing → 200. |
 | SH-NEW-022 | P3 | `VERIFIED` | Falso verde no E2E do Radar: `/…|lida|Modo Demo/` casava com "Compatibilidade" no menu. Checagens passaram a olhar só o toast. |
+| SH-NEW-023 | P2 | `VERIFIED` | Consultas repetiam respostas 4xx: o primeiro uso do Resume Studio (404) girava ~7 s antes do onboarding; E2E instável (2/3 sob carga). Política `lib/api/retry.ts`; v2 passa a lançar `ApiHttpError`. 75/75 em repetição. |
+| SH-NEW-024 | P1 | `VERIFIED` | Variantes em "última gravação vence": uma aba apagava a outra sem aviso. Controle otimista + reconciliação explícita no editor. |
+| SH-NEW-025 | P2 | `VERIFIED` | Fato editado no Perfil depois de projetado ficava desatualizado no Mestre sem sinal. Lista de diferenças e atualização a pedido. |
+| SH-NEW-026 | P2 | `VERIFIED` | Configurações de IA: a hidratação tardia (ou um refetch) revertia a escolha de provider não salva e desabilitava o campo da chave; E2E instável (2/3). Formulário espera a configuração salva e só re-hidrata quando o conteúdo muda; 10/10. |
+| SH-NEW-027 | P3 | `VERIFIED` | Resume Studio: erro diferente de 404 ficava preso em "Abrindo…"; rascunho restaurado nunca era salvo; importação gravava o Mestre numa chave de cache sem `baseUrl`. |
+| SH-NEW-028 | P3 | `VERIFIED` | Perfil: "Remover" apagava um fato num clique, sem confirmação; tipos e origens apareciam crus (`higher_education`, `demo_resume`). |
+| SH-NEW-029 | P3 | `VERIFIED` | Captura de UX analisava a página 400 ms após `networkidle`, que não espera a latência simulada do demo (até 800 ms): nós "transitórios" de contraste no Application Lab. Espera de 1 s; 0 nós. |
 
 ## Eficácia dos testes (controles negativos)
 

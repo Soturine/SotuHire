@@ -151,7 +151,20 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Testes | Vitest 32/32 (3 novos de retry); Chromium E2E 33 passed + o instável investigado (repetição 3× de 3 specs: 75/75); captura 200 telas + 10 estados: 0 nós axe, 0 estouro, 0 erro de console |
 | Medidas | JS +1,0 KB e CSS +0,8 KB gzip contra `739023c`, mesmo método |
 | Não é | redesign das demais telas (segue em CP-UX02…05) |
+| Commit | `81aba70` (push confirmado com `ls-remote`) |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, direção de design, ADR 006, galeria `2026-11-v5-ux01b`) |
+
+## CP-UX02 — Perfil, Resume Studio, primeira visita; variantes versionadas
+
+| Campo | Registro |
+| --- | --- |
+| Hipótese | Perfil e Resume Studio eram listas longas de formulários; dados informados uma vez podiam divergir entre Perfil, Mestre e variantes sem sinal; 8 etapas antes da primeira tela |
+| Mudança | composição nova das duas telas, `Field` compartilhado, onboarding em 2 etapas; backend: variantes com `expected_updated_at` (409), lista e atualização a pedido de fatos alterados no Perfil |
+| Achados no caminho | SH-NEW-024…029 (ver auditoria); dois E2E instáveis investigados até a causa (retry de 4xx, hidratação tardia das configurações de IA), nenhum mascarado |
+| Testes | pytest 941 passed, 4 skipped (providers externos sem chave); 6 novos de reconciliação, o módulo nem importa no código anterior; Vitest 35/35; Chromium E2E 39 passed, 0 failed, 71 skipped (capturas e API real condicionadas); API real: 2 jornadas passam (fato → Mestre → autosave → JSON/PDF → edição reconciliada) |
+| Medidas | 0 nós axe, 0 estouro, 0 erro de console nas 8 combinações; onboarding 8 → 2 etapas |
+| Não é | Radar, Tracker, Lab, Copilot e Configurações recompostos (CP-UX03/04); reimportação do mesmo arquivo continua upsert sem aviso |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, mapa de autoridade, auditoria, galeria `2026-11-v5-ux02`, direção de design) |
 
 ## Ferramentas (repositórios donos)
 

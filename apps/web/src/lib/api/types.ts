@@ -1933,7 +1933,18 @@ export interface ProfileUpdateItem {
   section_title: string;
 }
 
+/** A projected fact whose Profile text no longer matches its Master Resume entry. */
+export interface ProfileChangedItem {
+  item_id: string;
+  item_type: string;
+  title: string;
+  section_title: string;
+  changes: { field: string; in_master: string; in_profile: string }[];
+}
+
 export interface ProfileUpdatesResult {
   master_resume_id: string;
   items: ProfileUpdateItem[];
+  /** Absent on APIs older than CP-UX02. */
+  changed?: ProfileChangedItem[];
 }

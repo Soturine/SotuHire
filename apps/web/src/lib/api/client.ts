@@ -970,7 +970,30 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
               section_title: "Idiomas",
             },
           ],
+          changed: [
+            {
+              item_id: "profile-demo-project",
+              item_type: "project",
+              title: "Projeto de extensão (DEMO)",
+              section_title: "Projetos",
+              changes: [
+                {
+                  field: "content",
+                  in_master: "Projeto acadêmico de extensão.",
+                  in_profile: "Projeto de extensão com 120 pessoas atendidas (exemplo fictício).",
+                },
+              ],
+            },
+          ],
         },
+      ),
+    resumeStudioRefreshProfileFacts: (itemIds: string[]) =>
+      call<{ resume: MasterResume }>(
+        mode,
+        baseUrl,
+        "/resume-studio/master/profile-refresh",
+        { method: "POST", body: JSON.stringify({ item_ids: itemIds }) },
+        { resume: mockMasterResume },
       ),
     resumeStudioApplyProfileUpdates: (itemIds: string[]) =>
       call<{ resume: MasterResume }>(
@@ -1055,13 +1078,23 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         { method: "POST", body: JSON.stringify({ variant }) },
         { variant },
       ),
-    resumeStudioUpdateVariant: (variantId: string, patch: Partial<ResumeVariant>) =>
+    /** With expectedUpdatedAt the API answers 409 if the variant was saved elsewhere since. */
+    resumeStudioUpdateVariant: (
+      variantId: string,
+      patch: Partial<ResumeVariant>,
+      expectedUpdatedAt?: string,
+    ) =>
       call<{ variant: ResumeVariant }>(
         mode,
         baseUrl,
         `/resume-studio/variants/${encodeURIComponent(variantId)}`,
-        { method: "PATCH", body: JSON.stringify(patch) },
-        { variant: { ...mockVariant, ...patch } },
+        {
+          method: "PATCH",
+          body: JSON.stringify(
+            expectedUpdatedAt ? { ...patch, expected_updated_at: expectedUpdatedAt } : patch,
+          ),
+        },
+        { variant: { ...mockVariant, ...patch, updated_at: new Date().toISOString() } },
       ),
     resumeStudioTemplates: () =>
       call<{ items: ResumeTemplate[] }>(mode, baseUrl, "/resume-studio/templates", undefined, {

@@ -210,6 +210,11 @@ export const ptBRMessages = {
   "onboarding.step.approval.body":
     "O Copiloto apenas propõe. Revise evidências, prévia e impacto na fila antes de aprovar qualquer escrita.",
   "onboarding.openStep": "Abrir {{page}}",
+  "onboarding.start.title": "Por onde começar",
+  "onboarding.start.body":
+    "Escolha um caminho. Você pode explorar tudo com dados de exemplo antes de usar os seus.",
+  "onboarding.start.explore": "Explorar com dados de exemplo",
+  "onboarding.principles": "Como o SotuHire trabalha",
 
   "errors.notFoundTitle": "Página não encontrada",
   "errors.notFoundBody": "O recurso que você procura não existe ou foi movido.",
@@ -430,6 +435,11 @@ export const enUSMessages = {
   "onboarding.step.approval.body":
     "The Copilot only proposes. Review evidence, preview, and impact in the queue before approving any write.",
   "onboarding.openStep": "Open {{page}}",
+  "onboarding.start.title": "Where to start",
+  "onboarding.start.body":
+    "Pick a path. You can explore everything with sample data before using your own.",
+  "onboarding.start.explore": "Explore with sample data",
+  "onboarding.principles": "How SotuHire works",
 
   "errors.notFoundTitle": "Page not found",
   "errors.notFoundBody": "The resource you are looking for does not exist or has moved.",

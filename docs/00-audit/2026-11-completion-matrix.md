@@ -42,12 +42,12 @@ nada aqui é "verde no CI".
 | UX-03 | Navegação por jornada desktop/tablet/mobile | DONE | registro único, barra lateral, barra mobile, E2E `journey-shell` | — |
 | UX-04 | Busca e autocomplete reais | PARTIAL | telas sem acento, recentes, dados locais (evidência, portfólio) | busca de dados no backend sem acento e sobre Perfil e vagas (CP-UX03) |
 | UX-05 | Motion e microinterações com reduced-motion | PARTIAL | tokens de duração, entrada de página, abertura de jornada | interações das telas de produto |
-| UX-06 | Perfil e Resume Studio | NOT_RUN | — | CP-UX02 |
+| UX-06 | Perfil e Resume Studio | DONE | CP-UX02: composição nova, `Field`, versões de variante, fatos alterados reconciliados, E2E demo e API real, 0 nós axe | reimportação sem aviso (dados) |
 | UX-07 | Radar, fontes, Tracker | NOT_RUN | — | CP-UX03 |
 | UX-08 | Lab, Copilot, aprovações, Configurações | NOT_RUN | — | CP-UX04 |
 | UX-09 | Demais rotas e limpeza de estilos | NOT_RUN | — | CP-UX05 |
 | UX-10 | Tema escuro e en-US medidos | DONE | escuro 0 nós, en-US 0 nós nas larguras capturadas | — |
-| UX-11 | Fluxos com API real | PARTIAL | pareamento, Cockpit, busca e primeiro uso do Resume Studio contra a API real | demais jornadas |
+| UX-11 | Fluxos com API real | PARTIAL | pareamento, Cockpit, busca; Perfil → Mestre → autosave → exportação → reconciliação contra a API real | vagas, Tracker, Lab |
 | UX-12 | Desempenho e matriz de navegadores | PARTIAL | bundle medido | LCP/CLS/INP de produção, Firefox, WebKit (CP-UX06) |
 | v3/v4 | Dados informados uma vez | PARTIAL | projeção Perfil → Mestre com revisão | edição de fato já projetado; retirada de `LocalStore` |
 | v3/v4 | Haiku 5.5 | PARTIAL | adapter com `MOCK_PASS` | chamada real `BLOCKED_EXTERNAL_CREDENTIALS` |

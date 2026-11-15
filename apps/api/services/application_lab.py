@@ -19,9 +19,11 @@ from modules.application_lab.profile_projection import (
     SECTION_LAYOUT,
     apply_profile_updates,
     master_resume_from_profile,
+    profile_changes,
     profile_updates,
+    refresh_profile_facts,
 )
-from modules.application_lab.repository import MasterResumeConflictError
+from modules.application_lab.repository import StaleWriteError
 from modules.application_lab.service import ApplicationLabService
 from modules.profile.json_resume import section_for_item
 from modules.profile.service import UniversalCareerProfileService
@@ -33,6 +35,8 @@ from apps.api.schemas.application_lab import (
     ApplicationLabSessionPage,
     MasterResumeResponse,
     PaginationMeta,
+    ProfileChangedItem,
+    ProfileFieldChange,
     ProfileUpdateItem,
     ProfileUpdatesResponse,
     ResumeExportResponse,
@@ -186,6 +190,35 @@ class ApplicationLabApiService:
                 )
                 for item in profile_updates(profile, master)
             ],
+            changed=[
+                ProfileChangedItem(
+                    item_id=item.item_id,
+                    item_type=item.type,
+                    title=item.title,
+                    section_title=section_title,
+                    changes=[
+                        ProfileFieldChange(field=field, in_master=before, in_profile=after)
+                        for field, (before, after) in diff.items()
+                    ],
+                )
+                for item, section_title, diff in profile_changes(profile, master)
+            ],
+        )
+
+    def refresh_profile_facts(self, item_ids: list[str]) -> MasterResumeResponse:
+        """Bring the current Profile text of chosen facts into the Master (never the reverse)."""
+        master = self.master().resume
+        profile = UniversalCareerProfileService().get_profile()
+        try:
+            updated = refresh_profile_facts(master, profile, item_ids)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        if updated is master:
+            return MasterResumeResponse(resume=master)
+        return MasterResumeResponse(
+            resume=self._call(
+                self.repository.save_master_resume, updated, expected_updated_at=master.updated_at
+            )
         )
 
     def apply_profile_updates(self, item_ids: list[str]) -> MasterResumeResponse:
@@ -252,11 +285,17 @@ class ApplicationLabApiService:
             ),
         )
 
-    def save_variant(self, variant: ResumeVariant) -> ResumeVariantResponse:
+    def save_variant(
+        self, variant: ResumeVariant, *, expected_updated_at: datetime | None = None
+    ) -> ResumeVariantResponse:
         if self.repository.get_master_resume(variant.master_resume_id) is None:
             raise HTTPException(status_code=404, detail="Currículo Mestre não encontrado.")
         prepared = variant.model_copy(update={"updated_at": datetime.now(UTC)})
-        return ResumeVariantResponse(variant=self._call(self.repository.save_variant, prepared))
+        return ResumeVariantResponse(
+            variant=self._call(
+                self.repository.save_variant, prepared, expected_updated_at=expected_updated_at
+            )
+        )
 
     def variant(self, variant_id: str) -> ResumeVariantResponse:
         variant = self.repository.get_variant(variant_id)
@@ -264,14 +303,23 @@ class ApplicationLabApiService:
             raise HTTPException(status_code=404, detail="Variante não encontrada.")
         return ResumeVariantResponse(variant=variant)
 
-    def update_variant(self, variant_id: str, changes: dict[str, Any]) -> ResumeVariantResponse:
+    def update_variant(
+        self,
+        variant_id: str,
+        changes: dict[str, Any],
+        *,
+        expected_updated_at: datetime | None = None,
+    ) -> ResumeVariantResponse:
+        """Patch a variant. With ``expected_updated_at`` a newer stored copy answers 409."""
         current = self.variant(variant_id).variant
         allowed = {"title", "target_role", "sections", "validation_warnings"}
         update = {
             key: value for key, value in changes.items() if key in allowed and value is not None
         }
         update["updated_at"] = datetime.now(UTC)
-        return self.save_variant(current.model_copy(update=update))
+        return self.save_variant(
+            current.model_copy(update=update), expected_updated_at=expected_updated_at
+        )
 
     def templates(self) -> ResumeTemplatesResponse:
         return ResumeTemplatesResponse(items=self.repository.list_templates())
@@ -301,7 +349,7 @@ class ApplicationLabApiService:
     def _call(function, *args, **kwargs):
         try:
             return function(*args, **kwargs)
-        except MasterResumeConflictError as exc:
+        except StaleWriteError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except LookupError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc

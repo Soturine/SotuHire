@@ -13,9 +13,10 @@ import {
   Trash2,
   WifiOff,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
+import { LoadingState } from "@/components/states";
 import { useApiStatus } from "@/components/api-mode-badge";
 import { useApi } from "@/lib/api/hooks";
 import { DEFAULT_API_URL, useApiMode } from "@/lib/api/mode";
@@ -645,9 +646,16 @@ function AiProvidersCard() {
     retry: false,
   });
 
+  // Hydrate the form from what is saved only when the saved settings actually change. A refetch
+  // with the same content (window refocus, remount) used to reset an unsaved choice of provider
+  // and disable the key field while the person was typing.
+  const hydratedFrom = useRef("");
   useEffect(() => {
     if (!settingsQ.data) return;
     const data = settingsQ.data;
+    const snapshot = JSON.stringify(data);
+    if (snapshot === hydratedFrom.current) return;
+    hydratedFrom.current = snapshot;
     setProvider(data.provider);
     setModel(data.model || defaultModel(data.provider));
     setCustomModel("");
@@ -786,6 +794,23 @@ function AiProvidersCard() {
     testMutation.isPending ||
     deleteMutation.isPending ||
     refreshModels.isPending;
+
+  // Until the saved settings arrive the form would show defaults, and a choice made then was
+  // overwritten when they did (the late hydration reverted the provider to "local").
+  if (settingsQ.isLoading) {
+    return (
+      <SectionCard
+        className="lg:col-span-2"
+        title={
+          <span className="flex items-center gap-2">
+            <Brain className="h-4 w-4 text-accent-strong" /> IA e Providers
+          </span>
+        }
+      >
+        <LoadingState label="Lendo a configuração de IA salva…" />
+      </SectionCard>
+    );
+  }
 
   return (
     <SectionCard

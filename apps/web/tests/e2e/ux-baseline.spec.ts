@@ -84,7 +84,9 @@ for (const { viewport, theme, locale } of combos) {
       await page.goto(route);
       await expect(page.locator("main, [role=main], body").first()).toBeVisible();
       await page.waitForLoadState("networkidle");
-      await page.waitForTimeout(400);
+      // demo calls simulate 400-800 ms of latency and networkidle does not wait for them; at
+      // 400 ms axe could catch a control in the middle of its disabled -> enabled switch
+      await page.waitForTimeout(1_000);
 
       const overflow = await page.evaluate(() => {
         const width = document.documentElement.clientWidth;

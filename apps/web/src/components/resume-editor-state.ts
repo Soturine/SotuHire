@@ -8,7 +8,7 @@ export interface ResumeEditorState {
 }
 
 export type ResumeEditorAction =
-  | { type: "replace"; variant: ResumeVariant }
+  | { type: "replace"; variant: ResumeVariant; dirty?: boolean }
   | { type: "edit-meta"; field: "title" | "target_role"; value: string }
   | { type: "edit-section"; sectionId: string; content: string }
   | { type: "toggle-section"; sectionId: string }
@@ -27,7 +27,8 @@ export function resumeEditorReducer(
   state: ResumeEditorState,
   action: ResumeEditorAction,
 ): ResumeEditorState {
-  if (action.type === "replace") return createResumeEditorState(action.variant);
+  if (action.type === "replace")
+    return { ...createResumeEditorState(action.variant), dirty: action.dirty ?? false };
   if (action.type === "undo") {
     const previous = state.past.at(-1);
     if (!previous) return state;

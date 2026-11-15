@@ -46,4 +46,17 @@ describe("resume editor state", () => {
     expect(moved.present.sections.map((section) => section.position)).toEqual([0, 1, 2]);
     expect(approximatePageCount(moved.present, "A4")).toBeGreaterThanOrEqual(1);
   });
+
+  it("a restored browser draft stays dirty so autosave stores it", () => {
+    const initial = createResumeEditorState(mockVariant);
+    const restored = resumeEditorReducer(initial, {
+      type: "replace",
+      variant: mockVariant,
+      dirty: true,
+    });
+    expect(restored.dirty).toBe(true);
+    expect(resumeEditorReducer(initial, { type: "replace", variant: mockVariant }).dirty).toBe(
+      false,
+    );
+  });
 });

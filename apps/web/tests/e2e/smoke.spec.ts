@@ -76,17 +76,28 @@ test("profile page imports fictitious text and keeps review before saving", asyn
 
   await expect(page.getByRole("heading", { name: "Perfil", exact: true })).toBeVisible();
   await expect(page.getByText("Perfil Profissional Universal", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Identidade e objetivos" }).click();
+  // nothing changed yet: saving is not offered
+  await expect(page.getByTestId("profile-save")).toBeDisabled();
   await page.getByTestId("profile-name").fill("Pessoa Ficticia E2E");
+  await expect(page.getByText("Alterações ainda não salvas.")).toBeVisible();
   await page.getByTestId("profile-save").click();
   await expect(page.getByText(/Perfil atualizado|Modo Demo/i).first()).toBeVisible();
 
+  await page.getByRole("button", { name: "Adicionar fato" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Adicionar um fato ao Perfil" });
+  // a fact without a title is refused inline, not sent
+  await dialog.getByTestId("profile-add-item").click();
+  await expect(dialog.getByText("Dê um título ao fato.")).toBeVisible();
   await page.getByTestId("profile-item-title").fill("NR10");
   await page
     .getByTestId("profile-item-evidence")
     .fill("Certificado ficticio informado pelo usuario.");
   await page.getByTestId("profile-add-item").click();
   await expect(page.getByText(/Item adicionado|Modo Demo/i).first()).toBeVisible();
+  await expect(dialog).toHaveCount(0);
 
+  await page.getByRole("tab", { name: "Importar" }).click();
   await page
     .getByTestId("profile-import-textarea")
     .fill("Sou estudante de engenharia com CREA e experiencia em obra.");
@@ -97,11 +108,12 @@ test("profile page imports fictitious text and keeps review before saving", asyn
   );
   await page.getByRole("button", { name: "Adicionar ao perfil" }).first().click();
   await expect(page.getByText(/Item adicionado|Modo Demo/i).first()).toBeVisible();
+  await page.getByRole("tab", { name: /Fatos e evidências/ }).click();
   await expect(page.getByTestId("profile-items")).toContainText(/NR10|Engenharia|Registro/);
 });
 
 test("profile page extracts Lattes candidates and confirms selected items", async ({ page }) => {
-  await page.goto("/profile");
+  await page.goto("/profile?tab=import");
 
   await expect(page.getByTestId("profile-lattes-section")).toBeVisible();
   await expect(page.getByTestId("profile-lattes-review-warning")).toBeVisible();
@@ -192,6 +204,12 @@ test("Claude can be chosen as provider with Haiku 5.5 as the default model and a
     });
     await expect(keyInput).toBeEnabled({ timeout: 1_000 });
   }).toPass({ timeout: 10_000 });
+  // A background refetch (window refocus) must not revert an unsaved choice: it used to put the
+  // provider back to "local" and disable the key field while the person was typing.
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await page.waitForTimeout(500);
+  await expect(page.getByTestId("ai-model-select")).toHaveValue("claude-haiku-5-5");
+  await expect(keyInput).toBeEnabled();
   await keyInput.fill(fakeKey);
   await page.getByRole("button", { name: /Salvar no backend local/i }).click();
   await expect(keyInput).toHaveValue("");
@@ -210,15 +228,16 @@ test("demo personas stay coherent and can be restored without touching real data
   await expect(page.getByRole("heading", { name: /Configura..es/ }).first()).toBeVisible();
 
   await page.goto("/profile");
+  await expect(page.getByText("COREN ativo — exemplo fictício")).toBeVisible();
+  await page.getByRole("tab", { name: "Identidade e objetivos" }).click();
   await expect(page.getByLabel("Headline")).toHaveValue(
     "Enfermeira assistencial com COREN confirmado",
   );
-  await expect(page.getByText("COREN ativo — exemplo fictício")).toBeVisible();
 
   await page.goto("/settings");
   await Promise.all([page.waitForNavigation(), page.getByTestId("restore-demo-data").click()]);
   await expect(page.getByRole("heading", { name: /Configura..es/ }).first()).toBeVisible();
-  await page.goto("/profile");
+  await page.goto("/profile?tab=identity");
   await expect(page.getByLabel("Headline")).toHaveValue(
     "Estudante de engenharia com projetos acadêmicos",
   );

@@ -82,6 +82,78 @@ def profile_updates(profile: UniversalCareerProfile, master: MasterResume) -> li
     return [item for item in projectable_items(profile) if item.item_id not in present]
 
 
+REFRESHABLE_FIELDS = ("title", "subtitle", "content", "start_date", "end_date")
+
+
+def profile_changes(
+    profile: UniversalCareerProfile, master: MasterResume
+) -> list[tuple[ProfileItem, str, dict[str, tuple[str, str]]]]:
+    """Projected facts whose Profile version no longer matches the Master Resume entry.
+
+    Only entries built from exactly one profile item are compared (an entry the person merged
+    from several facts is theirs). Returns (item, section title, {field: (in master, in
+    profile)}). The difference may be an edit in the Profile or in the Master; the person
+    decides, and nothing is ever written back to the Profile.
+    """
+    eligible = {item.item_id: item for item in projectable_items(profile)}
+    changes: list[tuple[ProfileItem, str, dict[str, tuple[str, str]]]] = []
+    for section in master.sections:
+        for entry in section.entries:
+            if len(entry.source_profile_item_ids) != 1:
+                continue
+            item = eligible.get(entry.source_profile_item_ids[0])
+            if item is None:
+                continue
+            fresh = _entry(item, position=entry.position)
+            diff = {
+                field: (getattr(entry, field), getattr(fresh, field))
+                for field in REFRESHABLE_FIELDS
+                if getattr(entry, field) != getattr(fresh, field)
+            }
+            if diff:
+                changes.append((item, section.title, diff))
+    return changes
+
+
+def refresh_profile_facts(
+    master: MasterResume, profile: UniversalCareerProfile, item_ids: list[str]
+) -> MasterResume:
+    """Overwrite the Master entries of the chosen facts with their current Profile text.
+
+    Keeps the entry id, position and enabled flag. Idempotent: ids whose entry already matches
+    are no-ops and, when nothing changes, the very same object is returned. Ids that are not a
+    changed, projected, confirmed fact are refused as a whole.
+    """
+    chosen = list(dict.fromkeys(item_ids))
+    pending = {item.item_id: item for item, _title, _diff in profile_changes(profile, master)}
+    present = _projected_item_ids(master)
+    eligible = {item.item_id for item in projectable_items(profile)} & present
+    unknown = [item_id for item_id in chosen if item_id not in eligible]
+    if unknown:
+        raise ValueError(
+            "Itens que não estão no Currículo Mestre ou não estão confirmados no Perfil: "
+            + ", ".join(sorted(unknown))
+        )
+    targets = {item_id: pending[item_id] for item_id in chosen if item_id in pending}
+    if not targets:
+        return master
+    now = datetime.now(UTC)
+    sections = [section.model_copy(deep=True) for section in master.sections]
+    for section in sections:
+        for entry in section.entries:
+            if len(entry.source_profile_item_ids) != 1:
+                continue
+            item = targets.get(entry.source_profile_item_ids[0])
+            if item is None:
+                continue
+            fresh = _entry(item, position=entry.position)
+            for field in REFRESHABLE_FIELDS:
+                setattr(entry, field, getattr(fresh, field))
+            entry.updated_at = now
+            section.updated_at = now
+    return master.model_copy(update={"sections": sections, "updated_at": now})
+
+
 def apply_profile_updates(
     master: MasterResume, profile: UniversalCareerProfile, item_ids: list[str]
 ) -> MasterResume:
@@ -166,6 +238,8 @@ __all__ = [
     "SECTION_LAYOUT",
     "apply_profile_updates",
     "master_resume_from_profile",
+    "profile_changes",
     "profile_updates",
     "projectable_items",
+    "refresh_profile_facts",
 ]

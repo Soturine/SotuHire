@@ -1,4 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { readFile } from "node:fs/promises";
+
+import { expect, test, type Page } from "@playwright/test";
 
 /**
  * Against a real Local API (not mocks): REAL_API_BOOTSTRAP=<pairing bootstrap> with
@@ -10,7 +12,17 @@ import { expect, test } from "@playwright/test";
 
 const bootstrap = process.env.REAL_API_BOOTSTRAP || "";
 
+async function pair(page: Page, path: string) {
+  await page.addInitScript(() => localStorage.setItem("sotuhire.api-mode", "real"));
+  await page.goto(`${path}#sotuhire-pairing=${bootstrap}`);
+  await expect(page.getByRole("link", { name: /API local conectada/ }).first()).toBeVisible({
+    timeout: 15_000,
+  });
+}
+
 test.describe("real local API", () => {
+  // the second journey builds on the empty data dir the first one checks
+  test.describe.configure({ mode: "serial" });
   test.skip(
     !bootstrap,
     "Set REAL_API_BOOTSTRAP and run scripts/run_api.py to exercise the real API.",
@@ -57,5 +69,63 @@ test.describe("real local API", () => {
         path: `${process.env.CAPTURE_UX_DIR}/_states/real-api-resume-studio-first-use.png`,
       });
     }
+  });
+
+  test("profile fact → Master Resume → autosave → export → profile edit reconciled", async ({
+    page,
+  }) => {
+    test.setTimeout(90_000);
+    const fact = "Enfermeira assistencial (fictícia)";
+    await pair(page, "/profile");
+
+    // first use of the Profile: an empty state with a way in, not a blank list
+    await expect(page.getByText("Seu perfil ainda não tem fatos")).toBeVisible();
+    await page.getByRole("button", { name: "Adicionar o primeiro fato" }).click();
+    const dialog = page.getByRole("dialog", { name: "Adicionar um fato ao Perfil" });
+    await dialog.getByLabel("Tipo").selectOption("experience");
+    await page.getByTestId("profile-item-title").fill(fact);
+    await dialog.getByLabel(/Organização/).fill("Hospital Fictício");
+    await page.getByTestId("profile-item-evidence").fill("Plantões em UTI adulto.");
+    await page.getByTestId("profile-add-item").click();
+    await expect(page.getByTestId("profile-items")).toContainText(fact);
+
+    await page.goto("/resume-studio");
+    await page.getByTestId("master-from-profile").click();
+    await expect(page.getByTestId("resume-studio")).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByTestId("resume-studio")).toContainText(fact);
+    await page.getByLabel("Nome da variante").fill("Variante sintética E2E");
+    await expect(page.getByRole("status").filter({ hasText: /^Salvo/ })).toBeVisible({
+      timeout: 10_000,
+    });
+
+    // exports come from the API and carry the confirmed fact
+    const jsonDownload = page.waitForEvent("download");
+    await page.getByRole("button", { name: "JSON Resume" }).click();
+    const json = await readFile((await (await jsonDownload).path())!, "utf8");
+    expect(json).toContain(fact);
+    const pdfDownload = page.waitForEvent("download");
+    await page.getByRole("button", { name: "PDF", exact: true }).click();
+    const pdf = await readFile((await (await pdfDownload).path())!);
+    expect(pdf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+    if (process.env.CAPTURE_UX_DIR) {
+      await page.screenshot({
+        path: `${process.env.CAPTURE_UX_DIR}/_states/real-api-resume-studio.png`,
+      });
+    }
+
+    // a later edit in the Profile shows up as a reviewable difference, applied only on request
+    await page.goto("/profile");
+    await page.getByRole("button", { name: "Editar" }).first().click();
+    await page.getByLabel("Evidência ou descrição").fill("Plantões em UTI adulto e pediátrica.");
+    await page.getByRole("button", { name: "Salvar edição" }).click();
+    await expect(page.getByTestId("profile-items")).toContainText("UTI adulto e pediátrica");
+
+    await page.goto("/resume-studio");
+    const changed = page.getByTestId("profile-changed");
+    await expect(changed).toContainText("Plantões em UTI adulto e pediátrica.");
+    await expect(changed).toContainText("Plantões em UTI adulto.");
+    await changed.getByRole("checkbox").first().check();
+    await page.getByTestId("refresh-profile-facts").click();
+    await expect(changed).toHaveCount(0);
   });
 });

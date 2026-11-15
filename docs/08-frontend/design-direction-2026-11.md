@@ -125,3 +125,18 @@ Decisões:
 
 Não mudou: navegação por jornada, busca, estados de erro e vazio, traduções, destinos das ações,
 avisos de modo de exemplo e API Real.
+
+## Entregue no CP-UX02
+
+- **Perfil**: o hero (a "afirmação" da tela) mostra quem é a pessoa e quanto do que está registrado ela
+  confirmou. O resto vira três abas com endereço próprio, para não empilhar seis formulários: fatos
+  (o que alimenta tudo), identidade e objetivos (o que se edita raramente) e importação (o que se usa
+  uma vez). Fatos pendentes têm marca ocre e uma ação "Confirmar"; remover pede confirmação.
+- **Resume Studio**: o cabeçalho da variante responde "o que estou editando, de onde veio e o que
+  falta"; a barra de ferramentas separa modo, histórico e saída; o estado de salvamento é anunciado
+  (`role=status`) e o conflito com outra aba é um alerta com duas saídas, nunca uma gravação por cima.
+- **`Field`** (`src/components/field.tsx`): rótulo ligado ao controle, "opcional" como texto real,
+  dica e erro em `aria-describedby`, estilos únicos de controle (`controlClass`, `textareaClass`).
+  Aplicado no Perfil e no Resume Studio; as demais telas migram nos próximos checkpoints.
+- **Primeira visita**: 2 etapas. A primeira define idioma e tema e diz as três regras do produto; a
+  segunda oferece os caminhos como links. Os textos das 8 etapas antigas foram mantidos, só agrupados.

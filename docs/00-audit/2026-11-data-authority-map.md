@@ -54,12 +54,11 @@ voluntariado e interesses.
 
 ## Em aberto
 
-- Fatos editados no Perfil depois de projetados não atualizam a entrada já existente no Mestre (só
-  fatos novos aparecem como atualização). Decidir entre "propor edição" e manter o texto do documento.
+- ~~Fatos editados no Perfil depois de projetados não atualizam a entrada no Mestre.~~ Resolvido no
+  CP-UX02 (seção abaixo): a diferença é listada com antes/depois e aplicada só a pedido.
 - `LocalStore` ainda é usado por Application Lab, Local API, Radar, fontes e Tracker; a retirada segue
   a política de migração com backup e rollback e não foi feita neste ciclo.
-- Variantes: dois navegadores editando a mesma variante ao mesmo tempo continuam em "última gravação
-  vence" (a API de variantes não tem controle de versão). O Currículo Mestre já tem (ver abaixo).
+- ~~Variantes em "última gravação vence".~~ Resolvido no CP-UX02 (seção abaixo).
 - Reimportar o mesmo arquivo gera o mesmo `master_resume_id` (`master-{hash}`) e a adoção do rascunho
   é um upsert sem versão: substitui fatos aplicados do Perfil a esse Mestre. Ficou assim para não
   quebrar a reimportação; a tela de importação ainda não avisa.
@@ -75,3 +74,17 @@ voluntariado e interesses.
 O token de versão é o `updated_at` do Mestre; a conferência e a gravação ficam na mesma transação
 `BEGIN IMMEDIATE`, então dois escritores não passam os dois pela conferência. Os testes foram rodados
 contra o código anterior primeiro: 5 dos 6 falharam.
+
+## Variantes e fatos alterados no Perfil (CP-UX02)
+
+| Caso | Antes | Depois | Prova |
+| --- | --- | --- | --- |
+| Duas abas editando a mesma variante | o autosave da segunda apagava a primeira, sem aviso | `PATCH` com `expected_updated_at`; 409 se a versão salva mudou; o editor para o autosave e pergunta "Carregar a versão salva" ou "Manter a minha" (esta grava sem versão, por escolha) | `test_a_variant_patch_from_a_stale_copy_answers_409_and_keeps_the_newer`, `test_conditional_variant_writes_cannot_both_win`, E2E `a variant saved elsewhere stops autosave…` e `loading the saved version…` |
+| Fato editado no Perfil depois de entrar no Mestre | o Mestre ficava com o texto antigo, sem sinal | `GET /master/profile-updates` lista `changed` com campo, texto no Mestre e no Perfil; `POST /master/profile-refresh` atualiza só os escolhidos, idempotente, com versão do Mestre | `test_an_edited_profile_fact_is_listed_with_before_and_after`, `test_refresh_updates_the_master_entry_only_and_is_idempotent`, `test_the_api_lists_changed_facts_and_refreshes_on_request`, E2E com API real |
+| Direção da escrita | — | o Perfil nunca é escrito a partir do Mestre ou das variantes; variantes já criadas não mudam quando o Mestre muda | `test_refresh_updates_the_master_entry_only_and_is_idempotent` confere o Perfil depois |
+| Rascunho do navegador restaurado | a mensagem dizia "será salvo em seguida", mas o editor o marcava como salvo e ele só ia ao servidor numa próxima edição | o rascunho restaurado fica pendente e o autosave o grava com a versão em que se baseou | `resume-editor-state.test.ts` |
+
+Só entradas montadas a partir de um único fato são comparadas: uma entrada que a pessoa juntou de
+vários fatos é dela. A diferença pode vir de uma edição no Perfil ou no Mestre; a tela diz isso e não
+escolhe sozinha. No código anterior o módulo de teste nem importa (as funções e o erro de conflito não
+existem).

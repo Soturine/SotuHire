@@ -174,3 +174,28 @@ recaptura nas 8 combinações sem violações.
 | API local fora do ar | ![](../assets/ux-comparison/2026-11-v5/api-unreachable-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/api-unreachable-after.webp) | Falha dita e saída, agora sobre a hierarquia nova |
 | Perfil, desktop | ![](../assets/ux-comparison/2026-11-v5/profile-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/profile-desktop-after.webp) | Só tokens e cartões compartilhados; composição no CP-UX02 |
 | Radar, desktop | ![](../assets/ux-comparison/2026-11-v5/radar-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/radar-desktop-after.webp) | Indicadores herdam o `StatCard` novo; composição no CP-UX03 |
+
+### CP-UX02 — Perfil, Resume Studio e primeira visita
+
+Mesma matriz (25 rotas × 4 larguras × claro/escuro, pt-BR, mais estados): **0** nós axe sérios, 0
+estouro horizontal, 0 erro de console em todas as combinações. Hash do conjunto JSON:
+`d37061a1d1ff0c5b4fb81cbcd6238e3c70bb6f1406a046d7e717a8048e8f8e90`. A espera da captura passou de 400
+ms para 1 s depois do `networkidle` (SH-NEW-029); com 400 ms o Application Lab mostrava 5 nós em 8
+combinações, com 1 s, 0 na última de 3 repetições.
+
+| Estado | Baseline (`459ffa9`) | CP-UX02 | O que mudou |
+| --- | --- | --- | --- |
+| Perfil, desktop | ![](../assets/ux-comparison/2026-11-v5/profile-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux02/profile-desktop-after.webp) | Hero com nome, headline, áreas e % de fatos confirmados; abas Fatos / Identidade / Importar com link direto; fatos com tipo legível, origem e estado; remover pede confirmação |
+| Perfil, escuro | ![](../assets/ux-comparison/2026-11-v5-ux02/profile-desktop-dark-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux02/profile-desktop-dark-after.webp) | Mesma composição no tema escuro; 0 nós de contraste |
+| Perfil, mobile | ![](../assets/ux-comparison/2026-11-v5-ux02/profile-mobile-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux02/profile-mobile-after.webp) | Abas com rótulo curto, ações do hero empilhadas |
+| Resume Studio, desktop | ![](../assets/ux-comparison/2026-11-v5/resume-studio-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux02/resume-studio-desktop-after.webp) | Cabeçalho da variante com vínculos, páginas e pendências; barra de ferramentas agrupada (PDF como ação principal); painel do Perfil com fatos novos e fatos alterados lado a lado; preview em papel |
+| Resume Studio, mobile | ![](../assets/ux-comparison/2026-11-v5-ux02/resume-studio-mobile-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux02/resume-studio-mobile-after.webp) | Barra de ferramentas deixa de ser fixa no celular |
+| Resume Studio, primeiro uso | ![](../assets/ux-comparison/2026-11-v5/resume-studio-first-use-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux02/resume-studio-first-use-after.webp) | Sem os ~7 s de "Abrindo…" antes do onboarding (SH-NEW-023) |
+| Primeira visita | ![](../assets/ux-comparison/2026-11-v5/first-visit-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux02/first-visit-after.webp) | 8 etapas → 2: idioma, tema e princípios; depois os caminhos de início como links |
+
+Contra a API real, em diretório sintético (`real-api-shell.spec.ts`, 2 jornadas, rodadas no código
+final): o fato é criado pela interface, o Mestre é montado a partir do Perfil, o autosave grava, o JSON
+Resume exportado contém o fato e o PDF começa com `%PDF-`; a edição posterior no Perfil aparece como
+diferença e é aplicada no Mestre a pedido.
+
+![Resume Studio contra a API real](../assets/ux-comparison/2026-11-v5-ux02/real-api-resume-studio-after.webp)

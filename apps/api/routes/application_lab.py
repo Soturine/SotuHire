@@ -331,6 +331,19 @@ def apply_master_profile_updates(
     return ok(service.apply_profile_updates(payload.item_ids), request_id=payload.request_id)
 
 
+@resume_studio_router.post(
+    "/master/profile-refresh", response_model=ApiEnvelope[MasterResumeResponse]
+)
+def refresh_master_profile_facts(
+    payload: ProfileUpdatesApplyRequest, service: LabDependency
+) -> ApiEnvelope[MasterResumeResponse]:
+    """Replace Master entries of the chosen facts with their current Profile text, on request.
+
+    The Profile is never written from here: the Master follows the Profile, not the reverse.
+    """
+    return ok(service.refresh_profile_facts(payload.item_ids), request_id=payload.request_id)
+
+
 @resume_studio_router.put("/master", response_model=ApiEnvelope[MasterResumeResponse])
 def put_master_resume(
     payload: MasterResumeUpsertRequest, service: LabDependency
@@ -381,9 +394,11 @@ def update_resume_variant(
     payload: ResumeVariantUpdateRequest,
     service: LabDependency,
 ) -> ApiEnvelope[ResumeVariantResponse]:
-    changes = payload.model_dump(exclude={"request_id"}, exclude_unset=True)
+    changes = payload.model_dump(exclude={"request_id", "expected_updated_at"}, exclude_unset=True)
     return ok(
-        service.update_variant(variant_id, changes),
+        service.update_variant(
+            variant_id, changes, expected_updated_at=payload.expected_updated_at
+        ),
         request_id=payload.request_id,
     )
 

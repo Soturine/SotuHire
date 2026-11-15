@@ -34,8 +34,16 @@ from modules.storage.database import connect_database, default_database_path
 from modules.storage.migrations import ensure_database
 
 
-class MasterResumeConflictError(Exception):
+class StaleWriteError(Exception):
+    """A conditional write found a newer stored version than the one it was computed from."""
+
+
+class MasterResumeConflictError(StaleWriteError):
     """The Master Resume changed after the copy this write was computed from was read."""
+
+
+class ResumeVariantConflictError(StaleWriteError):
+    """The variant changed after the copy this write was computed from was read."""
 
 
 class ApplicationLabRepository:
@@ -236,12 +244,33 @@ class ApplicationLabRepository:
             updated_at=row["updated_at"],
         )
 
-    def save_variant(self, variant: ResumeVariant) -> ResumeVariant:
+    def save_variant(
+        self, variant: ResumeVariant, *, expected_updated_at: datetime | None = None
+    ) -> ResumeVariant:
+        """Upsert a variant; conditional on ``expected_updated_at`` like the Master Resume.
+
+        Two tabs (or a stale browser draft and a fresh edit) editing the same variant used to be
+        last-write-wins. With ``expected_updated_at`` the second writer gets
+        :class:`ResumeVariantConflictError` and the editor asks which version to keep.
+        """
         variant = variant.model_copy(deep=True)
         _normalize_positions(variant.sections)
         canonical = canonical_document(variant)
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            if expected_updated_at is not None:
+                current = connection.execute(
+                    "SELECT updated_at FROM resume_variants WHERE resume_variant_id = ?",
+                    (variant.resume_variant_id,),
+                ).fetchone()
+                if (
+                    current is not None
+                    and datetime.fromisoformat(current["updated_at"]) != expected_updated_at
+                ):
+                    raise ResumeVariantConflictError(
+                        "Esta variante foi salva em outra aba ou sessão depois de ser aberta aqui."
+                    )
             connection.execute(
                 """INSERT INTO resume_variants
                 (resume_variant_id, master_resume_id, job_snapshot_id, title, target_role,

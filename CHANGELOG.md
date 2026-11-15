@@ -9,6 +9,21 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- Perfil e Resume Studio recompostos (CP-UX02). Perfil: hero com nome, headline, áreas e parcela de
+  fatos confirmados; abas "Fatos e evidências", "Identidade e objetivos" e "Importar" com link direto
+  (`/profile?tab=…`); fatos com tipo e origem legíveis, estado de confirmação, "Confirmar" para o que
+  está pendente, edição no lugar e remoção com confirmação; "Adicionar fato" em diálogo com validação;
+  identidade com aviso de alterações não salvas e "Descartar". Resume Studio: cabeçalho da variante
+  (vínculos com o Perfil, páginas, pendências), barra de ferramentas agrupada, estado de salvamento
+  anunciado, preview em papel, importação recolhida. Componente `Field` compartilhado (rótulo ligado ao
+  controle, dica e erro anunciados).
+- Fatos alterados no Perfil depois de entrarem no Currículo Mestre aparecem com o texto do Mestre e o
+  do Perfil lado a lado; a pessoa escolhe quais atualizar (`POST /resume-studio/master/profile-refresh`).
+  O Perfil nunca é escrito a partir do Mestre.
+- Variantes com controle de versão: `PATCH /resume-studio/variants/{id}` aceita `expected_updated_at`
+  e responde 409 se a variante foi salva em outra aba; o editor para o autosave e pergunta qual versão
+  fica.
+- Primeira visita em 2 etapas (antes 8): idioma, tema e princípios; depois os caminhos de início.
 - Correção visual do redesign (CP-UX01B): barra lateral marinho também no tema claro (e no menu
   "Mais" e na barra de jornadas do celular), com o item atual em petróleo; superfícies em camadas
   (`canvas`, `surface`, `surface-raised`, `surface-muted`, `surface-accent`, `surface-interactive`)
@@ -74,6 +89,13 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Configurações de IA: escolher um provider antes de a configuração salva carregar (ou durante um
+  refetch) era desfeito e o campo da chave voltava a ficar desabilitado.
+- Resume Studio: erro diferente de 404 ao abrir ficava em "Abrindo…" para sempre; rascunho do
+  navegador restaurado não era salvo; importação gravava o Mestre numa chave de cache errada; toast
+  dizia "JSON_RESUME".
+- Perfil: remover um fato não pedia confirmação; tipos e origens apareciam como identificadores
+  (`higher_education`, `demo_resume`).
 - Consultas não repetem mais respostas 4xx: o primeiro uso do Resume Studio (404 "Mestre ainda não
   existe") mostrava "Abrindo seu estúdio…" por cerca de 7 s antes do onboarding, e o E2E
   correspondente falhava sob carga (2 de 3 execuções). Política em `src/lib/api/retry.ts` (408, 429 e

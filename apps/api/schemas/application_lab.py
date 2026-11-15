@@ -148,9 +148,26 @@ class ProfileUpdateItem(LabApiModel):
     section_title: str
 
 
+class ProfileFieldChange(LabApiModel):
+    field: str
+    in_master: str
+    in_profile: str
+
+
+class ProfileChangedItem(LabApiModel):
+    """A projected fact whose Profile text differs from its Master Resume entry."""
+
+    item_id: str
+    item_type: str
+    title: str
+    section_title: str
+    changes: list[ProfileFieldChange] = Field(default_factory=list)
+
+
 class ProfileUpdatesResponse(LabApiModel):
     master_resume_id: str
     items: list[ProfileUpdateItem] = Field(default_factory=list)
+    changed: list[ProfileChangedItem] = Field(default_factory=list)
 
 
 class ProfileUpdatesApplyRequest(LabApiModel):
@@ -180,6 +197,8 @@ class ResumeVariantCreateRequest(LabApiModel):
 
 
 class ResumeVariantUpdateRequest(LabApiModel):
+    # The updated_at of the copy being edited; a newer stored version answers 409.
+    expected_updated_at: datetime | None = None
     title: str | None = Field(default=None, max_length=240)
     target_role: str | None = Field(default=None, max_length=240)
     sections: list[ResumeSection] | None = None

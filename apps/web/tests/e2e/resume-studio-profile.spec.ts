@@ -134,3 +134,106 @@ test("a new user builds the Master Resume from the Profile, then reviews later p
   await expect(updates).toHaveCount(0);
   expect(calls).toContain("POST /api/v1/resume-studio/master/profile-updates");
 });
+
+/**
+ * CP-UX02: a variant saved in another tab used to be overwritten silently by this tab's autosave
+ * (last write wins). Now the API answers 409 and the editor stops and asks.
+ */
+async function mockVariantConflict(page: Page, patches: Array<Record<string, unknown>>) {
+  const envelope = (data: unknown) => ({ ok: true, data, request_id: "fixture", warnings: [] });
+  const stored = {
+    resume_variant_id: "variant-fixture",
+    master_resume_id: master.master_resume_id,
+    job_snapshot_id: "",
+    title: "Variante salva em outra aba",
+    target_role: "Enfermeira UTI",
+    sections: master.sections,
+    source_profile_item_ids: ["item-work"],
+    change_set: [],
+    validation_warnings: [],
+    created_at: "2026-11-14T10:00:00Z",
+    updated_at: "2026-11-14T10:00:00Z",
+  };
+  await page.addInitScript(() => localStorage.setItem("sotuhire.api-mode", "real"));
+  await page.route("http://127.0.0.1:8787/api/v1/**", async (route) => {
+    const url = new URL(route.request().url());
+    const method = route.request().method();
+    const path = url.pathname.replace("/api/v1", "");
+    if (path.endsWith("/security/pairing/start"))
+      return route.fulfill({ json: envelope({ challenge_id: "c", proof: "p" }) });
+    if (path.endsWith("/security/pairing/complete"))
+      return route.fulfill({ json: envelope({ csrf_token: "memory-only" }) });
+    if (path === "/resume-studio/master")
+      return route.fulfill({ json: envelope({ resume: master }) });
+    if (path === "/resume-studio/master/profile-updates")
+      return route.fulfill({
+        json: envelope({ master_resume_id: master.master_resume_id, items: [], changed: [] }),
+      });
+    if (path === "/resume-studio/variants" && method === "GET")
+      return route.fulfill({
+        json: envelope({
+          items: [stored],
+          pagination: { limit: 25, offset: 0, total: 1, has_more: false },
+        }),
+      });
+    if (path === "/resume-studio/variants/variant-fixture" && method === "GET")
+      return route.fulfill({ json: envelope({ variant: stored }) });
+    if (path === "/resume-studio/variants/variant-fixture" && method === "PATCH") {
+      const body = route.request().postDataJSON() as Record<string, unknown>;
+      patches.push(body);
+      if (body.expected_updated_at)
+        return route.fulfill({
+          status: 409,
+          json: { ok: false, error: { message: "Esta variante foi salva em outra aba." } },
+        });
+      return route.fulfill({
+        json: envelope({
+          variant: { ...stored, title: body.title, updated_at: "2026-11-14T10:05:00Z" },
+        }),
+      });
+    }
+    return route.fulfill({ json: envelope({ items: [] }) });
+  });
+}
+
+test("a variant saved elsewhere stops autosave and the person chooses which version stays", async ({
+  page,
+}) => {
+  const patches: Array<Record<string, unknown>> = [];
+  await mockVariantConflict(page, patches);
+  await page.goto("/resume-studio");
+  const title = page.getByLabel("Nome da variante");
+  await expect(title).toHaveValue("Variante salva em outra aba");
+
+  await title.fill("Minha versão local");
+  const conflict = page.getByTestId("variant-conflict");
+  await expect(conflict).toBeVisible();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Escolha qual versão manter" }),
+  ).toBeVisible();
+  // the autosave sent the version it was based on, and did not retry over the other tab
+  expect(patches).toHaveLength(1);
+  expect(patches[0].expected_updated_at).toBe("2026-11-14T10:00:00Z");
+  await title.fill("Minha versão local, editada de novo");
+  await page.waitForTimeout(1_000);
+  expect(patches).toHaveLength(1);
+
+  await conflict.getByRole("button", { name: "Manter a minha" }).click();
+  await expect(conflict).toHaveCount(0);
+  expect(patches[1].expected_updated_at).toBeUndefined();
+  expect(patches[1].title).toBe("Minha versão local, editada de novo");
+  await expect(page.getByRole("status").filter({ hasText: /^Salvo/ })).toBeVisible();
+});
+
+test("loading the saved version discards the local edit", async ({ page }) => {
+  const patches: Array<Record<string, unknown>> = [];
+  await mockVariantConflict(page, patches);
+  await page.goto("/resume-studio");
+  const title = page.getByLabel("Nome da variante");
+  await title.fill("Edição que vai ser descartada");
+  const conflict = page.getByTestId("variant-conflict");
+  await conflict.getByRole("button", { name: "Carregar a versão salva" }).click();
+  await expect(conflict).toHaveCount(0);
+  await expect(title).toHaveValue("Variante salva em outra aba");
+  expect(patches).toHaveLength(1);
+});
