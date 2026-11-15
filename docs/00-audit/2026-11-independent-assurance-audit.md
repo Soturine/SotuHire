@@ -90,6 +90,9 @@ em `8ea37d7` e passa depois.
 | SH-NEW-010 | P2 | `VERIFIED` | Dependabot npm parado: 5 PRs de 2026-08 ocupavam o limite. Agrupamento configurado. |
 | SH-NEW-011 | P2 | `VERIFIED` | Modo demo da tela Carreira: salvar tarefa, lembrete, plano, entrevista, STAR ou follow-up não aparecia na lista. Store de sessão só no modo demo. |
 | SH-NEW-012 | P3 | `VERIFIED` | `wheel` em `build-system.requires` desnecessário com `setuptools>=70.1`; build não-isolado falhava sem ele. Wheel construído e qualificado num venv novo. |
+| SH-NEW-017 | P2 | `VERIFIED` | Companion interpretava o JSON antes de autenticar (no servidor e no app): corpo inválido sem credencial respondia 422/400 em vez de 401, e `[]` em `/pairing/complete` lançava `AttributeError`. Autenticação antes da leitura; 45 casos novos falham no código anterior. |
+| SH-NEW-018 | P3 | `VERIFIED` | O teste da fronteira copiava a lista de rotas: uma rota nova ficaria sem teste. Agora percorre a tabela do app e confere os caminhos chamados pela extensão. |
+| SH-NEW-019 | P2 | `VERIFIED` | Aplicar fatos do Perfil ao Mestre duplicava entradas com ID repetido, respondia 422 num retry e perdia gravações concorrentes. Idempotente e com versão otimista (409); 5 de 6 testes novos falham no código anterior. |
 
 ## Eficácia dos testes (controles negativos)
 

@@ -5,6 +5,7 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ResumeImport } from "@/features/document-ingestion/resume-import";
+import { ApiHttpError } from "@/lib/api/client";
 import { useApi } from "@/lib/api/hooks";
 import { useApiMode } from "@/lib/api/mode";
 import type { MasterResume } from "@/lib/api/types";
@@ -113,7 +114,14 @@ export function ProfileUpdatesPanel({ onApplied }: { onApplied: (resume: MasterR
       void queryClient.invalidateQueries({ queryKey: ["resume-studio-profile-updates"] });
       onApplied(resume);
     },
-    onError: (error: Error) => toast.error(error.message),
+    onError: (error: Error) => {
+      toast.error(error.message);
+      // 409: the Master Resume changed in another tab; show the current one and what is still new.
+      if (error instanceof ApiHttpError && error.status === 409) {
+        void queryClient.invalidateQueries({ queryKey: ["resume-studio-master"] });
+        void queryClient.invalidateQueries({ queryKey: ["resume-studio-profile-updates"] });
+      }
+    },
   });
 
   if (!items.length) return null;

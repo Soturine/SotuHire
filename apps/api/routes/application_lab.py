@@ -335,7 +335,10 @@ def apply_master_profile_updates(
 def put_master_resume(
     payload: MasterResumeUpsertRequest, service: LabDependency
 ) -> ApiEnvelope[MasterResumeResponse]:
-    return ok(service.save_master(payload.resume), request_id=payload.request_id)
+    return ok(
+        service.save_master(payload.resume, expected_updated_at=payload.expected_updated_at),
+        request_id=payload.request_id,
+    )
 
 
 @resume_studio_router.get("/variants", response_model=ApiEnvelope[ResumeVariantPage])

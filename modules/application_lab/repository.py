@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,10 @@ from modules.storage.database import connect_database, default_database_path
 from modules.storage.migrations import ensure_database
 
 
+class MasterResumeConflictError(Exception):
+    """The Master Resume changed after the copy this write was computed from was read."""
+
+
 class ApplicationLabRepository:
     """Persist resumable Lab state without duplicating existing analysis engines."""
 
@@ -41,12 +46,35 @@ class ApplicationLabRepository:
             Path(database_path) if database_path is not None else default_database_path()
         )
 
-    def save_master_resume(self, resume: MasterResume) -> MasterResume:
+    def save_master_resume(
+        self, resume: MasterResume, *, expected_updated_at: datetime | None = None
+    ) -> MasterResume:
+        """Upsert the Master Resume.
+
+        With ``expected_updated_at`` the write is conditional: it happens only if the stored row
+        still has that ``updated_at`` (or does not exist yet). The check and the write run inside
+        one ``BEGIN IMMEDIATE`` transaction, so two writers that read the same copy cannot both
+        succeed; the second gets :class:`MasterResumeConflictError` instead of erasing the first.
+        """
         resume = resume.model_copy(deep=True)
         _normalize_positions(resume.sections)
         canonical = canonical_document(resume)
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            if expected_updated_at is not None:
+                current = connection.execute(
+                    "SELECT updated_at FROM master_resumes WHERE master_resume_id = ?",
+                    (resume.master_resume_id,),
+                ).fetchone()
+                if (
+                    current is not None
+                    and datetime.fromisoformat(current["updated_at"]) != expected_updated_at
+                ):
+                    raise MasterResumeConflictError(
+                        "O Currículo Mestre mudou depois de ser carregado; recarregue e tente "
+                        "de novo."
+                    )
             if resume.profile_id:
                 now = resume.updated_at.isoformat()
                 connection.execute(

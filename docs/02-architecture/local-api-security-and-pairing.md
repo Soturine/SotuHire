@@ -60,6 +60,15 @@ content scripts.
   aceita JSON em POST;
 - erros usam mensagens fixas, `Cache-Control: no-store` e não refletem corpo, proof ou token.
 
+Ordem de processamento na Companion (`LocalCompanionApp.handle`), que é a própria fronteira: cliente
+local (403) → tamanho do corpo em bytes (413) → caminhos públicos `/health`, `/pairing/start`,
+`/pairing/complete` (405 para método errado; origem conferida antes do pareamento) → credencial
+(401) → rota declarada (404) → método (405) → só então o corpo é decodificado e interpretado (400 se
+não for JSON UTF-8; 422 se não for objeto, se passar de 16 níveis ou de 100 itens num lote) →
+validação do modelo (422) → handler. O servidor HTTP só confere `Content-Length`, `Content-Type` e
+lê os bytes; não interpreta JSON. `tests/test_local_api_route_boundary.py` percorre a tabela de rotas
+do app, inclusive por um socket real.
+
 ## Recuperação e diagnóstico
 
 Se o arquivo de autenticação estiver inválido, a API falha explicitamente em vez de criar uma

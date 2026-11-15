@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Literal
 
 from modules.application_lab.models import (
@@ -124,6 +125,8 @@ class ApplicationKitExportResponse(LabApiModel):
 
 class MasterResumeUpsertRequest(LabApiModel):
     resume: MasterResume
+    # updated_at of the copy the client edited; when set, a newer stored copy answers 409
+    expected_updated_at: datetime | None = None
     request_id: str = Field(default="", max_length=120)
 
 

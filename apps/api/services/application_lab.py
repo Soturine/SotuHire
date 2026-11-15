@@ -21,6 +21,7 @@ from modules.application_lab.profile_projection import (
     master_resume_from_profile,
     profile_updates,
 )
+from modules.application_lab.repository import MasterResumeConflictError
 from modules.application_lab.service import ApplicationLabService
 from modules.profile.json_resume import section_for_item
 from modules.profile.service import UniversalCareerProfileService
@@ -194,11 +195,32 @@ class ApplicationLabApiService:
             updated = apply_profile_updates(master, profile, item_ids)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
-        return MasterResumeResponse(resume=self._call(self.repository.save_master_resume, updated))
+        if updated is master:  # every chosen fact is already there: a retry, nothing to write
+            return MasterResumeResponse(resume=master)
+        return MasterResumeResponse(
+            resume=self._call(
+                self.repository.save_master_resume, updated, expected_updated_at=master.updated_at
+            )
+        )
 
-    def save_master(self, resume: MasterResume) -> MasterResumeResponse:
+    def save_master(
+        self, resume: MasterResume, *, expected_updated_at: datetime | None = None
+    ) -> MasterResumeResponse:
+        """Save a Master Resume.
+
+        A client that edits a copy it loaded sends that copy's ``updated_at`` as
+        ``expected_updated_at`` and gets 409 instead of erasing a newer save (another tab, or
+        facts applied from the Profile meanwhile). Without it the write is an upsert, which is
+        what adopting an imported draft needs.
+        """
         prepared = resume.model_copy(update={"updated_at": datetime.now(UTC)})
-        return MasterResumeResponse(resume=self._call(self.repository.save_master_resume, prepared))
+        return MasterResumeResponse(
+            resume=self._call(
+                self.repository.save_master_resume,
+                prepared,
+                expected_updated_at=expected_updated_at,
+            )
+        )
 
     def ingest_resume(self, file_name: str, content_base64: str) -> ResumeIngestionResponse:
         try:
@@ -279,6 +301,8 @@ class ApplicationLabApiService:
     def _call(function, *args, **kwargs):
         try:
             return function(*args, **kwargs)
+        except MasterResumeConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         except LookupError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ValueError as exc:

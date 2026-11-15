@@ -10,7 +10,7 @@ import threading
 from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 from pydantic import BaseModel, ValidationError
 
@@ -66,7 +66,7 @@ from modules.portfolio import (
 from modules.schemas.job_analysis import JobAnalysisSchema, Recommendation
 from modules.schemas.user_preferences import UserPreferences
 from modules.scraping.connectors.manual_url import opportunity_from_text
-from modules.security import LocalAuthManager, PairingError
+from modules.security import LocalAuthManager, PairingError, RequestLimitError, RequestPolicy
 from modules.storage import (
     AnalysisSnapshot,
     JobSnapshot,
@@ -660,11 +660,16 @@ class _Route:
     request_model: type[BaseModel] | None = None
 
 
+class _MalformedBody(Exception):
+    """The body is not UTF-8 JSON."""
+
+
 _PROJECT_ROUTE = _Route("POST", "analyze_project_capture", ProjectAnalysisPayload)
-# Every route here requires a credential; only /health and /pairing/* are public (handled above
-# the authentication check in LocalCompanionApp.handle). tests/test_local_api_route_boundary.py
-# walks this table.
-_AUTHENTICATED_ROUTES: dict[str, _Route] = {
+# The only paths answered without a credential (LocalCompanionApp._handle_public).
+PUBLIC_PATHS = frozenset({"/health", "/pairing/start", "/pairing/complete"})
+# Every route here requires a credential. tests/test_local_api_route_boundary.py walks this
+# table (not a copy of it) and checks that every path the extension calls is declared.
+AUTHENTICATED_ROUTES: dict[str, _Route] = {
     "/capture/status": _Route("GET", "context_summary"),
     "/capture/context-summary": _Route("GET", "context_summary"),
     "/handshake": _Route("POST", "handshake", CompanionHandshakeRequest),
@@ -691,6 +696,7 @@ class LocalCompanionApp:
         *,
         token: str | None = None,
         auth: LocalAuthManager | None = None,
+        policy: RequestPolicy | None = None,
     ) -> None:
         self.service = service or LocalCompanionService()
         self.token = configured_token() if token is None else token
@@ -699,6 +705,7 @@ class LocalCompanionApp:
             installation_token=self.token,
             token_path=base / "security" / "companion-auth.json",
         )
+        self.policy = policy or RequestPolicy()
         self._idempotency_lock = threading.Lock()
         self._idempotency_responses: dict[tuple[str, str], tuple[str, dict[str, object]]] = {}
 
@@ -713,49 +720,33 @@ class LocalCompanionApp:
         origin: str = "",
         idempotency_key: str = "",
     ) -> tuple[int, dict[str, object]]:
+        """Route one request. Order is the security boundary.
+
+        Locality, then the body size (bytes only, nothing decoded), then the public paths, then
+        authentication; the body of a protected route is decoded and parsed only after the
+        caller is authenticated, and the handler sees it only after it parsed as a JSON object
+        within the depth and batch limits.
+        """
         if not is_local_client(client_host):
             return 403, {"ok": False, "message": "A Local API aceita somente localhost."}
+        if len(body) > self.policy.max_body_bytes:
+            return 413, {"ok": False, "message": "O corpo da requisição excede o limite."}
         try:
-            if method == "GET" and path == "/health":
-                return 200, self.service.health().model_dump(mode="json")
-            payload = json.loads(body.decode("utf-8") or "{}")
-            if method == "POST" and path == "/pairing/start":
-                if not _pairing_origin_allowed(origin):
-                    return 403, {"ok": False, "message": "Origem de pairing não autorizada."}
-                challenge = self.auth.start_pairing(origin=origin, client_kind="extension")
-                return 200, {
-                    "ok": True,
-                    "challenge_id": challenge.challenge_id,
-                    "proof": challenge.proof,
-                    "expires_in_seconds": self.auth.pairing_ttl_seconds,
-                }
-            if method == "POST" and path == "/pairing/complete":
-                if not _pairing_origin_allowed(origin):
-                    return 403, {"ok": False, "message": "Origem de pairing não autorizada."}
-                credentials = self.auth.complete_pairing(
-                    challenge_id=str(payload.get("challenge_id", "")),
-                    proof=str(payload.get("proof", "")),
-                    origin=origin,
-                    client_kind="extension",
-                )
-                return 200, {
-                    "ok": True,
-                    "paired": True,
-                    "session_token": credentials.session_token,
-                    "expires_in_seconds": self.auth.session_ttl_seconds,
-                }
+            if path in PUBLIC_PATHS:
+                return self._handle_public(method, path, body=body, origin=origin)
             authenticated = self.auth.authenticate_installation(token) or (
                 bool(origin) and self.auth.authenticate_session(token, origin=origin)
             )
             if not authenticated:
                 return 401, {"ok": False, "message": "Pareamento local obrigatório."}
-            route = _AUTHENTICATED_ROUTES.get(path)
+            route = AUTHENTICATED_ROUTES.get(path)
             if route is None:
                 return 404, {"ok": False, "message": "Endpoint não encontrado."}
             if method != route.method:
                 return 405, {"ok": False, "message": f"Use {route.method} em {path}."}
-            if route.request_model is None:  # reads: no idempotency
+            if route.request_model is None:  # reads: no body, no idempotency
                 return 200, getattr(self.service, route.handler)().model_dump(mode="json")
+            payload = self._parse_object(body)
             replay = self._idempotency_replay(path, body, idempotency_key)
             if replay is not None:
                 return replay
@@ -765,12 +756,59 @@ class LocalCompanionApp:
             result = cast(dict[str, object], response.model_dump(mode="json"))
             self._remember_idempotent_response(path, body, idempotency_key, result)
             return 200, result
+        except _MalformedBody:
+            return 400, {"ok": False, "message": "Payload local inválido."}
+        except RequestLimitError as exc:
+            return exc.status_code, {"ok": False, "message": str(exc)}
         except PairingError as exc:
             return 401, {"ok": False, "message": str(exc)}
-        except (ValidationError, ValueError, json.JSONDecodeError) as exc:
+        except (ValidationError, ValueError) as exc:
             return 422, {"ok": False, "message": str(exc)}
         except KeyError as exc:
             return 404, {"ok": False, "message": str(exc)}
+
+    def _handle_public(
+        self, method: str, path: str, *, body: bytes, origin: str
+    ) -> tuple[int, dict[str, object]]:
+        expected = "GET" if path == "/health" else "POST"
+        if method != expected:
+            return 405, {"ok": False, "message": f"Use {expected} em {path}."}
+        if path == "/health":
+            return 200, self.service.health().model_dump(mode="json")
+        if not _pairing_origin_allowed(origin):
+            return 403, {"ok": False, "message": "Origem de pairing não autorizada."}
+        if path == "/pairing/start":  # the body is not read
+            challenge = self.auth.start_pairing(origin=origin, client_kind="extension")
+            return 200, {
+                "ok": True,
+                "challenge_id": challenge.challenge_id,
+                "proof": challenge.proof,
+                "expires_in_seconds": self.auth.pairing_ttl_seconds,
+            }
+        payload = self._parse_object(body)
+        credentials = self.auth.complete_pairing(
+            challenge_id=str(payload.get("challenge_id", "")),
+            proof=str(payload.get("proof", "")),
+            origin=origin,
+            client_kind="extension",
+        )
+        return 200, {
+            "ok": True,
+            "paired": True,
+            "session_token": credentials.session_token,
+            "expires_in_seconds": self.auth.session_ttl_seconds,
+        }
+
+    def _parse_object(self, body: bytes) -> dict[str, Any]:
+        """Decode a bounded body into a JSON object, or raise; never called before auth."""
+        try:
+            payload = json.loads(body.decode("utf-8") or "{}")
+        except (UnicodeDecodeError, json.JSONDecodeError, RecursionError) as exc:
+            raise _MalformedBody from exc
+        self.policy.validate_json(payload)
+        if not isinstance(payload, dict):
+            raise ValueError("O corpo deve ser um objeto JSON.")
+        return payload
 
     def _idempotency_replay(
         self, path: str, body: bytes, idempotency_key: str

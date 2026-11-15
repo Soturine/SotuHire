@@ -32,12 +32,30 @@ Nenhuma versão ou tag foi criada.
   web corrigido por `npm audit fix` (incluindo a crítica em `seroval`).
 - A checagem de campos com cara de credencial antes de chamadas de IA e capturas tem um único dono
   (`modules/security`); duas das quatro cópias não bloqueavam `headers`.
+- Local Companion autentica antes de ler o conteúdo: o corpo de uma rota protegida só é
+  decodificado e interpretado depois da credencial, e o servidor HTTP passou a só limitar e ler
+  bytes. Antes, um corpo inválido sem credencial respondia 422 (o JSON era interpretado antes da
+  autenticação, em duas camadas) e um `[]` em `/pairing/complete` derrubava o handler com
+  `AttributeError`. Agora: 401 sem credencial, qualquer que seja o corpo; 413 acima do limite
+  antes de tudo; 400 para corpo que não é JSON UTF-8 e 422 para JSON que não é objeto, profundo
+  demais ou com lote acima do limite, só depois da autenticação. Caminho público com método
+  errado responde 405.
 
 ### Corrigido
 
 - Local Companion: as rotas autenticadas viraram uma tabela explícita, testada rota a rota (só
   `/health` e o pareamento são públicos); rota conhecida com método errado responde 405 e rota
   desconhecida continua escondida atrás da autenticação.
+- O teste da fronteira da Companion percorre a tabela de rotas que o app usa (não uma cópia), fixa
+  o conjunto de caminhos públicos e confere que todo caminho chamado pela extensão está declarado.
+- Aplicar fatos do Perfil ao Currículo Mestre é idempotente: um ID repetido no pedido gerava
+  entradas duplicadas, e repetir um pedido que já tinha dado certo respondia 422. Agora o ID conta
+  uma vez e o que já está no Mestre não muda nada (o retry responde 200 com o mesmo currículo).
+- Gravações do Currículo Mestre baseadas numa cópia antiga respondem 409 em vez de apagar o que
+  outra aba ou a aplicação de fatos do Perfil tinha gravado: a aplicação de fatos sempre confere a
+  versão, e `PUT /resume-studio/master` confere quando recebe `expected_updated_at`. A conferência
+  e a gravação ficam na mesma transação `BEGIN IMMEDIATE`. A tela de atualizações do Perfil recarrega
+  o Mestre e a lista ao receber 409.
 - Application Lab: aceitar uma sugestão sem edição falha quando o texto afirma registro profissional
   (os 26 conselhos e registros conhecidos, como CRM, OAB e COREN) ou pós-graduação (doutorado, mestrado, MBA,
   especialização) que não aparece no texto substituído nem no Currículo Mestre confirmado. Antes, bastava

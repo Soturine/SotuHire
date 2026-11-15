@@ -58,5 +58,20 @@ voluntariado e interesses.
   fatos novos aparecem como atualização). Decidir entre "propor edição" e manter o texto do documento.
 - `LocalStore` ainda é usado por Application Lab, Local API, Radar, fontes e Tracker; a retirada segue
   a política de migração com backup e rollback e não foi feita neste ciclo.
-- Não verificado: dois navegadores editando a mesma variante ao mesmo tempo (não há controle de versão
-  otimista na API de variantes).
+- Variantes: dois navegadores editando a mesma variante ao mesmo tempo continuam em "última gravação
+  vence" (a API de variantes não tem controle de versão). O Currículo Mestre já tem (ver abaixo).
+- Reimportar o mesmo arquivo gera o mesmo `master_resume_id` (`master-{hash}`) e a adoção do rascunho
+  é um upsert sem versão: substitui fatos aplicados do Perfil a esse Mestre. Ficou assim para não
+  quebrar a reimportação; a tela de importação ainda não avisa.
+
+## Concorrência e idempotência do Currículo Mestre (CP-SEC02)
+
+| Caso | Antes | Depois | Prova |
+| --- | --- | --- | --- |
+| Mesmo ID repetido no pedido de aplicar fatos | uma entrada por repetição (a checagem deduplicava, a montagem iterava a lista original) | uma entrada | `test_a_repeated_id_adds_the_fact_once` (3 entradas → 1) |
+| Retry de um pedido que já deu certo | 422 "já presentes" | 200 com o mesmo currículo, sem gravar | `test_a_retried_request_answers_200_with_the_same_resume` |
+| Duas gravações a partir da mesma cópia | a segunda apagava a primeira | a segunda recebe 409; a primeira fica | `test_a_write_based_on_a_stale_copy_is_refused`, `test_the_api_maps_a_stale_write_to_409`, `test_put_with_an_old_expected_version_answers_409_and_keeps_the_newer_copy` |
+
+O token de versão é o `updated_at` do Mestre; a conferência e a gravação ficam na mesma transação
+`BEGIN IMMEDIATE`, então dois escritores não passam os dois pela conferência. Os testes foram rodados
+contra o código anterior primeiro: 5 dos 6 falharam.

@@ -107,10 +107,21 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
   próprio ciclo tinha introduzido 3 funções acima do limiar; 2 foram simplificadas.
 - `CHANGELOG_GATE: PASS` · `DOCS_GATE: PASS` · pytest 837 passed / 4 skipped.
 
+## CP-SEC02 — fronteira da Companion e idempotência do Currículo Mestre
+
+| Campo | Registro |
+| --- | --- |
+| Pergunta | Conteúdo de quem não se autenticou é interpretado? O teste da fronteira acompanha a tabela? Aplicar fatos do Perfil é idempotente e seguro sob concorrência? |
+| Reprodução | controle negativo contra `f55b1d4`: 45 falhas no teste da fronteira (422 sem credencial com corpo inválido ou não UTF-8; `AttributeError` com `[]` em `/pairing/complete`); socket real 400 em vez de 401; 5 de 6 testes de idempotência falham (3 entradas para 3 IDs repetidos, 422 no retry, gravação perdida) |
+| Correção | `handle()` autentica antes de decodificar; servidor só lê bytes; `PUBLIC_PATHS` + `AUTHENTICATED_ROUTES` como registro único; `apply_profile_updates` deduplica e ignora o que já está no Mestre; `save_master_resume(expected_updated_at=…)` sob `BEGIN IMMEDIATE`, 409 na API |
+| Achados | SH-NEW-017, 018, 019 |
+| Pendente | variantes ainda em "última gravação vence"; reimportação do mesmo arquivo é upsert sem aviso |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, mapa de autoridade, segurança da Local API, ledger de findings) |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |
 | --- | --- | --- | --- | --- |
 | Derivanta | `feat/approval-consumption-and-required-artifacts` | `7e1ecba` | confirmado | `scripts/tests` 26 passed; checagem de links igual à de antes (7 itens pré-existentes) |
 | Derivanta-Engine | `feat/ci-workflow-checks` | `35f9951` | confirmado | suíte 951 passed, 5 skipped |
-| Assertiva | `fix/precommit-hook-tool-identity` | `fee2c44` | confirmado | suítes relacionadas 234 passed; suíte completa em `b0dec09`: 1.332 passed + 1 falha só do ambiente (`%TEMP%`); suíte completa em `fee2c44` em execução |
+| Assertiva | `fix/precommit-hook-tool-identity` | `fee2c44` | confirmado | suítes relacionadas 234 passed; suíte completa em `b0dec09`: 1.332 passed + 1 falha só do ambiente (`%TEMP%`); suíte completa em `fee2c44`: 1.346 passed |

@@ -58,12 +58,10 @@ class CompanionRequestHandler(BaseHTTPRequestHandler):
                     self._send_json(415, {"ok": False, "message": "Content-Type não aceito."})
                     return
             self.connection.settimeout(self.policy.timeout_seconds)
+            # Bytes only: the app authenticates before it decodes or parses anything.
             body = self.rfile.read(length) if length else b""
-            if body:
-                self.policy.validate_json(json.loads(body))
-        except (RequestLimitError, json.JSONDecodeError, RecursionError) as exc:
-            status = exc.status_code if isinstance(exc, RequestLimitError) else 400
-            self._send_json(status, {"ok": False, "message": "Payload local inválido."})
+        except RequestLimitError as exc:
+            self._send_json(exc.status_code, {"ok": False, "message": "Payload local inválido."})
             return
         except TimeoutError:
             self._send_json(408, {"ok": False, "message": "Tempo limite da requisição excedido."})

@@ -67,33 +67,47 @@ def master_resume_from_profile(profile: UniversalCareerProfile) -> MasterResume:
     )
 
 
-def profile_updates(profile: UniversalCareerProfile, master: MasterResume) -> list[ProfileItem]:
-    """Confirmed profile facts that no entry of the Master Resume was built from yet."""
-    present = {
+def _projected_item_ids(master: MasterResume) -> set[str]:
+    return {
         item_id
         for section in master.sections
         for entry in section.entries
         for item_id in entry.source_profile_item_ids
     }
+
+
+def profile_updates(profile: UniversalCareerProfile, master: MasterResume) -> list[ProfileItem]:
+    """Confirmed profile facts that no entry of the Master Resume was built from yet."""
+    present = _projected_item_ids(master)
     return [item for item in projectable_items(profile) if item.item_id not in present]
 
 
 def apply_profile_updates(
     master: MasterResume, profile: UniversalCareerProfile, item_ids: list[str]
 ) -> MasterResume:
-    """Append the chosen confirmed profile facts to the Master Resume; existing entries are kept."""
-    chosen = set(item_ids)
-    pending = {item.item_id: item for item in profile_updates(profile, master)}
-    unknown = chosen - set(pending)
+    """Append the chosen confirmed profile facts to the Master Resume; existing entries are kept.
+
+    Idempotent: a repeated id counts once, and an id the resume already has an entry for is a
+    no-op, so a retried request returns the same resume (the very same object when nothing is
+    added, which tells the caller there is nothing to save). Ids that are not confirmed,
+    sensitive or unknown are refused as a whole.
+    """
+    chosen = list(dict.fromkeys(item_ids))
+    eligible = {item.item_id: item for item in projectable_items(profile)}
+    unknown = [item_id for item_id in chosen if item_id not in eligible]
     if unknown:
         raise ValueError(
-            "Itens não disponíveis para o Currículo Mestre (não confirmados, sensíveis ou já "
-            "presentes): " + ", ".join(sorted(unknown))
+            "Itens não disponíveis para o Currículo Mestre (não confirmados, sensíveis ou "
+            "inexistentes): " + ", ".join(sorted(unknown))
         )
+    present = _projected_item_ids(master)
+    to_add = [eligible[item_id] for item_id in chosen if item_id not in present]
+    if not to_add:
+        return master
     sections = [section.model_copy(deep=True) for section in master.sections]
     by_type = {section.section_type: section for section in sections}
     now = datetime.now(UTC)
-    for item in (pending[item_id] for item_id in item_ids):
+    for item in to_add:
         section_type, title = _LAYOUT[section_for_item(item)]
         section = by_type.get(section_type)
         if section is None:
@@ -106,7 +120,7 @@ def apply_profile_updates(
         update={
             "sections": sections,
             "source_profile_item_ids": list(
-                dict.fromkeys([*master.source_profile_item_ids, *item_ids])
+                dict.fromkeys([*master.source_profile_item_ids, *(item.item_id for item in to_add)])
             ),
             "updated_at": now,
         }
