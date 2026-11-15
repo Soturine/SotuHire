@@ -18,8 +18,8 @@ nada aqui é "verde no CI".
 | C08 | Domínio e integridade | PARTIAL | aprovação no ponto de efeito, undo condicional, aceite com prova de credencial, regra de confirmação única | Radar/Tracker sem auditoria de transições |
 | C09 | Dados, backup, restore, offline | DONE | round-trip completo pela API (Perfil, Mestre, variantes, Tracker, evidências) com rollback pelo backup de segurança; SH-NEW-039 corrigido; migrações v6→v8 executadas no pytest deste ciclo; rascunho local não sobrescreve o servidor | retirada do `LocalStore` está em C06 |
 | C10 | IA agent-led do próprio SotuHire | PARTIAL | `plan()` declarado como não interpretativo; catálogo de prompts só conta consumidores reais | conectar `plan(intent)` a um consumidor ou retirar a capacidade |
-| C11 | Frontend: todas as rotas, a11y, i18n | PARTIAL | 25 rotas × 4 larguras × 2 temas + en-US: claro 0, escuro 28 → 0 nós axe por largura; sem estouro nem erro de console ([UX](2026-11-frontend-product-ux.md)) | leitor de tela (`NOT_RUN`), redesign das telas além do shell e do Cockpit |
-| C12 | Extensão e Companion | PARTIAL | sender/URL do service worker; tabela de rotas autenticadas testada | Chrome real com o ZIP distribuído não executado |
+| C11 | Frontend: todas as rotas, a11y, i18n | PARTIAL | redesign v5 (CP-UX01–06): 400 telas (4 larguras × claro/escuro × pt-BR/en-US) com 0 nós axe, 0 estouro, 0 erro de console; Chromium, Firefox e WebKit; mutação de UI 9/10 ([UX](2026-11-frontend-product-ux.md)) | leitor de tela (`NOT_RUN`); interface das telas de produto só em pt-BR |
+| C12 | Extensão e Companion | DONE | sender/URL do service worker; tabela de rotas autenticadas testada; ZIP distribuído carregado num Chromium real (`scripts/verify_extension_in_chromium.py`): service worker, popup sem erros, captura numa página do GitHub offline; controle negativo com ZIP quebrado | Chrome de marca não aceita `--load-extension` (Chromium usado no lugar) |
 | C13 | Segurança e supply chain | PARTIAL | checagem de segredos única, SBOM transitivo, pins de Actions conferidos, secret scan | DAST/SSRF não reexecutados neste ciclo |
 | C14 | Gates reais e release | PARTIAL | uploads obrigatórios, SBOM verificado, instalação limpa | CI remoto no SHA final pendente |
 | C15 | Dependabot | DONE | 10 integradas com validação, 1 adiada com motivo ([dependências](2026-11-dependency-review.md)) | fechar as PRs supersedidas após o merge |
@@ -31,9 +31,9 @@ nada aqui é "verde no CI".
 | C21 | Dogfood bidirecional verdadeiro | DONE | ciclo A→E do CP-04 com reteste cruzado; o reteste pegou um defeito do próprio patch | — |
 | C22 | Documentação vs runtime | PARTIAL | catálogo de prompts, `.env.example`, métricas de IA, requirements, docs de planejamento marcados | varredura completa de docs antigos |
 | C23 | Continuidade, branches, PRs | PARTIAL | 4 repos com branches publicadas e SHA conferido | PRs não abertas (gate final) |
-| C24 | Validação final | NOT_RUN | — | CI no SHA final, Firefox/WebKit, release decision |
+| C24 | Validação final | PARTIAL | Firefox e WebKit executados (47/0 cada); Web Vitals de produção; pytest 952 | CI remoto no SHA final; decisão de release (não autorizada) |
 | C25 | Descobertas fora do roadmap | DONE | primeiro uso do Resume Studio sem saída, modelo do Gemini gravado para todo provider, rascunho que vencia o servidor | — |
-| C26 | Instalação e operação | PARTIAL | extras documentados, `.env.example` real, instalação padrão menor | `ensure_database` (SH-NEW-001) não medido |
+| C26 | Instalação e operação | DONE | extras documentados, `.env.example` real, instalação padrão menor; `ensure_database` medido (12 ms/chamada) e com cache por assinatura (`list_nodes` 18 → 5,5 ms) | — |
 | C27 | Mercado brasileiro multiárea | PARTIAL | detector de credenciais com 26 conselhos; fixtures de saúde e engenharia | avaliação multiárea do matching |
 | C28 | Fechar correções das ferramentas | PARTIAL | branches publicadas, CHANGELOG e testes próprios | PRs nos repositórios donos |
 | v3/v4 | UX premium com antes/depois | PARTIAL | CP-UX00 baseline e CP-UX01 com galeria antes/depois | CP-UX02…06 |

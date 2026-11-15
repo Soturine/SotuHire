@@ -1,7 +1,7 @@
 """Versioned local database migrations."""
 
 from .models import Migration
-from .runner import MigrationError, MigrationRunner, ensure_database
+from .runner import MigrationError, MigrationRunner, ensure_database, forget_verified_databases
 from .versions import LATEST_SCHEMA_VERSION, MIGRATIONS
 
 __all__ = [
@@ -11,4 +11,5 @@ __all__ = [
     "MigrationError",
     "MigrationRunner",
     "ensure_database",
+    "forget_verified_databases",
 ]

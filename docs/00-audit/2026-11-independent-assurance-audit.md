@@ -78,7 +78,7 @@ em `8ea37d7` e passa depois.
 
 | ID | Pri. | Resultado | Descrição e prova |
 | --- | --- | --- | --- |
-| SH-NEW-001 | P2 | `CONFIRMED` | Todo método do `CopilotRepository` chama `ensure_database()`, que roda `PRAGMA integrity_check` e `foreign_key_check` completos; um `propose()` faz isso várias vezes. Custo cresce com o banco. Não corrigido: cachear a verificação exige invalidar em restore/migração. |
+| SH-NEW-001 | P2 | `VERIFIED` | Todo método do `CopilotRepository` chamava `ensure_database()` com `integrity_check` e `foreign_key_check` completos: 12 ms por chamada num banco de 1,7 MB (~65% de um `list_nodes`). Cache por assinatura do arquivo (tamanho/mtime do banco, tamanho do WAL; o mtime do WAL muda a cada conexão e o WAL vazio é apagado ao fechar, os dois achados ao medir): 18 → 5,5 ms. Escritas, restauração e migração invalidam. Lacuna residual documentada no código. |
 | SH-NEW-002 | P1 | `VERIFIED` | Tarefa criada pelo Copilot era gravada com `payload='{}'`; `GET /api/v1/career/tasks` passava a falhar (`ValidationError` → HTTP 500) para sempre. `test_executed_copilot_task_is_listed_by_the_career_api`. |
 | SH-NEW-003 | P2 | `VERIFIED` | `due_at` gravado com offset original e comparado como texto com `now` UTC; a UI mandava `datetime-local` sem fuso. `test_overdue_detection_is_correct_for_non_utc_deadlines`. |
 | SH-NEW-004 | P2 | `VERIFIED` | Lembrete ligado silenciosamente à primeira tarefa da lista. Seletor explícito + `tests/e2e/career.spec.ts`. |

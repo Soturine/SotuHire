@@ -240,6 +240,15 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Testes | os 2 testes novos falham no código anterior; dados: 8 passed |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
 
+## CP-OPS01 — extensão no Chromium e custo do `ensure_database`
+
+| Campo | Registro |
+| --- | --- |
+| C12 | ZIP do `scripts/package_extension.py` carregado com `--load-extension`: service worker MV3, popup sem erros, captura pelo fluxo do popup numa página do GitHub servida offline. Primeira versão do verificador assumia que `content.js` era injetado pelo manifesto (não é: o popup injeta sob demanda); corrigido no verificador, não na extensão. Controle negativo: ZIP sem `content.js` → `ok: false` |
+| C26 | `ensure_database` medido: 12 ms por chamada (banco 1,7 MB). Cache por assinatura; duas tentativas erradas pegas pela medição (mtime do WAL muda a cada conexão; WAL vazio é apagado ao fechar). `list_nodes` 18 → 5,5 ms; pytest 103 s (antes 116 s) |
+| Testes | pytest 952 passed, 4 skipped; 4 testes do cache (3 falham sem o cache) |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |

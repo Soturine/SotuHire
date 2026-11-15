@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
+import threading
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -150,14 +151,64 @@ class MigrationRunner:
         connection.commit()
 
 
+# Files already migrated and verified, by their on-disk signature. SH-NEW-001: every repository
+# method called ensure_database(), which runs full integrity and foreign-key checks (~12 ms on a
+# 1.7 MB database, about 65% of a list query), several times per operation. A restore replaces the
+# file and a checkpoint rewrites it (size or mtime change); pending writes grow the WAL. The WAL's
+# mtime is left out on purpose: SQLite touches it whenever a connection opens in WAL mode, so with
+# it no read could ever reuse the check. Residual gap: writes that reuse WAL frames between
+# checkpoints keep the same WAL size and skip one integrity check (corruption detection, not
+# schema or logic: migrations only run through this function).
+_VERIFIED: dict[str, tuple[int, ...]] = {}
+_VERIFIED_LOCK = threading.Lock()
+
+
+def _signature(database: Path) -> tuple[int, ...]:
+    try:
+        stat = database.stat()
+        main = (stat.st_size, stat.st_mtime_ns)
+    except FileNotFoundError:
+        main = (-1, -1)
+    try:
+        wal = database.with_name(database.name + "-wal").stat().st_size
+    except FileNotFoundError:
+        wal = 0  # SQLite deletes an empty WAL when the last connection closes: same state
+    return (*main, wal)
+
+
 def ensure_database(path: str | Path | None = None) -> Path:
-    """Create or migrate the local database and return its path."""
+    """Create or migrate the local database and return its path.
+
+    The migration and the integrity check are skipped when this process already verified the very
+    same file contents (see ``_VERIFIED``).
+    """
     runner = MigrationRunner(path)
+    database = runner.database_path
+    key = str(Path(database).resolve())
+    with _VERIFIED_LOCK:
+        if database.is_file() and _VERIFIED.get(key) == _signature(database):
+            return database
+    with _VERIFIED_LOCK:
+        _VERIFIED.pop(key, None)  # until this check passes, the file is not verified
     runner.apply()
     errors = runner.verify()
     if errors:
         raise MigrationError("; ".join(errors))
-    return runner.database_path
+    with _VERIFIED_LOCK:
+        _VERIFIED[key] = _signature(database)
+    return database
 
 
-__all__ = ["LATEST_SCHEMA_VERSION", "MigrationError", "MigrationRunner", "ensure_database"]
+def forget_verified_databases() -> None:
+    """Drop the verification cache (tests, or after replacing files by other means)."""
+    with _VERIFIED_LOCK:
+        _VERIFIED.clear()
+
+
+__all__ = [
+    "LATEST_SCHEMA_VERSION",
+    "MigrationError",
+    "MigrationRunner",
+    "ensure_database",
+    "forget_verified_databases",
+]

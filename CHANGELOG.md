@@ -9,6 +9,9 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- `scripts/verify_extension_in_chromium.py`: empacota a extensão, carrega o ZIP distribuído num
+  Chromium real e verifica service worker, popup sem erros e a captura (o mesmo fluxo do popup)
+  numa página do GitHub servida offline; com o ZIP sem `content.js` o relatório falha.
 - Gate de experiência (CP-UX06): suíte E2E aprovada em Chromium, Firefox e WebKit; Web Vitals do
   build de produção medidos com script versionado (`apps/web/scripts/measure-vitals.mjs`); harness
   de mutação adversarial de UI (`apps/web/scripts/ui-mutants.py`, 10 mutantes, 9 mortos, 1
@@ -196,6 +199,9 @@ Nenhuma versão ou tag foi criada.
 
 ### Alterado
 
+- `ensure_database()` não repete as verificações completas de integridade a cada chamada de
+  repositório quando o arquivo não mudou (assinatura: tamanho e data do banco, tamanho do WAL):
+  `list_nodes` com 2.000 evidências caiu de 18 para 5,5 ms; escritas continuam verificadas.
 - Instalação padrão sem Streamlit e sem pandas: a interface Streamlit (modo legado/dev desde a
   v1.4) vai para o extra `legacy-ui`; o fechamento de runtime caiu de 51 para 28 pacotes.
 - Dependências vivem só no `pyproject.toml` com extras `ai`, `browser`, `docs`, `legacy-ui` e `dev`;
