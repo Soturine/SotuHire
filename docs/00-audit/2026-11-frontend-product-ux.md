@@ -144,3 +144,33 @@ Hash SHA-256 do conjunto de registros JSON do depois:
 | Primeira visita | ![](../assets/ux-comparison/2026-11-v5/first-visit-before.webp) | ![](../assets/ux-comparison/2026-11-v5/first-visit-after.webp) | Onboarding de 8 etapas mantido; reavaliar no CP-UX02 |
 
 Outras telas estão no manifesto. Redesign só de cor e shell nas telas marcadas acima não é redesign completo dessas telas.
+
+### CP-UX01B — correção visual: barra marinho, gradientes e superfícies
+
+Baseline × CP-UX01B, mesma matriz (25 rotas × 4 larguras × claro/escuro em pt-BR, mais os estados),
+mesmo navegador e dados. O CP-UX01 fica na tabela anterior para comparação. Análise dos dez
+critérios em [direção de design](../08-frontend/design-direction-2026-11.md#correcao-de-rumo-cp-ux01b-adendo-v52).
+
+| Medida | Baseline | CP-UX01 | CP-UX01B |
+| --- | --- | --- | --- |
+| Nós axe sérios, claro (por largura) | 0 | 0 | 0 |
+| Nós axe sérios, escuro (por largura) | 28 | 0 | 0 |
+| Estouro horizontal / erro de console | 0 / 0 | 0 / 0 | 0 / 0 |
+| JS / CSS de produção, gzip -9, mesma máquina | — | 450,3 / 19,2 KB | 451,3 / 20,0 KB |
+
+O valor de 436,4 KB registrado no CP-UX01 veio do relatório do Vite, outro método; a comparação acima
+mede `739023c` e o CP-UX01B do mesmo jeito. A primeira captura completa do CP-UX01B teve 5 nós
+`svg-img-alt` em `/intelligence` (só tablet): os setores da pizza do Recharts têm `role="img"` sem
+nome, e aparecer ou não depende do momento da animação. Corrigido com `aria-label` por setor;
+recaptura nas 8 combinações sem violações.
+
+| Estado | Baseline (`459ffa9`) | CP-UX01B | O que mudou |
+| --- | --- | --- | --- |
+| Cockpit, desktop | ![](../assets/ux-comparison/2026-11-v5/dashboard-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/dashboard-desktop-after.webp) | Barra marinho volta; hero com gradiente e anel de cobertura; indicadores com ícone e cor; passos traduzidos e destinos do CP-UX01 mantidos |
+| Cockpit, escuro | ![](../assets/ux-comparison/2026-11-v5/dashboard-desktop-dark-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/dashboard-desktop-dark-after.webp) | Três planos (barra, fundo, cartões); 0 nós de contraste |
+| Cockpit, mobile | ![](../assets/ux-comparison/2026-11-v5/dashboard-mobile-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/dashboard-mobile-after.webp) | Barra de jornadas marinho; anel ao lado do texto; botões no tamanho do conteúdo |
+| Cockpit, tablet | ![](../assets/ux-comparison/2026-11-v5/dashboard-tablet-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/dashboard-tablet-after.webp) | Mesmo arranjo do desktop a partir de 1024 px |
+| Navegação mobile aberta | ![](../assets/ux-comparison/2026-11-v5/navigation-mobile-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/navigation-mobile-after.webp) | Menu "Mais" com o mesmo trilho escuro |
+| API local fora do ar | ![](../assets/ux-comparison/2026-11-v5/api-unreachable-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/api-unreachable-after.webp) | Falha dita e saída, agora sobre a hierarquia nova |
+| Perfil, desktop | ![](../assets/ux-comparison/2026-11-v5/profile-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/profile-desktop-after.webp) | Só tokens e cartões compartilhados; composição no CP-UX02 |
+| Radar, desktop | ![](../assets/ux-comparison/2026-11-v5/radar-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux01b/radar-desktop-after.webp) | Indicadores herdam o `StatCard` novo; composição no CP-UX03 |

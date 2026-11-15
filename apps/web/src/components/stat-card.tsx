@@ -23,18 +23,22 @@ export function StatCard({
     warning: "text-warning-strong",
     destructive: "text-destructive-strong",
   }[tone];
+  const chipCls = {
+    default: "bg-surface-accent text-accent-strong",
+    accent: "bg-accent/12 text-accent-strong",
+    warning: "bg-highlight text-highlight-foreground",
+    destructive: "bg-destructive/10 text-destructive-strong",
+  }[tone];
 
   return (
-    <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] transition-all hover:shadow-[var(--shadow-elevated)]">
+    <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 shadow-[var(--shadow-soft)] transition-[box-shadow,border-color] duration-(--duration-2) ease-(--ease-out) hover:border-accent/30 hover:shadow-[var(--shadow-elevated)]">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            {label}
-          </p>
-          <p className={cn("text-display text-3xl tabular-nums leading-none", toneCls)}>{value}</p>
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className={cn("text-metric text-3xl", toneCls)}>{value}</p>
         </div>
         {Icon && (
-          <div className="grid h-9 w-9 place-items-center rounded-lg bg-muted text-muted-foreground transition-colors group-hover:bg-accent/15 group-hover:text-accent-strong">
+          <div className={cn("grid h-9 w-9 place-items-center rounded-lg", chipCls)}>
             <Icon className="h-4 w-4" />
           </div>
         )}

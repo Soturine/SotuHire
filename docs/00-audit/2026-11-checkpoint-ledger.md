@@ -141,6 +141,18 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Não é | redesign das telas Perfil, Resume Studio, Radar, Tracker, Lab, Copilot e Configurações (só tokens e shell chegaram a elas) |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, direção de design, galeria, ADR 006, findings) |
 
+## CP-UX01B — correção visual do redesign (adendo v5.2)
+
+| Campo | Registro |
+| --- | --- |
+| Hipótese | o CP-UX01 acertou estrutura e errou superfície: barra e conteúdo no mesmo bege, sem cor nem profundidade; recuperar contraste e personalidade da baseline sem perder o comportamento novo |
+| Mudança | tokens híbridos (barra marinho como ilha escura, hierarquia de superfícies, petróleo, gradiente só no hero e na ação principal), Cockpit recomposto, `StatCard`/`SectionCard`/`ScoreRing` atualizados, marca e favicon |
+| Achados no caminho | retry de 4xx atrasava o primeiro uso do Resume Studio em ~7 s e tornava o E2E instável (2/3 falhas sob carga; 75/75 depois); v2 perdia o status HTTP; setores da pizza sem nome (`svg-img-alt`, dependente de tempo) |
+| Testes | Vitest 32/32 (3 novos de retry); Chromium E2E 33 passed + o instável investigado (repetição 3× de 3 specs: 75/75); captura 200 telas + 10 estados: 0 nós axe, 0 estouro, 0 erro de console |
+| Medidas | JS +1,0 KB e CSS +0,8 KB gzip contra `739023c`, mesmo método |
+| Não é | redesign das demais telas (segue em CP-UX02…05) |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, direção de design, ADR 006, galeria `2026-11-v5-ux01b`) |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |

@@ -9,6 +9,14 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- Correção visual do redesign (CP-UX01B): barra lateral marinho também no tema claro (e no menu
+  "Mais" e na barra de jornadas do celular), com o item atual em petróleo; superfícies em camadas
+  (`canvas`, `surface`, `surface-raised`, `surface-muted`, `surface-accent`, `surface-interactive`)
+  e sombras suaves; hero do Cockpit com gradiente marinho→petróleo e anel de cobertura;
+  indicadores com ícone e cor por tipo; forças comprovadas e lacunas diferenciadas; primeiro passo
+  como ação principal. Serifa só em títulos e no hero; números em sans tabular. Marca e favicon em
+  selo petróleo→azul. Nada do comportamento do CP-UX01 mudou (jornadas, busca, estados, traduções,
+  destinos).
 - Redesign, primeira fatia (CP-UX01): identidade "dossiê de carreira" (papel e tinta, verde-pinho
   para evidência confirmada, ocre para o que espera revisão, vermelho-selo para o que espera a
   pessoa), fontes OFL empacotadas que funcionam offline (Source Serif 4, IBM Plex Sans e Mono),
@@ -66,6 +74,12 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Consultas não repetem mais respostas 4xx: o primeiro uso do Resume Studio (404 "Mestre ainda não
+  existe") mostrava "Abrindo seu estúdio…" por cerca de 7 s antes do onboarding, e o E2E
+  correspondente falhava sob carga (2 de 3 execuções). Política em `src/lib/api/retry.ts` (408, 429 e
+  5xx repetem; conexão recusada repete uma vez) com testes. A camada v2 passa a lançar
+  `ApiHttpError` com o status.
+- Gráfico "Status do Kanban" (Inteligência): cada setor tem nome acessível (`svg-img-alt`).
 - Modo API Real: nenhuma chamada do Career Copilot (Cockpit, aprovações, evidências, portfólio e
   busca) saía do navegador; a camada v2 passava uma URL `/api/v2` ao pareamento, que só aceita
   `/api/v1`, e falhava antes da rede (desde `880a5f1`, 2026-08-10). Verificado contra a API real:

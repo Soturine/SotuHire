@@ -27,7 +27,7 @@ export function SectionCard({
       )}
     >
       {(title || actions) && (
-        <header className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
+        <header className="flex items-start justify-between gap-3 border-b border-border bg-surface/60 px-5 py-4">
           <div className="min-w-0">
             {title && <h2 className="text-base font-semibold tracking-tight">{title}</h2>}
             {description && <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>}

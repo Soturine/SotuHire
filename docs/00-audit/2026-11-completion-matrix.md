@@ -38,7 +38,7 @@ nada aqui é "verde no CI".
 | C28 | Fechar correções das ferramentas | PARTIAL | branches publicadas, CHANGELOG e testes próprios | PRs nos repositórios donos |
 | v3/v4 | UX premium com antes/depois | PARTIAL | CP-UX00 baseline e CP-UX01 com galeria antes/depois | CP-UX02…06 |
 | UX-01 | Baseline pré-redesign reproduzível | DONE | `459ffa9`, 250 telas + 10 estados, manifesto com hashes | — |
-| UX-02 | Identidade e design system | PARTIAL | tokens, fontes, marca, estados, ADR 006 | aplicação nas telas restantes |
+| UX-02 | Identidade e design system | PARTIAL | tokens híbridos (CP-UX01B: barra marinho, superfícies, gradientes), fontes, marca, estados, ADR 006 revisado | aplicação nas telas restantes |
 | UX-03 | Navegação por jornada desktop/tablet/mobile | DONE | registro único, barra lateral, barra mobile, E2E `journey-shell` | — |
 | UX-04 | Busca e autocomplete reais | PARTIAL | telas sem acento, recentes, dados locais (evidência, portfólio) | busca de dados no backend sem acento e sobre Perfil e vagas (CP-UX03) |
 | UX-05 | Motion e microinterações com reduced-motion | PARTIAL | tokens de duração, entrada de página, abertura de jornada | interações das telas de produto |

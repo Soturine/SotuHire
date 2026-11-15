@@ -1,4 +1,5 @@
 import { pairedApiFetch } from "@/features/local-security/api-pairing";
+import { ApiHttpError } from "@/lib/api/client";
 import type { ApiMode } from "@/lib/api/mode";
 import { normalize } from "@/lib/search";
 
@@ -212,10 +213,12 @@ async function request<T>(baseUrl: string, path: string, init?: RequestInit): Pr
     { ...init, headers: { "content-type": "application/json", ...(init?.headers ?? {}) } },
     { apiVersion: "v2" },
   );
-  const envelope = (await response.json()) as Envelope<T>;
-  if (!response.ok || !envelope.ok) {
-    throw new Error(envelope.error?.message || `HTTP ${response.status}`);
+  const envelope = (await response.json().catch(() => ({ ok: false }))) as Envelope<T>;
+  if (!response.ok) {
+    // Keep the status: callers and the retry policy tell "not found" from "server down".
+    throw new ApiHttpError(response.status, envelope.error?.message || `HTTP ${response.status}`);
   }
+  if (!envelope.ok) throw new Error(envelope.error?.message || "Resposta inválida da API.");
   return envelope.data;
 }
 

@@ -26,13 +26,16 @@ function SearchTrigger({ className }: { className?: string }) {
       onClick={openSearch}
       aria-keyshortcuts="Control+K"
       className={cn(
-        "flex w-full items-center gap-2 rounded-md border border-sidebar-border bg-card px-3 py-2 text-left text-sm text-muted-foreground transition-colors duration-(--duration-1) hover:border-foreground/30 hover:text-foreground",
+        "flex w-full items-center gap-2 rounded-lg border border-sidebar-border bg-sidebar-accent/50 px-3 py-2 text-left text-sm text-sidebar-muted transition-colors duration-(--duration-1) hover:border-sidebar-primary/50 hover:bg-sidebar-accent hover:text-sidebar-foreground",
         className,
       )}
     >
       <Search aria-hidden className="h-4 w-4 shrink-0" />
       <span className="flex-1">{t("search.open")}</span>
-      <kbd className="font-mono text-[10px] tracking-wide" aria-hidden>
+      <kbd
+        className="rounded border border-sidebar-border px-1.5 py-0.5 font-mono text-[10px] tracking-wide"
+        aria-hidden
+      >
         Ctrl K
       </kbd>
     </button>
@@ -64,23 +67,25 @@ function JourneySection({
         aria-controls={listId}
         onClick={onToggle}
         className={cn(
-          "group flex w-full items-start gap-2.5 rounded-md px-2.5 py-2 text-left transition-colors duration-(--duration-1)",
+          "group flex w-full items-start gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors duration-(--duration-1)",
           current
-            ? "text-sidebar-accent-foreground"
-            : "text-sidebar-foreground hover:bg-sidebar-accent/60",
+            ? "bg-sidebar-accent/60 text-sidebar-accent-foreground"
+            : "text-sidebar-foreground/90 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
         )}
       >
         <Icon
           aria-hidden
           className={cn(
             "mt-0.5 h-4 w-4 shrink-0",
-            current ? "text-accent-strong" : "text-muted-foreground",
+            current
+              ? "text-sidebar-primary"
+              : "text-sidebar-muted group-hover:text-sidebar-foreground",
           )}
         />
         <span className="min-w-0 flex-1">
           <span className="block text-sm font-semibold">{t(journey.label)}</span>
           {open ? (
-            <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
+            <span className="mt-0.5 block text-xs leading-snug text-sidebar-muted">
               {t(journey.purpose)}
             </span>
           ) : null}
@@ -88,7 +93,7 @@ function JourneySection({
         <ChevronDown
           aria-hidden
           className={cn(
-            "mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-(--duration-2) ease-(--ease-out)",
+            "mt-0.5 h-4 w-4 shrink-0 text-sidebar-muted transition-transform duration-(--duration-2) ease-(--ease-out)",
             open && "rotate-180",
           )}
         />
@@ -111,14 +116,14 @@ function JourneySection({
                   className={cn(
                     "relative ml-[17px] flex items-center gap-2 border-l py-1.5 pl-4 pr-2 text-sm transition-colors duration-(--duration-1)",
                     active
-                      ? "border-primary font-medium text-foreground"
-                      : "border-sidebar-border text-muted-foreground hover:border-foreground/40 hover:text-foreground",
+                      ? "border-sidebar-primary font-medium text-sidebar-accent-foreground"
+                      : "border-sidebar-border text-sidebar-muted hover:border-sidebar-muted hover:text-sidebar-foreground",
                   )}
                 >
                   {active ? (
                     <span
                       aria-hidden
-                      className="absolute -left-[3px] h-1.5 w-1.5 rounded-full bg-primary"
+                      className="absolute -left-[4px] h-[7px] w-[7px] rounded-full bg-sidebar-primary shadow-[0_0_0_3px_var(--sidebar)]"
                     />
                   ) : null}
                   <span className="truncate">{t(entry.label)}</span>
@@ -138,10 +143,10 @@ function ConnectionNote() {
   return (
     <div className="border-t border-sidebar-border px-4 py-3">
       <ApiModeBadge />
-      <p className="mt-2 text-[11px] leading-snug text-muted-foreground">
+      <p className="mt-2 text-[11px] leading-snug text-sidebar-muted">
         {status === "online" ? t("shell.localApi", { host: API_LOCAL_HOST }) : message}
       </p>
-      <p className="mt-1 font-mono text-[10px] text-muted-foreground">v{APP_VERSION}</p>
+      <p className="mt-1 font-mono text-[10px] text-sidebar-muted">v{APP_VERSION}</p>
     </div>
   );
 }
@@ -175,7 +180,7 @@ function NavigationBody({ pathname, onNavigate }: { pathname: string; onNavigate
             />
           ))}
         </ul>
-        <p className="eyebrow mt-6 px-2.5 text-muted-foreground">{t(SYSTEM.label)}</p>
+        <p className="eyebrow mt-6 px-2.5 text-sidebar-muted">{t(SYSTEM.label)}</p>
         <ul className="mt-1.5 grid grid-cols-2 gap-1">
           {SYSTEM.entries.map((entry) => {
             const Icon = entry.icon;
@@ -190,7 +195,7 @@ function NavigationBody({ pathname, onNavigate }: { pathname: string; onNavigate
                     "flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs transition-colors duration-(--duration-1)",
                     active
                       ? "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
-                      : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-foreground",
+                      : "text-sidebar-muted hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                   )}
                 >
                   <Icon aria-hidden className="h-3.5 w-3.5 shrink-0" />
@@ -248,7 +253,7 @@ function MobileTabBar({ pathname, onMore }: { pathname: string; onMore: () => vo
   return (
     <nav
       aria-label={t("shell.journeys")}
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden"
+      className="dark fixed inset-x-0 bottom-0 z-40 border-t border-sidebar-border bg-sidebar/95 pb-[env(safe-area-inset-bottom)] text-sidebar-foreground backdrop-blur lg:hidden"
     >
       <ul className="mx-auto grid max-w-xl grid-cols-6">
         {MOBILE_TABS.map((tab) => {
@@ -262,13 +267,13 @@ function MobileTabBar({ pathname, onMore }: { pathname: string; onMore: () => vo
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-14 flex-col items-center justify-center gap-0.5 px-1 text-[10.5px] leading-tight",
-                  active ? "font-semibold text-foreground" : "text-muted-foreground",
+                  active ? "font-semibold text-sidebar-accent-foreground" : "text-sidebar-muted",
                 )}
               >
                 <span
                   className={cn(
                     "grid h-7 w-10 place-items-center rounded-full transition-colors duration-(--duration-1)",
-                    active && "bg-highlight text-highlight-foreground",
+                    active && "bg-sidebar-accent text-sidebar-primary",
                   )}
                 >
                   <Icon aria-hidden className="h-4 w-4" />
@@ -282,7 +287,7 @@ function MobileTabBar({ pathname, onMore }: { pathname: string; onMore: () => vo
           <button
             type="button"
             onClick={onMore}
-            className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-[10.5px] text-muted-foreground"
+            className="flex min-h-14 w-full flex-col items-center justify-center gap-0.5 text-[10.5px] text-sidebar-muted"
           >
             <span className="grid h-7 w-10 place-items-center">
               <Menu aria-hidden className="h-4 w-4" />
@@ -324,14 +329,14 @@ export function AppShell({
       >
         {t("shell.skipToContent")}
       </a>
-      <aside className="sticky top-0 hidden h-screen w-[17rem] shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:flex">
+      <aside className="dark sticky top-0 hidden h-screen w-[17rem] shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground lg:flex">
         <NavigationBody pathname={pathname} />
       </aside>
 
       <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
         <SheetContent
           side="left"
-          className="flex w-80 max-w-[88vw] flex-col border-sidebar-border bg-sidebar p-0 text-sidebar-foreground lg:hidden"
+          className="dark flex w-80 max-w-[88vw] flex-col border-sidebar-border bg-sidebar p-0 text-sidebar-foreground lg:hidden"
         >
           <SheetHeader className="sr-only">
             <SheetTitle>{t("shell.navigation")}</SheetTitle>
@@ -344,7 +349,7 @@ export function AppShell({
       </Sheet>
 
       <div className="flex min-w-0 flex-1 flex-col pb-16 lg:pb-0">
-        <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
+        <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-md">
           <div className="flex items-center gap-2 px-4 pt-3 md:px-8 lg:pt-4">
             <Link to="/dashboard" className="rounded-md lg:hidden" aria-label="SotuHire">
               <BrandMark className="h-7 w-7" />
@@ -378,7 +383,7 @@ export function AppShell({
           <div className="flex flex-wrap items-end gap-x-6 gap-y-2 px-4 pb-3 pt-1.5 md:px-8 lg:pb-5">
             <div className="min-w-0 flex-1">
               {title && (
-                <h1 className="text-display text-[26px] leading-tight md:text-[32px]">{title}</h1>
+                <h1 className="text-display text-[26px] leading-tight md:text-[30px]">{title}</h1>
               )}
               {description && (
                 <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{description}</p>

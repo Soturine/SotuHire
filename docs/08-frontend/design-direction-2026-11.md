@@ -91,3 +91,37 @@ de console.
 
 Fica para os próximos checkpoints: as demais telas ainda usam cartões e espaçamentos antigos sobre
 os tokens novos (a mudança de cor e fonte chega a todas, a de composição só ao Cockpit e ao shell).
+
+## Correção de rumo (CP-UX01B, adendo v5.2)
+
+A revisão das capturas do CP-UX01 lado a lado com a baseline mostrou que a direção "dossiê" acertou a
+estrutura e errou a superfície: papel bege na barra e no conteúdo, quase sem cor, tudo no mesmo
+plano. O adendo v5.2 pediu uma terceira versão que juntasse o melhor das duas.
+
+| Critério | Baseline `459ffa9` | CP-UX01 `739023c` | Veredito | CP-UX01B |
+| --- | --- | --- | --- | --- |
+| Identidade e marca | ícone "Sparkles" genérico, mas barra marinho memorável | monograma próprio; resto anônimo | marca melhorou, presença piorou | monograma em selo petróleo→azul sobre a barra marinho; favicon e `theme-color` iguais |
+| Navegação × conteúdo | contraste forte (marinho × branco) | barra bege sobre fundo bege | **piorou** | barra marinho nos dois temas (no escuro, mais escura que o fundo e com borda própria); barra de jornadas do celular também |
+| Cor e gradientes | gradiente teal no hero, verde-água vivo | pinho apagado, sem gradiente | **piorou** | gradiente marinho→petróleo só no hero; gradiente de marca no primeiro passo; lavagem petróleo nas forças comprovadas |
+| Profundidade | cartões brancos com sombra sobre cinza-azulado | quase tudo plano, só borda | **piorou** | hierarquia `canvas` < `surface-muted` < `surface` < `surface-raised`, sombras suaves e elevação no hover |
+| Hierarquia tipográfica | sans em tudo, títulos fortes | serifa em títulos e números | números em serifa ficaram "relatório" | serifa só no título da página e na frase do hero; números em Plex Sans tabular (`text-metric`) |
+| Densidade | 4 cartões grandes iguais | faixa compacta de indicadores | melhorou | 4 indicadores com ícone e cor próprios, mais baixos que os da baseline |
+| Legibilidade e varredura | ações em inglês e caixa alta | ações em português, destinos certos | **melhorou**, mantido | mantido; primeiro passo como botão principal, os demais secundários |
+| Cartões, formulários, indicadores | genéricos | linhas finas, pouco contraste de controle | igual | `StatCard`, `SectionCard` e `ScoreRing` compartilhados atualizados (as telas que usam herdam) |
+| Tema escuro | 28 nós de contraste por largura | 0 nós, mas plano | contraste melhorou, separação não | 0 nós; barra, fundo e cartões em três níveis distintos |
+| Desktop, tablet, mobile | título truncado no celular | título inteiro, barra de jornadas | **melhorou**, mantido | mantido; botões do Cockpit no celular deixam de ocupar a largura toda |
+
+Decisões:
+
+- A barra lateral é uma "ilha escura": `class="dark"` no `<aside>`, no menu "Mais" e na barra do
+  celular. Selo de API, busca, foco e qualquer componente compartilhado lá dentro usam os tokens do
+  tema escuro sem cor fixa no componente. Os tokens `--sidebar-*` ficam em `:root` e `:root.dark`
+  (seguem o tema da página, não a ilha).
+- Gradiente tem lugar marcado: o hero (`.trajectory-surface`, uma afirmação por tela), o primeiro passo
+  e o anel de cobertura. Cartões comuns não recebem gradiente.
+- Ocre "marca-texto" e vermelho-selo continuam com o mesmo papel semântico (revisão pendente;
+  espera a pessoa).
+- A serifa fica: dá identidade aos títulos sem custo novo (já estava no bundle). Deixou os números.
+
+Não mudou: navegação por jornada, busca, estados de erro e vazio, traduções, destinos das ações,
+avisos de modo de exemplo e API Real.

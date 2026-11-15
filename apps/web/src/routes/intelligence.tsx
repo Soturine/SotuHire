@@ -192,8 +192,15 @@ function IntelPage() {
                     outerRadius={75}
                     paddingAngle={2}
                   >
-                    {statusData.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    {statusData.map((entry, i) => (
+                      // Recharts gives each sector role="img"; without a name axe flags it
+                      // (svg-img-alt) and a screen reader announces an unnamed image.
+                      <Cell
+                        key={i}
+                        fill={CHART_COLORS[i % CHART_COLORS.length]}
+                        stroke="var(--color-card)"
+                        aria-label={`${entry.name}: ${entry.value}`}
+                      />
                     ))}
                   </Pie>
                   <Tooltip

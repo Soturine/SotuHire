@@ -33,3 +33,12 @@ agrupada por módulo técnico, e o visual era o de um painel SaaS genérico.
 - Cada fonte custa um arquivo `woff2` por faixa Unicode usada (latin e latin-ext); medido no
   CP-UX01.
 - Testes: `search.test.ts` exige que toda tela do registro seja encontrável pelo próprio rótulo.
+
+## Revisão (CP-UX01B, 2026-11)
+
+A paleta "papel e tinta" do CP-UX01 foi substituída por uma híbrida (detalhes e comparação na
+[direção de design](../../08-frontend/design-direction-2026-11.md#correcao-de-rumo-cp-ux01b-adendo-v52)):
+barra marinho como ilha de tema escuro, superfícies em camadas (`canvas`, `surface`,
+`surface-raised`, `surface-muted`, `surface-accent`, `surface-interactive`), petróleo como cor de
+marca, gradiente reservado ao hero e a ações principais. Os itens 1 a 4 da decisão continuam
+valendo; o nome "editorial" passa a valer só para a tipografia dos títulos.
