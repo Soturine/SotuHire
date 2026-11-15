@@ -118,6 +118,17 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Pendente | variantes ainda em "última gravação vence"; reimportação do mesmo arquivo é upsert sem aviso |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, mapa de autoridade, segurança da Local API, ledger de findings) |
 
+## CP-UX00 — baseline do redesign (adendo v5)
+
+| Campo | Registro |
+| --- | --- |
+| SHA do app medido | `459ffa9` (interface igual à de `f55b1d4`) |
+| Cobertura | 250 telas + 10 estados; Chromium, demo, reduced-motion |
+| Achados de experiência | navegação por módulo com 23 links; busca com 4 telas em inglês e 0 resultados para "currículo"/"vaga"; zeros falsos com a API fora do ar; título truncado no mobile; ações em inglês na interface pt-BR; tema escuro com 28 nós de contraste por largura (nunca medido) |
+| Decisão | direção "dossiê de carreira" (alternativas no documento de direção), ADR 006 |
+| Não é | redesign: nenhuma tela mudou neste checkpoint |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |

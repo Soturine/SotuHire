@@ -128,6 +128,7 @@ nav:
           - Tool Registry: 02-architecture/adrs/003-copilot-tool-registry.md
           - MCP read/draft: 02-architecture/adrs/004-mcp-read-draft.md
           - Sem auto-apply: 02-architecture/adrs/005-no-auto-apply.md
+          - Navegação por jornada e design editorial: 02-architecture/adrs/006-journey-navigation-and-editorial-design-system.md
       - Interoperabilidade com IA local: 02-architecture/local-ai-interoperability.md
       - Matching por domínio: 02-architecture/domain-matching-policies.md
       - Atualizações de taxonomia: 02-architecture/taxonomy-updates.md
@@ -388,6 +389,7 @@ nav:
       - API contract: 08-frontend/api-contract.md
       - Mock data contract: 08-frontend/mock-data-contract.md
       - Design system notes: 08-frontend/design-system-notes.md
+      - Direção de design 2026-11: 08-frontend/design-direction-2026-11.md
       - Frontend rules: 08-frontend/frontend-rules.md
       - Application Intelligence: 08-frontend/application-intelligence.md
   - Benchmark:

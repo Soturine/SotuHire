@@ -8,6 +8,11 @@ import { join } from "node:path";
  * For every route and viewport it writes a full-page screenshot and a metrics record: horizontal
  * overflow, axe violations by impact (WCAG 2.x A/AA rules) and console errors. Same demo data, theme,
  * locale and viewport on both sides; CAPTURE_UX_DIR names the output folder (before/ or after/).
+ *
+ * Matrix (env, comma-separated): CAPTURE_UX_VIEWPORTS (desktop,tablet,mobile,small; default
+ * desktop,mobile), CAPTURE_UX_THEMES (light,dark; default light), CAPTURE_UX_LOCALES (pt-BR,en-US;
+ * default pt-BR). The file name is <viewport>[-<theme>][-<locale>].png, so the 2026-11 default
+ * capture keeps its original names.
  */
 
 const ROUTES = [
@@ -33,26 +38,49 @@ const ROUTES = [
   "/sources",
   "/settings",
   "/privacy",
+  // added in CP-UX00 after reconciling with src/routes: these three were never captured
+  "/interviews",
+  "/ai-quality",
+  "/help",
 ];
 
-const VIEWPORTS = [
+const ALL_VIEWPORTS = [
   { name: "desktop", width: 1440, height: 900 },
+  { name: "tablet", width: 1024, height: 768 },
   { name: "mobile", width: 390, height: 844 },
+  { name: "small", width: 360, height: 800 },
 ];
+const pick = (name: string, fallback: string) =>
+  (process.env[name] || fallback).split(",").map((value) => value.trim());
+const wanted = pick("CAPTURE_UX_VIEWPORTS", "desktop,mobile");
+const VIEWPORTS = ALL_VIEWPORTS.filter((viewport) => wanted.includes(viewport.name));
+const THEMES = pick("CAPTURE_UX_THEMES", "light") as ("light" | "dark")[];
+const LOCALES = pick("CAPTURE_UX_LOCALES", "pt-BR");
 
 const outDir = process.env.CAPTURE_UX_DIR || "ux-capture";
 
-for (const viewport of VIEWPORTS) {
+const combos = VIEWPORTS.flatMap((viewport) =>
+  THEMES.flatMap((theme) => LOCALES.map((locale) => ({ viewport, theme, locale }))),
+);
+
+for (const { viewport, theme, locale } of combos) {
+  const suffix = `${theme === "light" ? "" : `-${theme}`}${locale === "pt-BR" ? "" : `-${locale}`}`;
   for (const route of ROUTES) {
-    test(`ux evidence ${viewport.name} ${route}`, async ({ page }) => {
+    test(`ux evidence ${viewport.name}${suffix} ${route}`, async ({ page }) => {
       test.skip(process.env.CAPTURE_UX !== "1", "Set CAPTURE_UX=1 to capture UX evidence.");
       const errors: string[] = [];
       page.on("console", (message) => {
         if (message.type() === "error") errors.push(message.text().slice(0, 200));
       });
       page.on("pageerror", (error) => errors.push(String(error).slice(0, 200)));
+      await page.addInitScript((value) => {
+        localStorage.setItem(
+          "sotuhire.ui-preferences.v1",
+          JSON.stringify({ locale: value, theme: "system" }),
+        );
+      }, locale);
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+      await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
       await page.goto(route);
       await expect(page.locator("main, [role=main], body").first()).toBeVisible();
       await page.waitForLoadState("networkidle");
@@ -82,13 +110,15 @@ for (const viewport of VIEWPORTS) {
       const slug = route === "/" ? "home" : route.slice(1).replaceAll("/", "-");
       const dir = join(outDir, slug);
       mkdirSync(dir, { recursive: true });
-      await page.screenshot({ path: join(dir, `${viewport.name}.png`), fullPage: true });
+      await page.screenshot({ path: join(dir, `${viewport.name}${suffix}.png`), fullPage: true });
       writeFileSync(
-        join(dir, `${viewport.name}.json`),
+        join(dir, `${viewport.name}${suffix}.json`),
         JSON.stringify(
           {
             route,
             viewport,
+            theme,
+            locale,
             horizontal_overflow_px: Math.max(0, overflow.scrollWidth - overflow.clientWidth),
             overflow_offenders: overflow.offenders,
             axe_rules: axe.violations.map((v) => ({

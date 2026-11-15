@@ -9,6 +9,11 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- Baseline do redesign (CP-UX00): a captura de UX cobre as 25 rotas reais (faltavam 3), 4 larguras
+  (1440, 1024, 390, 360), tema claro e escuro e en-US, e um spec novo grava 10 estados de uso
+  (primeira visita, busca, navegação mobile, API fora do ar, primeiro uso do Resume Studio, Copilot).
+  `scripts/build_ux_gallery.py` gera a galeria versionada e o manifesto com o hash de cada captura.
+  Direção de design em `docs/08-frontend/design-direction-2026-11.md` e ADR 006.
 - Resume Studio monta o Currículo Mestre a partir do Perfil Universal (só fatos confirmados e não
   sensíveis, com a origem de cada entrada) em vez de pedir o currículo de novo, e lista fatos
   confirmados depois no Perfil para a pessoa escolher quais entram. Nada volta da variante para o

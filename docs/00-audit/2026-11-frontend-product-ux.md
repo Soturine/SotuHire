@@ -1,8 +1,9 @@
 # Frontend: acessibilidade, continuidade de dados e evidência antes/depois — 2026-11
 
-Parte da [auditoria de 2026-11](2026-11-independent-assurance-audit.md) (CP-FE00, CP-FE01a). O
-redesign visual amplo ainda não foi feito; este documento registra o que foi medido e corrigido e o que
-fica para os próximos checkpoints.
+Parte da [auditoria de 2026-11](2026-11-independent-assurance-audit.md) (CP-FE00, CP-FE01a e, a partir
+do adendo v5, o redesign CP-UX00…06). A seção [Redesign 2026-11 v5](#redesign-2026-11-v5) tem a baseline
+nova e a galeria antes/depois do redesign; as seções anteriores são o registro histórico da correção
+de acessibilidade e não provam o redesign.
 
 ## Método
 
@@ -71,3 +72,44 @@ As demais 34 capturas de cada lado ficam fora do repositório (hash acima).
 Redesign visual (identidade, tipografia, densidade, navegação por jornada) em fatias verticais com o
 mesmo antes/depois; componente `Field` para associar rótulo e campo de forma sistemática (48 rótulos
 sem `htmlFor` não acusados pelo axe porque o campo tem outro nome); verificação com leitor de tela.
+
+## Redesign 2026-11 v5
+
+Direção, alternativas e plano: [design-direction-2026-11](../08-frontend/design-direction-2026-11.md).
+Decisão de arquitetura: [ADR 006](../02-architecture/adrs/006-journey-navigation-and-editorial-design-system.md).
+
+### Baseline (CP-UX00, app em `459ffa9`)
+
+250 telas (25 rotas × 4 larguras × 2 temas em pt-BR, mais 2 larguras em en-US) e 10 estados
+interativos. Gerar de novo:
+
+```bash
+cd apps/web
+CAPTURE_UX=1 CAPTURE_UX_DIR=<pasta>/before CAPTURE_UX_VIEWPORTS=desktop,tablet,mobile,small   CAPTURE_UX_THEMES=light,dark npx playwright test tests/e2e/ux-baseline.spec.ts --project=chromium
+CAPTURE_UX=1 CAPTURE_UX_DIR=<pasta>/before CAPTURE_UX_VIEWPORTS=desktop,mobile CAPTURE_UX_LOCALES=en-US   npx playwright test tests/e2e/ux-baseline.spec.ts --project=chromium
+CAPTURE_UX=1 CAPTURE_UX_DIR=<pasta>/before npx playwright test tests/e2e/ux-states.spec.ts --project=chromium
+python scripts/build_ux_gallery.py --before <pasta>/before --before-sha 459ffa9   --out docs/assets/ux-comparison/2026-11-v5
+```
+
+| Medida (baseline) | Claro | Escuro |
+| --- | --- | --- |
+| Nós axe sérios/críticos, por largura | 0 | 28 (`color-contrast`) |
+| Telas com estouro horizontal | 0 | 0 |
+| Telas com erro de console | 0 | 0 |
+| Links de navegação sempre visíveis (desktop) | 23 em 7 grupos | — |
+| Resultados da busca para "curriculo", "currículo", "vaga" | 0, 0, 0 | — |
+
+Hash SHA-256 do conjunto de registros JSON da baseline:
+`dcde97062ffbe1c095d4008e208cd8215025eb63db149ed11eda508c8fc6abe8`; o `manifest.json` da galeria
+tem o hash de cada arquivo. Uma captura de `/portfolio` (mobile, en-US) foi refeita porque o
+servidor de desenvolvimento recarregou durante a análise do axe.
+
+| Estado | Antes |
+| --- | --- |
+| Cockpit, desktop | ![](../assets/ux-comparison/2026-11-v5/dashboard-desktop-before.webp) |
+| Cockpit, mobile | ![](../assets/ux-comparison/2026-11-v5/dashboard-mobile-before.webp) |
+| API local fora do ar | ![](../assets/ux-comparison/2026-11-v5/api-unreachable-before.webp) |
+| Busca por "currículo" | ![](../assets/ux-comparison/2026-11-v5/search-curriculo-before.webp) |
+| Navegação mobile aberta | ![](../assets/ux-comparison/2026-11-v5/navigation-mobile-before.webp) |
+
+As demais imagens da baseline estão na mesma pasta; a coluna "depois" entra a cada checkpoint.
