@@ -256,12 +256,27 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Método | `scripts/dast_local_api.py` contra `scripts/run_api.py` em diretório sintético, sem credenciais: 14 sondas |
 | Resultado | 14/14. Duas sondas estavam mal desenhadas e foram corrigidas, não mascaradas: um corpo de 6 MB "falhava" porque o servidor respondia 401 e fechava sem ler o corpo (correto); a expectativa de 413 antes do 401 vinha do Companion, e esta API autentica antes de olhar o tamanho (as duas ordens são seguras sem leitura do corpo) |
 | Observação | rota inexistente sem sessão também responde 401: não há enumeração de rotas sem credencial |
+| Revisão (CP-CI01) | o 14/14 superestimava duas sondas: a de corpo grande aceitava `ConnectionError` como recusa, e a de prova forjada parava no 403 da origem sem chegar à prova. Corrigidas no CP-CI01 |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
+
+## CP-CI01 — CI remoto das quatro PRs e revisão de evidência
+
+| Campo | Registro |
+| --- | --- |
+| SotuHire #57 em `63cda10` | CI falhou em três pontos: cópia do OpenAPI diferente (FastAPI/Pydantic mais novos no CI mudam títulos, `-Input`/`-Output` e `additionalProperties` sem mudar a API), `ruff format` em `apps/web/scripts/ui-mutants.py`, 2 erros de pyright em `scripts/verify_extension_in_chromium.py` |
+| Correção do contrato | `scripts/export_openapi.py` grava uma visão do contrato (corpos de requisição, respostas 2xx, schemas alcançados; `additionalProperties` só onde a requisição alcança). Idêntica com FastAPI 0.138/Pydantic 2.13 e 0.163/2.14. Testes: campo novo na requisição e campo renomeado na resposta mudam a visão; título novo não |
+| `ensure_database` (revisão pedida) | tamanho/mtime/tamanho do WAL não garantem identidade. Agora: hash do cabeçalho do banco (contador de mudanças, cookie do schema) e cabeçalho do WAL (sais mudam a cada reinício), validade de 10 min, invalidação no restore. 8 testes: reescrita do WAL sem crescimento (tamanho e mtime do banco iguais, comprovado no teste), 4 escritores concorrentes, restore, corrupção que preserva mtime (não vista dentro da janela, pega quando expira: limite documentado), arquivo corrompido substituído. 3 execuções seguidas verdes. Custo: chamada em cache 0,5 ms, verificação completa 19,6 ms |
+| DAST (revisão pedida) | corpo grande por socket: 64 KB de 6 MB enviados, `HTTP/1.1 401` lido; silêncio é inconclusivo e falha. Prova forjada com origem permitida: 401 da prova. Travessia com sessão autorizada (pareamento real em diretório descartável): 5 caminhos 400/404, nenhum arquivo; controle positivo baixa o backup legítimo (`PK`); erros pós-autenticação sem caminho absoluto. 27/27; bootstrap errado → sai 1 |
+| Assertiva #10 em `a91b445` | CI acusou `test_core_modules_do_not_name_tools[workspace.py]`: a correção de caches listava `.vite` no núcleo. `f1dec58`: adapters declaram `tool_cache_entries()`; `link_installed(..., local_only)`; teste de independência intocado. Local: 3.12 unit 1.161 + integração 193, 3.11 unit 1.161, `validate_repo` |
+| Derivanta #12 | `db2dcc7` corrige os links (passo `check_markdown_links.py --strict-navigation` verde no CI). O job falha no passo seguinte, `check_documentation_structure.py`: 51 erros em 17 casos de eval; a `main` (`218761d`) falha no mesmo workflow desde 2026-10-28. Pré-existente, não corrigido nesta rodada; a PR não deve ser mesclada sem decisão do dono |
+| Engine #4 | sem checks porque `.github/workflows` só dispara em `push` na `main` e `workflow_dispatch`; ausência de checks não é aprovação. Run manual 43774748903 na branch: 4 jobs de teste verdes (Ubuntu 3.12/3.13/3.14, Windows 3.12). `tools/verify.py` local num venv: lint, format, types, tests, conformance PASS. Workflow não alterado (decisão do dono) |
+| Matriz | rodapé dizia 8/19/1 com linhas 12 `DONE`/16 `PARTIAL`. Revisão de evidência: C03, C15, C18, C20 e UX-06 descem para `PARTIAL`. Agora C01–C28: 8 `DONE`, 20 `PARTIAL` |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
 
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |
 | --- | --- | --- | --- | --- |
-| Derivanta | `feat/approval-consumption-and-required-artifacts` | `7e1ecba` | confirmado | `scripts/tests` 26 passed; checagem de links igual à de antes (7 itens pré-existentes) |
-| Derivanta-Engine | `feat/ci-workflow-checks` | `35f9951` | confirmado | suíte 951 passed, 5 skipped |
-| Assertiva | `fix/precommit-hook-tool-identity` | `a91b445` | confirmado | suíte completa em `fee2c44`: 1.346 passed; em `a91b445` (correção de links de dependências): suítes relacionadas 67 passed, 9 skipped (fixtures Node) |
+| Derivanta | `feat/approval-consumption-and-required-artifacts` | `db2dcc7` | confirmado | `scripts/tests` 26 passed; links verdes; estrutura de docs falha como na `main` (ver CP-CI01) |
+| Derivanta-Engine | `feat/ci-workflow-checks` | `35f9951` | confirmado | `tools/verify.py` PASS; CI manual 43774748903 |
+| Assertiva | `fix/precommit-hook-tool-identity` | `f1dec58` | confirmado | Python 3.12: unit 1.161, integração 193; 3.11: unit 1.161; `validate_repo` |

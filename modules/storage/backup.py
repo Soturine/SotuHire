@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from modules.security.credentials import contains_provider_secret
 from modules.storage.database import default_data_dir
-from modules.storage.migrations import MigrationRunner
+from modules.storage.migrations import MigrationRunner, forget_verified_databases
 from modules.storage.migrations.versions import LATEST_SCHEMA_VERSION
 from modules.storage.safe_paths import UnsafeStorePath, ensure_within, resolve_within, safe_relative
 
@@ -247,6 +247,8 @@ def restore_backup(
                 shutil.copy2(source_path, temporary_path)
                 temporary_path.replace(destination_path)
                 result.files_restored += 1
+        # The restored database is new content: never trust an earlier verification of that path.
+        forget_verified_databases()
         return result
 
 

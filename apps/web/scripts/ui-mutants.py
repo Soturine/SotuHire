@@ -88,8 +88,8 @@ MUTANTS = [
         "id": "tracker-filter-accent-sensitive",
         "promise": "the Tracker filter ignores accents",
         "file": "src/routes/tracker.tsx",
-        "old": "const haystack = normalize(`${j.title} ${j.company} ${j.source ?? \"\"}`);",
-        "new": "const haystack = `${j.title} ${j.company} ${j.source ?? \"\"}`.toLowerCase();",
+        "old": 'const haystack = normalize(`${j.title} ${j.company} ${j.source ?? ""}`);',
+        "new": 'const haystack = `${j.title} ${j.company} ${j.source ?? ""}`.toLowerCase();',
         "spec": "tests/e2e/opportunities-ux.spec.ts",
         "grep": "tracker filter",
     },
@@ -126,11 +126,24 @@ def run(mutant: dict) -> dict:
         started = time.time()
         proc = subprocess.run(
             [
-                "npx", "playwright", "test", mutant["spec"], "--project=chromium",
-                "--workers=1", "--retries=0", "--reporter=line", "--grep", mutant["grep"],
+                "npx",
+                "playwright",
+                "test",
+                mutant["spec"],
+                "--project=chromium",
+                "--workers=1",
+                "--retries=0",
+                "--reporter=line",
+                "--grep",
+                mutant["grep"],
             ],
-            cwd=ROOT, capture_output=True, text=True, encoding="utf-8", errors="replace",
-            shell=True, timeout=600,
+            cwd=ROOT,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            shell=True,
+            timeout=600,
         )
         tail = [line for line in proc.stdout.splitlines() if line.strip()][-3:]
         return {

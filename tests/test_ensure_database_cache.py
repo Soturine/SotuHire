@@ -1,9 +1,16 @@
-"""SH-NEW-001: ensure_database() verifies a file once per content, not once per repository call."""
+"""SH-NEW-001: ensure_database() verifies a file once per content, within a bounded age.
+
+The cache must never hide a change it can see: a write (growing or not), a WAL restart that reuses
+frames without growing the file, concurrent writers, a restore. What it cannot see by itself
+(damage that preserves size, mtime and both headers) is caught when the verification expires.
+"""
 
 from __future__ import annotations
 
+import os
 import shutil
 import sqlite3
+import threading
 from pathlib import Path
 
 import pytest
@@ -31,6 +38,13 @@ def _count_verify(monkeypatch) -> list[int]:
     return calls
 
 
+def _wal_connection(database: Path) -> sqlite3.Connection:
+    connection = sqlite3.connect(database, isolation_level=None)
+    connection.execute("PRAGMA journal_mode = WAL")
+    connection.execute("CREATE TABLE IF NOT EXISTS probe (value TEXT)")
+    return connection
+
+
 def test_repeated_calls_on_unchanged_file_verify_once(tmp_path: Path, monkeypatch) -> None:
     calls = _count_verify(monkeypatch)
     database = tmp_path / "sotuhire.db"
@@ -42,8 +56,7 @@ def test_repeated_calls_on_unchanged_file_verify_once(tmp_path: Path, monkeypatc
 def test_reads_through_the_app_connection_do_not_force_a_new_check(
     tmp_path: Path, monkeypatch
 ) -> None:
-    """The first cache keyed on the WAL's mtime never hit: SQLite touches the -wal file whenever a
-    WAL-mode connection opens, even to read (found by measuring list_nodes after the change)."""
+    """SQLite touches the -wal file whenever a WAL-mode connection opens, even to read."""
     from modules.storage.database import connect_database
 
     calls = _count_verify(monkeypatch)
@@ -67,13 +80,105 @@ def test_a_write_makes_the_next_call_verify_again(tmp_path: Path, monkeypatch) -
     assert len(calls) == 2
 
 
+def test_a_wal_restart_that_reuses_frames_without_growing_is_seen(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """After a checkpoint the next write restarts the WAL from its first frame: the file keeps its
+    size and the main database is not touched. Only the WAL header (new salts) changes."""
+    database = tmp_path / "sotuhire.db"
+    ensure_database(database)
+    keeper = _wal_connection(database)  # keeps the WAL file from being deleted between steps
+    try:
+        keeper.execute("INSERT INTO probe VALUES (?)", ("a" * 64,))
+        keeper.execute("PRAGMA wal_checkpoint(PASSIVE)")
+        calls = _count_verify(monkeypatch)
+        ensure_database(database)
+        wal = database.with_name(database.name + "-wal")
+        size_before, main_before = wal.stat().st_size, database.stat().st_mtime_ns
+        keeper.execute("INSERT INTO probe VALUES (?)", ("b" * 64,))
+        assert wal.stat().st_size == size_before  # no growth: frames were rewritten in place
+        assert database.stat().st_mtime_ns == main_before  # main file untouched
+        ensure_database(database)
+    finally:
+        keeper.close()
+    assert len(calls) == 2
+
+
+def test_concurrent_writers_never_leave_a_stale_verification(tmp_path: Path) -> None:
+    database = tmp_path / "sotuhire.db"
+    ensure_database(database)
+    _wal_connection(database).close()
+    errors: list[BaseException] = []
+
+    def writer(index: int) -> None:
+        try:
+            for step in range(15):
+                with sqlite3.connect(database, timeout=10) as connection:
+                    connection.execute("INSERT INTO probe VALUES (?)", (f"{index}-{step}",))
+                ensure_database(database)
+        except BaseException as exc:  # noqa: BLE001 - surfaced below
+            errors.append(exc)
+
+    threads = [threading.Thread(target=writer, args=(index,)) for index in range(4)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+    assert errors == []
+    key = str(database.resolve())
+    # whatever the interleaving, the cached fingerprint is the file as it is now, or nothing
+    cached = runner_module._VERIFIED.get(key)
+    assert cached is None or cached[0] == runner_module._fingerprint(database)
+    with sqlite3.connect(database) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM probe").fetchone()[0] == 60
+
+
+def test_restoring_a_backup_drops_the_verification(tmp_path: Path, monkeypatch) -> None:
+    from modules.storage.backup import create_backup, restore_backup
+
+    database = tmp_path / "sotuhire.db"
+    ensure_database(database)
+    archive = create_backup(data_dir=tmp_path).archive_path
+    ensure_database(database)
+    assert str(database.resolve()) in runner_module._VERIFIED
+    restore_backup(archive, destination=tmp_path, dry_run=False)
+    assert runner_module._VERIFIED == {}
+    calls = _count_verify(monkeypatch)
+    ensure_database(database)
+    assert len(calls) == 1
+
+
+def test_damage_that_keeps_size_and_mtime_is_caught_when_the_verification_expires(
+    tmp_path: Path, monkeypatch
+) -> None:
+    database = tmp_path / "sotuhire.db"
+    ensure_database(database)
+    with sqlite3.connect(database) as connection:  # make the file span several pages
+        connection.execute("CREATE TABLE filler (x TEXT)")
+        connection.executemany("INSERT INTO filler VALUES (?)", [("z" * 500,)] * 200)
+        connection.commit()  # a checkpoint inside the open transaction is refused
+        connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    ensure_database(database)
+    stat = database.stat()
+    data = bytearray(database.read_bytes())
+    data[4096:8192] = b"\xff" * 4096  # wreck the second page, keep the header
+    database.write_bytes(bytes(data))
+    os.utime(database, ns=(stat.st_atime_ns, stat.st_mtime_ns))  # a tool that keeps timestamps
+
+    ensure_database(database)  # within the window the cache cannot see this: documented bound
+
+    monkeypatch.setattr(runner_module, "VERIFY_MAX_AGE_S", 0.0)
+    with pytest.raises((MigrationError, sqlite3.DatabaseError)):
+        ensure_database(database)
+
+
 def test_a_replaced_corrupt_file_is_still_rejected(tmp_path: Path) -> None:
     database = tmp_path / "sotuhire.db"
     ensure_database(database)
     good = tmp_path / "good.db"
     shutil.copy2(database, good)
     data = bytearray(database.read_bytes())
-    data[100:4096] = b"\x00" * (4096 - 100)  # wreck the header area: no longer a valid database
+    data[100:4096] = b"\x00" * (4096 - 100)
     database.write_bytes(bytes(data))
     with pytest.raises((MigrationError, sqlite3.DatabaseError)):
         ensure_database(database)

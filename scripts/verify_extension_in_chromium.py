@@ -113,12 +113,14 @@ def main() -> int:
                     )
                 except Exception as exc:  # noqa: BLE001 - reported as the step's failure
                     answer = {"error": str(exc).splitlines()[0]}
-                capture = (answer or {}).get("capture") or {}
+                answer = answer if isinstance(answer, dict) else {}
+                raw_capture = answer.get("capture")
+                capture: dict = raw_capture if isinstance(raw_capture, dict) else {}
                 steps["content_script"] = {
                     "ok": "fictional-repo" in json.dumps(capture),
                     "keys": sorted(capture)[:12],
                     "url": capture.get("url"),
-                    "error": (answer or {}).get("error"),
+                    "error": answer.get("error"),
                 }
             finally:
                 context.close()

@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import hashlib
 import sqlite3
 import threading
+import time
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -151,56 +153,81 @@ class MigrationRunner:
         connection.commit()
 
 
-# Files already migrated and verified, by their on-disk signature. SH-NEW-001: every repository
-# method called ensure_database(), which runs full integrity and foreign-key checks (~12 ms on a
-# 1.7 MB database, about 65% of a list query), several times per operation. A restore replaces the
-# file and a checkpoint rewrites it (size or mtime change); pending writes grow the WAL. The WAL's
-# mtime is left out on purpose: SQLite touches it whenever a connection opens in WAL mode, so with
-# it no read could ever reuse the check. Residual gap: writes that reuse WAL frames between
-# checkpoints keep the same WAL size and skip one integrity check (corruption detection, not
-# schema or logic: migrations only run through this function).
-_VERIFIED: dict[str, tuple[int, ...]] = {}
+# Files already migrated and verified in this process. SH-NEW-001: every repository method called
+# ensure_database(), which runs full integrity and foreign-key checks (~12 ms on a 1.7 MB
+# database), several times per operation. The full check is skipped only while all of these hold:
+#
+# * the file's fingerprint is unchanged: size and mtime of the database, a hash of its 100-byte
+#   header (page size, schema cookie, change counters), the WAL's size and its 32-byte header. The
+#   WAL header carries salts SQLite changes every time the WAL restarts after a checkpoint, so a
+#   rewrite of WAL frames that does not grow the file still changes the fingerprint. The WAL's
+#   mtime is left out: SQLite touches it on every WAL-mode connection, even to read;
+# * the last full check is younger than VERIFY_MAX_AGE_S. Damage that preserves size, mtime and
+#   both headers (bit rot, a tool that restores timestamps) is therefore caught within that
+#   window, and at the next process start (the cache lives in memory only);
+# * nothing invalidated it: restoring a backup calls forget_verified_databases().
+#
+# Migrations are never skipped by this cache: any schema change rewrites the database header
+# (schema cookie), and a schema change made outside this function is an error either way.
+VERIFY_MAX_AGE_S = 600.0
+_VERIFIED: dict[str, tuple[tuple, float]] = {}
 _VERIFIED_LOCK = threading.Lock()
 
 
-def _signature(database: Path) -> tuple[int, ...]:
+def _read_prefix(path: Path, size: int) -> bytes:
+    try:
+        with path.open("rb") as handle:
+            return handle.read(size)
+    except FileNotFoundError:
+        return b""
+
+
+def _fingerprint(database: Path) -> tuple:
     try:
         stat = database.stat()
         main = (stat.st_size, stat.st_mtime_ns)
     except FileNotFoundError:
         main = (-1, -1)
+    header = hashlib.sha256(_read_prefix(database, 100)).hexdigest()
+    wal_path = database.with_name(database.name + "-wal")
     try:
-        wal = database.with_name(database.name + "-wal").stat().st_size
+        wal_size = wal_path.stat().st_size
     except FileNotFoundError:
-        wal = 0  # SQLite deletes an empty WAL when the last connection closes: same state
-    return (*main, wal)
+        wal_size = 0  # SQLite deletes an empty WAL when the last connection closes: same state
+    wal_header = _read_prefix(wal_path, 32) if wal_size else b""
+    return (*main, header, wal_size, wal_header)
 
 
 def ensure_database(path: str | Path | None = None) -> Path:
     """Create or migrate the local database and return its path.
 
-    The migration and the integrity check are skipped when this process already verified the very
-    same file contents (see ``_VERIFIED``).
+    Migration and the full integrity check are skipped only for a file this process verified with
+    the same fingerprint less than VERIFY_MAX_AGE_S ago (see ``_VERIFIED``).
     """
     runner = MigrationRunner(path)
     database = runner.database_path
     key = str(Path(database).resolve())
     with _VERIFIED_LOCK:
-        if database.is_file() and _VERIFIED.get(key) == _signature(database):
+        cached = _VERIFIED.get(key)
+        if (
+            cached is not None
+            and database.is_file()
+            and cached[0] == _fingerprint(database)
+            and time.monotonic() - cached[1] < VERIFY_MAX_AGE_S
+        ):
             return database
-    with _VERIFIED_LOCK:
         _VERIFIED.pop(key, None)  # until this check passes, the file is not verified
     runner.apply()
     errors = runner.verify()
     if errors:
         raise MigrationError("; ".join(errors))
     with _VERIFIED_LOCK:
-        _VERIFIED[key] = _signature(database)
+        _VERIFIED[key] = (_fingerprint(database), time.monotonic())
     return database
 
 
 def forget_verified_databases() -> None:
-    """Drop the verification cache (tests, or after replacing files by other means)."""
+    """Drop the verification cache: after a restore, or when files were replaced by other means."""
     with _VERIFIED_LOCK:
         _VERIFIED.clear()
 

@@ -9,9 +9,11 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
-- `scripts/dast_local_api.py`: 14 sondas dinâmicas contra a API local rodando (Host forjado, origem
+- `scripts/dast_local_api.py`: sondas dinâmicas contra a API local rodando (Host forjado, origem
   estranha e preflight, rotas sem sessão, prova de pareamento forjada, corpo grande sem sessão e
   tamanho declarado acima do limite, travessia no download de backup, vazamento de caminho em erros).
+  Com `--bootstrap` (instância descartável) pareia uma sessão como o app web e repete a travessia
+  com ela, com controle positivo (o arquivo legítimo baixa): 27 sondas.
 - `scripts/verify_extension_in_chromium.py`: empacota a extensão, carrega o ZIP distribuído num
   Chromium real e verifica service worker, popup sem erros e a captura (o mesmo fluxo do popup)
   numa página do GitHub servida offline; com o ZIP sem `content.js` o relatório falha.
@@ -115,6 +117,15 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- DAST: a sonda de corpo grande sem sessão contava uma conexão derrubada como recusa correta; agora
+  envia 64 KB de 6 MB por socket e só passa ao ler a linha `401`; sem resposta é inconclusivo e
+  falha. A sonda de prova de pareamento forjada não mandava `Origin` e parava no 403 da origem sem
+  chegar à prova; agora usa uma origem permitida e exige o 401 da checagem da prova.
+- Contrato cliente × API: a cópia versionada do OpenAPI mudava com a versão do FastAPI/Pydantic
+  instalada (o CI instala as mais novas compatíveis) e falhava sem mudança de API. Passa a ser uma
+  visão do contrato (corpos de requisição, respostas 2xx e os schemas alcançados; sem títulos,
+  descrições e defaults), idêntica nas duas combinações testadas; um campo novo na requisição ou um
+  campo renomeado na resposta continuam mudando a visão (testes).
 - Backup: arquivos de backup tinham nome com resolução de segundo e eram sobrescritos sem aviso. Ao
   restaurar um backup criado no mesmo segundo, o backup de segurança da própria restauração
   substituía o arquivo escolhido (restauração falhava com "Arquivo ZIP inválido" ou trazia o estado
@@ -203,8 +214,12 @@ Nenhuma versão ou tag foi criada.
 ### Alterado
 
 - `ensure_database()` não repete as verificações completas de integridade a cada chamada de
-  repositório quando o arquivo não mudou (assinatura: tamanho e data do banco, tamanho do WAL):
-  `list_nodes` com 2.000 evidências caiu de 18 para 5,5 ms; escritas continuam verificadas.
+  repositório quando o arquivo não mudou: `list_nodes` com 2.000 evidências caiu de 18 para 5,5 ms;
+  uma chamada em cache custa 0,5 ms contra 19,6 ms da verificação completa. A identidade do arquivo
+  usa tamanho, data e hash do cabeçalho do banco e tamanho e cabeçalho do WAL (os sais mudam quando
+  o WAL reinicia, então uma escrita que reaproveita quadros sem crescer é vista); a verificação vale
+  no máximo 10 minutos (dano que preserva tamanho, data e cabeçalhos é pego então) e restaurar um
+  backup a descarta.
 - Instalação padrão sem Streamlit e sem pandas: a interface Streamlit (modo legado/dev desde a
   v1.4) vai para o extra `legacy-ui`; o fechamento de runtime caiu de 51 para 28 pacotes.
 - Dependências vivem só no `pyproject.toml` com extras `ai`, `browser`, `docs`, `legacy-ui` e `dev`;
