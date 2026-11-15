@@ -218,6 +218,17 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Não é | leitor de tela (`NOT_RUN`: não há leitor disponível neste ambiente); auditoria de acessibilidade manual |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
 
+## CP-CONTRACT01 — contrato cliente × API
+
+| Campo | Registro |
+| --- | --- |
+| Pergunta | depois de SH-NEW-032, quantos outros corpos do cliente quebram o contrato (`extra="forbid"` nos 108 endpoints com corpo)? |
+| Método | OpenAPI exportado para `apps/web/tests/contract/openapi.json` (deriva checada no pytest); teste Vitest usa o cliente em modo demo para produzir os objetos que as telas usam e envia as escritas pelo cliente real com `fetch` capturado, validando campos extras e obrigatórios recursivamente |
+| Achado | SH-NEW-038: "Adicionar ao perfil" depois de importar texto respondia 422 na API real; confirmado com a API; corrigido com corpo só de campos do contrato |
+| Cobertura | 10 escritas com objetos de domínio (Perfil, Lattes, Tracker, variantes, Mestre); escritas que montam literais na tela (~50) não foram verificadas uma a uma |
+| Testes | Vitest 44/44 (controle negativo: o teste falha no código anterior; outro confere que pegaria SH-NEW-032); pytest 946 passed, 4 skipped; Chromium 49/0; API real 3/3 (inclui importar → adicionar) |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |

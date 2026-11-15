@@ -109,6 +109,11 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- API Real: "Adicionar ao perfil" a partir de um texto importado respondia 422 sempre (o cliente
+  enviava o item de rascunho inteiro, com `item_id` e datas que o contrato não aceita). Achado pelo
+  teste de contrato novo: `src/lib/api/contract.test.ts` envia os corpos das escritas que as telas
+  fazem com objetos de domínio pelo cliente real e os confere contra o OpenAPI versionado
+  (`scripts/export_openapi.py`; o pytest acusa se a cópia ficar desatualizada).
 - Tela inicial: o título pulava ~60 px quando a fonte serifada carregava (CLS 0,14 → 0,002), com
   fallback de métricas medidas por peso.
 - Testes: quatro verificações não podiam falhar (checagem de "Aprovar tudo" antes de a fila carregar,

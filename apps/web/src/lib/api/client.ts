@@ -308,7 +308,9 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         mode,
         baseUrl,
         "/profile/items",
-        { method: "POST", body: JSON.stringify(payload) },
+        // An import draft item carries item_id, confirmed_by_user and timestamps, which the API
+        // contract forbids: "Adicionar ao perfil" answered 422 in API mode (contract test).
+        { method: "POST", body: JSON.stringify(profileItemBody(payload)) },
         { item: normalizeProfileItem({ ...payload, confirmed_by_user: true }), message: "Demo" },
         normalizeProfileItemResult,
       ),
@@ -5647,5 +5649,36 @@ export function trackerCreateBody(payload: Partial<TrackerJob>): Record<string, 
   if (payload.match_score !== undefined) body.match_score = payload.match_score;
   if (payload.ats_score !== undefined) body.ats_score = payload.ats_score;
   if (payload.source_capture_id) body.source_capture_id = payload.source_capture_id;
+  return body;
+}
+
+/** Fields of ProfileItemRequest (apps/api/schemas, extra="forbid"). */
+const PROFILE_ITEM_FIELDS = [
+  "type",
+  "title",
+  "description",
+  "area",
+  "domain",
+  "institution",
+  "organization",
+  "status",
+  "start_date",
+  "end_date",
+  "tags",
+  "skills",
+  "evidence",
+  "source",
+  "source_ref",
+  "confidence",
+  "sensitive",
+] as const;
+
+/** Body of POST /profile/items: only contract fields, so a draft or stored item can be sent as is. */
+export function profileItemBody(payload: Partial<ProfileItem>): Record<string, unknown> {
+  const body: Record<string, unknown> = {};
+  for (const field of PROFILE_ITEM_FIELDS) {
+    const value = payload[field];
+    if (value !== undefined && value !== null) body[field] = value;
+  }
   return body;
 }

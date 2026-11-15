@@ -89,6 +89,18 @@ test.describe("real local API", () => {
     await page.getByTestId("profile-add-item").click();
     await expect(page.getByTestId("profile-items")).toContainText(fact);
 
+    // an import draft item goes to the API as is from the screen: it used to answer 422
+    await page.getByRole("tab", { name: "Importar" }).click();
+    await page
+      .getByTestId("profile-import-textarea")
+      .fill("Curso técnico em enfermagem concluído em 2019 no Instituto Fictício.");
+    await page.getByTestId("profile-import-text").click();
+    const drafts = page.getByTestId("profile-draft-items");
+    await expect(drafts).toBeVisible({ timeout: 15_000 });
+    await drafts.getByRole("button", { name: "Adicionar ao perfil" }).first().click();
+    await expect(drafts.getByText("No Perfil").first()).toBeVisible();
+    await page.getByRole("tab", { name: /Fatos e evidências/ }).click();
+
     await page.goto("/resume-studio");
     await page.getByTestId("master-from-profile").click();
     await expect(page.getByTestId("resume-studio")).toBeVisible({ timeout: 15_000 });
@@ -115,7 +127,12 @@ test.describe("real local API", () => {
 
     // a later edit in the Profile shows up as a reviewable difference, applied only on request
     await page.goto("/profile");
-    await page.getByRole("button", { name: "Editar" }).first().click();
+    await page
+      .getByTestId("profile-items")
+      .getByRole("listitem")
+      .filter({ hasText: fact })
+      .getByRole("button", { name: "Editar" })
+      .click();
     await page.getByLabel("Evidência ou descrição").fill("Plantões em UTI adulto e pediátrica.");
     await page.getByRole("button", { name: "Salvar edição" }).click();
     await expect(page.getByTestId("profile-items")).toContainText("UTI adulto e pediátrica");
