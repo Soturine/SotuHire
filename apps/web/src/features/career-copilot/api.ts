@@ -214,6 +214,61 @@ export type SearchResult = {
   route: string;
 };
 
+export type ApprovalAction = "approve" | "reject" | "execute" | "undo";
+
+/**
+ * Sample-mode decisions live for the page session and follow the API's state machine, so the
+ * buttons behave as they do against the real API (before: the queue reloaded the static sample and
+ * "Aprovar" seemed to do nothing).
+ */
+const demoDecisions = new Map<string, string>();
+const demoCreated: ProposedAction[] = [];
+
+function demoCreateProposal(payload: {
+  tool_id: string;
+  input: Record<string, unknown>;
+  reason: string;
+  evidence_refs?: string[];
+}): ProposedAction {
+  const proposal: ProposedAction = {
+    proposal_id: `demo-proposal-${demoCreated.length + 1}`,
+    action_type: payload.tool_id,
+    title: String(payload.input.title ?? payload.tool_id),
+    description: "",
+    reason: payload.reason,
+    evidence_refs: payload.evidence_refs ?? [],
+    affected_entities: ["task"],
+    before_snapshot: {},
+    after_preview: payload.input,
+    risk: "low",
+    reversible: true,
+    undo_strategy: "Remover a tarefa criada",
+    status: "proposed",
+    created_at: new Date().toISOString(),
+  };
+  demoCreated.unshift(proposal);
+  return proposal;
+}
+const DEMO_TRANSITIONS: Record<ApprovalAction, { from: string[]; to: string }> = {
+  approve: { from: ["proposed", "reviewing"], to: "approved" },
+  reject: { from: ["proposed", "reviewing"], to: "rejected" },
+  execute: { from: ["approved"], to: "executed" },
+  undo: { from: ["executed"], to: "undone" },
+};
+
+async function demoTransition(proposalId: string, action: ApprovalAction) {
+  const item = [...demoCreated, ...demoApprovals].find(
+    (candidate) => candidate.proposal_id === proposalId,
+  );
+  if (!item) throw new Error("Proposta não encontrada.");
+  const current = demoDecisions.get(proposalId) ?? item.status;
+  const rule = DEMO_TRANSITIONS[action];
+  if (!rule.from.includes(current) || (action === "undo" && !item.reversible))
+    throw new Error(`Transição inválida: ${current} → ${rule.to}.`);
+  demoDecisions.set(proposalId, rule.to);
+  return { ...item, status: rule.to };
+}
+
 async function request<T>(baseUrl: string, path: string, init?: RequestInit): Promise<T> {
   const response = await pairedApiFetch(
     baseUrl,
@@ -248,21 +303,16 @@ export const v2Api = (mode: ApiMode, baseUrl: string) => ({
       : request<PortfolioItem[]>(baseUrl, "/portfolio"),
   approvals: () =>
     mode === "demo"
-      ? Promise.resolve(demoApprovals)
+      ? Promise.resolve(
+          [...demoCreated, ...demoApprovals].map((item) => ({
+            ...item,
+            status: demoDecisions.get(item.proposal_id) ?? item.status,
+          })),
+        )
       : request<ProposedAction[]>(baseUrl, "/approvals"),
-  transition: (proposalId: string, action: "approve" | "reject" | "execute" | "undo") =>
+  transition: (proposalId: string, action: ApprovalAction) =>
     mode === "demo"
-      ? Promise.resolve({
-          ...demoApprovals[0],
-          status:
-            action === "approve"
-              ? "approved"
-              : action === "reject"
-                ? "rejected"
-                : action === "undo"
-                  ? "undone"
-                  : "executed",
-        })
+      ? demoTransition(proposalId, action)
       : request<ProposedAction | { proposal: ProposedAction; result: Record<string, unknown> }>(
           baseUrl,
           `/approvals/${encodeURIComponent(proposalId)}/${action}`,
@@ -275,7 +325,7 @@ export const v2Api = (mode: ApiMode, baseUrl: string) => ({
     evidence_refs?: string[];
   }) =>
     mode === "demo"
-      ? Promise.resolve(demoApprovals[0])
+      ? Promise.resolve(demoCreateProposal(payload))
       : request<ProposedAction>(baseUrl, "/approvals", {
           method: "POST",
           body: JSON.stringify(payload),

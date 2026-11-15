@@ -544,18 +544,19 @@ function ApiStatusPanel({
         </button>
       </div>
       {capabilities && capabilities.length > 0 && (
-        <div className="mt-4">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Capacidades
-          </div>
-          <div className="flex flex-wrap gap-1.5">
+        // Technical identifiers: useful when diagnosing, noise otherwise, so collapsed by default.
+        <details className="mt-4 rounded-lg border bg-surface px-3 py-2">
+          <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+            {capabilities.length} capacidades técnicas da API (diagnóstico)
+          </summary>
+          <div className="mt-2 flex flex-wrap gap-1.5">
             {capabilities.map((c) => (
               <span key={c} className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px]">
                 {c}
               </span>
             ))}
           </div>
-        </div>
+        </details>
       )}
       {status === "offline" && (
         <p className="mt-3 rounded-md bg-muted/50 p-3 text-xs text-muted-foreground">
@@ -872,6 +873,7 @@ function AiProvidersCard() {
                     }
                   }}
                   data-testid={`ai-provider-${item}`}
+                  aria-pressed={provider === item}
                   className={`rounded-md border px-3 py-2 text-xs font-medium transition-colors ${
                     provider === item
                       ? "border-accent/50 bg-accent/10 text-foreground"
@@ -882,6 +884,20 @@ function AiProvidersCard() {
                 </button>
               ))}
             </div>
+            {/* The question people ask first: where does my text go? */}
+            <p
+              role="status"
+              data-testid="ai-data-destination"
+              className={`mt-2 rounded-md px-3 py-2 text-xs ${
+                provider === "local"
+                  ? "bg-success/10 text-success-strong"
+                  : "bg-highlight/60 text-highlight-foreground"
+              }`}
+            >
+              {provider === "local"
+                ? "Nada sai da sua máquina: as análises usam só regras e modelos locais."
+                : `Com a IA ligada, os fluxos permitidos ao lado enviam o texto necessário para ${providerLabel(provider)} pelo backend local. A chave fica só no backend; custo e retenção seguem a conta ${providerLabel(provider)}.`}
+            </p>
           </div>
 
           <div>

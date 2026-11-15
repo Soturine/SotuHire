@@ -178,7 +178,22 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Medidas | 0 nós axe, 0 estouro, 0 erro de console nas 8 combinações |
 | API real | 3 jornadas em diretório sintético passam; a do Tracker (criar → achar pela busca sem acento → mudar status → recarregar) achou SH-NEW-032 |
 | Não é | comparação lado a lado de vagas; alertas de duplicatas redesenhados; verificação sistemática dos ~30 corpos de requisição do cliente contra os schemas (pendência para o dogfood de contrato) |
+| Commit | `9bff13a` (push confirmado com `ls-remote`) |
+| Desvio de processo | a checagem de formatação antes do commit rodou como `prettier --check … | tail -1`, que engole o código de saída; o commit seguiu com um aviso. Conferido depois sobre o blob commitado (`git show HEAD:… | prettier --check`): exit 0, o aviso era só CRLF da cópia de trabalho. Desde então as checagens imprimem o código de saída e não passam por pipe. |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, auditoria, galeria `2026-11-v5-ux03`) |
+
+## CP-UX04 — Aprovações, Copilot, Lab e Configurações
+
+| Campo | Registro |
+| --- | --- |
+| Hipótese | o controle humano existia, mas a tela não o tornava legível: rótulos crus, JSON, falhas mudas, botões que no demo não faziam nada |
+| Mudança | Aprovações reescrita; drawer do Copilot com `lib/recommendations.ts` compartilhado com o Cockpit; demo com estado e máquina de estados; Lab (orientação × mudança, estado da sessão); Configurações (destino do texto, capacidades recolhidas, `aria-pressed`) |
+| Intertravamentos | nenhum relaxado: "Aprovar tudo" continua inexistente; aprovar não executa; afirmação sem evidência continua recusada pelo serviço (confirmado no código) |
+| Testes | Vitest 36/36; Chromium E2E 48 passed, 0 failed, 72 skipped; `control-ux.spec.ts` (6) cobre ciclo aprovar → executar → desfazer, transição recusada (409), destino do texto, Copilot → fila, orientação no Lab |
+| IA externa | `BLOCKED_EXTERNAL_CREDENTIALS`: nenhuma chamada paga feita |
+| Medidas | 0 nós axe, 0 estouro, 0 erro de console nas 8 combinações |
+| Não é | recomposição completa do Application Lab (1.445 linhas; só os pontos acima); Copilot conversacional |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, auditoria, galeria `2026-11-v5-ux04`) |
 
 ## Ferramentas (repositórios donos)
 

@@ -105,6 +105,9 @@ em `8ea37d7` e passa depois.
 | SH-NEW-030 | P2 | `VERIFIED` | Busca de dados sensível a acento (SQLite `LIKE`, `casefold`) e sem Perfil nem candidaturas; resultados com tipo cru. Busca nova em `copilot_v2/search.py`; teste falha no código anterior. |
 | SH-NEW-032 | P1 | `VERIFIED` | API Real: `POST /tracker/jobs` com `source` (campo inexistente, `extra=forbid`) respondia 422 para toda candidatura manual; nunca visto porque os E2E do Tracker eram só demo. Achado pela jornada nova contra a API real. Pendência derivada: ~30 corpos do cliente repassam objetos sem filtro; verificar contrato sistematicamente. |
 | SH-NEW-031 | P2 | `VERIFIED` | Tracker em lista: `select` de status sem nome (axe `select-name`, crítico); no celular não havia como sair do quadro de 11 colunas. |
+| SH-NEW-033 | P2 | `VERIFIED` | Modo de exemplo: transições de aprovação e criação de proposta não mudavam a fila (amostra fixa recarregada); botões pareciam falsos. Estado da sessão espelhando a máquina de estados da API. |
+| SH-NEW-034 | P2 | `VERIFIED` | Aprovações sem carregamento/erro/vazio e com falhas silenciosas; rótulos crus em inglês; prévia em JSON. |
+| SH-NEW-035 | P3 | `VERIFIED` | Lab: "Aceitar" habilitado ao lado de "não pode virar fato" para orientações sem texto. Sem risco real (o serviço ignora aceitas sem texto e recusa afirmação sem evidência), mas a tela se contradizia. |
 | SH-NEW-029 | P3 | `VERIFIED` | Captura de UX analisava a página 400 ms após `networkidle`, que não espera a latência simulada do demo (até 800 ms): nós "transitórios" de contraste no Application Lab. Espera de 1 s; 0 nós. |
 
 ## Eficácia dos testes (controles negativos)

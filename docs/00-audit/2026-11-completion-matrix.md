@@ -44,7 +44,7 @@ nada aqui é "verde no CI".
 | UX-05 | Motion e microinterações com reduced-motion | PARTIAL | tokens de duração, entrada de página, abertura de jornada | interações das telas de produto |
 | UX-06 | Perfil e Resume Studio | DONE | CP-UX02: composição nova, `Field`, versões de variante, fatos alterados reconciliados, E2E demo e API real, 0 nós axe | reimportação sem aviso (dados) |
 | UX-07 | Radar, fontes, Tracker | PARTIAL | CP-UX03: painel do Radar, funil e cartões do Tracker, lista no celular, Fontes com navegação; 0 nós axe; jornada do Tracker contra a API real | comparação de vagas lado a lado |
-| UX-08 | Lab, Copilot, aprovações, Configurações | NOT_RUN | — | CP-UX04 |
+| UX-08 | Lab, Copilot, aprovações, Configurações | PARTIAL | CP-UX04: Aprovações recompostas, Copilot alinhado ao Cockpit, demo com máquina de estados, destino do texto da IA, orientação × mudança no Lab; E2E de ciclo, erro e undo | recomposição completa do Lab; chamadas reais a providers (`BLOCKED_EXTERNAL_CREDENTIALS`) |
 | UX-09 | Demais rotas e limpeza de estilos | NOT_RUN | — | CP-UX05 |
 | UX-10 | Tema escuro e en-US medidos | DONE | escuro 0 nós, en-US 0 nós nas larguras capturadas | — |
 | UX-11 | Fluxos com API real | PARTIAL | pareamento, Cockpit, busca; Perfil → Mestre → autosave → exportação → reconciliação contra a API real | vagas, Tracker, Lab |

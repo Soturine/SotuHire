@@ -9,6 +9,11 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- Aprovações recompostas (CP-UX04): filtros por etapa da decisão, risco e status em português,
+  prévia campo a campo (o que muda, hoje e depois de executar), como desfazer sempre visível, botões
+  com estado pendente e falhas ditas. Copilot com os nomes e destinos do Cockpit e caminho até a
+  fila depois de criar uma proposta. Configurações dizem para onde vai o texto de cada provider.
+  Application Lab separa orientação de mudança e mostra o estado da sessão em português.
 - Radar, Fontes e Tracker recompostos (CP-UX03). Tracker: funil com proporção e filtro por etapa,
   follow-ups vencidos em destaque, cartões sem informação repetida e com "Preparar candidatura" quando
   o anúncio foi preservado, filtro sem acento, lista como padrão no celular com troca de visualização
@@ -97,6 +102,9 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Modo de exemplo: aprovar, rejeitar, executar, desfazer e criar proposta não mudavam nada na tela.
+- Aprovações: sem estados de carregamento, erro e vazio (a página ficava em branco numa falha); falha
+  de transição não era dita.
 - Tracker em lista: o seletor de status de cada candidatura não tinha nome acessível.
 - API Real: criar candidatura pelo Tracker respondia 422 sempre (o frontend enviava `source`, que o
   contrato não aceita; o campo da API é `source_url`). Corpo montado com os campos do contrato e

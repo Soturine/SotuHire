@@ -226,3 +226,25 @@ a chave por termo do React Query já garantia isso).
 Contra a API real, em diretório sintético: criar uma candidatura pelo Tracker, achá-la na paleta por
 "enfermeira clinica", abrir, mudar o status e recarregar. A primeira execução falhou com 422 em
 `POST /tracker/jobs` (SH-NEW-032); depois da correção, as 3 jornadas reais passam.
+
+### CP-UX04 — Aprovações, Copilot, Application Lab e Configurações
+
+Mesma matriz: **0** nós axe, 0 estouro, 0 erro de console em todas as combinações.
+
+| Estado | Baseline (`459ffa9`) | CP-UX04 | O que mudou |
+| --- | --- | --- | --- |
+| Aprovações | ![](../assets/ux-comparison/2026-11-v5/approvals-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux04/approvals-desktop-after.webp) | Filtros Para decidir / Aprovadas / Encerradas com contagem; risco e status em português; tabela Hoje × Depois de executar com o que muda marcado; como desfazer sempre visível; botões com estado pendente; falhas ditas |
+| Preparar candidatura | ![](../assets/ux-comparison/2026-11-v5/application-lab-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux04/application-lab-desktop-after.webp) | Estado da sessão legível; orientação (sem texto novo) separada de mudança: "Entendi" e "não altera o currículo" em vez de "Aceitar" ao lado de "não pode virar fato" |
+| Configurações, mobile | ![](../assets/ux-comparison/2026-11-v5/settings-mobile-before.webp) | ![](../assets/ux-comparison/2026-11-v5-ux04/settings-mobile-after.webp) | Frase "para onde vai o texto" junto da escolha de provider; capacidades técnicas recolhidas; provider escolhido com `aria-pressed` |
+
+Copilot (drawer): sugestões com o mesmo nome e destino do Cockpit (antes "INTERVIEW PREP DUE"),
+contexto pelo nome da tela (antes o caminho `/dashboard`), "Criar proposta" confirma e leva à fila,
+estado de erro. No modo de exemplo, aprovar, executar, desfazer e criar proposta passaram a mudar a
+fila de verdade, seguindo a máquina de estados da API (antes recarregava a amostra fixa e os botões
+pareciam não fazer nada).
+
+IA externa: nenhuma chamada a provider pago foi feita neste ciclo
+(`BLOCKED_EXTERNAL_CREDENTIALS`, sem chave autorizada). A tela diz para onde o texto iria e que a
+chave fica só no backend; o teste `settings say where the text goes…` e o teste existente que
+confere que a chave nunca vai para `localStorage`/`sessionStorage` cobrem o que é verificável sem
+chamada externa.
