@@ -9,6 +9,9 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- `scripts/dast_local_api.py`: 14 sondas dinâmicas contra a API local rodando (Host forjado, origem
+  estranha e preflight, rotas sem sessão, prova de pareamento forjada, corpo grande sem sessão e
+  tamanho declarado acima do limite, travessia no download de backup, vazamento de caminho em erros).
 - `scripts/verify_extension_in_chromium.py`: empacota a extensão, carrega o ZIP distribuído num
   Chromium real e verifica service worker, popup sem erros e a captura (o mesmo fluxo do popup)
   numa página do GitHub servida offline; com o ZIP sem `content.js` o relatório falha.

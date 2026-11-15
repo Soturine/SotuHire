@@ -249,6 +249,15 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Testes | pytest 952 passed, 4 skipped; 4 testes do cache (3 falham sem o cache) |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
 
+## CP-SEC03 — DAST da API local
+
+| Campo | Registro |
+| --- | --- |
+| Método | `scripts/dast_local_api.py` contra `scripts/run_api.py` em diretório sintético, sem credenciais: 14 sondas |
+| Resultado | 14/14. Duas sondas estavam mal desenhadas e foram corrigidas, não mascaradas: um corpo de 6 MB "falhava" porque o servidor respondia 401 e fechava sem ler o corpo (correto); a expectativa de 413 antes do 401 vinha do Companion, e esta API autentica antes de olhar o tamanho (as duas ordens são seguras sem leitura do corpo) |
+| Observação | rota inexistente sem sessão também responde 401: não há enumeração de rotas sem credencial |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |
