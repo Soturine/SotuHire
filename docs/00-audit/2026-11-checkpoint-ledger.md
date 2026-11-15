@@ -204,7 +204,19 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Testes | Chromium E2E 48 passed, 0 failed, 72 skipped (segunda execução completa); a primeira teve 1 falha em `API Real empty states…` que não reproduziu em 4 repetições isoladas nem em 12 paralelas (6 workers). Causa provável: compilação sob demanda do Vite de `sources.tsx` (2.300 linhas) logo após a edição, sob carga; registrada como intermitência observada, não como corrigida |
 | Medidas | 400 telas (pt-BR e en-US): 0 nós axe, 0 estouro, 0 erro de console |
 | Não é | tradução da interface das telas de produto (lacuna registrada na auditoria de UX); migração de todos os formulários para `Field` (sem necessidade comprovada pelo axe) |
+| Commit | `af7a725` (push confirmado com `ls-remote`) |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, auditoria, galeria `2026-11-v5-ux05`) |
+
+## CP-UX06 — gate de experiência
+
+| Campo | Registro |
+| --- | --- |
+| Navegadores | Chromium 49/0, Firefox 47/0, WebKit 47/0 (E2E com animação normal). No Firefox, com 6 workers, 3 testes estouraram tempo; passam em série e com 2 workers. Na auditoria da Assertiva (3 navegadores em paralelo, workers padrão), 4 testes no Firefox e 1 no WebKit falharam por carga: a suíte cruzada não é robusta sob paralelismo total |
+| Desempenho | build de produção, `scripts/measure-vitals.mjs`: LCP ≤ 2,4 s com 4× CPU; CLS ≤ 0,073 depois de corrigir a tela inicial (0,14 → 0,002; a primeira correção piorou para 0,23 e foi refeita com uma face por peso); interação ≤ 80 ms, exceto Tracker 240 ms com 4× CPU (registrado) |
+| Mutação de UI | `scripts/ui-mutants.py`: 6/10 → 9/10 mortos; o sobrevivente é equivalente. Achou 4 checagens que não podiam falhar (SH-NEW-036) |
+| Assertiva (dogfood) | 1ª execução recusada pela própria trava de somente-leitura: o Vitest gravou `node_modules/.vite` no projeto através do link da cópia. Corrigido no repositório dono (`a91b445`, teste falha no código anterior). Depois: mutação real com StrykerJS em `retry.ts` e `search.ts`, 156 mutantes, 38 sobreviventes (escore ~76%); testes de limite acrescentados; nova medição: 156 mutantes, **13** sobreviventes (~92%), quase todos equivalentes (regex `\s` × `\s+` seguida de `filter(Boolean)`, fallbacks `?? ""`, status 3xx que nunca chega como erro); acionável: ordem de desempate do ranking, registrada. Um uso errado meu (`--mutate-tests` com Stryker) foi apontado pela ferramenta |
+| Não é | leitor de tela (`NOT_RUN`: não há leitor disponível neste ambiente); auditoria de acessibilidade manual |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
 
 ## Ferramentas (repositórios donos)
 
@@ -212,4 +224,4 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | --- | --- | --- | --- | --- |
 | Derivanta | `feat/approval-consumption-and-required-artifacts` | `7e1ecba` | confirmado | `scripts/tests` 26 passed; checagem de links igual à de antes (7 itens pré-existentes) |
 | Derivanta-Engine | `feat/ci-workflow-checks` | `35f9951` | confirmado | suíte 951 passed, 5 skipped |
-| Assertiva | `fix/precommit-hook-tool-identity` | `fee2c44` | confirmado | suítes relacionadas 234 passed; suíte completa em `b0dec09`: 1.332 passed + 1 falha só do ambiente (`%TEMP%`); suíte completa em `fee2c44`: 1.346 passed |
+| Assertiva | `fix/precommit-hook-tool-identity` | `a91b445` | confirmado | suíte completa em `fee2c44`: 1.346 passed; em `a91b445` (correção de links de dependências): suítes relacionadas 67 passed, 9 skipped (fixtures Node) |

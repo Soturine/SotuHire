@@ -121,7 +121,8 @@ test("a new user builds the Master Resume from the Profile, then reviews later p
   await expect(
     page.getByRole("heading", { name: "Seu Currículo Mestre ainda não existe" }),
   ).toBeVisible();
-  await expect(page.getByText(/Não foi possível|Erro HTTP 404/)).toHaveCount(0);
+  // one-shot: a retrying toHaveCount(0) would wait for an error toast to fade and pass
+  expect(await page.getByText(/Não foi possível|Erro HTTP 404/).count()).toBe(0);
   await page.getByTestId("master-from-profile").click();
 
   await expect(page.getByTestId("resume-studio")).toBeVisible();

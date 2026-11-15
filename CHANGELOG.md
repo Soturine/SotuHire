@@ -9,6 +9,11 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- Gate de experiência (CP-UX06): suíte E2E aprovada em Chromium, Firefox e WebKit; Web Vitals do
+  build de produção medidos com script versionado (`apps/web/scripts/measure-vitals.mjs`); harness
+  de mutação adversarial de UI (`apps/web/scripts/ui-mutants.py`, 10 mutantes, 9 mortos, 1
+  equivalente). O modo de exemplo do Application Lab mostra uma afirmação sem evidência com
+  "Aceitar" desabilitado.
 - Tela inicial na identidade nova (CP-UX05): marca própria, hero marinho→petróleo, números em sans
   tabular. `TextField` compartilhado substitui três cópias locais de campo.
 - Aprovações recompostas (CP-UX04): filtros por etapa da decisão, risco e status em português,
@@ -104,6 +109,10 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Tela inicial: o título pulava ~60 px quando a fonte serifada carregava (CLS 0,14 → 0,002), com
+  fallback de métricas medidas por peso.
+- Testes: quatro verificações não podiam falhar (checagem de "Aprovar tudo" antes de a fila carregar,
+  em dois specs; `toHaveCount(0)` sobre toasts, que espera o toast sumir, em três specs).
 - Modo de exemplo: aprovar, rejeitar, executar, desfazer e criar proposta não mudavam nada na tela.
 - Aprovações: sem estados de carregamento, erro e vazio (a página ficava em branco numa falha); falha
   de transição não era dita.

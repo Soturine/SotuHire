@@ -22,3 +22,24 @@ describe("shouldRetryQuery", () => {
     expect(shouldRetryQuery(1, new TypeError("Failed to fetch"))).toBe(false);
   });
 });
+
+// Boundaries found by StrykerJS run through Assertiva (CP-UX06): these mutants survived before.
+describe("shouldRetryQuery boundaries", () => {
+  it("treats 500 as a server error and 499 as a client answer", () => {
+    expect(shouldRetryQuery(0, new ApiHttpError(500, "x"))).toBe(true);
+    expect(shouldRetryQuery(0, new ApiHttpError(499, "x"))).toBe(false);
+    expect(shouldRetryQuery(0, new ApiHttpError(400, "x"))).toBe(false);
+  });
+
+  it("gives timeouts and rate limits exactly two retries", () => {
+    for (const status of [408, 429]) {
+      expect(shouldRetryQuery(1, new ApiHttpError(status, "x"))).toBe(true);
+      expect(shouldRetryQuery(2, new ApiHttpError(status, "x"))).toBe(false);
+    }
+  });
+
+  it("gives any other failure three retries", () => {
+    expect(shouldRetryQuery(2, new Error("boom"))).toBe(true);
+    expect(shouldRetryQuery(3, new Error("boom"))).toBe(false);
+  });
+});

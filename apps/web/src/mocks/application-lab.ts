@@ -284,6 +284,25 @@ export const mockSuggestions: ApplicationSuggestion[] = [
     created_at: now,
     reviewed_at: null,
   },
+  {
+    // Shows the interlock in sample mode: a new claim with no confirmed evidence cannot be
+    // accepted (the API refuses it too: "Afirmações sem evidência não podem ser aceitas").
+    suggestion_id: "suggestion-demo-unsupported-claim",
+    session_id: mockLabSession.session_id,
+    suggestion_type: "claim",
+    section: "Resumo",
+    before: "",
+    after: "Liderou a implantação de ISO 9001 na unidade (exemplo fictício).",
+    reason: "A vaga pede ISO 9001; o texto só pode entrar se houver evidência confirmada.",
+    evidence_used: [],
+    source_refs: [],
+    warnings: ["Sem evidência confirmada; não aceitar como fato."],
+    status: "pending",
+    edited_value: "",
+    provider_run_id: "",
+    created_at: now,
+    reviewed_at: null,
+  },
 ];
 
 export const mockVariant: ResumeVariant = {

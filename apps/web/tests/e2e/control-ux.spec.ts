@@ -10,9 +10,10 @@ test("a proposal goes approve → run → undo, each step in its own list, never
   page,
 }) => {
   await page.goto("/approvals");
-  await expect(page.getByRole("button", { name: /Aprovar tudo/i })).toHaveCount(0);
   const card = page.getByRole("article").first();
   await expect(card).toContainText("risco baixo");
+  // checked once the queue has rendered: before, it ran before loading and could never fail
+  await expect(page.getByRole("button", { name: /Aprovar tudo/i })).toHaveCount(0);
   await expect(card).toContainText("proposta");
   await expect(card.getByRole("table")).toBeVisible();
 
@@ -113,5 +114,9 @@ test("lab tells advice apart from changes, and a change without evidence cannot 
   await expect(advice.getByRole("button", { name: "Entendi" })).toBeVisible();
   await expect(advice).not.toContainText("não pode virar fato");
   const change = page.getByRole("article").filter({ hasText: "Antes" }).first();
-  await expect(change.getByRole("button", { name: "Aceitar", exact: true })).toBeVisible();
+  await expect(change.getByRole("button", { name: "Aceitar", exact: true })).toBeEnabled();
+  // a new claim without confirmed evidence: the interlock is visible, not only enforced by the API
+  const claim = page.getByRole("article").filter({ hasText: "ISO 9001 na unidade" });
+  await expect(claim).toContainText("Sem evidência — não pode virar fato");
+  await expect(claim.getByRole("button", { name: "Aceitar", exact: true })).toBeDisabled();
 });

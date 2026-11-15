@@ -4,6 +4,31 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Metric-matched fallback for the display serif (CP-UX06). Until Source Serif 4 arrives, titles
+   render in Georgia, which is wider: the landing headline wrapped into an extra line and jumped
+   when the web font swapped in (CLS 0.14). One face per weight, because local("Georgia") is only
+   the regular file and bold would be synthesized from it. Width ratios measured in Chromium on the
+   landing headline: 600 vs Georgia Bold 79.3%, 400 vs Georgia 91.5%; ascent 1.04 em, descent
+   0.34 em (Source Serif 4). */
+@font-face {
+  font-family: "Source Serif 4 Fallback";
+  font-weight: 100 500;
+  src: local("Georgia");
+  size-adjust: 91.5%;
+  ascent-override: 104%;
+  descent-override: 34%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Source Serif 4 Fallback";
+  font-weight: 501 900;
+  src: local("Georgia Bold"), local("Georgia-Bold");
+  size-adjust: 79.3%;
+  ascent-override: 104%;
+  descent-override: 34%;
+  line-gap-override: 0%;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -73,7 +98,8 @@
   /* Self-hosted OFL fonts (src/main.tsx), so the app stays offline-capable. */
   --font-sans:
     "IBM Plex Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: "Source Serif 4 Variable", Georgia, "Times New Roman", serif;
+  --font-display:
+    "Source Serif 4 Variable", "Source Serif 4 Fallback", Georgia, "Times New Roman", serif;
   --font-mono: "IBM Plex Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
 
   --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);

@@ -10,12 +10,13 @@ test("v2 journey keeps every write behind individual approval", async ({ page })
 
   await page.goto("/approvals");
   await expect(page.getByText(/Não existe Aprovar tudo/)).toBeVisible();
-  await expect(page.getByRole("button", { name: /Aprovar tudo/i })).toHaveCount(0);
   // approving changes nothing; running does: the preview compares today with after running
   await expect(page.getByRole("columnheader", { name: "Hoje" }).first()).toBeVisible();
   await expect(
     page.getByRole("columnheader", { name: "Depois de executar" }).first(),
   ).toBeVisible();
+  // after the queue rendered (the sentence above is static and shows before any data)
+  await expect(page.getByRole("button", { name: /Aprovar tudo/i })).toHaveCount(0);
 });
 
 test("evidence review, portfolio and command palette are keyboard reachable", async ({ page }) => {

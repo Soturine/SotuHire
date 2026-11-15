@@ -59,3 +59,32 @@ describe("search", () => {
     ).toBe("<b>x</b>");
   });
 });
+
+// Ranking and folding rules pinned one by one (StrykerJS survivors, CP-UX06).
+describe("search rules", () => {
+  it("folds accents, case and surrounding spaces", () => {
+    expect(normalize("  Ação RÁPIDA ")).toBe("acao rapida");
+  });
+
+  it("scores where each word matched, and 0 when any word is missing", () => {
+    const item = { label: "Pós-graduação clínica", keywords: "residencia", detail: "plantões" };
+    expect(rank("pos", item)).toBe(100); // label start
+    expect(rank("graduacao", item)).toBe(60); // word start after a hyphen
+    expect(rank("linica", item)).toBe(40); // substring
+    expect(rank("resid", item)).toBe(25); // keyword
+    expect(rank("plantoes", item)).toBe(10); // detail, accent-folded
+    expect(rank("pos inexistente", item)).toBe(0); // every word must match
+    expect(rank("   ", item)).toBe(0);
+  });
+
+  it("highlights the accented original text from an unaccented query", () => {
+    const parts = highlight("Currículo", "curriculo");
+    expect(
+      parts
+        .filter((part) => part.match)
+        .map((part) => part.text)
+        .join(""),
+    ).toBe("Currículo");
+    expect(highlight("Currículo", "  ")).toEqual([{ text: "Currículo", match: false }]);
+  });
+});

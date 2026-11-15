@@ -269,3 +269,66 @@ comprovada.
 Lacuna registrada: Perfil, Resume Studio, Tracker, Radar, Fontes, Lab e outras telas têm a interface
 escrita em pt-BR no código (como antes do redesign); em en-US só o shell, a busca, o Cockpit, o
 Copilot e as Aprovações mudam de idioma.
+
+### CP-UX06 — navegadores, desempenho de produção e mutação adversarial
+
+**Matriz de navegadores** (suíte E2E inteira, animações normais: o Playwright usa
+`prefers-reduced-motion: no-preference` fora das capturas):
+
+| Navegador | Passaram | Falharam | Pulados (condicionados) | Observação |
+| --- | --- | --- | --- | --- |
+| Chromium | 48 | 0 | 72 | — |
+| Firefox | 47 | 0 | 73 | com 6 workers, 3 testes estouraram tempo sob carga; os 3 passam em série e a suíte inteira passa com 2 workers |
+| WebKit | 47 | 0 | 73 | — |
+
+**Web Vitals no build de produção** (`vite build` + `vite preview`, Chromium 1440×900, modo de
+exemplo, mediana de 5 carregamentos; script versionado em `apps/web/scripts/measure-vitals.mjs`).
+Números de laboratório numa máquina: servem para comparar builds, não são dados de campo.
+
+| Rota | LCP 1× | LCP 4× CPU | CLS 1× | CLS 4× | Interação 1× | Interação 4× |
+| --- | --- | --- | --- | --- | --- | --- |
+| `/` | 244 ms | 1036 ms | 0,0021 | 0,0045 | 16 ms | 80 ms |
+| `/dashboard` | 292 ms | 1340 ms | 0,0033 | 0,0002 | 0 ms | 72 ms |
+| `/profile` | 740 ms | 1484 ms | 0,0003 | 0,0003 | 16 ms | 80 ms |
+| `/resume-studio` | 1452 ms | 2384 ms | 0,073 | 0,0003 | 16 ms | 80 ms |
+| `/tracker` | 184 ms | 904 ms | 0,0002 | 0,0002 | 48 ms | **240 ms** |
+| `/radar` | 316 ms | 1800 ms | 0,0003 | 0,0003 | 16 ms | 80 ms |
+
+- A primeira medição deu **CLS 0,14** na tela inicial: o título renderizava em Georgia (mais larga),
+  quebrava numa linha a mais e pulava ~60 px quando a Source Serif 4 chegava. Correção: fallback com
+  métricas ajustadas (`size-adjust`, `ascent/descent-override`), uma face por peso; a primeira
+  tentativa usou só a Georgia regular, o negrito sintetizado ficou estreito demais e o CLS **piorou**
+  para 0,23. Com as duas faces medidas (79,3% contra Georgia Bold, 91,5% contra a regular): 0,002.
+- O Resume Studio encadeia consultas (Mestre → variantes) sobre a latência simulada do modo de
+  exemplo; é a rota mais lenta e a única com CLS acima de 0,01 (0,073, ainda abaixo de 0,1).
+- A interação medida é um clique no primeiro link da navegação; no Tracker com 4× de CPU ela fica em
+  240 ms (faixa "precisa melhorar", 200–500 ms). Não corrigido.
+- Bundle de produção: JS 468,0 KB gzip-9 (451,3 no CP-UX01B: +16,7 KB ao longo do UX02–05), CSS 20,6
+  KB, fontes 686 KB em 22 arquivos `woff2` (cada página carrega só as faixas que usa).
+
+**Mutação adversarial de UI** (adendo v5 §12; harness versionado em `apps/web/scripts/ui-mutants.py`).
+Cada mutante quebra uma promessa da interface com uma edição de uma linha, roda o spec que deveria
+protegê-la (Chromium, 1 worker, sem retry) e restaura o arquivo byte a byte.
+
+| Mutante | Promessa | 1ª rodada | Final | O que mudou no teste |
+| --- | --- | --- | --- | --- |
+| `approve-all` | não existe "Aprovar tudo" | sobreviveu | morto | a checagem rodava antes de a fila carregar (também em `copilot-v2.spec.ts`); agora roda depois |
+| `silent-transition-failure` | transição recusada é dita | morto | morto | — |
+| `accept-claim-without-evidence` | mudança sem evidência não pode ser aceita no Lab | sobreviveu | morto | o demo ganhou uma afirmação sem evidência (o intertravamento fica visível também no modo de exemplo) e o teste confere "Aceitar" desabilitado |
+| `autosave-ignores-conflict` | variante salva em outra aba não é sobrescrita | morto | morto | — |
+| `remove-without-confirm` | remover fato pede confirmação | sobreviveu | morto | **falso verde**: `expect(toast).toHaveCount(0)` repete até o timeout e passava quando o toast de 4 s sumia; virou contagem instantânea (o mesmo padrão foi corrigido em mais dois testes) |
+| `zeros-when-api-down` | Cockpit sem zeros falsos | morto | morto | — |
+| `tracker-select-unnamed` | status do Tracker com nome acessível | morto | morto | — |
+| `tracker-filter-accent-sensitive` | filtro sem acento | morto | morto | — |
+| `settings-revert-unsaved-choice` | refetch não desfaz escolha não salva | sobreviveu | sobreviveu | **equivalente**: com o formulário bloqueado até carregar e o *structural sharing* do React Query, a guarda por snapshot é defesa redundante; mantida e registrada |
+| `profile-drift-applied-silently` | Perfil → Mestre só a pedido | morto* | morto | *o teste em demo foi escrito antes da rodada, a partir da análise que previa a lacuna |
+
+Resultado: 6/10 → **9/10** mortos; o sobrevivente é equivalente.
+
+**Mutação de lógica com a Assertiva** (dogfood; StrykerJS executado pela Assertiva numa cópia
+descartável, Vitest como executor): `retry.ts` e `search.ts`, 156 mutantes. Primeira medição: 38
+sobreviventes (~76%), entre eles limites de status (500 × 499, 408/429 com 1 × 2 tentativas), o ramo
+de erro genérico sem cobertura e o `trim` da normalização. Com testes de limite: **13** (~92%), quase
+todos equivalentes. Antes disso, a primeira execução da Assertiva foi recusada pela própria trava de
+somente-leitura (o Vitest gravou `node_modules/.vite` no projeto através do link da cópia); o defeito
+foi corrigido no repositório da Assertiva (`a91b445`) e a nova execução não tocou o projeto.

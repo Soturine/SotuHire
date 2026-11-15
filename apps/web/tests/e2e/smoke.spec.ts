@@ -317,7 +317,8 @@ test("job radar creates wishlist/source, runs demo and saves results", async ({ 
   await expect(
     page.getByText(/rascunho de wishlist gerado|Wishlist sugerida/i).first(),
   ).toBeVisible();
-  await expect(page.getByText(/wishlist criada/i)).toHaveCount(0);
+  // one-shot: a retrying toHaveCount(0) would wait for a toast to fade and pass
+  expect(await page.getByText(/wishlist criada/i).count()).toBe(0);
   await page.getByLabel("Nome").first().fill("Wishlist revisada E2E");
   await page.getByTestId("radar-create-wishlist").click();
   await expectToast(page, /wishlist criada/i);

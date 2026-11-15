@@ -54,5 +54,27 @@ test.describe("profile", () => {
     await confirm.getByRole("button", { name: "Manter" }).click();
     await expect(confirm).toHaveCount(0);
     await expect(items).toHaveCount(before);
+    // sample mode does not persist deletes, so the count alone cannot tell: no removal was sent.
+    // A one-shot count, not expect(...).toHaveCount(0): that retries until the 4 s toast fades
+    // and passed with the delete firing (found by the remove-without-confirm UI mutant).
+    await page.waitForTimeout(1_200);
+    expect(await page.getByText("Item removido.").count()).toBe(0);
   });
+});
+
+test("a fact changed in the Profile reaches the Master only after it is chosen", async ({
+  page,
+}) => {
+  await page.goto("/resume-studio");
+  const changed = page.getByTestId("profile-changed");
+  await expect(changed).toContainText("Projeto de extensão (DEMO)");
+  await expect(changed).toContainText("Mestre");
+  await expect(changed).toContainText("Perfil");
+  const refresh = page.getByTestId("refresh-profile-facts");
+  // nothing is pre-selected: the Master keeps its text until the person picks
+  await expect(refresh).toBeDisabled();
+  await changed.getByRole("checkbox").first().check();
+  await expect(refresh).toBeEnabled();
+  await refresh.click();
+  await expect(page.getByText(/atualizado\(s\) com o texto do Perfil/)).toBeVisible();
 });
