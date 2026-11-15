@@ -37,6 +37,12 @@
   --color-success-strong: var(--success-strong);
   --color-warning-strong: var(--warning-strong);
   --color-destructive-strong: var(--destructive-strong);
+  /* Dossier marks: highlighter (pending review) and seal (waiting on the person). */
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-seal: var(--seal);
+  --color-seal-strong: var(--seal-strong);
+  --color-paper: var(--paper);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -54,124 +60,167 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, ui-monospace, monospace;
+  /* Self-hosted OFL fonts (src/main.tsx), so the app stays offline-capable. */
+  --font-sans:
+    "IBM Plex Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Source Serif 4 Variable", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-page-in: page-in var(--duration-2) var(--ease-out) both;
+  --animate-rise-in: page-in var(--duration-3) var(--ease-out) both;
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 
-  /* SotuHire v2: calm compass blue, evidence teal and warm trajectory surfaces. */
-  --background: oklch(0.985 0.003 240);
-  --foreground: oklch(0.18 0.03 250);
+  /* Motion: three durations, all off under prefers-reduced-motion. */
+  --duration-1: 120ms;
+  --duration-2: 200ms;
+  --duration-3: 320ms;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 250);
+  /* SotuHire "dossier": warm paper, ink, pine for confirmed evidence, ochre highlighter for what
+     waits for review, a vermilion seal for what waits on the person. */
+  --paper: oklch(0.975 0.008 85);
+  --background: var(--paper);
+  --foreground: oklch(0.21 0.025 265);
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 250);
+  --card: oklch(0.993 0.004 85);
+  --card-foreground: oklch(0.21 0.025 265);
 
-  /* Primary = deep ink navy */
-  --primary: oklch(0.22 0.04 255);
-  --primary-foreground: oklch(0.985 0.003 240);
+  --popover: oklch(0.995 0.003 85);
+  --popover-foreground: oklch(0.21 0.025 265);
 
-  --secondary: oklch(0.965 0.008 250);
-  --secondary-foreground: oklch(0.22 0.04 255);
+  /* Primary = ink */
+  --primary: oklch(0.26 0.04 265);
+  --primary-foreground: oklch(0.985 0.006 85);
 
-  --muted: oklch(0.96 0.006 250);
-  --muted-foreground: oklch(0.52 0.02 255);
+  --secondary: oklch(0.945 0.012 85);
+  --secondary-foreground: oklch(0.26 0.04 265);
 
-  /* Accent = emerald */
-  --accent: oklch(0.63 0.13 183);
-  --accent-foreground: oklch(0.16 0.04 200);
+  --muted: oklch(0.948 0.01 85);
+  --muted-foreground: oklch(0.46 0.02 265);
 
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.985 0.003 240);
+  /* Accent = pine (confirmed evidence, links) */
+  --accent: oklch(0.52 0.095 168);
+  --accent-foreground: oklch(0.99 0.004 85);
 
-  --success: oklch(0.7 0.16 160);
-  --success-foreground: oklch(0.16 0.04 200);
+  --destructive: oklch(0.6 0.2 27);
+  --destructive-foreground: oklch(0.99 0.004 85);
 
-  --warning: oklch(0.78 0.15 75);
-  --warning-foreground: oklch(0.22 0.06 60);
+  --success: oklch(0.66 0.13 155);
+  --success-foreground: oklch(0.17 0.04 160);
+
+  --warning: oklch(0.8 0.14 80);
+  --warning-foreground: oklch(0.24 0.06 60);
+
+  --highlight: oklch(0.93 0.085 95);
+  --highlight-foreground: oklch(0.25 0.05 75);
+  --seal: oklch(0.6 0.17 35);
+  --seal-strong: oklch(0.46 0.16 35);
 
   /* Fills above are for backgrounds, icons and borders; text uses the -strong variants
      (contrast computed in OKLCH with gamma-correct blending, calibrated against axe). */
-  --accent-strong: oklch(0.46 0.124 183);
-  --success-strong: oklch(0.46 0.152 160);
-  --warning-strong: oklch(0.46 0.143 75);
-  --destructive-strong: oklch(0.46 0.209 25);
+  --accent-strong: oklch(0.45 0.1 168);
+  --success-strong: oklch(0.45 0.13 155);
+  --warning-strong: oklch(0.46 0.12 70);
+  --destructive-strong: oklch(0.46 0.19 27);
 
-  --border: oklch(0.92 0.008 250);
-  --input: oklch(0.92 0.008 250);
-  --ring: oklch(0.63 0.13 183);
+  --border: oklch(0.89 0.012 85);
+  --input: oklch(0.86 0.014 85);
+  --ring: oklch(0.45 0.1 168);
 
-  --chart-1: oklch(0.55 0.16 255); /* indigo */
-  --chart-2: oklch(0.72 0.16 165); /* emerald */
-  --chart-3: oklch(0.78 0.15 75); /* amber */
-  --chart-4: oklch(0.65 0.2 20); /* coral */
-  --chart-5: oklch(0.6 0.13 290); /* violet */
+  --chart-1: oklch(0.42 0.08 265); /* ink */
+  --chart-2: oklch(0.52 0.095 168); /* pine */
+  --chart-3: oklch(0.78 0.13 80); /* ochre */
+  --chart-4: oklch(0.6 0.17 35); /* seal */
+  --chart-5: oklch(0.6 0.08 230); /* slate blue */
 
-  --sidebar: oklch(0.18 0.03 255);
-  --sidebar-foreground: oklch(0.92 0.01 240);
-  --sidebar-primary: oklch(0.68 0.12 183);
-  --sidebar-primary-foreground: oklch(0.16 0.04 200);
-  --sidebar-accent: oklch(0.24 0.04 255);
-  --sidebar-accent-foreground: oklch(0.97 0.005 240);
-  --sidebar-border: oklch(0.28 0.03 255);
-  --sidebar-ring: oklch(0.68 0.12 183);
+  --sidebar: oklch(0.955 0.012 85);
+  --sidebar-foreground: oklch(0.24 0.03 265);
+  --sidebar-primary: oklch(0.26 0.04 265);
+  --sidebar-primary-foreground: oklch(0.985 0.006 85);
+  --sidebar-accent: oklch(0.915 0.018 85);
+  --sidebar-accent-foreground: oklch(0.18 0.03 265);
+  --sidebar-border: oklch(0.88 0.014 85);
+  --sidebar-ring: oklch(0.45 0.1 168);
 
-  --gradient-hero:
-    radial-gradient(ellipse at top, oklch(0.96 0.04 165 / 0.5), transparent 60%),
-    linear-gradient(180deg, oklch(0.98 0.005 240), oklch(0.96 0.01 250));
-  --gradient-ink: linear-gradient(135deg, oklch(0.22 0.04 255), oklch(0.32 0.06 255));
-  --shadow-soft: 0 1px 2px oklch(0.2 0.03 255 / 0.04), 0 8px 24px -12px oklch(0.2 0.03 255 / 0.08);
+  --gradient-hero: linear-gradient(180deg, var(--card), var(--paper));
+  --gradient-ink: linear-gradient(135deg, oklch(0.24 0.04 265), oklch(0.3 0.05 265));
+  --shadow-soft: 0 1px 0 oklch(0.2 0.03 265 / 0.05);
   --shadow-elevated:
-    0 4px 12px -2px oklch(0.2 0.03 255 / 0.08), 0 24px 48px -16px oklch(0.2 0.03 255 / 0.12);
+    0 1px 0 oklch(0.2 0.03 265 / 0.05), 0 12px 32px -18px oklch(0.2 0.03 265 / 0.22);
 }
 
 .dark {
-  --background: oklch(0.14 0.02 255);
-  --foreground: oklch(0.96 0.005 240);
-  --card: oklch(0.18 0.03 255);
-  --card-foreground: oklch(0.96 0.005 240);
-  --popover: oklch(0.18 0.03 255);
-  --popover-foreground: oklch(0.96 0.005 240);
-  --primary: oklch(0.96 0.005 240);
-  --primary-foreground: oklch(0.18 0.03 255);
-  --secondary: oklch(0.24 0.03 255);
-  --secondary-foreground: oklch(0.96 0.005 240);
-  --muted: oklch(0.24 0.03 255);
-  --muted-foreground: oklch(0.7 0.02 250);
-  --accent: oklch(0.7 0.12 183);
-  --accent-foreground: oklch(0.14 0.04 200);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
-  --accent-strong: oklch(0.84 0.104 183);
-  --success-strong: oklch(0.84 0.128 160);
-  --warning-strong: oklch(0.84 0.12 75);
-  --destructive-strong: oklch(0.84 0.176 25);
+  --paper: oklch(0.17 0.018 265);
+  --background: var(--paper);
+  --foreground: oklch(0.94 0.008 85);
+  --card: oklch(0.205 0.02 265);
+  --card-foreground: oklch(0.94 0.008 85);
+  --popover: oklch(0.215 0.02 265);
+  --popover-foreground: oklch(0.94 0.008 85);
+  --primary: oklch(0.94 0.008 85);
+  --primary-foreground: oklch(0.19 0.025 265);
+  --secondary: oklch(0.25 0.022 265);
+  --secondary-foreground: oklch(0.94 0.008 85);
+  --muted: oklch(0.25 0.022 265);
+  --muted-foreground: oklch(0.74 0.014 85);
+  --accent: oklch(0.7 0.1 168);
+  --accent-foreground: oklch(0.16 0.03 170);
+  --success: oklch(0.7 0.12 155);
+  --success-foreground: oklch(0.16 0.03 160);
+  --warning: oklch(0.8 0.13 80);
+  --warning-foreground: oklch(0.2 0.05 70);
+  --destructive: oklch(0.66 0.18 27);
+  --destructive-foreground: oklch(0.16 0.03 27);
+  --highlight: oklch(0.36 0.07 85);
+  --highlight-foreground: oklch(0.95 0.04 90);
+  --seal: oklch(0.68 0.15 35);
+  --seal-strong: oklch(0.82 0.11 40);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.78 0.1 168);
+  --accent-strong: oklch(0.84 0.09 168);
+  --success-strong: oklch(0.84 0.11 155);
+  --warning-strong: oklch(0.86 0.11 80);
+  --destructive-strong: oklch(0.84 0.13 27);
+  --chart-1: oklch(0.78 0.06 265);
+  --chart-2: oklch(0.72 0.1 168);
+  --chart-3: oklch(0.8 0.12 80);
+  --chart-4: oklch(0.7 0.14 35);
+  --chart-5: oklch(0.72 0.07 230);
+  --sidebar: oklch(0.15 0.016 265);
+  --sidebar-foreground: oklch(0.9 0.01 85);
+  --sidebar-primary: oklch(0.94 0.008 85);
+  --sidebar-primary-foreground: oklch(0.19 0.025 265);
+  --sidebar-accent: oklch(0.235 0.022 265);
+  --sidebar-accent-foreground: oklch(0.97 0.006 85);
+  --sidebar-border: oklch(1 0 0 / 9%);
+  --sidebar-ring: oklch(0.78 0.1 168);
+  --shadow-soft: 0 1px 0 oklch(0 0 0 / 0.3);
+  --shadow-elevated: 0 1px 0 oklch(0 0 0 / 0.3), 0 16px 40px -20px oklch(0 0 0 / 0.6);
 }
 
 @layer components {
+  /* The cover of a dossier: card paper with an ink rule on the left. */
   .trajectory-surface {
-    background:
-      radial-gradient(
-        circle at 85% 15%,
-        color-mix(in oklab, var(--color-accent) 22%, transparent),
-        transparent 32%
-      ),
-      linear-gradient(
-        135deg,
-        color-mix(in oklab, var(--color-card) 94%, var(--color-accent)),
-        var(--color-card)
-      );
+    background: var(--color-card);
     box-shadow: var(--shadow-elevated);
-  }
-  .trajectory-surface::before {
-    content: "";
-    position: absolute;
-    pointer-events: none;
+    border-left: 3px solid var(--color-primary);
   }
   .portfolio-cover {
     display: flex;
@@ -211,14 +260,50 @@
     -webkit-font-smoothing: antialiased;
   }
   ::selection {
-    background: oklch(0.72 0.16 165 / 0.35);
+    background: color-mix(in oklab, var(--color-highlight) 80%, transparent);
+    color: var(--color-highlight-foreground);
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
   }
 }
 
 @utility text-display {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-weight: 600;
+  font-optical-sizing: auto;
+  letter-spacing: -0.012em;
+}
+
+/* Section label of the dossier: monospace, tracked caps; never the only cue. */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Text awaiting review, like a highlighter on paper. */
+@utility mark-pending {
+  background: linear-gradient(
+    180deg,
+    transparent 55%,
+    color-mix(in oklab, var(--color-highlight) 90%, transparent) 55%
+  );
 }
 
 @utility grid-bg {

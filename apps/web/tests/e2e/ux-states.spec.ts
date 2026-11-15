@@ -59,7 +59,7 @@ test.describe("ux states", () => {
     await page.goto("/dashboard");
     await settle(page);
     await page
-      .getByRole("button", { name: /menu|navega/i })
+      .getByRole("button", { name: /menu|navega|^mais$|^more$/i })
       .first()
       .click();
     await page.waitForTimeout(300);

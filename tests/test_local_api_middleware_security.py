@@ -226,3 +226,23 @@ def test_environment_rejects_public_bind_and_remote_origin_without_opt_in(monkey
     monkeypatch.setenv("SOTUHIRE_API_ALLOWED_ORIGINS", "https://public.example")
     with pytest.raises(ValueError, match="ALLOW_REMOTE_ORIGINS"):
         ApiSettings.from_env()
+
+
+def test_rejections_for_an_allowed_origin_are_readable_by_the_browser() -> None:
+    """A 401 the browser cannot read breaks pairing: the web client pairs when it sees a 401.
+
+    LocalSecurityMiddleware is the outermost middleware, so its error responses skipped
+    CORSMiddleware and carried no Access-Control-Allow-Origin. fetch() then rejects with a network
+    error instead of returning the 401, and the 401 -> pair -> retry handshake never starts.
+    """
+    client = _client()
+    for path in ("/api/v1/profile", "/api/v2/career-state"):
+        response = client.get(path, headers={"Origin": ORIGIN})
+        assert response.status_code == 401
+        assert response.headers.get("access-control-allow-origin") == ORIGIN
+        assert response.headers.get("access-control-allow-credentials") == "true"
+        assert "Origin" in response.headers.get("vary", "")
+    # an origin that is not allowed still gets nothing it could use
+    rejected = client.get("/api/v1/profile", headers={"Origin": "https://attacker.example"})
+    assert rejected.status_code == 403
+    assert "access-control-allow-origin" not in rejected.headers

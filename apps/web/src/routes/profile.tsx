@@ -440,7 +440,7 @@ function ProfilePage() {
               {draft.warnings.map((warning) => (
                 <p
                   key={warning}
-                  className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-foreground"
+                  className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-strong"
                 >
                   {warning}
                 </p>
@@ -470,7 +470,7 @@ function ProfilePage() {
         >
           <div className="space-y-4" data-testid="profile-lattes-section">
             <div
-              className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-foreground"
+              className="flex items-start gap-2 rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-strong"
               data-testid="profile-lattes-review-warning"
             >
               <GraduationCap className="mt-0.5 h-4 w-4 shrink-0" />
@@ -564,7 +564,7 @@ function ProfilePage() {
                 {[...lattesDraft.warnings, ...lattesDraft.assumptions].map((warning) => (
                   <p
                     key={warning}
-                    className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-foreground"
+                    className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-warning-strong"
                   >
                     {warning}
                   </p>
@@ -791,7 +791,7 @@ function ProfileItemRow({
               "inline-flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold",
               danger
                 ? "border-destructive/40 text-destructive-strong hover:bg-destructive/10"
-                : "border-success/40 text-success-foreground hover:bg-success/10",
+                : "border-success/40 text-success-strong hover:bg-success/10",
             )}
           >
             {danger ? <Trash2 className="h-3.5 w-3.5" /> : <CheckCircle2 className="h-3.5 w-3.5" />}
@@ -821,9 +821,9 @@ function Badge({
 }) {
   const cls =
     tone === "success"
-      ? "border-success/30 bg-success/10 text-success-foreground"
+      ? "border-success/30 bg-success/10 text-success-strong"
       : tone === "warning"
-        ? "border-warning/30 bg-warning/10 text-warning-foreground"
+        ? "border-warning/30 bg-warning/10 text-warning-strong"
         : "border-border bg-muted text-muted-foreground";
   return (
     <span className={cn("rounded-full border px-2 py-0.5 text-[11px] font-medium", cls)}>

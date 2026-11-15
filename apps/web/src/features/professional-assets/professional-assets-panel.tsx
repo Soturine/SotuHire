@@ -213,7 +213,7 @@ export function ProfessionalAssetsPanel() {
                     className={cn(
                       "rounded-full px-2 py-1 text-[10px] font-bold uppercase",
                       asset.status === "confirmed" && "bg-success/15 text-success-strong",
-                      asset.status === "stale" && "bg-warning/15 text-warning-foreground",
+                      asset.status === "stale" && "bg-warning/15 text-warning-strong",
                       asset.status === "archived" && "bg-muted text-muted-foreground",
                       (asset.status === "draft" || asset.status === "review") &&
                         "bg-accent/10 text-accent-strong",
@@ -251,7 +251,7 @@ export function ProfessionalAssetsPanel() {
                   <code>{asset.evidence_scope_id || "não definido"}</code>
                 </p>
                 {asset.stale_reason && (
-                  <p className="mt-2 text-xs text-warning-foreground">{asset.stale_reason}</p>
+                  <p className="mt-2 text-xs text-warning-strong">{asset.stale_reason}</p>
                 )}
 
                 <div className="mt-4 flex flex-wrap gap-2 border-t pt-3">

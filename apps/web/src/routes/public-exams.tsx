@@ -870,9 +870,9 @@ function Badge({
 }) {
   const cls =
     tone === "success"
-      ? "border-success/30 bg-success/10 text-success-foreground"
+      ? "border-success/30 bg-success/10 text-success-strong"
       : tone === "warning"
-        ? "border-warning/30 bg-warning/10 text-warning-foreground"
+        ? "border-warning/30 bg-warning/10 text-warning-strong"
         : tone === "error"
           ? "border-destructive/30 bg-destructive/10 text-destructive-strong"
           : "border-border bg-muted text-muted-foreground";

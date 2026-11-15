@@ -18,7 +18,7 @@ nada aqui é "verde no CI".
 | C08 | Domínio e integridade | PARTIAL | aprovação no ponto de efeito, undo condicional, aceite com prova de credencial, regra de confirmação única | Radar/Tracker sem auditoria de transições |
 | C09 | Dados, backup, restore, offline | PARTIAL | rascunho local não sobrescreve servidor; mapa de autoridade | round-trip de backup/restore e migração v6→v8 não reexecutados neste ciclo |
 | C10 | IA agent-led do próprio SotuHire | PARTIAL | `plan()` declarado como não interpretativo; catálogo de prompts só conta consumidores reais | conectar `plan(intent)` a um consumidor ou retirar a capacidade |
-| C11 | Frontend: todas as rotas, a11y, i18n | PARTIAL | 22 rotas × 2 viewports: axe 20 críticos/309 sérios → 0/0, sem estouro, sem erro de console ([UX](2026-11-frontend-product-ux.md)) | leitor de tela, en-US, tema escuro medido, redesign visual |
+| C11 | Frontend: todas as rotas, a11y, i18n | PARTIAL | 25 rotas × 4 larguras × 2 temas + en-US: claro 0, escuro 28 → 0 nós axe por largura; sem estouro nem erro de console ([UX](2026-11-frontend-product-ux.md)) | leitor de tela (`NOT_RUN`), redesign das telas além do shell e do Cockpit |
 | C12 | Extensão e Companion | PARTIAL | sender/URL do service worker; tabela de rotas autenticadas testada | Chrome real com o ZIP distribuído não executado |
 | C13 | Segurança e supply chain | PARTIAL | checagem de segredos única, SBOM transitivo, pins de Actions conferidos, secret scan | DAST/SSRF não reexecutados neste ciclo |
 | C14 | Gates reais e release | PARTIAL | uploads obrigatórios, SBOM verificado, instalação limpa | CI remoto no SHA final pendente |
@@ -36,7 +36,19 @@ nada aqui é "verde no CI".
 | C26 | Instalação e operação | PARTIAL | extras documentados, `.env.example` real, instalação padrão menor | `ensure_database` (SH-NEW-001) não medido |
 | C27 | Mercado brasileiro multiárea | PARTIAL | detector de credenciais com 26 conselhos; fixtures de saúde e engenharia | avaliação multiárea do matching |
 | C28 | Fechar correções das ferramentas | PARTIAL | branches publicadas, CHANGELOG e testes próprios | PRs nos repositórios donos |
-| v3/v4 | UX premium com antes/depois | PARTIAL | evidência de a11y antes/depois | redesign visual |
+| v3/v4 | UX premium com antes/depois | PARTIAL | CP-UX00 baseline e CP-UX01 com galeria antes/depois | CP-UX02…06 |
+| UX-01 | Baseline pré-redesign reproduzível | DONE | `459ffa9`, 250 telas + 10 estados, manifesto com hashes | — |
+| UX-02 | Identidade e design system | PARTIAL | tokens, fontes, marca, estados, ADR 006 | aplicação nas telas restantes |
+| UX-03 | Navegação por jornada desktop/tablet/mobile | DONE | registro único, barra lateral, barra mobile, E2E `journey-shell` | — |
+| UX-04 | Busca e autocomplete reais | PARTIAL | telas sem acento, recentes, dados locais (evidência, portfólio) | busca de dados no backend sem acento e sobre Perfil e vagas (CP-UX03) |
+| UX-05 | Motion e microinterações com reduced-motion | PARTIAL | tokens de duração, entrada de página, abertura de jornada | interações das telas de produto |
+| UX-06 | Perfil e Resume Studio | NOT_RUN | — | CP-UX02 |
+| UX-07 | Radar, fontes, Tracker | NOT_RUN | — | CP-UX03 |
+| UX-08 | Lab, Copilot, aprovações, Configurações | NOT_RUN | — | CP-UX04 |
+| UX-09 | Demais rotas e limpeza de estilos | NOT_RUN | — | CP-UX05 |
+| UX-10 | Tema escuro e en-US medidos | DONE | escuro 0 nós, en-US 0 nós nas larguras capturadas | — |
+| UX-11 | Fluxos com API real | PARTIAL | pareamento, Cockpit, busca e primeiro uso do Resume Studio contra a API real | demais jornadas |
+| UX-12 | Desempenho e matriz de navegadores | PARTIAL | bundle medido | LCP/CLS/INP de produção, Firefox, WebKit (CP-UX06) |
 | v3/v4 | Dados informados uma vez | PARTIAL | projeção Perfil → Mestre com revisão | edição de fato já projetado; retirada de `LocalStore` |
 | v3/v4 | Haiku 5.5 | PARTIAL | adapter com `MOCK_PASS` | chamada real `BLOCKED_EXTERNAL_CREDENTIALS` |
 | v3/v4 | Commit + push por checkpoint | DONE | SHA remoto conferido em cada checkpoint | — |

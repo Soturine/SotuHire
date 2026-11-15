@@ -1,60 +1,132 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  ArrowRight,
-  CalendarClock,
-  CheckCircle2,
-  Compass,
-  Inbox,
-  Layers3,
-  ShieldCheck,
-  Target,
-} from "lucide-react";
+import { ArrowRight, CircleCheck, CircleDot, ShieldCheck } from "lucide-react";
 
 import { AppShell } from "@/components/app-shell";
-import { Button } from "@/components/ui/button";
+import { ErrorState, LoadingState } from "@/components/states";
 import { v2Api } from "@/features/career-copilot/api";
 import { useApiMode } from "@/lib/api/mode";
 import { usePreferences } from "@/lib/preferences";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/dashboard")({ component: CareerCockpit });
+
+type Locale = "pt-BR" | "en-US";
 
 const copy = {
   "pt-BR": {
     title: "Cockpit de carreira",
     description: "O que mudou, o que precisa de atenção e por quê.",
     eyebrow: "Seu estado profissional agora",
-    approvals: "Aguardando sua aprovação",
+    loading: "Lendo seu estado profissional…",
+    approvals: "aguardando sua aprovação",
     evidence: "Cobertura de evidências",
-    active: "Candidaturas ativas",
-    interview: "Próxima entrevista",
-    priorities: "Próximas melhores ações",
+    evidenceHint: "parte dos fatos do Perfil com evidência confirmada",
+    active: "candidaturas ativas",
+    interview: "entrevistas nos próximos 7 dias",
+    gapsCount: "lacunas para revisar",
+    priorities: "Próximos passos",
+    prioritiesHint: "Ordenados por urgência. Nada é executado sem você.",
+    nothingToDo: "Nada pede sua atenção agora.",
     why: "Por que agora",
-    impact: "Impacto esperado",
+    impact: "Impacto",
     effort: "Esforço",
-    open: "Revisar",
     strengths: "Forças comprovadas",
     gaps: "Lacunas para revisar",
-    noProvider: "Confiança do provider não entra no cálculo determinístico.",
+    none: "Nenhuma ainda.",
+    noProvider:
+      "Calculado a partir dos seus dados; a confiança de provider de IA não entra na conta.",
+    urgency: { low: "baixa", medium: "média", high: "alta", critical: "crítica" },
   },
   "en-US": {
     title: "Career cockpit",
     description: "What changed, what needs attention, and why.",
     eyebrow: "Your career state now",
-    approvals: "Waiting for your approval",
+    loading: "Reading your career state…",
+    approvals: "waiting for your approval",
     evidence: "Evidence coverage",
-    active: "Active applications",
-    interview: "Next interview",
-    priorities: "Next best actions",
+    evidenceHint: "share of Profile facts with confirmed evidence",
+    active: "active applications",
+    interview: "interviews in the next 7 days",
+    gapsCount: "gaps to review",
+    priorities: "Next steps",
+    prioritiesHint: "Ordered by urgency. Nothing runs without you.",
+    nothingToDo: "Nothing needs your attention right now.",
     why: "Why now",
-    impact: "Expected impact",
+    impact: "Impact",
     effort: "Effort",
-    open: "Review",
     strengths: "Confirmed strengths",
     gaps: "Gaps to review",
-    noProvider: "Provider confidence is not part of deterministic scoring.",
+    none: "None yet.",
+    noProvider: "Computed from your data; AI provider confidence is not part of it.",
+    urgency: { low: "low", medium: "medium", high: "high", critical: "critical" },
+  },
+} satisfies Record<Locale, unknown>;
+
+/** Each recommendation type: what to call it and where the person acts on it. */
+const ACTIONS: Record<string, { to: string; label: Record<Locale, [string, string]> }> = {
+  APPLICATION_FOLLOW_UP_DUE: {
+    to: "/tracker",
+    label: {
+      "pt-BR": ["Retomar candidaturas com prazo vencido", "Abrir Tracker"],
+      "en-US": ["Follow up on overdue applications", "Open Tracker"],
+    },
+  },
+  INTERVIEW_PREP_DUE: {
+    to: "/interviews",
+    label: {
+      "pt-BR": ["Preparar a próxima entrevista", "Preparar"],
+      "en-US": ["Prepare for the next interview", "Prepare"],
+    },
+  },
+  PROFILE_REVIEW_REQUIRED: {
+    to: "/evidence",
+    label: {
+      "pt-BR": ["Confirmar evidências pendentes", "Revisar evidências"],
+      "en-US": ["Confirm pending evidence", "Review evidence"],
+    },
+  },
+  PORTFOLIO_GAP: {
+    to: "/portfolio",
+    label: {
+      "pt-BR": ["Levar projetos confirmados ao portfólio", "Abrir portfólio"],
+      "en-US": ["Bring confirmed projects to the portfolio", "Open portfolio"],
+    },
+  },
+  MISSING_CRITICAL_EVIDENCE: {
+    to: "/evidence",
+    label: {
+      "pt-BR": ["Comprovar competências sem evidência", "Ver lacunas"],
+      "en-US": ["Back skills that have no evidence", "See gaps"],
+    },
+  },
+  RESUME_STALE: {
+    to: "/resume-studio",
+    label: {
+      "pt-BR": ["Atualizar o Currículo Mestre", "Abrir Resume Studio"],
+      "en-US": ["Update the Master Resume", "Open Resume Studio"],
+    },
+  },
+  HIGH_FIT_OPPORTUNITY: {
+    to: "/radar",
+    label: {
+      "pt-BR": ["Avaliar uma oportunidade com boa aderência", "Ver no Radar"],
+      "en-US": ["Review a well-matched opportunity", "See in Radar"],
+    },
   },
 };
+
+function actionCopy(type: string, locale: Locale) {
+  const known = ACTIONS[type];
+  if (known) return { to: known.to, title: known.label[locale][0], cta: known.label[locale][1] };
+  // Unknown types still render, readable, and go to the approval queue as before.
+  const readable = type.toLowerCase().replaceAll("_", " ");
+  return {
+    to: "/approvals",
+    title: readable.charAt(0).toUpperCase() + readable.slice(1),
+    cta: locale === "pt-BR" ? "Revisar" : "Review",
+  };
+}
 
 function CareerCockpit() {
   const { mode, baseUrl } = useApiMode();
@@ -71,168 +143,206 @@ function CareerCockpit() {
 
   return (
     <AppShell title={t.title} description={t.description}>
-      <div className="career-map mx-auto max-w-7xl space-y-6">
-        <section className="trajectory-surface overflow-hidden rounded-3xl border p-6 md:p-8">
-          <div className="grid gap-8 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
-            <div>
-              <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent-strong">
-                <Compass className="h-4 w-4" /> {t.eyebrow}
-              </p>
-              <h2 className="mt-4 max-w-3xl text-3xl font-semibold tracking-tight md:text-5xl">
-                {state.data?.profile_summary ?? "Carregando estado da carreira…"}
-              </h2>
-              <p className="mt-4 max-w-2xl text-sm text-muted-foreground">{t.noProvider}</p>
-            </div>
-            <div className="rounded-2xl border border-accent/20 bg-background/70 p-5 backdrop-blur">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">{t.evidence}</span>
-                <span className="text-2xl font-semibold tabular-nums">
-                  {Math.round((state.data?.confidence.data_coverage ?? 0) * 100)}%
-                </span>
-              </div>
-              <div className="mt-4 h-2 rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full bg-accent"
-                  style={{
-                    width: `${Math.round((state.data?.confidence.data_coverage ?? 0) * 100)}%`,
-                  }}
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Career signals">
-          <Signal
-            icon={Inbox}
-            label={t.approvals}
-            value={approvals.data?.filter((item) => item.status === "proposed").length ?? 0}
-            to="/approvals"
-          />
-          <Signal
-            icon={Target}
-            label={t.active}
-            value={state.data?.active_applications ?? 0}
-            to="/tracker"
-          />
-          <Signal
-            icon={CalendarClock}
-            label={t.interview}
-            value={state.data?.upcoming_interviews ?? 0}
-            to="/interviews"
-          />
-          <Signal
-            icon={Layers3}
-            label={t.gaps}
-            value={state.data?.evidence_gaps.length ?? 0}
-            to="/evidence"
-          />
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-[1.45fr_0.55fr]">
-          <div className="rounded-2xl border bg-card p-5 shadow-[var(--shadow-soft)] md:p-6">
-            <div className="mb-5 flex items-center justify-between">
-              <h2 className="text-xl font-semibold">{t.priorities}</h2>
-              <ShieldCheck
-                className="h-5 w-5 text-accent-strong"
-                aria-label="Human approval required"
-              />
-            </div>
-            <ol className="space-y-3">
-              {state.data?.recommendation_candidates.map((action, index) => (
-                <li
-                  key={action.action_id}
-                  className="group rounded-xl border bg-background p-4 transition-colors hover:border-accent/40"
-                >
-                  <div className="flex gap-4">
-                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-primary text-xs font-semibold text-primary-foreground">
-                      {index + 1}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-semibold">{action.type.replaceAll("_", " ")}</h3>
-                        <span className="rounded-full bg-warning/15 px-2 py-0.5 text-[11px] font-medium">
-                          {action.urgency}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-sm">
-                        <span className="font-medium">{t.why}:</span> {action.reason}
-                      </p>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground">{t.impact}:</span>{" "}
-                        {action.impact} · {t.effort}: {action.estimated_effort}
-                      </p>
-                    </div>
-                    <Button asChild variant="outline" size="sm">
-                      <Link to="/approvals">
-                        {t.open}
-                        <ArrowRight />
-                      </Link>
-                    </Button>
-                  </div>
-                </li>
-              ))}
-            </ol>
-          </div>
-
-          <div className="space-y-6">
-            <ListPanel title={t.strengths} items={state.data?.confirmed_strengths ?? []} positive />
-            <ListPanel title={t.gaps} items={state.data?.evidence_gaps ?? []} />
-          </div>
-        </section>
-      </div>
+      {state.isError ? (
+        // Before: zeros rendered as if they were the person's data while the API was down.
+        <ErrorState error={state.error} onRetry={() => state.refetch()} />
+      ) : state.isLoading || !state.data ? (
+        <LoadingState label={t.loading} />
+      ) : (
+        <Cockpit
+          t={t}
+          locale={locale}
+          data={state.data}
+          pendingApprovals={approvals.data?.filter((item) => item.status === "proposed").length}
+        />
+      )}
     </AppShell>
   );
 }
 
-function Signal({
-  icon: Icon,
-  label,
-  value,
-  to,
+type CareerState = Awaited<ReturnType<ReturnType<typeof v2Api>["careerState"]>>;
+
+function Cockpit({
+  t,
+  locale,
+  data,
+  pendingApprovals,
 }: {
-  icon: typeof Target;
-  label: string;
-  value: number;
-  to: "/approvals" | "/tracker" | "/interviews" | "/evidence";
+  t: (typeof copy)[Locale];
+  locale: Locale;
+  data: CareerState;
+  pendingApprovals: number | undefined;
 }) {
+  const coverage = Math.round(data.confidence.data_coverage * 100);
+  const ledger: { value: number | undefined; label: string; to: string; seal?: boolean }[] = [
+    { value: pendingApprovals, label: t.approvals, to: "/approvals", seal: true },
+    { value: data.active_applications, label: t.active, to: "/tracker" },
+    { value: data.upcoming_interviews, label: t.interview, to: "/interviews" },
+    { value: data.evidence_gaps.length, label: t.gapsCount, to: "/evidence" },
+  ];
   return (
-    <Link
-      to={to}
-      className="group rounded-2xl border bg-card p-5 shadow-[var(--shadow-soft)] transition-transform hover:-translate-y-0.5"
-    >
-      <div className="flex items-center justify-between">
-        <Icon className="h-5 w-5 text-accent-strong" />
-        <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
-      </div>
-      <div className="mt-5 text-3xl font-semibold tabular-nums">{value}</div>
-      <div className="mt-1 text-sm text-muted-foreground">{label}</div>
-    </Link>
+    <div className="mx-auto max-w-6xl space-y-8">
+      <section className="trajectory-surface rounded-lg border px-6 py-7 md:px-9 md:py-9">
+        <p className="eyebrow text-accent-strong">{t.eyebrow}</p>
+        <div className="mt-3 grid gap-8 lg:grid-cols-[1fr_17rem] lg:items-end">
+          <h2 className="text-display max-w-3xl text-[28px] leading-[1.15] md:text-[40px]">
+            {data.profile_summary}
+          </h2>
+          <div>
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="text-sm font-medium">{t.evidence}</span>
+              <span className="text-display tabular text-3xl">{coverage}%</span>
+            </div>
+            <div
+              className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"
+              role="progressbar"
+              aria-label={t.evidence}
+              aria-valuenow={coverage}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <div
+                className="h-full rounded-full bg-accent transition-[width] duration-(--duration-3) ease-(--ease-out)"
+                style={{ width: `${coverage}%` }}
+              />
+            </div>
+            <p className="mt-2 text-xs text-muted-foreground">{t.evidenceHint}</p>
+          </div>
+        </div>
+        <p className="mt-6 text-xs text-muted-foreground">{t.noProvider}</p>
+      </section>
+
+      <section aria-label={t.eyebrow}>
+        <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border md:grid-cols-4">
+          {ledger.map((row) => (
+            <li key={row.to}>
+              <Link
+                to={row.to}
+                className="group flex h-full flex-col gap-1 bg-card px-5 py-4 transition-colors duration-(--duration-1) hover:bg-secondary"
+              >
+                <span
+                  className={cn(
+                    "text-display tabular text-3xl",
+                    row.seal && (row.value ?? 0) > 0 && "text-seal-strong",
+                  )}
+                >
+                  {row.value ?? "—"}
+                </span>
+                <span className="flex items-center gap-1 text-sm text-muted-foreground">
+                  {row.label}
+                  <ArrowRight
+                    aria-hidden
+                    className="h-3.5 w-3.5 opacity-0 transition-[opacity,transform] duration-(--duration-1) group-hover:translate-x-0.5 group-hover:opacity-100"
+                  />
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="grid gap-8 lg:grid-cols-[1fr_18rem]">
+        <div>
+          <div className="flex items-end justify-between gap-4 border-b pb-3">
+            <div>
+              <h2 className="text-display text-2xl">{t.priorities}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t.prioritiesHint}</p>
+            </div>
+            <ShieldCheck aria-hidden className="h-5 w-5 shrink-0 text-accent-strong" />
+          </div>
+          {data.recommendation_candidates.length ? (
+            <ol className="divide-y">
+              {data.recommendation_candidates.map((action, index) => {
+                const view = actionCopy(action.type, locale);
+                return (
+                  <li
+                    key={action.action_id}
+                    className="grid grid-cols-[2rem_1fr] gap-x-4 py-5 sm:grid-cols-[2rem_1fr_auto]"
+                  >
+                    <span className="text-display tabular pt-0.5 text-xl text-muted-foreground">
+                      {String(index + 1).padStart(2, "0")}
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="flex flex-wrap items-center gap-2 font-semibold">
+                        {view.title}
+                        <span
+                          className={cn(
+                            "eyebrow rounded-sm px-1.5 py-0.5",
+                            action.urgency === "critical" || action.urgency === "high"
+                              ? "bg-seal/12 text-seal-strong"
+                              : "bg-muted text-muted-foreground",
+                          )}
+                        >
+                          {t.urgency[action.urgency]}
+                        </span>
+                      </h3>
+                      <p className="mt-1.5 text-sm">
+                        <span className="text-muted-foreground">{t.why}: </span>
+                        {action.reason}
+                      </p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {t.impact}: {action.impact} · {t.effort}:{" "}
+                        <span className="tabular">{action.estimated_effort}</span>
+                      </p>
+                    </div>
+                    <Link
+                      to={view.to}
+                      className="col-start-2 mt-3 inline-flex items-center gap-1.5 self-start text-sm font-medium text-accent-strong underline-offset-4 hover:underline sm:col-start-3 sm:mt-0"
+                    >
+                      {view.cta}
+                      <ArrowRight aria-hidden className="h-4 w-4" />
+                    </Link>
+                  </li>
+                );
+              })}
+            </ol>
+          ) : (
+            <p className="py-8 text-sm text-muted-foreground">{t.nothingToDo}</p>
+          )}
+        </div>
+
+        <aside className="space-y-8">
+          <FactList title={t.strengths} items={data.confirmed_strengths} none={t.none} positive />
+          <FactList title={t.gaps} items={data.evidence_gaps} none={t.none} />
+        </aside>
+      </section>
+    </div>
   );
 }
 
-function ListPanel({
+function FactList({
   title,
   items,
+  none,
   positive = false,
 }: {
   title: string;
   items: string[];
+  none: string;
   positive?: boolean;
 }) {
+  const Icon = positive ? CircleCheck : CircleDot;
   return (
-    <div className="rounded-2xl border bg-card p-5">
-      <h2 className="font-semibold">{title}</h2>
-      <ul className="mt-4 space-y-3">
-        {items.slice(0, 5).map((item) => (
-          <li key={item} className="flex gap-2 text-sm">
-            <CheckCircle2
-              className={`mt-0.5 h-4 w-4 shrink-0 ${positive ? "text-accent-strong" : "text-warning-strong"}`}
-            />
-            {item}
-          </li>
-        ))}
-      </ul>
+    <div>
+      <h2 className="eyebrow border-b pb-2 text-muted-foreground">{title}</h2>
+      {items.length ? (
+        <ul className="mt-3 space-y-2.5">
+          {items.slice(0, 5).map((item) => (
+            <li key={item} className="flex gap-2 text-sm">
+              <Icon
+                aria-hidden
+                className={cn(
+                  "mt-0.5 h-4 w-4 shrink-0",
+                  positive ? "text-accent-strong" : "text-warning-strong",
+                )}
+              />
+              <span className={cn(!positive && "mark-pending")}>{item}</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="mt-3 text-sm text-muted-foreground">{none}</p>
+      )}
     </div>
   );
 }

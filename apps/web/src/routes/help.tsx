@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
 import { usePreferences } from "@/lib/preferences";
 import { ROUTES } from "@/lib/route-metadata";
+import { search } from "@/lib/search";
 
 export const Route = createFileRoute("/help")({
   head: () => ({ meta: [{ title: "Ajuda — SotuHire" }] }),
@@ -13,17 +14,16 @@ export const Route = createFileRoute("/help")({
 });
 
 function HelpPage() {
-  const { t, locale } = usePreferences();
+  const { t } = usePreferences();
   const [query, setQuery] = useState("");
   const topics = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase(locale);
-    if (!needle) return ROUTES.filter((route) => route.path !== "/help");
-    return ROUTES.filter((route) =>
-      `${t(route.label)} ${t(route.title)} ${t(route.description)}`
-        .toLocaleLowerCase(locale)
-        .includes(needle),
-    );
-  }, [locale, query, t]);
+    const all = ROUTES.filter((route) => route.path !== "/help");
+    if (!query.trim()) return all;
+    return search(query, all, (route) => ({
+      label: t(route.label),
+      detail: `${t(route.title)} ${t(route.description)}`,
+    }));
+  }, [query, t]);
 
   return (
     <AppShell title={t("route.help.title")} description={t("route.help.description")}>

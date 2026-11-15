@@ -1,5 +1,6 @@
 import { pairedApiFetch } from "@/features/local-security/api-pairing";
 import type { ApiMode } from "@/lib/api/mode";
+import { normalize } from "@/lib/search";
 
 export interface NextBestAction {
   action_id: string;
@@ -204,15 +205,13 @@ const demoApprovals: ProposedAction[] = [
   },
 ];
 
-function v2Base(baseUrl: string): string {
-  return baseUrl.replace(/\/api\/v1\/?$/, "/api/v2");
-}
-
 async function request<T>(baseUrl: string, path: string, init?: RequestInit): Promise<T> {
-  const response = await pairedApiFetch(v2Base(baseUrl), path, {
-    ...init,
-    headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
-  });
+  const response = await pairedApiFetch(
+    baseUrl,
+    path,
+    { ...init, headers: { "content-type": "application/json", ...(init?.headers ?? {}) } },
+    { apiVersion: "v2" },
+  );
   const envelope = (await response.json()) as Envelope<T>;
   if (!response.ok || !envelope.ok) {
     throw new Error(envelope.error?.message || `HTTP ${response.status}`);
@@ -270,11 +269,11 @@ export const v2Api = (mode: ApiMode, baseUrl: string) => ({
           method: "POST",
           body: JSON.stringify(payload),
         }),
-  search: (query: string) =>
+  search: (query: string, signal?: AbortSignal) =>
     mode === "demo"
       ? Promise.resolve(
           [...demoEvidence, ...demoPortfolio]
-            .filter((item) => item.title.toLowerCase().includes(query.toLowerCase()))
+            .filter((item) => normalize(item.title).includes(normalize(query)))
             .map((item) => ({
               entity_type: "node_id" in item ? "evidence" : "portfolio",
               entity_id: "node_id" in item ? item.node_id : item.portfolio_item_id,
@@ -285,5 +284,6 @@ export const v2Api = (mode: ApiMode, baseUrl: string) => ({
       : request<Array<{ entity_type: string; entity_id: string; title: string; route: string }>>(
           baseUrl,
           `/search?query=${encodeURIComponent(query)}`,
+          { signal },
         ),
 });

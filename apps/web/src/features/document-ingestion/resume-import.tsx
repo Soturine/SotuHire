@@ -158,7 +158,7 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
               {result.document.status === "accepted" ? (
                 <CheckCircle2 className="h-4 w-4 text-success-strong" />
               ) : (
-                <AlertTriangle className="h-4 w-4 text-warning-foreground" />
+                <AlertTriangle className="h-4 w-4 text-warning-strong" />
               )}
               {result.document.document_type.toUpperCase()} · {result.document.text_blocks.length}{" "}
               bloco(s) · {result.document.pages.length} página(s)
@@ -215,7 +215,7 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
             </ul>
           </div>
           {result.document.warnings.map((warning) => (
-            <p key={warning} className="text-xs text-warning-foreground">
+            <p key={warning} className="text-xs text-warning-strong">
               {warning}
             </p>
           ))}

@@ -26,7 +26,7 @@ test("evidence review, portfolio and command palette are keyboard reachable", as
   await expect(page.getByText("Projeto Aurora").first()).toBeVisible();
 
   await page.keyboard.press("Control+K");
-  const search = page.getByPlaceholder("Buscar rotas, evidências, portfólio…");
+  const search = page.getByPlaceholder("Buscar telas, fatos, vagas, evidências…");
   await expect(search).toBeFocused();
   await search.fill("Aurora");
   await expect(page.getByText("Projeto Aurora").last()).toBeVisible();

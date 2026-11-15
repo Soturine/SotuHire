@@ -9,6 +9,20 @@ Nenhuma versão ou tag foi criada.
 
 ### Adicionado
 
+- Redesign, primeira fatia (CP-UX01): identidade "dossiê de carreira" (papel e tinta, verde-pinho
+  para evidência confirmada, ocre para o que espera revisão, vermelho-selo para o que espera a
+  pessoa), fontes OFL empacotadas que funcionam offline (Source Serif 4, IBM Plex Sans e Mono),
+  marca e favicon próprios no lugar do ícone genérico. A navegação passa a ser por jornada (Hoje,
+  Quem eu sou, Currículos, Oportunidades, Candidaturas, Sistema) a partir de um registro único de
+  telas, com a jornada atual aberta; no celular, barra inferior com as jornadas e "Mais". Cabeçalho
+  com a jornada como sobrelinha e o título inteiro também no celular. Todas as telas mantêm o
+  endereço.
+- Busca única (Ctrl+K) sobre todas as telas, sem acento, com ranking, destaque do termo, telas
+  visitadas recentemente, dados locais com cancelamento da requisição anterior e mensagens de
+  carregamento, falha, modo de exemplo e "nada encontrado". A Central de Ajuda usa o mesmo ranking.
+- Cockpit: próximos passos com nome em português e destino certo (preparar entrevista abre
+  Entrevistas, evidências pendentes abre Evidências; antes todos levavam a Aprovações), faixa de
+  indicadores no lugar de quatro cartões idênticos, estados de carregamento, erro e vazio.
 - Baseline do redesign (CP-UX00): a captura de UX cobre as 25 rotas reais (faltavam 3), 4 larguras
   (1440, 1024, 390, 360), tema claro e escuro e en-US, e um spec novo grava 10 estados de uso
   (primeira visita, busca, navegação mobile, API fora do ar, primeiro uso do Resume Studio, Copilot).
@@ -25,6 +39,10 @@ Nenhuma versão ou tag foi criada.
 
 ### Segurança
 
+- A API local respondia 401/403/429 sem cabeçalhos CORS, porque o middleware de segurança fica do
+  lado de fora do CORS. O navegador escondia o 401, e o pareamento da interface web (que começa
+  justamente com um 401) nunca acontecia. As rejeições para uma origem autorizada agora trazem os
+  cabeçalhos; origens não autorizadas continuam sem eles.
 - O Copilot revalida status, expiração e `dependency_hash` da proposta dentro da mesma transação
   `BEGIN IMMEDIATE` que grava o efeito, o registro de execução, o status e o audit; aprovar e depois
   mudar o estado de carreira ou deixar expirar não executa mais a ação.
@@ -48,6 +66,18 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Modo API Real: nenhuma chamada do Career Copilot (Cockpit, aprovações, evidências, portfólio e
+  busca) saía do navegador; a camada v2 passava uma URL `/api/v2` ao pareamento, que só aceita
+  `/api/v1`, e falhava antes da rede (desde `880a5f1`, 2026-08-10). Verificado contra a API real:
+  pareamento, Cockpit, busca e primeiro uso do Resume Studio.
+- Com a API local fora do ar, o Cockpit mostrava "Carregando…" e zeros como se fossem dados; agora
+  mostra a falha, um aviso global com "Dados de exemplo" e "Gerenciar conexão", e tenta de novo só
+  uma vez em erro de conexão.
+- Tema escuro: 28 nós de contraste insuficiente por largura de tela (`text-*-foreground` sobre
+  tons claros) migrados para as variantes `-strong`.
+- Teste E2E do Radar que passava sem verificar nada: a expressão `/…|lida|Modo Demo/` casava com
+  "Compatibi**lida**de" no menu lateral. As checagens de toast agora olham só o toast e a mensagem
+  de cada ação.
 - Local Companion: as rotas autenticadas viraram uma tabela explícita, testada rota a rota (só
   `/health` e o pareamento são públicos); rota conhecida com método errado responde 405 e rota
   desconhecida continua escondida atrás da autenticação.

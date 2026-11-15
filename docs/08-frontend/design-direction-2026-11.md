@@ -73,3 +73,21 @@ de console.
 | CP-UX04 | Application Lab, Copilot, aprovações, Configurações |
 | CP-UX05 | demais rotas e limpeza de estilos sem consumidor |
 | CP-UX06 | galeria final, matriz de navegadores, a11y nos dois temas e idiomas, desempenho |
+
+## Entregue no CP-UX01
+
+- Tokens claro/escuro em `apps/web/src/styles.css` (papel, tinta, pinho, ocre, selo, variantes
+  `-strong`, durações e curvas de motion); utilitários `eyebrow`, `tabular` e `mark-pending`.
+- `src/lib/navigation.ts` (registro único de telas por jornada), `src/lib/search.ts` (busca sem
+  acento com ranking e destaque seguro), `src/components/brand.tsx` e `public/favicon.svg`.
+- Shell (`app-shell.tsx`): jornada atual aberta com linha de propósito; grupo Sistema compacto;
+  estado da conexão no rodapé da barra; aviso global quando a API cai, com saída; link "pular para
+  o conteúdo"; barra de jornadas no celular com rótulos curtos; animação de entrada de página
+  desligada por `prefers-reduced-motion`.
+- Busca (`command-palette.tsx`): uma instância para o app, aberta por Ctrl+K ou pelos botões;
+  seleção acompanha o melhor resultado ao digitar.
+- Estados compartilhados (`states.tsx`) e Cockpit refeitos com os componentes novos.
+- Primitivos shadcn: hover e foco de botões e menus em `secondary`, não no verde da marca.
+
+Fica para os próximos checkpoints: as demais telas ainda usam cartões e espaçamentos antigos sobre
+os tokens novos (a mudança de cor e fonte chega a todas, a de composição só ao Cockpit e ao shell).

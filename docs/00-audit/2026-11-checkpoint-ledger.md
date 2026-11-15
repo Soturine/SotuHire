@@ -129,6 +129,18 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Não é | redesign: nenhuma tela mudou neste checkpoint |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
 
+## CP-UX01 — design system, shell por jornada, busca; API Real consertada
+
+| Campo | Registro |
+| --- | --- |
+| Hipótese | navegação por módulo, busca que não acha telas e zeros falsos tornam o produto difícil e pouco confiável; identidade genérica |
+| Mudança | tokens e fontes próprios, marca, registro único de telas por jornada, shell desktop/tablet/mobile, busca única, estados compartilhados, Cockpit; tema escuro sem `-foreground` sobre tons |
+| Achados no caminho | SH-NEW-020 (v2 nunca saía do navegador em API Real), SH-NEW-021 (401 sem CORS impedia o pareamento web), SH-NEW-022 (falso verde no E2E do Radar); "Revisar" do Cockpit sempre levava a Aprovações; seleção da busca não acompanhava o melhor resultado (pego pelo E2E novo) |
+| Testes | Vitest 29/29; Chromium E2E 34 passed, 0 failed (70 skipped: capturas e API real condicionadas); `journey-shell.spec.ts` (5) escrito para falhar na versão anterior; unitário do pareamento v2 falha no código anterior; pytest do middleware 11/11 (o teste novo falha antes); jornada contra a API real em diretório sintético passa |
+| Medidas | escuro 28 → 0 nós axe por largura; claro 0 → 0; busca 0 → 4/4/3; JS +6,8 KB gzip, CSS +2,1 KB gzip, fontes 198 KB |
+| Não é | redesign das telas Perfil, Resume Studio, Radar, Tracker, Lab, Copilot e Configurações (só tokens e shell chegaram a elas) |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS (CHANGELOG, direção de design, galeria, ADR 006, findings) |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |

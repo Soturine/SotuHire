@@ -4,6 +4,10 @@ import ReactDOM from "react-dom/client";
 
 import { getRouter } from "./router";
 import { applyStoredAppearance } from "./lib/preferences";
+import "@fontsource-variable/ibm-plex-sans";
+import "@fontsource-variable/source-serif-4/opsz.css";
+import "@fontsource/ibm-plex-mono/400.css";
+import "@fontsource/ibm-plex-mono/500.css";
 import "./styles.css";
 
 applyStoredAppearance();

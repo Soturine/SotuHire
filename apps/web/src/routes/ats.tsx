@@ -273,7 +273,7 @@ function KeywordBlock({
   tone: "success" | "warning" | "destructive";
 }) {
   const bg = {
-    success: "bg-success/10 text-success-foreground ring-success/20",
+    success: "bg-success/10 text-success-strong ring-success/20",
     warning: "bg-warning/10 ring-warning/20",
     destructive: "bg-destructive/10 ring-destructive/20",
   }[tone];

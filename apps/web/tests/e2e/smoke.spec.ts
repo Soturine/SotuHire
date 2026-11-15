@@ -1,5 +1,7 @@
 ﻿import { expect, test } from "@playwright/test";
 
+import { expectToast, navTo } from "./nav";
+
 const coreScreens = [
   { path: "/", heading: /SotuHire/i },
   { path: "/dashboard", heading: "Cockpit de carreira" },
@@ -34,7 +36,7 @@ test("home, dashboard and guided flow render without legacy branding", async ({ 
 
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { name: "Cockpit de carreira" })).toBeVisible();
-  await expect(page.getByText("Próximas melhores ações")).toBeVisible();
+  await expect(page.getByText("Próximos passos")).toBeVisible();
   await expect(page.getByText("Aguardando sua aprovação").first()).toBeVisible();
 });
 
@@ -52,19 +54,18 @@ test("sidebar navigates across core screens", async ({ page }) => {
   await page.goto("/dashboard");
 
   const routes = [
-    { label: /Curr.culo/i, url: /\/resume$/, heading: /Curr.culo/ },
-    { label: /Vaga/i, url: /\/job$/, heading: "Vaga" },
+    { label: /^Currículos$/, url: /\/resume$/, heading: /Curr.culo/ },
+    { label: /^Vagas$/, url: /\/job$/, heading: "Vaga" },
     { label: /Compatibilidade/i, url: /\/match$/, heading: /Compatibilidade/ },
     { label: /Radar/i, url: /\/radar$/, heading: "Radar de Vagas" },
     { label: /Editais \/ Concursos/i, url: /\/public-exams$/, heading: "Editais / Concursos" },
-    { label: /Perfil/i, url: /\/profile$/, heading: "Perfil" },
+    { label: /^Perfil profissional$/, url: /\/profile$/, heading: "Perfil" },
     { label: /Fontes e Captura/i, url: /\/sources$/, heading: "Fontes e Captura" },
     { label: /Prefer.ncias/i, url: /\/settings$/, heading: /Configura..es/ },
   ];
 
   for (const route of routes) {
-    const link = page.getByRole("link", { name: route.label }).first();
-    await link.click();
+    await navTo(page, route.label);
     await expect(page).toHaveURL(route.url);
     await expect(page.getByRole("heading", { name: route.heading }).first()).toBeVisible();
   }
@@ -226,14 +227,14 @@ test("demo personas stay coherent and can be restored without touching real data
 test("sources page handles local extension offline and fake capture imports", async ({ page }) => {
   await page.goto("/settings");
   await page.getByRole("button", { name: "API Real" }).click();
-  await page.getByRole("link", { name: /Fontes e Captura/i }).click();
+  await navTo(page, /Fontes e Captura/i);
   await expect(
     page.getByText(/Companion offline|Companion conectado|API Real sem oportunidades/i).first(),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Preferências", exact: true }).click();
+  await navTo(page, /^Preferências$/);
   await page.getByRole("button", { name: "Demo" }).click();
-  await page.getByRole("link", { name: /Fontes e Captura/i }).click();
+  await navTo(page, /Fontes e Captura/i);
   await expect(page.getByText(/Extens.o Local/).first()).toBeVisible();
   await expect(page.getByTestId("extension-capture-row").first()).toBeVisible();
   await page.getByTestId("import-capture-job").first().click();
@@ -300,28 +301,28 @@ test("job radar creates wishlist/source, runs demo and saves results", async ({ 
   await expect(page.getByText(/wishlist criada/i)).toHaveCount(0);
   await page.getByLabel("Nome").first().fill("Wishlist revisada E2E");
   await page.getByTestId("radar-create-wishlist").click();
-  await expect(page.getByText(/wishlist criada|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /wishlist criada/i);
   await page.getByTestId("radar-create-source").click();
-  await expect(page.getByText(/fonte criada|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /fonte criada/i);
   await page.getByTestId("radar-run-now").first().click();
   await expect(page.getByTestId("radar-result-card").first()).toBeVisible();
-  await expect(page.getByText(/Nova vaga|Radar concluido|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /Nova vaga|Radar concluido/i);
   await page.getByTestId("radar-save-inbox").first().click();
   await expect(page.getByText(/Caixa de Entrada|salvo/i).first()).toBeVisible();
   await page.getByTestId("radar-save-tracker").first().click();
   await expect(page.getByText(/Candidaturas|salvo/i).first()).toBeVisible();
   await page.getByTestId("radar-mark-alert-read").first().click();
-  await expect(page.getByText(/Alerta atualizado|lido|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /alerta atualizado/i);
   await expect(page.getByTestId("radar-schedules-panel")).toBeVisible();
   await page.getByTestId("radar-create-schedule").click();
-  await expect(page.getByText(/agendamento criado|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /agendamento criado/i);
   await page.getByTestId("radar-schedule-run-now").first().click();
-  await expect(page.getByText(/agendamento executado|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /agendamento executado/i);
   await page.getByTestId("radar-schedule-toggle").first().click();
-  await expect(page.getByText(/agendamento atualizado|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /agendamento (atualizado|pausado)/i);
   await expect(page.getByTestId("notifications-panel")).toBeVisible();
   await page.getByTestId("notification-mark-read").first().click();
-  await expect(page.getByText(/notificacao atualizada|lida|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /notificacao atualizada/i);
   const storage = await page.evaluate(() => ({
     local: JSON.stringify(localStorage),
     session: JSON.stringify(sessionStorage),
@@ -480,14 +481,11 @@ test("API Real empty states do not silently show demo opportunity data", async (
 
   await page.goto("/settings");
   await page.getByRole("button", { name: "API Real" }).click();
-  await page.getByRole("link", { name: /Fontes e Captura/i }).click();
+  await navTo(page, /Fontes e Captura/i);
   await expect(page.getByTestId("source-real-empty")).toContainText("API Real sem oportunidades");
   await expect(page.locator("#opportunity-inbox")).not.toContainText("Empresa Exemplo");
 
-  await page
-    .getByRole("navigation")
-    .getByRole("link", { name: /Tracker/i })
-    .click();
+  await navTo(page, /Tracker/i);
   await expect(page.getByText("Nenhuma candidatura ainda")).toBeVisible();
   await expect(page.locator("body")).not.toContainText("Empresa Demo");
 });
@@ -596,7 +594,7 @@ test("API Real radar empty state does not show demo radar results silently", asy
 
   await page.goto("/settings");
   await page.getByRole("button", { name: "API Real" }).click();
-  await page.getByRole("link", { name: /Radar/i }).click();
+  await navTo(page, /Radar/i);
   await expect(page.getByTestId("radar-real-empty")).toContainText("API Real sem Radar");
   await expect(page.locator("body")).not.toContainText("Empresa Exemplo");
   await expect(page.locator("body")).not.toContainText("Desenvolvedor Backend Python");

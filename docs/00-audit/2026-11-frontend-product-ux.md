@@ -104,12 +104,43 @@ Hash SHA-256 do conjunto de registros JSON da baseline:
 tem o hash de cada arquivo. Uma captura de `/portfolio` (mobile, en-US) foi refeita porque o
 servidor de desenvolvimento recarregou durante a análise do axe.
 
-| Estado | Antes |
-| --- | --- |
-| Cockpit, desktop | ![](../assets/ux-comparison/2026-11-v5/dashboard-desktop-before.webp) |
-| Cockpit, mobile | ![](../assets/ux-comparison/2026-11-v5/dashboard-mobile-before.webp) |
-| API local fora do ar | ![](../assets/ux-comparison/2026-11-v5/api-unreachable-before.webp) |
-| Busca por "currículo" | ![](../assets/ux-comparison/2026-11-v5/search-curriculo-before.webp) |
-| Navegação mobile aberta | ![](../assets/ux-comparison/2026-11-v5/navigation-mobile-before.webp) |
+### CP-UX01 — design system, shell por jornada e busca
 
-As demais imagens da baseline estão na mesma pasta; a coluna "depois" entra a cada checkpoint.
+Mesma matriz da baseline (250 telas + 10 estados), mesmo navegador e dados.
+
+| Medida | Antes | Depois |
+| --- | --- | --- |
+| Nós axe sérios/críticos, claro (por largura, pt-BR e en-US) | 0 | 0 (1 nó transitório em `/application-lab`, botão desativado capturado no meio da troca de estado; 12 recapturas sem ele) |
+| Nós axe sérios, escuro (por largura) | 28 | 0 |
+| Telas com estouro horizontal / erro de console | 0 / 0 | 0 / 0 |
+| Links de navegação sempre visíveis (desktop) | 23 em 7 grupos | 5 jornadas + a jornada atual aberta + 4 de Sistema |
+| Busca: telas encontradas para "curriculo", "currículo", "vaga" | 0, 0, 0 | 4, 4, 3 |
+| Cockpit com a API fora do ar | zeros como dados, carregando sem fim | falha dita, aviso com "Dados de exemplo" e "Gerenciar conexão" |
+| Modo API Real contra a API de verdade | Cockpit nunca carregava (SH-NEW-020, SH-NEW-021) | pareia, carrega, busca (`real-api-shell.spec.ts`) |
+| JS de produção (gzip) | 429,6 KB | 436,4 KB (+6,8) |
+| CSS de produção (gzip) | 17,4 KB | 19,5 KB (+2,1) |
+| Fontes carregadas numa página pt-BR/en-US | 0 (fontes do sistema) | 4 arquivos latin, 198 KB (Source Serif 4 opsz 122 KB) |
+
+Hash SHA-256 do conjunto de registros JSON do depois:
+`710fd1a7da57bbfb9e72d30cc495402d8a5f17c2cd06880f00129b844c2b9f6f`. LCP/CLS/INP não foram medidos
+(servidor de desenvolvimento; medição de produção fica para o CP-UX06).
+
+| Estado | Antes (`459ffa9`) | Depois (CP-UX01) | O que mudou |
+| --- | --- | --- | --- |
+| Cockpit, desktop | ![](../assets/ux-comparison/2026-11-v5/dashboard-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5/dashboard-desktop-after.webp) | Navegação por jornada, título em serifa, próximos passos em português com o destino certo, faixa de indicadores no lugar de 4 cartões iguais |
+| Cockpit, escuro | ![](../assets/ux-comparison/2026-11-v5/dashboard-desktop-dark-before.webp) | ![](../assets/ux-comparison/2026-11-v5/dashboard-desktop-dark-after.webp) | Tema escuro próprio; 28 nós de contraste por largura → 0 |
+| Cockpit, mobile | ![](../assets/ux-comparison/2026-11-v5/dashboard-mobile-before.webp) | ![](../assets/ux-comparison/2026-11-v5/dashboard-mobile-after.webp) | Título inteiro (antes "C…"), barra de jornadas embaixo |
+| Cockpit, tablet | ![](../assets/ux-comparison/2026-11-v5/dashboard-tablet-before.webp) | ![](../assets/ux-comparison/2026-11-v5/dashboard-tablet-after.webp) | Barra lateral por jornada a partir de 1024 px |
+| API local fora do ar | ![](../assets/ux-comparison/2026-11-v5/api-unreachable-before.webp) | ![](../assets/ux-comparison/2026-11-v5/api-unreachable-after.webp) | Antes: "Carregando…" e zeros como dados. Depois: aviso com saída e a falha dita em palavras |
+| Busca por "currículo" | ![](../assets/ux-comparison/2026-11-v5/search-curriculo-before.webp) | ![](../assets/ux-comparison/2026-11-v5/search-curriculo-after.webp) | 0 → 4 telas, com o termo destacado, sem depender de acento |
+| Navegação mobile aberta | ![](../assets/ux-comparison/2026-11-v5/navigation-mobile-before.webp) | ![](../assets/ux-comparison/2026-11-v5/navigation-mobile-after.webp) | Jornadas recolhidas com propósito, Sistema compacto, estado da conexão |
+| Resume Studio, primeiro uso | ![](../assets/ux-comparison/2026-11-v5/resume-studio-first-use-before.webp) | ![](../assets/ux-comparison/2026-11-v5/resume-studio-first-use-after.webp) | Shell novo; composição da tela fica para o CP-UX02 |
+| Perfil, desktop | ![](../assets/ux-comparison/2026-11-v5/profile-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5/profile-desktop-after.webp) | Só tokens e shell mudaram; composição no CP-UX02 |
+| Radar, desktop | ![](../assets/ux-comparison/2026-11-v5/radar-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5/radar-desktop-after.webp) | Só tokens e shell; CP-UX03 |
+| Tracker, desktop | ![](../assets/ux-comparison/2026-11-v5/tracker-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5/tracker-desktop-after.webp) | Só tokens e shell; CP-UX03 |
+| Preparar candidatura, desktop | ![](../assets/ux-comparison/2026-11-v5/application-lab-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5/application-lab-desktop-after.webp) | Só tokens e shell; CP-UX04 |
+| Aprovações, desktop | ![](../assets/ux-comparison/2026-11-v5/approvals-desktop-before.webp) | ![](../assets/ux-comparison/2026-11-v5/approvals-desktop-after.webp) | Só tokens e shell; CP-UX04 |
+| Configurações, mobile | ![](../assets/ux-comparison/2026-11-v5/settings-mobile-before.webp) | ![](../assets/ux-comparison/2026-11-v5/settings-mobile-after.webp) | Só tokens e shell; CP-UX04 |
+| Primeira visita | ![](../assets/ux-comparison/2026-11-v5/first-visit-before.webp) | ![](../assets/ux-comparison/2026-11-v5/first-visit-after.webp) | Onboarding de 8 etapas mantido; reavaliar no CP-UX02 |
+
+Outras telas estão no manifesto. Redesign só de cor e shell nas telas marcadas acima não é redesign completo dessas telas.

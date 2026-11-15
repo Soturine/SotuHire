@@ -93,6 +93,9 @@ em `8ea37d7` e passa depois.
 | SH-NEW-017 | P2 | `VERIFIED` | Companion interpretava o JSON antes de autenticar (no servidor e no app): corpo inválido sem credencial respondia 422/400 em vez de 401, e `[]` em `/pairing/complete` lançava `AttributeError`. Autenticação antes da leitura; 45 casos novos falham no código anterior. |
 | SH-NEW-018 | P3 | `VERIFIED` | O teste da fronteira copiava a lista de rotas: uma rota nova ficaria sem teste. Agora percorre a tabela do app e confere os caminhos chamados pela extensão. |
 | SH-NEW-019 | P2 | `VERIFIED` | Aplicar fatos do Perfil ao Mestre duplicava entradas com ID repetido, respondia 422 num retry e perdia gravações concorrentes. Idempotente e com versão otimista (409); 5 de 6 testes novos falham no código anterior. |
+| SH-NEW-020 | P1 | `VERIFIED` | Modo API Real: toda chamada do Career Copilot v2 falhava antes da rede (URL `/api/v2` rejeitada pelo normalizador do pareamento, desde `880a5f1`). Os E2E só usavam o modo demo. Teste unitário falha no código anterior; jornada contra a API real passa. |
+| SH-NEW-021 | P1 | `VERIFIED` | Rejeições do `LocalSecurityMiddleware` (externo ao CORS) saíam sem cabeçalhos CORS; o navegador escondia o 401 que inicia o pareamento web. Teste falha no código anterior; o log da API real mostra 401 → csrf → pairing → 200. |
+| SH-NEW-022 | P3 | `VERIFIED` | Falso verde no E2E do Radar: `/…|lida|Modo Demo/` casava com "Compatibilidade" no menu. Checagens passaram a olhar só o toast. |
 
 ## Eficácia dos testes (controles negativos)
 

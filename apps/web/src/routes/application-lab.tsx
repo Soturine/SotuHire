@@ -582,7 +582,7 @@ function StartCard({
         <span
           className={cn(
             "rounded-full px-2 py-1 text-[10px] font-semibold uppercase tracking-wide",
-            ready ? "bg-success/15 text-success-strong" : "bg-warning/15 text-warning-foreground",
+            ready ? "bg-success/15 text-success-strong" : "bg-warning/15 text-warning-strong",
           )}
         >
           {ready ? "Pronto" : "Pendente"}
@@ -636,7 +636,7 @@ function LabStepper({
                     "grid h-6 w-6 shrink-0 place-items-center rounded-full border text-[10px] font-bold",
                     active && "border-white/30 bg-white/10",
                     complete && !active && "border-success/30 bg-success/15 text-success-strong",
-                    stale && !active && "border-warning/30 bg-warning/15 text-warning-foreground",
+                    stale && !active && "border-warning/30 bg-warning/15 text-warning-strong",
                   )}
                 >
                   {complete ? <Check className="h-3 w-3" /> : stale ? "!" : step}
@@ -669,7 +669,7 @@ function SessionStatus({ detail }: { detail: ApplicationLabDetail }) {
           {report?.provider_metadata.provider_used === "local" ? "análise local" : "provider"}
         </span>
         {session.invalidated_steps.length > 0 && (
-          <span className="rounded-full bg-warning/15 px-2 py-1 text-warning-foreground">
+          <span className="rounded-full bg-warning/15 px-2 py-1 text-warning-strong">
             recalcular {session.invalidated_steps.join(", ")}
           </span>
         )}
@@ -1094,7 +1094,7 @@ function ReadinessReport({
         <div className="rounded-xl border p-4">
           <h3 className="text-sm font-semibold">Cobertura, não promessa</h3>
           <p className="mt-2 text-xs leading-5 text-muted-foreground">{report.score_explanation}</p>
-          <p className="mt-2 text-xs font-semibold text-warning-foreground">
+          <p className="mt-2 text-xs font-semibold text-warning-strong">
             Readiness não é probabilidade de entrevista.
           </p>
           <div className="mt-4 grid grid-cols-2 gap-3">
@@ -1186,7 +1186,7 @@ function AnalysisBundleSummary({
             "rounded-full px-2 py-1 text-[10px] font-semibold",
             bundle.status === "current"
               ? "bg-success/15 text-success-strong"
-              : "bg-warning/15 text-warning-foreground",
+              : "bg-warning/15 text-warning-strong",
           )}
         >
           {bundle.status === "current" ? "Atual" : "Desatualizado"}
@@ -1336,7 +1336,7 @@ function SuggestionCard({
         </span>
       </div>
       {item.warnings.map((warning) => (
-        <p key={warning} className="mt-3 flex items-center gap-2 text-xs text-warning-foreground">
+        <p key={warning} className="mt-3 flex items-center gap-2 text-xs text-warning-strong">
           <AlertTriangle className="h-3.5 w-3.5" /> {warning}
         </p>
       ))}
@@ -1383,7 +1383,7 @@ function StatusMark({ status }: { status: string }) {
       className={cn(
         "mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full text-[10px]",
         status === "met" && "bg-success/15 text-success-strong",
-        status === "partial" && "bg-warning/15 text-warning-foreground",
+        status === "partial" && "bg-warning/15 text-warning-strong",
         status === "missing" && "bg-destructive/10 text-destructive-strong",
         status === "not_applicable" && "bg-muted text-muted-foreground",
       )}
