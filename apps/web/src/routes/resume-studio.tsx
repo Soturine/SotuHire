@@ -324,6 +324,7 @@ function ResumeStudioPage() {
             </summary>
             <div className="border-t px-5 py-4">
               <ResumeImport
+                current={masterQ.data?.resume ?? null}
                 onImported={(resume) => {
                   queryClient.setQueryData(["resume-studio-master", mode, baseUrl], { resume });
                   dispatch({ type: "replace", variant: variantFromMaster(resume) });

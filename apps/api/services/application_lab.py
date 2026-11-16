@@ -237,15 +237,39 @@ class ApplicationLabApiService:
         )
 
     def save_master(
-        self, resume: MasterResume, *, expected_updated_at: datetime | None = None
+        self,
+        resume: MasterResume,
+        *,
+        expected_updated_at: datetime | None = None,
+        replace_existing: bool = False,
     ) -> MasterResumeResponse:
         """Save a Master Resume.
 
         A client that edits a copy it loaded sends that copy's ``updated_at`` as
         ``expected_updated_at`` and gets 409 instead of erasing a newer save (another tab, or
-        facts applied from the Profile meanwhile). Without it the write is an upsert, which is
-        what adopting an imported draft needs.
+        facts applied from the Profile meanwhile).
+
+        A different resume (an imported draft has its own id) becomes the Master the app uses
+        only with ``replace_existing``: before, adopting a re-imported file silently took the
+        place of the Master being edited. With it, ``expected_updated_at`` must name the Master
+        the person saw being replaced. The previous one is not deleted; it stays in the database
+        and in backups, no longer the current Master.
         """
+        current = self.repository.get_master_resume()
+        if current is not None and current.master_resume_id != resume.master_resume_id:
+            if not replace_existing:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Já existe um Currículo Mestre; confirme a substituição para adotar "
+                    "este currículo no lugar dele.",
+                )
+            if expected_updated_at is not None and current.updated_at != expected_updated_at:
+                raise HTTPException(
+                    status_code=409,
+                    detail="O Currículo Mestre mudou depois de ser exibido; revise de novo "
+                    "antes de substituí-lo.",
+                )
+            expected_updated_at = None  # checked above; the new resume has no stored copy yet
         prepared = resume.model_copy(update={"updated_at": datetime.now(UTC)})
         return MasterResumeResponse(
             resume=self._call(

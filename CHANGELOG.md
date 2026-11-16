@@ -4,11 +4,20 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
-Trabalho da auditoria independente de 2026-11 (ver `docs/00-audit/2026-11-independent-assurance-audit.md`).
-Nenhuma versão ou tag foi criada.
+## [2.1.0] - 2026-11-16
+
+Redesign da interface (identidade 2.1), Perfil → Currículo Mestre sem redigitação e o trabalho da
+auditoria independente de 2026-11 (ver `docs/00-audit/2026-11-independent-assurance-audit.md` e
+[notas da release](docs/releases/v2.1.md)). Extensão 0.10.1. Schema SQLite continua 8.
 
 ### Adicionado
 
+- `scripts/verify_extension_modes.py`: carrega o ZIP da extensão num Chromium real e usa o popup de
+  verdade nos três modos (independente, com Local Companion, integrado ao site e à API), com
+  serviços num diretório descartável e fixtures para GitHub, Gemini e OpenAI que recusam o que as
+  APIs reais recusam. 52 verificações na 0.10.1.
+- `scripts/capture_readme_media.py`: capturas do README, GIF e vídeo WebM gravados do build de
+  produção em modo de exemplo.
 - `scripts/dast_local_api.py`: sondas dinâmicas contra a API local rodando (Host forjado, origem
   estranha e preflight, rotas sem sessão, prova de pareamento forjada, corpo grande sem sessão e
   tamanho declarado acima do limite, travessia no download de backup, vazamento de caminho em erros).
@@ -117,6 +126,28 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Tracker: uma candidatura criada enquanto a lista inicial ainda carregava sumia da tela, porque a
+  resposta da listagem pedida antes substituía o cache (SH-NEW-041). Reproduzido em teste com
+  respostas controladas; a criação agora invalida a listagem (que cancela a requisição em voo) e o
+  modo de exemplo guarda as candidaturas criadas na sessão.
+- Resume Studio: adotar um currículo reimportado substituía o Currículo Mestre em uso sem aviso.
+  A API recusa (409) a troca do Mestre por outro currículo sem `replace_existing`, e a confirmação
+  precisa nomear o Mestre exibido; a tela mostra o que será substituído e pede confirmação. O Mestre
+  anterior não é apagado.
+- Banco local: o primeiro acesso concorrente a um banco novo (várias requisições, ou Local
+  Companion e API no mesmo diretório) rodava as migrações duas vezes e podia responder 500
+  ("Schema divergente"). Migração e verificação agora são serializadas por um lock de arquivo
+  entre threads e processos.
+- Local Companion: recapturar uma página sem mudança marcava análises, variante e kit como
+  desatualizados ("A vaga mudou"), porque o horário da captura entrava no hash do snapshot. Vagas e
+  editais iguais agora reaproveitam o snapshot.
+- Extensão 0.10.1: a análise "OpenAI própria" enviava `response_format` à Responses API, que a
+  rejeita, e caía sempre no fallback local; uma falha na análise de projeto deixava o popup em
+  "Processando…" para sempre; com "IA configurada no SotuHire" (o padrão) e nada rodando, a análise
+  agora devolve o relatório local com o fallback declarado.
+- Testes: a suíte força `SOTUHIRE_DATA_DIR` e `SOTUHIRE_BENCHMARK_DATABASE` para uma pasta
+  descartável (antes, um `SOTUHIRE_DATA_DIR` exportado recebia escritas) e falha se algo em
+  `data/` ou `benchmarks/` do checkout mudar.
 - Dados locais: cinco stores (perfil de carreira legado, oportunidades, análises de projeto,
   cache de scraping, token de instalação) usavam `data/...` relativo ao diretório de trabalho
   e ignoravam `SOTUHIRE_DATA_DIR`. A suíte de testes regravava o perfil de carreira do checkout

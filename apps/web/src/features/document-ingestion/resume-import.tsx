@@ -7,6 +7,10 @@ import { toast } from "@/lib/notify";
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
+function countEntries(resume: MasterResume): number {
+  return resume.sections.reduce((total, section) => total + section.entries.length, 0);
+}
+
 export async function fileToBase64(file: File): Promise<string> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   let binary = "";
@@ -16,13 +20,21 @@ export async function fileToBase64(file: File): Promise<string> {
   return btoa(binary);
 }
 
-export function ResumeImport({ onImported }: { onImported: (resume: MasterResume) => void }) {
+export function ResumeImport({
+  onImported,
+  current,
+}: {
+  onImported: (resume: MasterResume) => void;
+  /** The Master Resume in use, when there is one: adopting the import replaces it. */
+  current?: MasterResume | null;
+}) {
   const api = useApi();
   const { mode } = useApiMode();
   const [file, setFile] = useState<File | null>(null);
   const [result, setResult] = useState<ResumeIngestionResult | null>(null);
   const [includedEntryIds, setIncludedEntryIds] = useState<Set<string>>(new Set());
   const [reviewConfirmed, setReviewConfirmed] = useState(false);
+  const [replaceConfirmed, setReplaceConfirmed] = useState(false);
   const [busy, setBusy] = useState<"ingest" | "save" | null>(null);
 
   async function inspect(): Promise<void> {
@@ -43,6 +55,7 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
         ),
       );
       setReviewConfirmed(false);
+      setReplaceConfirmed(false);
       toast.success(
         mode === "demo"
           ? "DEMO: prévia fictícia criada; nenhum dado real foi alterado."
@@ -59,6 +72,10 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
     if (!result) return;
     if (!reviewConfirmed) {
       toast.warning("Confirme a revisão dos blocos antes de criar o Currículo Mestre.");
+      return;
+    }
+    if (current && !replaceConfirmed) {
+      toast.warning("Confirme que este currículo substitui o Currículo Mestre atual.");
       return;
     }
     if (includedEntryIds.size === 0) {
@@ -88,7 +105,7 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
           }),
         })),
       };
-      const saved = await api.resumeStudioSaveMaster(reviewedResume);
+      const saved = await api.resumeStudioSaveMaster(reviewedResume, current ?? undefined);
       onImported(saved.resume);
       toast.success(
         mode === "demo"
@@ -228,14 +245,46 @@ export function ResumeImport({ onImported }: { onImported: (resume: MasterResume
             Revisei os blocos selecionados; eles podem entrar como evidência confirmada no Currículo
             Mestre.
           </label>
+          {current && (
+            <div
+              role="alert"
+              data-testid="master-replace-warning"
+              className="space-y-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs"
+            >
+              <p className="flex items-start gap-2 font-semibold">
+                <AlertTriangle aria-hidden className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                Isto substitui o Currículo Mestre atual
+              </p>
+              <p>
+                “{current.title || "Currículo Mestre"}” ({countEntries(current)} blocos) deixa de
+                ser o Mestre usado nas variantes novas e no Application Lab. Ele não é apagado:
+                continua guardado no banco local e nos backups, e as variantes já criadas não mudam.
+                Para trazer só itens novos, use as atualizações do Perfil.
+              </p>
+              <label className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  data-testid="master-replace-confirm"
+                  checked={replaceConfirmed}
+                  onChange={(event) => setReplaceConfirmed(event.target.checked)}
+                />
+                Quero substituir o Currículo Mestre atual por este currículo.
+              </label>
+            </div>
+          )}
           <button
             type="button"
             onClick={adopt}
-            disabled={Boolean(busy) || !reviewConfirmed || includedEntryIds.size === 0}
+            disabled={
+              Boolean(busy) ||
+              !reviewConfirmed ||
+              includedEntryIds.size === 0 ||
+              Boolean(current && !replaceConfirmed)
+            }
             className="inline-flex items-center gap-2 rounded-md border px-3 py-2 text-xs font-semibold hover:bg-muted disabled:opacity-50"
           >
             {busy === "save" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-            Adotar rascunho como Currículo Mestre
+            {current ? "Substituir o Currículo Mestre" : "Adotar rascunho como Currículo Mestre"}
           </button>
         </div>
       )}

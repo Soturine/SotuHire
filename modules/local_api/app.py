@@ -288,7 +288,10 @@ class LocalCompanionService:
                 ),
                 source_kind=clean.collection_method,
                 raw_text=text,
-                structured_data=clean.model_dump(mode="json"),
+                # captured_at is when, not what: kept out of the content the hash compares, or
+                # re-capturing an unchanged page reported "A vaga mudou" and marked the analyses,
+                # variant and kit built on it stale
+                structured_data=clean.model_dump(mode="json", exclude={"captured_at"}),
                 captured_at=clean.captured_at,
             )
         )
@@ -385,7 +388,7 @@ class LocalCompanionService:
             PublicExamSnapshot(
                 notice_id=capture_id,
                 raw_text=text,
-                structured_notice=clean.model_dump(mode="json"),
+                structured_notice=clean.model_dump(mode="json", exclude={"captured_at"}),
                 captured_at=clean.captured_at,
             )
         )

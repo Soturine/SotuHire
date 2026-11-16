@@ -127,6 +127,9 @@ class MasterResumeUpsertRequest(LabApiModel):
     resume: MasterResume
     # updated_at of the copy the client edited; when set, a newer stored copy answers 409
     expected_updated_at: datetime | None = None
+    # a different resume (an imported draft) takes the place of the current Master only when the
+    # person confirmed it; expected_updated_at then names the Master they saw being replaced
+    replace_existing: bool = False
     request_id: str = Field(default="", max_length=120)
 
 

@@ -7,7 +7,7 @@ def test_extension_v0100_has_local_theme_locale_and_help() -> None:
     popup = Path("browser-extension/popup.html").read_text(encoding="utf-8")
     runtime = Path("browser-extension/popup.js").read_text(encoding="utf-8")
 
-    assert manifest["version"] == "0.10.0"
+    assert manifest["version"] == "0.10.1"
     assert 'id="ui-locale"' in popup
     assert 'id="theme-toggle"' in popup
     assert 'class="help-panel"' in popup

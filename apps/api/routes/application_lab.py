@@ -349,7 +349,11 @@ def put_master_resume(
     payload: MasterResumeUpsertRequest, service: LabDependency
 ) -> ApiEnvelope[MasterResumeResponse]:
     return ok(
-        service.save_master(payload.resume, expected_updated_at=payload.expected_updated_at),
+        service.save_master(
+            payload.resume,
+            expected_updated_at=payload.expected_updated_at,
+            replace_existing=payload.replace_existing,
+        ),
         request_id=payload.request_id,
     )
 

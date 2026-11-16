@@ -555,11 +555,29 @@ async function analyzeWithSotuHire(project, localReport, trace) {
       apiFallbackReason = `API local indisponível: ${safeError(error)}`;
     }
   }
-  const payload = await companionRequest("/capture/repo-analysis", {
-    ...project,
-    provider_used: "local",
-    analysis_result: { ...(project.analysis_result || {}), use_ai: true },
-  });
+  let payload;
+  try {
+    payload = await companionRequest("/capture/repo-analysis", {
+      ...project,
+      provider_used: "local",
+      analysis_result: { ...(project.analysis_result || {}), use_ai: true },
+    });
+  } catch (error) {
+    // Same contract as an external provider that fails: the local report, with the reason said.
+    return {
+      project,
+      warning: safeError(error),
+      report: {
+        ...localReport,
+        ...trace,
+        provider_used: "local-browser",
+        model_used: "local-browser",
+        analysis_mode: "fallback",
+        fallback_used: true,
+        fallback_reason: `SotuHire local indisponível: ${safeError(error)}`,
+      },
+    };
+  }
   const report = payload.report || localReport;
   return {
     project,
@@ -705,7 +723,9 @@ async function analyzeWithOpenAi(key, model, project, localReport) {
     credentials: "omit",
     body: JSON.stringify({
       model,
-      response_format: { type: "json_object" },
+      // The Responses API takes the output format under text.format; a top-level
+      // response_format (Chat Completions) is rejected with 400, and every analysis fell back.
+      text: { format: { type: "json_object" } },
       input: [
         {
           role: "system",

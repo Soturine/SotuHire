@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-APP_VERSION = "2.0.0"
-COMPANION_VERSION = "2.0.0"
+APP_VERSION = "2.1.0"
+COMPANION_VERSION = "2.1.0"
 API_VERSION = "v1"
 MIN_SUPPORTED_EXTENSION_VERSION = "0.9.1"
-MAX_TESTED_EXTENSION_VERSION = "0.10.0"
+MAX_TESTED_EXTENSION_VERSION = "0.10.1"
 MIN_SUPPORTED_COMPANION_VERSION = "1.9.5"
 # Capture flows the companion accepts; the handshake reports them to the extension.
 ENABLED_EXTENSION_FLOWS = ("job", "public_exam", "github", "profile_evidence")

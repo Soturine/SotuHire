@@ -668,7 +668,11 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         baseUrl,
         "/tracker/jobs",
         undefined,
-        { jobs: mockPersonaJobs(), context_summary: "", job_contexts: {} },
+        {
+          jobs: [...demoCreatedJobs(), ...mockPersonaJobs()],
+          context_summary: "",
+          job_contexts: {},
+        },
         normalizeTrackerJobs,
       ),
 
@@ -685,7 +689,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           body: JSON.stringify(trackerCreateBody(payload)),
         },
         {
-          job: {
+          job: rememberDemoJob(mode, {
             id: `job_${Math.random().toString(36).slice(2, 8)}`,
             title: payload.title ?? "Nova vaga",
             company: payload.company ?? "-",
@@ -696,7 +700,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
             created_at: new Date().toISOString().slice(0, 10),
             updated_at: new Date().toISOString().slice(0, 10),
             notes: payload.notes,
-          },
+          }),
         },
         normalizeTrackerJobEnvelope,
       ),
@@ -708,10 +712,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         `/tracker/jobs/${id}`,
         { method: "PATCH", body: JSON.stringify(patch) },
         {
-          job: {
-            ...(mockPersonaJobs().find((job) => job.id === id) ?? mockPersonaJobs()[0]!),
-            ...patch,
-          },
+          job: demoUpdatedJob(mode, id, patch),
         },
         normalizeTrackerJobEnvelope,
       ),
@@ -1011,12 +1012,23 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         { method: "POST", body: JSON.stringify({ item_ids: itemIds }) },
         { resume: mockMasterResume },
       ),
-    resumeStudioSaveMaster: (resume: MasterResume) =>
+    resumeStudioSaveMaster: (
+      resume: MasterResume,
+      // replacing: the Master the person saw and confirmed replacing with this resume
+      replacing?: Pick<MasterResume, "updated_at">,
+    ) =>
       call<{ resume: MasterResume }>(
         mode,
         baseUrl,
         "/resume-studio/master",
-        { method: "PUT", body: JSON.stringify({ resume }) },
+        {
+          method: "PUT",
+          body: JSON.stringify(
+            replacing
+              ? { resume, replace_existing: true, expected_updated_at: replacing.updated_at }
+              : { resume },
+          ),
+        },
         { resume },
       ),
     resumeStudioIngest: (fileName: string, contentBase64: string) =>
@@ -1356,8 +1368,8 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           profile_summary: "Resumo seguro demo do Perfil Universal.",
           enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
           ai_provider_status: "local",
-          extension_version: "0.10.0",
-          companion_version: "2.0.0",
+          extension_version: "0.10.1",
+          companion_version: "2.1.0",
           api_version: "v1",
           compatible: true,
           capabilities: ["capture.snapshot", "queue.retry", "jobposting.jsonld"],
@@ -1365,7 +1377,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeExtensionStatus,
       ),
 
-    extensionHandshake: (extension_version = "0.10.0") =>
+    extensionHandshake: (extension_version = "0.10.1") =>
       call<ExtensionHandshake>(
         mode,
         baseUrl,
@@ -1373,14 +1385,14 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         { method: "POST", body: JSON.stringify({ extension_version }) },
         {
           extension_version,
-          companion_version: "2.0.0",
+          companion_version: "2.1.0",
           api_version: "v1",
-          app_version: "2.0.0",
+          app_version: "2.1.0",
           capabilities: ["capture.snapshot", "queue.retry", "jobposting.jsonld"],
           compatible: true,
           warnings: [],
           min_supported_extension_version: "0.9.1",
-          max_tested_extension_version: "0.10.0",
+          max_tested_extension_version: "0.10.1",
           min_supported_companion_version: "1.9.5",
         },
         normalizeExtensionHandshake,
@@ -2919,6 +2931,29 @@ function mockProfileResult(): ProfileResult {
   };
 }
 
+// Demo mode only: what a server would keep of the applications created in this page session, so a
+// refetch of the list (SH-NEW-041) still shows them and moving one updates that one.
+const demoJobs = new Map<string, TrackerJob>();
+
+function demoCreatedJobs(): TrackerJob[] {
+  return [...demoJobs.values()].reverse();
+}
+
+function rememberDemoJob(mode: ApiMode, job: TrackerJob): TrackerJob {
+  if (mode === "demo") demoJobs.set(job.id, job);
+  return job;
+}
+
+function demoUpdatedJob(mode: ApiMode, id: string, patch: Partial<TrackerJob>): TrackerJob {
+  const created = demoJobs.get(id);
+  if (created) {
+    const updated = { ...created, ...patch, id };
+    if (mode === "demo") demoJobs.set(id, updated);
+    return updated;
+  }
+  return { ...(mockPersonaJobs().find((job) => job.id === id) ?? mockPersonaJobs()[0]!), ...patch };
+}
+
 function mockPersonaJobs(): TrackerJob[] {
   const persona = getActiveDemoPersona();
   return [
@@ -3747,7 +3782,7 @@ function normalizeHealth(value: unknown): Health {
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "2.0.0",
+    version: asString(raw.version) || "2.1.0",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),

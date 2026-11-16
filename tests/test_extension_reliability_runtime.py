@@ -99,7 +99,7 @@ def test_popup_uses_versioned_handshake_contract() -> None:
     popup = Path("browser-extension/popup.js").read_text(encoding="utf-8")
     manifest = json.loads(Path("browser-extension/manifest.json").read_text(encoding="utf-8"))
 
-    assert manifest["version"] == "0.10.0"
+    assert manifest["version"] == "0.10.1"
     assert 'request("/handshake"' in popup
     assert "chrome.runtime.getManifest().version" in popup
     assert "handshake.compatible" in popup
@@ -115,7 +115,7 @@ def test_companion_handshake_negotiates_current_and_old_extension(
     status, current = app.handle(
         "POST",
         "/handshake",
-        body=b'{"extension_version":"0.10.0"}',
+        body=b'{"extension_version":"0.10.1"}',
         token="companion-test-token",
     )
     old_status, old = app.handle(
@@ -126,8 +126,8 @@ def test_companion_handshake_negotiates_current_and_old_extension(
     )
 
     assert status == 200
-    assert current["extension_version"] == "0.10.0"
-    assert current["companion_version"] == "2.0.0"
+    assert current["extension_version"] == "0.10.1"
+    assert current["companion_version"] == "2.1.0"
     assert current["compatible"] is True
     capabilities = cast(list[str], current["capabilities"])
     assert "queue.retry" in capabilities

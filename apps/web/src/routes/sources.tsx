@@ -1319,7 +1319,7 @@ function LocalExtensionPanel() {
   });
   const handshakeQ = useQuery({
     queryKey: ["extension-handshake", mode, baseUrl],
-    queryFn: () => api.extensionHandshake("0.10.0"),
+    queryFn: () => api.extensionHandshake("0.10.1"),
     retry: false,
   });
   const capturesQ = useQuery({

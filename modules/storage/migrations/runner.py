@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import sqlite3
 import threading
 import time
+from collections.abc import Iterator
+from contextlib import contextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -20,6 +23,46 @@ from .versions import LATEST_SCHEMA_VERSION, MIGRATIONS
 
 class MigrationError(RuntimeError):
     """Raised when a migration cannot be safely completed."""
+
+
+@contextmanager
+def migration_lock(database: Path) -> Iterator[None]:
+    """Exclusive lock for migrating or verifying one database, across threads and processes.
+
+    The first requests of a session (and the Local Companion beside the Local API, on the same
+    data dir) all call ensure_database() on a new file at once. Unserialized, two of them read
+    version 0 and ran every migration twice, and a verify between two migration commits of the
+    other read "Schema divergente entre schema_metadata (5) e migration_history (8)" and answered
+    500. Migrations commit inside their own scripts, so no outer transaction can cover them; a
+    lock file next to the database does. Byte 0 is locked through its own open handle, so threads
+    of one process exclude each other as well.
+    """
+    lock_path = database.with_name(database.name + ".migrate.lock")
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
+    with lock_path.open("a+b") as handle:
+        if os.name == "nt":
+            import msvcrt
+
+            while True:
+                try:
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+                    break
+                except OSError:
+                    time.sleep(0.02)
+            try:
+                yield
+            finally:
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle, fcntl.LOCK_EX)
+            try:
+                yield
+            finally:
+                fcntl.flock(handle, fcntl.LOCK_UN)
 
 
 class MigrationRunner:
@@ -46,6 +89,10 @@ class MigrationRunner:
 
     def apply(self, *, create_backup: bool = True) -> list[int]:
         """Apply all pending migrations and return their version numbers."""
+        with migration_lock(self.database_path):
+            return self._apply(create_backup=create_backup)
+
+    def _apply(self, *, create_backup: bool) -> list[int]:
         previous_version = self.current_version()
         pending = [item for item in MIGRATIONS if item.version > previous_version]
         if not pending:
@@ -88,6 +135,10 @@ class MigrationRunner:
 
     def verify(self) -> list[str]:
         """Validate schema version, migration records, tables and foreign keys."""
+        with migration_lock(self.database_path):  # never between another writer's migrations
+            return self._verify()
+
+    def _verify(self) -> list[str]:
         if not self.database_path.exists():
             return [f"Banco ausente: {self.database_path}"]
         errors: list[str] = []

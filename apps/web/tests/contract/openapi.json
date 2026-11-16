@@ -10869,6 +10869,9 @@
        }
       ]
      },
+     "replace_existing": {
+      "type": "boolean"
+     },
      "request_id": {
       "maxLength": 120,
       "type": "string"

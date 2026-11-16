@@ -640,10 +640,8 @@ test("kanban creates and moves a fake application", async ({ page }) => {
   // drop (a person gets the browser's edge auto-scroll, and the status select as an alternative)
   await page.setViewportSize({ width: 1440, height: 1600 });
   await page.goto("/tracker");
-  // Let the board load first: a list request still in flight when the new application is saved
-  // replaces the cache without it (SH-NEW-041, recorded; this test is about dragging, not that).
-  await expect(page.getByTestId("kanban-card").first()).toBeVisible();
-
+  // Created right away, while the first list request may still be in flight (SH-NEW-041: that
+  // answer used to replace the cache without the new application).
   await page.getByTestId("new-application-button").first().click();
   const dialog = page.getByTestId("create-application-dialog");
   await expect(dialog).toBeVisible();
@@ -662,6 +660,10 @@ test("kanban creates and moves a fake application", async ({ page }) => {
     sourcePosition: { x: 24, y: 14 },
   });
   await expect(page.getByTestId("kanban-column-interview")).toContainText("Backend Python E2E");
+  // only the dragged application moved: the sample cards keep their columns
+  await expect(page.getByTestId("kanban-column-interview").getByTestId("kanban-card")).toHaveCount(
+    2,
+  );
   await page.getByRole("button", { name: /Lista/i }).click();
   await page.getByTestId("application-status-select").first().selectOption("interview");
   await expect(page.locator("body")).toContainText(/Atualizada|Última análise|Sem análise/);

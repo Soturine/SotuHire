@@ -277,10 +277,24 @@ Branch: `fix/copilot-execution-integrity`. Base: `main` `8ea37d7`.
 | Matriz | rodapé dizia 8/19/1 com linhas 12 `DONE`/16 `PARTIAL`. Revisão de evidência: C03, C15, C18, C20 e UX-06 descem para `PARTIAL`. Agora C01–C28: 8 `DONE`, 20 `PARTIAL` |
 | `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
 
+## CP-REL01 — estabilização, extensão nos três modos e release 2.1.0
+
+| Campo | Registro |
+| --- | --- |
+| Escopo | congelado pelo pedido de encerramento: SH-NEW-041, reimportação do Mestre, isolamento de testes, CI do Derivanta, auditoria real da extensão, README/mídia, merge e releases. Achados fora disso viram issues |
+| SH-NEW-041 | reproduzido em vitest com respostas controladas (falha no código anterior) e corrigido no produto, não só no teste |
+| Reimportação do Mestre | SH-NEW-042 corrigido na API (409 sem `replace_existing`) e na tela (confirmação); Mestre anterior preservado |
+| Isolamento | SH-NEW-046: variáveis forçadas e guarda de sessão sobre `data/` e `benchmarks/` (sonda: sai 1) |
+| Extensão | `scripts/verify_extension_modes.py` com o popup real (CDP + `chrome.action.openPopup()`): 52/52 na 0.10.1. Achou SH-NEW-045 (3 defeitos da extensão), SH-NEW-044 (snapshot) e SH-NEW-043 (migração concorrente, 500 na primeira tela). Controle negativo com o código anterior falha nos três da extensão |
+| Derivanta | `3ea6a71`: 17 evals reestruturados (validador intacto), 2 registros de pesquisa registrados, stopwords no piloto; os 15 passos do workflow passam localmente |
+| Mídia | `scripts/capture_readme_media.py`: 11 capturas, GIF e WebM do build de produção em modo de exemplo; 72 imagens órfãs removidas |
+| Versões | SotuHire 2.1.0, extensão 0.10.1, Assertiva 1.0.1, Derivanta Framework 0.1.0, Derivanta Engine 0.1.0 (primeiras tags dos dois) |
+| `CHANGELOG_GATE` / `DOCS_GATE` | PASS / PASS |
+
 ## Ferramentas (repositórios donos)
 
 | Repo | Branch | SHA | Push | Testes |
 | --- | --- | --- | --- | --- |
-| Derivanta | `feat/approval-consumption-and-required-artifacts` | `db2dcc7` | confirmado | `scripts/tests` 26 passed; links verdes; estrutura de docs falha como na `main` (ver CP-CI01) |
+| Derivanta | `feat/approval-consumption-and-required-artifacts` | `3ea6a71` | confirmado | os 15 passos de `Documentation integrity` passam localmente (ver CP-REL01) |
 | Derivanta-Engine | `feat/ci-workflow-checks` | `35f9951` | confirmado | `tools/verify.py` PASS; CI manual 43774748903 |
 | Assertiva | `fix/precommit-hook-tool-identity` | `f1dec58` | confirmado | Python 3.12: unit 1.161, integração 193; 3.11: unit 1.161; `validate_repo` |

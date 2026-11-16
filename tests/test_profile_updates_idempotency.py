@@ -123,12 +123,17 @@ def test_the_api_maps_a_stale_write_to_409(profile, monkeypatch) -> None:
     added = profile.add_item(ProfileItem(type="language", title="Inglês intermediário"))
 
     real_get = service.repository.get_master_resume
+    other_tab_saved = False
 
     def stale_get(master_resume_id: str = ""):
+        nonlocal other_tab_saved
         snapshot = real_get(master_resume_id)
-        # another tab saves between this read and the write below
         assert snapshot is not None
-        service.save_master(snapshot.model_copy(update={"title": "Outra aba"}))
+        if not other_tab_saved:
+            # another tab saves once between this read and the write below (save_master reads
+            # the current Master too, so the interference must not repeat on that read)
+            other_tab_saved = True
+            service.save_master(snapshot.model_copy(update={"title": "Outra aba"}))
         return snapshot
 
     monkeypatch.setattr(service.repository, "get_master_resume", stale_get)

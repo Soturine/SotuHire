@@ -611,7 +611,8 @@ const act = async (action) => {
       await chrome.storage.local.remove(["applicationBatch"]);
       return display(response);
     }
-    if (action === "project-standalone") return analyzeCurrentProject();
+    // awaited: a returned promise would skip the catch below and leave "Processando…" forever
+    if (action === "project-standalone") return await analyzeCurrentProject();
     if (action.startsWith("project-")) {
       const { project } = await extract("SOTUHIRE_PROJECT");
       const savedAnalysis = await chrome.storage.local.get([

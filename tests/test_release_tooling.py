@@ -16,7 +16,7 @@ def test_sbom_is_cyclonedx_and_deterministic() -> None:
 
     assert first == second
     assert first["bomFormat"] == "CycloneDX"
-    assert first["metadata"]["component"]["version"] == "2.0.0"
+    assert first["metadata"]["component"]["version"] == "2.1.0"
     assert {item["name"] for item in first["components"]} >= {
         "fastapi",
         "pypdf",
@@ -103,7 +103,7 @@ def test_extension_package_verifier_accepts_release_payload(tmp_path: Path) -> N
 
     manifest = verify_package(package)
 
-    assert manifest["version"] == "0.10.0"
+    assert manifest["version"] == "0.10.1"
 
 
 def test_extension_package_verifier_rejects_extra_entry(tmp_path: Path) -> None:

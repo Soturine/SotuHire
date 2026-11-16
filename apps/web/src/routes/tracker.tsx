@@ -4,6 +4,7 @@ import { ArrowRight, BellRing, GripVertical, Plus, Search, LayoutGrid, Rows3 } f
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { addCreatedJob } from "@/features/tracker/jobs-cache";
 import { useApi } from "@/lib/api/hooks";
 import type { TrackerJob, TrackerJobsResult, TrackerStatus } from "@/lib/api/types";
 import { useApiMode } from "@/lib/api/mode";
@@ -97,11 +98,7 @@ function TrackerPage() {
     mutationFn: (input: { title: string; company: string; source?: string; notes?: string }) =>
       api.trackerCreate({ ...input, status: "found" }),
     onSuccess: (data) => {
-      qc.setQueryData<TrackerJobsResult>(jobsKey, (current) => ({
-        context_summary: current?.context_summary ?? "",
-        job_contexts: current?.job_contexts ?? {},
-        jobs: [data.job, ...(current?.jobs ?? []).filter((job) => job.id !== data.job.id)],
-      }));
+      void addCreatedJob(qc, jobsKey, data.job);
       toast.success("Candidatura adicionada");
       setCreating(false);
     },
