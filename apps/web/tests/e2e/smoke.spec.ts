@@ -640,6 +640,9 @@ test("kanban creates and moves a fake application", async ({ page }) => {
   // drop (a person gets the browser's edge auto-scroll, and the status select as an alternative)
   await page.setViewportSize({ width: 1440, height: 1600 });
   await page.goto("/tracker");
+  // Let the board load first: a list request still in flight when the new application is saved
+  // replaces the cache without it (SH-NEW-041, recorded; this test is about dragging, not that).
+  await expect(page.getByTestId("kanban-card").first()).toBeVisible();
 
   await page.getByTestId("new-application-button").first().click();
   const dialog = page.getByTestId("create-application-dialog");
@@ -651,10 +654,11 @@ test("kanban creates and moves a fake application", async ({ page }) => {
   await page.getByTestId("create-application-submit").click();
   await expect(page.getByTestId("create-application-dialog")).toBeHidden();
 
-  const firstCard = page.getByTestId("kanban-card").first();
-  await expect(firstCard).toBeVisible();
+  // the created card, not whichever card the board shows first
+  const newCard = page.getByTestId("kanban-card").filter({ hasText: "Backend Python E2E" });
+  await expect(newCard).toHaveCount(1);
   // grab the card by its title row: its centre is the status <select>, which takes the press
-  await firstCard.dragTo(page.getByTestId("kanban-column-interview"), {
+  await newCard.dragTo(page.getByTestId("kanban-column-interview"), {
     sourcePosition: { x: 24, y: 14 },
   });
   await expect(page.getByTestId("kanban-column-interview")).toContainText("Backend Python E2E");
