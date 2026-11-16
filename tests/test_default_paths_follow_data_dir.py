@@ -46,3 +46,23 @@ def test_the_memory_page_store_follows_the_data_dir(tmp_path: Path, monkeypatch)
     store.save(CareerProfile())
     assert (tmp_path / "memory" / "career-profile.json").is_file()
     assert not (tmp_path.parent / "data").exists()
+
+
+def test_security_module_imports_without_the_app_dependencies() -> None:
+    """CI packages the extension in a bare Python whose secret scan imports modules.security. A
+    top-level import of modules.storage (pydantic) there broke the job on ac9e7d1."""
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[1]
+    code = (
+        "import sys\n"
+        "for name in ('pydantic', 'fastapi', 'pydantic_core'):\n"
+        "    sys.modules[name] = None  # importing any of them now raises ImportError\n"
+        "from modules.security.credentials import contains_provider_secret\n"
+        "print('ok')\n"
+    )
+    result = subprocess.run(
+        [sys.executable, "-c", code], cwd=root, capture_output=True, text=True, timeout=60
+    )
+    assert result.returncode == 0, result.stderr[-800:]

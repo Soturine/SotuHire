@@ -15,8 +15,6 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
-from modules.storage.database import default_data_dir
-
 DEFAULT_PAIRING_TTL_SECONDS = 90
 DEFAULT_SESSION_TTL_SECONDS = 12 * 60 * 60
 
@@ -112,11 +110,13 @@ class LocalAuthManager:
         self._pairing_bootstrap_digest = (
             _digest(pairing_bootstrap.strip()) if pairing_bootstrap.strip() else ""
         )
-        self._store = InstallationTokenStore(
-            token_path
-            if token_path is not None
-            else default_data_dir() / "security" / "local-auth.json"
-        )
+        if token_path is None:
+            # Imported here: modules.security must stay importable without the app's dependencies
+            # (the extension packaging scans for secrets in a bare environment).
+            from modules.storage.database import default_data_dir
+
+            token_path = default_data_dir() / "security" / "local-auth.json"
+        self._store = InstallationTokenStore(token_path)
         self._installation_token = ""
         self.pairing_ttl_seconds = max(10, pairing_ttl_seconds)
         self.session_ttl_seconds = max(60, session_ttl_seconds)
