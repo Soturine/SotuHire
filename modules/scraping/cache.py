@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from modules.scraping.schemas import FetchResult
+from modules.storage.database import default_data_dir
 
 
 class ScrapingCache:
@@ -15,10 +16,12 @@ class ScrapingCache:
 
     def __init__(
         self,
-        directory: str | Path = "data/scraping-cache",
+        directory: str | Path | None = None,
         ttl: timedelta = timedelta(hours=6),
     ) -> None:
-        self.directory = Path(directory)
+        self.directory = (
+            Path(directory) if directory is not None else default_data_dir() / "scraping-cache"
+        )
         self.ttl = ttl
 
     def _path(self, url: str) -> Path:

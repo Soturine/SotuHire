@@ -15,6 +15,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from uuid import uuid4
 
+from modules.storage.database import default_data_dir
+
 DEFAULT_PAIRING_TTL_SECONDS = 90
 DEFAULT_SESSION_TTL_SECONDS = 12 * 60 * 60
 
@@ -101,7 +103,7 @@ class LocalAuthManager:
         *,
         installation_token: str = "",
         pairing_bootstrap: str = "",
-        token_path: str | Path = "data/security/local-auth.json",
+        token_path: str | Path | None = None,
         pairing_ttl_seconds: int = DEFAULT_PAIRING_TTL_SECONDS,
         session_ttl_seconds: int = DEFAULT_SESSION_TTL_SECONDS,
         clock: Callable[[], float] = time.monotonic,
@@ -110,7 +112,11 @@ class LocalAuthManager:
         self._pairing_bootstrap_digest = (
             _digest(pairing_bootstrap.strip()) if pairing_bootstrap.strip() else ""
         )
-        self._store = InstallationTokenStore(token_path)
+        self._store = InstallationTokenStore(
+            token_path
+            if token_path is not None
+            else default_data_dir() / "security" / "local-auth.json"
+        )
         self._installation_token = ""
         self.pairing_ttl_seconds = max(10, pairing_ttl_seconds)
         self.session_ttl_seconds = max(60, session_ttl_seconds)

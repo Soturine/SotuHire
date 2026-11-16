@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict
 from modules.core.opportunity_identity import same_opportunity
 from modules.scraping.dedupe import opportunity_identity
 from modules.scraping.schemas import ScrapedOpportunity
+from modules.storage.database import default_data_dir
 
 
 class StoreSummary(BaseModel):
@@ -23,8 +24,10 @@ class StoreSummary(BaseModel):
 class OpportunityStore:
     """Persist collected opportunities and update changed duplicates."""
 
-    def __init__(self, path: str | Path = "data/sotuhire-opportunities.json") -> None:
-        self.path = Path(path)
+    def __init__(self, path: str | Path | None = None) -> None:
+        self.path = (
+            Path(path) if path is not None else default_data_dir() / "sotuhire-opportunities.json"
+        )
 
     def list(self) -> list[ScrapedOpportunity]:
         if not self.path.exists():

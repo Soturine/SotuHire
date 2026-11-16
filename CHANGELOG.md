@@ -117,6 +117,11 @@ Nenhuma versão ou tag foi criada.
 
 ### Corrigido
 
+- Dados locais: cinco stores (perfil de carreira legado, oportunidades, análises de projeto,
+  cache de scraping, token de instalação) usavam `data/...` relativo ao diretório de trabalho
+  e ignoravam `SOTUHIRE_DATA_DIR`. A suíte de testes regravava o perfil de carreira do checkout
+  do desenvolvedor, e a API de extensão lia análises fora do diretório configurado. Os padrões
+  agora ficam no diretório de dados configurado (SH-NEW-040).
 - DAST: a sonda de corpo grande sem sessão contava uma conexão derrubada como recusa correta; agora
   envia 64 KB de 6 MB por socket e só passa ao ler a linha `401`; sem resposta é inconclusivo e
   falha. A sonda de prova de pareamento forjada não mandava `Origin` e parava no 403 da origem sem

@@ -172,6 +172,47 @@ def test_damage_that_keeps_size_and_mtime_is_caught_when_the_verification_expire
         ensure_database(database)
 
 
+def test_a_verification_is_trusted_for_less_than_its_maximum_age_exactly(
+    tmp_path: Path, monkeypatch
+) -> None:
+    """Found by Assertiva mutation (2026-11-15): with the age forced to 0, `-` replaced by `/`, `//`
+    or `%`, and `<` by `<=`, all survived. A controlled clock pins the boundary."""
+    database = tmp_path / "sotuhire.db"
+    now = [100.0]
+    monkeypatch.setattr(runner_module.time, "monotonic", lambda: now[0])
+    ensure_database(database)  # verified at t=100
+    calls = _count_verify(monkeypatch)
+    now[0] = 100.0 + 599.0
+    ensure_database(database)
+    assert len(calls) == 0  # still trusted one second before the limit
+    now[0] = 100.0 + runner_module.VERIFY_MAX_AGE_S
+    ensure_database(database)
+    assert len(calls) == 1  # at exactly the limit it is checked again
+    now[0] += 601.0
+    ensure_database(database)
+    assert len(calls) == 2  # and again once the renewed verification is past the limit
+
+
+def test_an_older_smaller_copy_put_in_place_is_verified_again(tmp_path: Path, monkeypatch) -> None:
+    """A copy of an earlier state (smaller, older mtime) dropped over the file by hand must not be
+    taken for the verified one; the fingerprint is compared for equality, not order."""
+    database = tmp_path / "sotuhire.db"
+    ensure_database(database)
+    earlier = tmp_path / "earlier.db"
+    shutil.copy2(database, earlier)  # keeps the older mtime
+    with sqlite3.connect(database) as connection:
+        connection.execute("CREATE TABLE filler (x TEXT)")
+        connection.executemany("INSERT INTO filler VALUES (?)", [("z" * 500,)] * 100)
+        connection.commit()
+        connection.execute("PRAGMA wal_checkpoint(TRUNCATE)")
+    ensure_database(database)  # the larger, newer file is verified and cached
+    calls = _count_verify(monkeypatch)
+    shutil.copy2(earlier, database)
+    assert database.stat().st_size < runner_module._VERIFIED[str(database.resolve())][0][0]
+    ensure_database(database)
+    assert len(calls) == 1
+
+
 def test_a_replaced_corrupt_file_is_still_rejected(tmp_path: Path) -> None:
     database = tmp_path / "sotuhire.db"
     ensure_database(database)

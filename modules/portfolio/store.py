@@ -6,13 +6,18 @@ from pathlib import Path
 
 from modules.core.entity_identity import project_identity
 from modules.portfolio.schemas import ProjectAnalysisRecord
+from modules.storage.database import default_data_dir
 
 
 class ProjectAnalysisStore:
     """Persist one latest analysis per normalized public project URL."""
 
-    def __init__(self, path: str | Path = "data/portfolio/project-analyses.jsonl") -> None:
-        self.path = Path(path)
+    def __init__(self, path: str | Path | None = None) -> None:
+        self.path = (
+            Path(path)
+            if path is not None
+            else default_data_dir() / "portfolio/project-analyses.jsonl"
+        )
 
     def list(self) -> list[ProjectAnalysisRecord]:
         if not self.path.exists():
