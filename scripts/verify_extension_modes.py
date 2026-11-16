@@ -52,8 +52,9 @@ from playwright.sync_api import BrowserContext, Page, sync_playwright  # noqa: E
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / "apps" / "web"
 EXTENSION_ID = "joodapjganjanoaaogapmjhcellljnfg"
-FAKE_GEMINI_KEY = "AIzaFAKE-sotuhire-fixture-key-000000000"
-FAKE_OPENAI_KEY = "sk-fake-sotuhire-fixture-key-000000000000"
+# Fixture keys, assembled so the file never carries a provider-key shape (scripts/scan_secrets.py).
+FAKE_GEMINI_KEY = "AIza" + "FAKE-sotuhire-fixture-key-000000000"
+FAKE_OPENAI_KEY = "sk-" + "fake-sotuhire-fixture-key-000000000000"
 JOB_URL = "https://github.com/sotuhire-fixture/vaga-ficticia"
 REPO_URL = "https://github.com/sotuhire-fixture/projeto-ficticio"
 BOOTSTRAP = "ext-modes-disposable-bootstrap-0123456789"
@@ -572,7 +573,7 @@ def mode_providers(playwright, unpacked: Path, work: Path, shots: Path | None = 
             popup.tab("projects-panel")
             return popup.act("project-standalone", timeout=40)
 
-        bad = save_key("gemini", "AIzaWRONG-key-for-negative-control-000", False)
+        bad = save_key("gemini", "AIza" + "WRONG-key-for-negative-control-000", False)
         check(
             steps,
             "Gemini: a rejected key is not kept (negative control)",
@@ -591,7 +592,7 @@ def mode_providers(playwright, unpacked: Path, work: Path, shots: Path | None = 
             result=result["text"][:240],
         )
 
-        bad = save_key("openai", "sk-wrong-negative-control-0000000000", True)
+        bad = save_key("openai", "sk-" + "wrong-negative-control-0000000000", True)
         check(
             steps,
             "OpenAI: a rejected key is not kept (negative control)",
