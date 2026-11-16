@@ -78,3 +78,52 @@ def test_local_api_capture_public_exam_does_not_become_private_job(tmp_path):
     enabled_flows = context_payload.get("enabled_flows")
     assert isinstance(enabled_flows, list)
     assert "public_exam" in enabled_flows
+
+
+def test_recapturing_an_unchanged_page_is_not_a_changed_job(tmp_path):
+    """Found driving the extension in Chromium (Companion mode): every capture of the same page
+    answered "A vaga mudou" because the capture's own timestamp was part of the hashed snapshot."""
+    from datetime import UTC, datetime, timedelta
+
+    app = LocalCompanionApp(_service(tmp_path), token=TOKEN)
+    first_at = datetime(2026, 11, 15, 10, 0, tzinfo=UTC)
+    answers = []
+    for captured_at in (first_at, first_at + timedelta(minutes=5)):
+        capture = BrowserCapturePayload(
+            page_title="Desenvolvedor Python Júnior",
+            url="https://jobs.example/vaga-python",
+            domain="jobs.example",
+            job_title="Desenvolvedor Python Júnior",
+            company="Example",
+            description="Vaga remota para Python, FastAPI e SQL.",
+            captured_at=captured_at,
+        )
+        status, payload = app.handle(
+            "POST", "/capture/job", body=capture.model_dump_json().encode(), token=TOKEN
+        )
+        assert status == 200
+        answers.append(payload)
+
+    assert answers[1]["capture_id"] == answers[0]["capture_id"]
+    assert answers[1]["snapshot_id"] == answers[0]["snapshot_id"]
+    assert answers[1].get("artifact_status") != "stale"
+
+
+def test_a_real_change_is_still_reported_as_changed(tmp_path):
+    app = LocalCompanionApp(_service(tmp_path), token=TOKEN)
+    answers = []
+    for description in ("Vaga remota para Python.", "Vaga presencial para Python e Go."):
+        capture = BrowserCapturePayload(
+            page_title="Desenvolvedor Python Júnior",
+            url="https://jobs.example/vaga-python",
+            domain="jobs.example",
+            job_title="Desenvolvedor Python Júnior",
+            company="Example",
+            description=description,
+        )
+        _, payload = app.handle(
+            "POST", "/capture/job", body=capture.model_dump_json().encode(), token=TOKEN
+        )
+        answers.append(payload)
+    assert answers[1]["snapshot_id"] != answers[0]["snapshot_id"]
+    assert answers[1]["artifact_status"] == "stale"

@@ -104,6 +104,7 @@ import type {
   ResumeExportResult,
   ResumeIngestionResult,
   MasterResume,
+  ProfileUpdatesResult,
   ResumeProfile,
   ResumeTailor,
   ResumeTailorResult,
@@ -166,6 +167,21 @@ import type { ApiMode } from "./mode";
 import { getActiveDemoPersona } from "@/mocks/personas";
 import { pairedApiFetch } from "@/features/local-security/api-pairing";
 
+/** An HTTP error from the local API; ``status`` lets screens tell "not created yet" from failures. */
+export class ApiHttpError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiHttpError";
+  }
+}
+
+export function isNotFound(error: unknown): boolean {
+  return error instanceof ApiHttpError && error.status === 404;
+}
+
 type JsonRecord = Record<string, unknown>;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -199,7 +215,7 @@ async function call<T>(
     } catch {
       /* API may return an empty body for transport-level failures. */
     }
-    throw new Error(detail || `Erro HTTP ${res.status} ao chamar ${path}`);
+    throw new ApiHttpError(res.status, detail || `Erro HTTP ${res.status} ao chamar ${path}`);
   }
 
   const json = (await res.json()) as ApiEnvelope<unknown>;
@@ -292,7 +308,9 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         mode,
         baseUrl,
         "/profile/items",
-        { method: "POST", body: JSON.stringify(payload) },
+        // An import draft item carries item_id, confirmed_by_user and timestamps, which the API
+        // contract forbids: "Adicionar ao perfil" answered 422 in API mode (contract test).
+        { method: "POST", body: JSON.stringify(profileItemBody(payload)) },
         { item: normalizeProfileItem({ ...payload, confirmed_by_user: true }), message: "Demo" },
         normalizeProfileItemResult,
       ),
@@ -472,7 +490,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeAiModels,
       ),
 
-    aiModelsRefresh: (provider: "gemini" | "openai") =>
+    aiModelsRefresh: (provider: "gemini" | "openai" | "anthropic") =>
       call<AiModelsResult>(
         mode,
         baseUrl,
@@ -650,7 +668,11 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         baseUrl,
         "/tracker/jobs",
         undefined,
-        { jobs: mockPersonaJobs(), context_summary: "", job_contexts: {} },
+        {
+          jobs: [...demoCreatedJobs(), ...mockPersonaJobs()],
+          context_summary: "",
+          job_contexts: {},
+        },
         normalizeTrackerJobs,
       ),
 
@@ -659,9 +681,15 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         mode,
         baseUrl,
         "/tracker/jobs",
-        { method: "POST", body: JSON.stringify({ privacy_acknowledged: true, ...payload }) },
         {
-          job: {
+          method: "POST",
+          // The API contract forbids unknown fields; the frontend's `source` is the API's
+          // `source_url` (read back as `source` by normalizeTrackerJob). Sending the frontend
+          // object as-is answered 422 for every manual application in API Real mode.
+          body: JSON.stringify(trackerCreateBody(payload)),
+        },
+        {
+          job: rememberDemoJob(mode, {
             id: `job_${Math.random().toString(36).slice(2, 8)}`,
             title: payload.title ?? "Nova vaga",
             company: payload.company ?? "-",
@@ -672,7 +700,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
             created_at: new Date().toISOString().slice(0, 10),
             updated_at: new Date().toISOString().slice(0, 10),
             notes: payload.notes,
-          },
+          }),
         },
         normalizeTrackerJobEnvelope,
       ),
@@ -684,10 +712,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         `/tracker/jobs/${id}`,
         { method: "PATCH", body: JSON.stringify(patch) },
         {
-          job: {
-            ...(mockPersonaJobs().find((job) => job.id === id) ?? mockPersonaJobs()[0]!),
-            ...patch,
-          },
+          job: demoUpdatedJob(mode, id, patch),
         },
         normalizeTrackerJobEnvelope,
       ),
@@ -929,12 +954,81 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
       call<{ resume: MasterResume }>(mode, baseUrl, "/resume-studio/master", undefined, {
         resume: mockMasterResume,
       }),
-    resumeStudioSaveMaster: (resume: MasterResume) =>
+    resumeStudioMasterFromProfile: () =>
+      call<{ resume: MasterResume }>(
+        mode,
+        baseUrl,
+        "/resume-studio/master/from-profile",
+        { method: "POST", body: JSON.stringify({}) },
+        { resume: mockMasterResume },
+      ),
+    resumeStudioProfileUpdates: () =>
+      call<ProfileUpdatesResult>(
+        mode,
+        baseUrl,
+        "/resume-studio/master/profile-updates",
+        undefined,
+        {
+          master_resume_id: mockMasterResume.master_resume_id,
+          items: [
+            {
+              item_id: "profile-demo-language",
+              item_type: "language",
+              title: "Inglês intermediário (DEMO)",
+              subtitle: "",
+              section_title: "Idiomas",
+            },
+          ],
+          changed: [
+            {
+              item_id: "profile-demo-project",
+              item_type: "project",
+              title: "Projeto de extensão (DEMO)",
+              section_title: "Projetos",
+              changes: [
+                {
+                  field: "content",
+                  in_master: "Projeto acadêmico de extensão.",
+                  in_profile: "Projeto de extensão com 120 pessoas atendidas (exemplo fictício).",
+                },
+              ],
+            },
+          ],
+        },
+      ),
+    resumeStudioRefreshProfileFacts: (itemIds: string[]) =>
+      call<{ resume: MasterResume }>(
+        mode,
+        baseUrl,
+        "/resume-studio/master/profile-refresh",
+        { method: "POST", body: JSON.stringify({ item_ids: itemIds }) },
+        { resume: mockMasterResume },
+      ),
+    resumeStudioApplyProfileUpdates: (itemIds: string[]) =>
+      call<{ resume: MasterResume }>(
+        mode,
+        baseUrl,
+        "/resume-studio/master/profile-updates",
+        { method: "POST", body: JSON.stringify({ item_ids: itemIds }) },
+        { resume: mockMasterResume },
+      ),
+    resumeStudioSaveMaster: (
+      resume: MasterResume,
+      // replacing: the Master the person saw and confirmed replacing with this resume
+      replacing?: Pick<MasterResume, "updated_at">,
+    ) =>
       call<{ resume: MasterResume }>(
         mode,
         baseUrl,
         "/resume-studio/master",
-        { method: "PUT", body: JSON.stringify({ resume }) },
+        {
+          method: "PUT",
+          body: JSON.stringify(
+            replacing
+              ? { resume, replace_existing: true, expected_updated_at: replacing.updated_at }
+              : { resume },
+          ),
+        },
         { resume },
       ),
     resumeStudioIngest: (fileName: string, contentBase64: string) =>
@@ -1004,13 +1098,23 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         { method: "POST", body: JSON.stringify({ variant }) },
         { variant },
       ),
-    resumeStudioUpdateVariant: (variantId: string, patch: Partial<ResumeVariant>) =>
+    /** With expectedUpdatedAt the API answers 409 if the variant was saved elsewhere since. */
+    resumeStudioUpdateVariant: (
+      variantId: string,
+      patch: Partial<ResumeVariant>,
+      expectedUpdatedAt?: string,
+    ) =>
       call<{ variant: ResumeVariant }>(
         mode,
         baseUrl,
         `/resume-studio/variants/${encodeURIComponent(variantId)}`,
-        { method: "PATCH", body: JSON.stringify(patch) },
-        { variant: { ...mockVariant, ...patch } },
+        {
+          method: "PATCH",
+          body: JSON.stringify(
+            expectedUpdatedAt ? { ...patch, expected_updated_at: expectedUpdatedAt } : patch,
+          ),
+        },
+        { variant: { ...mockVariant, ...patch, updated_at: new Date().toISOString() } },
       ),
     resumeStudioTemplates: () =>
       call<{ items: ResumeTemplate[] }>(mode, baseUrl, "/resume-studio/templates", undefined, {
@@ -1264,8 +1368,8 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
           profile_summary: "Resumo seguro demo do Perfil Universal.",
           enabled_flows: ["job", "public_exam", "github", "profile_evidence"],
           ai_provider_status: "local",
-          extension_version: "0.10.0",
-          companion_version: "2.0.0",
+          extension_version: "0.10.1",
+          companion_version: "2.1.0",
           api_version: "v1",
           compatible: true,
           capabilities: ["capture.snapshot", "queue.retry", "jobposting.jsonld"],
@@ -1273,7 +1377,7 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         normalizeExtensionStatus,
       ),
 
-    extensionHandshake: (extension_version = "0.10.0") =>
+    extensionHandshake: (extension_version = "0.10.1") =>
       call<ExtensionHandshake>(
         mode,
         baseUrl,
@@ -1281,14 +1385,14 @@ export function makeApi(mode: ApiMode, baseUrl: string) {
         { method: "POST", body: JSON.stringify({ extension_version }) },
         {
           extension_version,
-          companion_version: "2.0.0",
+          companion_version: "2.1.0",
           api_version: "v1",
-          app_version: "2.0.0",
+          app_version: "2.1.0",
           capabilities: ["capture.snapshot", "queue.retry", "jobposting.jsonld"],
           compatible: true,
           warnings: [],
           min_supported_extension_version: "0.9.1",
-          max_tested_extension_version: "0.10.0",
+          max_tested_extension_version: "0.10.1",
           min_supported_companion_version: "1.9.5",
         },
         normalizeExtensionHandshake,
@@ -2827,6 +2931,29 @@ function mockProfileResult(): ProfileResult {
   };
 }
 
+// Demo mode only: what a server would keep of the applications created in this page session, so a
+// refetch of the list (SH-NEW-041) still shows them and moving one updates that one.
+const demoJobs = new Map<string, TrackerJob>();
+
+function demoCreatedJobs(): TrackerJob[] {
+  return [...demoJobs.values()].reverse();
+}
+
+function rememberDemoJob(mode: ApiMode, job: TrackerJob): TrackerJob {
+  if (mode === "demo") demoJobs.set(job.id, job);
+  return job;
+}
+
+function demoUpdatedJob(mode: ApiMode, id: string, patch: Partial<TrackerJob>): TrackerJob {
+  const created = demoJobs.get(id);
+  if (created) {
+    const updated = { ...created, ...patch, id };
+    if (mode === "demo") demoJobs.set(id, updated);
+    return updated;
+  }
+  return { ...(mockPersonaJobs().find((job) => job.id === id) ?? mockPersonaJobs()[0]!), ...patch };
+}
+
 function mockPersonaJobs(): TrackerJob[] {
   const persona = getActiveDemoPersona();
   return [
@@ -3655,7 +3782,7 @@ function normalizeHealth(value: unknown): Health {
   return {
     status: asString(raw.status) || "ok",
     service: asString(raw.service),
-    version: asString(raw.version) || "2.0.0",
+    version: asString(raw.version) || "2.1.0",
     local_first: asBoolean(raw.local_first, true),
     environment: asString(raw.environment),
     capabilities: stringList(raw.capabilities),
@@ -3800,7 +3927,10 @@ function normalizeAiSettingsTest(value: unknown): AiSettingsTestResult {
 function mockSavedAiSettings(payload: AiSettingsPayload): AiSettings {
   const configured =
     payload.provider === "local" ||
-    ((payload.provider === "gemini" || payload.provider === "openai") && Boolean(payload.api_key));
+    ((payload.provider === "gemini" ||
+      payload.provider === "openai" ||
+      payload.provider === "anthropic") &&
+      Boolean(payload.api_key));
   return {
     ...mockAiSettings,
     provider: payload.provider === "openai_future" ? "openai" : payload.provider,
@@ -3854,6 +3984,14 @@ function mockAiProviders(): AiProvidersResult {
         key_url: "https://platform.openai.com/api-keys",
         supports_model_catalog: true,
       },
+      {
+        id: "anthropic",
+        label: "Anthropic (Claude)",
+        status: "not_configured",
+        requires_api_key: true,
+        key_url: "https://platform.claude.com/settings/keys",
+        supports_model_catalog: false,
+      },
     ],
   };
 }
@@ -3881,6 +4019,25 @@ function mockAiModels(provider: AiProvider): AiModelsResult {
           recommended_for: ["reasoning", "review"],
         },
       ],
+    };
+  }
+  if (provider === "anthropic") {
+    return {
+      provider: "anthropic",
+      source: "builtin",
+      models: [
+        { id: "claude-haiku-5-5", label: "Claude Haiku 5.5" },
+        { id: "claude-sonnet-5-5", label: "Claude Sonnet 5.5" },
+        { id: "claude-opus-5-5", label: "Claude Opus 5.5" },
+      ].map((model) => ({
+        ...model,
+        status: "known",
+        supports_structured_output: true,
+        supports_json: true,
+        recommended_for: [],
+      })),
+      updated_at: "",
+      warnings: [],
     };
   }
   if (provider === "gemini") {
@@ -3940,7 +4097,9 @@ function mockAiSettingsTest(payload: AiSettingsTestPayload): AiSettingsTestResul
 
 function normalizeAiProvider(value: unknown): AiProvider {
   if (value === "openai_future") return "openai";
-  return value === "gemini" || value === "openai" || value === "local" ? value : "local";
+  return value === "gemini" || value === "openai" || value === "anthropic" || value === "local"
+    ? value
+    : "local";
 }
 
 function normalizeAiPreset(value: unknown): AiSettings["preset"] {
@@ -3952,11 +4111,13 @@ function normalizeAiPreset(value: unknown): AiSettings["preset"] {
 function defaultAiModel(provider: AiProvider): string {
   if (provider === "local") return "local";
   if (provider === "openai" || provider === "openai_future") return "gpt-5-mini";
+  if (provider === "anthropic") return "claude-haiku-5-5";
   return "gemini-2.5-flash";
 }
 
-function providerDisplayName(provider: "local" | "gemini" | "openai"): string {
+function providerDisplayName(provider: "local" | "gemini" | "openai" | "anthropic"): string {
   if (provider === "gemini") return "Gemini";
+  if (provider === "anthropic") return "Anthropic (Claude)";
   if (provider === "openai") return "OpenAI";
   return "Local seguro";
 }
@@ -3998,8 +4159,8 @@ function normalizeAiModels(value: unknown): AiModelsResult {
   };
 }
 
-function normalizeCatalogProvider(value: unknown): "local" | "gemini" | "openai" {
-  if (value === "gemini" || value === "openai") return value;
+function normalizeCatalogProvider(value: unknown): "local" | "gemini" | "openai" | "anthropic" {
+  if (value === "gemini" || value === "openai" || value === "anthropic") return value;
   return "local";
 }
 
@@ -5508,3 +5669,51 @@ function mockProfessionalAssets(): ProfessionalAsset[] {
 }
 
 export type Api = ReturnType<typeof makeApi>;
+
+/** Body of POST /tracker/jobs with only the fields of TrackerJobCreateRequest. */
+export function trackerCreateBody(payload: Partial<TrackerJob>): Record<string, unknown> {
+  const body: Record<string, unknown> = {
+    title: payload.title ?? "",
+    company: payload.company ?? "",
+    status: payload.status ?? "found",
+    notes: payload.notes ?? "",
+    requirements: payload.requirements ?? [],
+    privacy_acknowledged: true,
+  };
+  if (payload.source) body.source_url = payload.source;
+  if (payload.match_score !== undefined) body.match_score = payload.match_score;
+  if (payload.ats_score !== undefined) body.ats_score = payload.ats_score;
+  if (payload.source_capture_id) body.source_capture_id = payload.source_capture_id;
+  return body;
+}
+
+/** Fields of ProfileItemRequest (apps/api/schemas, extra="forbid"). */
+const PROFILE_ITEM_FIELDS = [
+  "type",
+  "title",
+  "description",
+  "area",
+  "domain",
+  "institution",
+  "organization",
+  "status",
+  "start_date",
+  "end_date",
+  "tags",
+  "skills",
+  "evidence",
+  "source",
+  "source_ref",
+  "confidence",
+  "sensitive",
+] as const;
+
+/** Body of POST /profile/items: only contract fields, so a draft or stored item can be sent as is. */
+export function profileItemBody(payload: Partial<ProfileItem>): Record<string, unknown> {
+  const body: Record<string, unknown> = {};
+  for (const field of PROFILE_ITEM_FIELDS) {
+    const value = payload[field];
+    if (value !== undefined && value !== null) body[field] = value;
+  }
+  return body;
+}

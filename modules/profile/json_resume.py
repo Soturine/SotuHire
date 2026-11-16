@@ -82,7 +82,7 @@ def profile_to_json_resume(
         if item.type in _PROFESSIONAL_REGISTRATION_TYPES:
             professional_registrations.append(_entry_from_item(item, "professional_registrations"))
             continue
-        section = _section_for_item(item)
+        section = section_for_item(item)
         if section:
             sections[section].append(_entry_from_item(item, section))
 
@@ -146,7 +146,8 @@ def json_resume_to_profile(
     )
 
 
-def _section_for_item(item: ProfileItem) -> str:
+def section_for_item(item: ProfileItem) -> str:
+    """JSON Resume section (work, education, projects...) for a profile item; empty when none fits."""
     if item.type in _WORK_TYPES:
         return "work"
     if item.type in _VOLUNTEER_TYPES:

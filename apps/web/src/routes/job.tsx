@@ -199,7 +199,7 @@ function SkillBlock({
             key={s}
             className={`rounded-md px-2 py-0.5 text-xs ${
               tone === "primary"
-                ? "bg-accent/15 text-accent-foreground ring-1 ring-accent/25"
+                ? "bg-accent/15 text-accent-strong ring-1 ring-accent/25"
                 : "bg-muted text-muted-foreground"
             }`}
           >

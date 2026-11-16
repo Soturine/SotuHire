@@ -17,6 +17,29 @@ class EvidenceReviewStatus(StrEnum):
     STALE = "stale"
 
 
+def reconcile_review_status(
+    review_status: EvidenceReviewStatus,
+    *,
+    confirmed_by_user: bool,
+    has_source: bool,
+) -> tuple[EvidenceReviewStatus, bool]:
+    """Return the consistent ``(review_status, confirmed_by_user)`` pair.
+
+    Only the user confirms: ``confirmed_by_user`` and ``CONFIRMED`` imply each other; a source
+    lifts a bare candidate to ``SOURCED`` (never to confirmed); rejected and stale items are never
+    confirmed.
+    """
+    if confirmed_by_user:
+        review_status = EvidenceReviewStatus.CONFIRMED
+    elif review_status == EvidenceReviewStatus.CONFIRMED:
+        confirmed_by_user = True
+    elif review_status == EvidenceReviewStatus.CANDIDATE and has_source:
+        review_status = EvidenceReviewStatus.SOURCED
+    if review_status in {EvidenceReviewStatus.REJECTED, EvidenceReviewStatus.STALE}:
+        confirmed_by_user = False
+    return review_status, confirmed_by_user
+
+
 class EvidenceSourceLocation(BaseModel):
     """Stable location inside an imported or captured source."""
 

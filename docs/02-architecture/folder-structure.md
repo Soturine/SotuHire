@@ -1,5 +1,9 @@
 # Estrutura de pastas
 
+> Documento de planejamento da fase MVP (v0.x). As árvores abaixo são propostas: vários arquivos
+> nunca existiram ou foram removidos (ver [triagem de 2026-11](../00-audit/2026-11-dead-dedupe-triage.md)).
+> A estrutura real é a do repositório.
+
 ## Estrutura recomendada para o MVP
 
 ```text

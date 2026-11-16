@@ -1,0 +1,242 @@
+{
+  "extension_id": "joodapjganjanoaaogapmjhcellljnfg",
+  "modes": {
+    "A": {
+      "port 8765 closed": {
+        "ok": true
+      },
+      "port 8787 closed": {
+        "ok": true
+      },
+      "port 5173 closed": {
+        "ok": true
+      },
+      "service worker started": {
+        "ok": true,
+        "url": "chrome-extension://joodapjganjanoaaogapmjhcellljnfg/background.js"
+      },
+      "permissions are the declared minimum": {
+        "ok": true,
+        "permissions": [
+          "activeTab",
+          "scripting",
+          "storage"
+        ],
+        "host_permissions": [
+          "http://127.0.0.1:8765/*",
+          "http://127.0.0.1:8787/*",
+          "https://github.com/*",
+          "https://api.github.com/*",
+          "https://generativelanguage.googleapis.com/*",
+          "https://api.openai.com/*"
+        ]
+      },
+      "popup says it runs standalone": {
+        "ok": true,
+        "status": "SotuHire offline · modo independente ativo"
+      },
+      "tab capture-panel opens": {
+        "ok": true
+      },
+      "tab projects-panel opens": {
+        "ok": true
+      },
+      "tab ai-panel opens": {
+        "ok": true
+      },
+      "works without any AI key": {
+        "ok": true,
+        "default_provider": "sotuhire"
+      },
+      "assisted capture reads the job in focus (JSON-LD first)": {
+        "ok": true,
+        "job_title": "Pessoa Desenvolvedora Python Pleno",
+        "company": "Empresa Fictícia Ltda."
+      },
+      "a connected action offline is explained and kept in the offline queue": {
+        "ok": true,
+        "message": "!\nNão foi possível concluir\n\nLocal Companion offline. Inicie o SotuHire local e tente novamente. Pareie a extensão com o Local Companion. Captura de vaga mantida localmente (1 pendência(s)).\nVocê ainda pode copiar o texto ou acumular um lot",
+        "queued": 1
+      },
+      "the same capture is queued once": {
+        "ok": true,
+        "queued": 1
+      },
+      "default provider (IA configurada no SotuHire) with nothing running: local report, fallback stated": {
+        "ok": true,
+        "result": "✦\n49/100 · Grade D\n\nsotuhire-fixture/projeto-ficticio recebeu nota 49/100 (D).\nlocal-browser · local-browser · fallback local"
+      },
+      "deterministic project analysis with no service and no key": {
+        "ok": true,
+        "result": "✦\n49/100 · Grade D\n\nsotuhire-fixture/projeto-ficticio recebeu nota 49/100 (D).\nlocal-browser · local-browser"
+      },
+      "SotuHire Insight button opens a report on the repository": {
+        "ok": true,
+        "label": "✦ SotuHire Insight",
+        "score": "49/100"
+      },
+      "GitHub API unreachable: the analysis still answers from the visible page": {
+        "ok": true,
+        "result": "✦\n30/100 · Grade F\n\nprojeto-ficticio✦ SotuHire Insight recebeu nota 30/100 (F).\nlocal-browser · local-browser"
+      },
+      "no cookies sent to public endpoints": {
+        "ok": true,
+        "problems": []
+      },
+      "popup has no unexpected console errors": {
+        "ok": true,
+        "errors": [],
+        "note": "connection refused by the stopped services is expected"
+      }
+    },
+    "AI": {
+      "Gemini: a rejected key is not kept (negative control)": {
+        "ok": true,
+        "message": "!\nNão foi possível concluir\n\nAPI key not valid. (fixture)\nVocê ainda pode copiar o texto ou acumular um lote offline."
+      },
+      "Gemini: a valid key lists models": {
+        "ok": true,
+        "message": "✓\nAção concluída\n\nChave validada. 2 modelos disponíveis."
+      },
+      "Gemini: the analysis goes through the provider": {
+        "ok": true,
+        "result": "✦\n49/100 · Grade D\n\nProjeto fictício com API Python e testes automatizados.\ngemini · gemini-2.5-flash"
+      },
+      "OpenAI: a rejected key is not kept (negative control)": {
+        "ok": true,
+        "message": "!\nNão foi possível concluir\n\nIncorrect API key provided. (fixture)\nVocê ainda pode copiar o texto ou acumular um lote offline."
+      },
+      "OpenAI: a valid key lists models": {
+        "ok": true,
+        "message": "✓\nAção concluída\n\nChave validada. 2 modelos disponíveis."
+      },
+      "OpenAI: the analysis goes through the Responses API (fixture rejects response_format)": {
+        "ok": true,
+        "result": "✦\n49/100 · Grade D\n\nProjeto fictício com API Python e testes automatizados.\nopenai · gpt-4.1-mini"
+      },
+      "keys never in chrome.storage.local; the session key only in session storage": {
+        "ok": true,
+        "local_keys": [
+          "aiKeyPersistence",
+          "aiModelCatalog",
+          "aiModels",
+          "aiProvider",
+          "lastProjectAnalysis"
+        ],
+        "note": "the remembered OpenAI key lives in the extension's IndexedDB vault"
+      },
+      "each key travels only to its own provider": {
+        "ok": true,
+        "problems": []
+      },
+      "a web page cannot message the extension": {
+        "ok": true,
+        "answer": "no access: Cannot read properties of undefined (reading 'sendMessage')"
+      },
+      "removing a key clears it": {
+        "ok": true
+      },
+      "real provider call": {
+        "ok": true,
+        "status": "BLOCKED_EXTERNAL_CREDENTIALS",
+        "note": "no authorized Gemini/OpenAI credential; fixtures only"
+      }
+    },
+    "B": {
+      "port 8787 closed (web app and Local API off)": {
+        "ok": true
+      },
+      "port 5173 closed (web app and Local API off)": {
+        "ok": true
+      },
+      "capture queued while the Companion is off": {
+        "ok": true,
+        "queued": 1
+      },
+      "Companion online asks for pairing": {
+        "ok": true,
+        "status": "Companion online · pareamento necessário"
+      },
+      "pairing and version handshake": {
+        "ok": true,
+        "handshake": "Extensão 0.10.1 · Companion 2.1.0 · API v1 · compatível"
+      },
+      "the offline queue is delivered after pairing": {
+        "ok": true,
+        "result": "✓\nAção concluída\n\n1 pendência(s) enviada(s); 0 ainda aguardam o Companion."
+      },
+      "capture saved; repeating it is accepted without a second record": {
+        "ok": true,
+        "first": "✓\nAção concluída\n\nVaga capturada localmente.",
+        "second": "✓\nAção concluída\n\nVaga capturada localmente."
+      },
+      "job sent to the Tracker; sending it again does not fail": {
+        "ok": true,
+        "first": "✓\nAção concluída\n\nVaga enviada ao tracker.\nMatch: 57 · ATS: 100",
+        "second": "✓\nAção concluída\n\nVaga enviada ao tracker.\nMatch: 57 · ATS: 100"
+      },
+      "public exam (edital) captured as a snapshot": {
+        "ok": true,
+        "result": "✓\nAção concluída\n\nEdital/concurso capturado localmente para revisao."
+      },
+      "Match/ATS computed by the Companion": {
+        "ok": true,
+        "result": "✓\nAção concluída\n\nVaga analisada localmente.\nMatch: 57 · ATS: 100"
+      },
+      "an expired session is refused and the capture is kept": {
+        "ok": true,
+        "result": "!\nNão foi possível concluir\n\nLocal Companion offline. Inicie o SotuHire local e tente novamente. Pareie a extensão com o Local Companion. Captura de vaga mantida localmente (1 pendência(s)).\nVocê ainda pode copiar o texto ou acumular um lot"
+      },
+      "re-pairing renews the session and flushes the queue": {
+        "ok": true,
+        "result": "✓\nAção concluída\n\n1 pendência(s) enviada(s); 0 ainda aguardam o Companion."
+      },
+      "nothing asked of the web app (5173) or the Local API (8787)": {
+        "ok": true
+      },
+      "after a browser restart the session is gone (re-pair required), settings remain": {
+        "ok": true
+      },
+      "data written only to the disposable data dir": {
+        "ok": true,
+        "files": 13
+      }
+    },
+    "C": {
+      "web app paired with the Local API": {
+        "ok": true
+      },
+      "Prepare application opens the Lab with identifiers only": {
+        "ok": true,
+        "popup": "✓\nAção concluída\n\nApplication Lab aberto com capture_id e job_snapshot_id. O Perfil completo não saiu do SotuHire.",
+        "lab_url": "http://127.0.0.1:5173/application-lab"
+      },
+      "the Lab receives the captured job snapshot, ready": {
+        "ok": true,
+        "note": "the card shows the snapshot id, not the job title (UX issue recorded)"
+      },
+      "the job reaches the web app Tracker once, though sent twice": {
+        "ok": true,
+        "cards": 1,
+        "first": "✓\nAção concluída\n\nVaga enviada ao tracker.\nMatch: 57 · ATS: 100",
+        "second": "✓\nAção concluída\n\nVaga enviada ao tracker.\nMatch: 57 · ATS: 100"
+      },
+      "project evidence sent for Profile review": {
+        "ok": true,
+        "result": "✦\n40/100 · Grade D\n\nsotuhire-fixture/projeto-ficticio tem nota técnica inicial 8/20 e 0 linguagem(ns) detectada(s).\nlocal-fallback · local-fallback"
+      },
+      "'IA configurada no SotuHire' answers and says which path it took": {
+        "ok": true,
+        "result": "✦\n46/100 · Grade D\n\nsotuhire-fixture/projeto-ficticio tem nota técnica inicial 8/20 e 2 linguagem(ns) detectada(s).\nlocal-fallback · configurado-no-sotuhire · fallback local"
+      },
+      "after a browser restart nothing is left pending": {
+        "ok": true,
+        "pending": 0
+      }
+    }
+  },
+  "zip": "extension.zip",
+  "version": "0.10.1",
+  "ok": true,
+  "failed": []
+}

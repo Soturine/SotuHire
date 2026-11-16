@@ -85,7 +85,9 @@ def test_prompt_catalog_comes_from_registry_and_marks_unconsumed_contracts() -> 
     by_id = {row["prompt_id"]: row for row in rows}
 
     assert len(rows) == 25
-    assert by_id["career_advice_v1"]["status"] == "implementado"
+    # its only "consumer" (modules/ai/guidance.py) was imported by nothing
+    assert by_id["career_advice_v1"]["status"] == "registrado sem consumidor"
+    assert by_id["career_advice_v1"]["consumers"] == []
     assert by_id["domain_classification_v1"]["status"] == "implementado sem fluxo integrado"
     assert by_id["interview_question_generation_v1"]["status"] == "implementado"
     assert by_id["taxonomy_mapping_explanation_v1"]["fallback"] != "Não documentado"
@@ -94,3 +96,28 @@ def test_prompt_catalog_comes_from_registry_and_marks_unconsumed_contracts() -> 
     assert by_id["resume_extraction_v1"]["evaluation_suite"] == "golden"
     assert by_id["resume_extraction_v1"]["golden_cases"]
     assert PROMPT_OUTPUT.read_text(encoding="utf-8") == expected
+
+
+def test_prompt_consumers_count_only_files_production_code_reaches(tmp_path):
+    # A file that only mentions a prompt id but that nothing imports is not an executable consumer
+    # (three guidance prompts were catalogued as "implementado" through such a file until 2026-11).
+    from scripts.generate_prompt_catalog import _production_reachable
+
+    (tmp_path / "apps" / "api" / "routes").mkdir(parents=True)
+    (tmp_path / "modules" / "pkg").mkdir(parents=True)
+    (tmp_path / "scripts").mkdir()
+    (tmp_path / "apps" / "api" / "routes" / "jobs.py").write_text(
+        "from modules.pkg import used\nfrom modules.pkg.rel import thing\n", encoding="utf-8"
+    )
+    (tmp_path / "modules" / "pkg" / "__init__.py").write_text("", encoding="utf-8")
+    (tmp_path / "modules" / "pkg" / "used.py").write_text("PROMPT = 'x_v1'\n", encoding="utf-8")
+    (tmp_path / "modules" / "pkg" / "rel.py").write_text(
+        "from .used import PROMPT\n", encoding="utf-8"
+    )
+    (tmp_path / "modules" / "pkg" / "orphan.py").write_text("PROMPT = 'y_v1'\n", encoding="utf-8")
+
+    reachable = _production_reachable(tmp_path)
+
+    assert "apps/api/routes/jobs.py" in reachable
+    assert {"modules/pkg/used.py", "modules/pkg/rel.py"} <= reachable
+    assert "modules/pkg/orphan.py" not in reachable

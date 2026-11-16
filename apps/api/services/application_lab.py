@@ -15,7 +15,18 @@ from modules.application_lab.models import (
     MasterResume,
     ResumeVariant,
 )
+from modules.application_lab.profile_projection import (
+    SECTION_LAYOUT,
+    apply_profile_updates,
+    master_resume_from_profile,
+    profile_changes,
+    profile_updates,
+    refresh_profile_facts,
+)
+from modules.application_lab.repository import StaleWriteError
 from modules.application_lab.service import ApplicationLabService
+from modules.profile.json_resume import section_for_item
+from modules.profile.service import UniversalCareerProfileService
 
 from apps.api.schemas.application_lab import (
     ApplicationLabAnalyzeResponse,
@@ -24,6 +35,10 @@ from apps.api.schemas.application_lab import (
     ApplicationLabSessionPage,
     MasterResumeResponse,
     PaginationMeta,
+    ProfileChangedItem,
+    ProfileFieldChange,
+    ProfileUpdateItem,
+    ProfileUpdatesResponse,
     ResumeExportResponse,
     ResumeIngestionResponse,
     ResumeTemplatesResponse,
@@ -143,9 +158,126 @@ class ApplicationLabApiService:
             raise HTTPException(status_code=404, detail="Currículo Mestre ainda não foi criado.")
         return MasterResumeResponse(resume=resume)
 
-    def save_master(self, resume: MasterResume) -> MasterResumeResponse:
+    def master_from_profile(self) -> MasterResumeResponse:
+        """Create the Master Resume from confirmed profile facts instead of a second import."""
+        if self.repository.get_master_resume() is not None:
+            raise HTTPException(
+                status_code=409,
+                detail="Currículo Mestre já existe; use as atualizações do Perfil para trazer itens novos.",
+            )
+        profile = UniversalCareerProfileService().get_profile()
+        resume = master_resume_from_profile(profile)
+        if not resume.sections:
+            raise HTTPException(
+                status_code=422,
+                detail="O Perfil ainda não tem itens confirmados para montar o Currículo Mestre.",
+            )
+        return MasterResumeResponse(resume=self._call(self.repository.save_master_resume, resume))
+
+    def profile_updates(self) -> ProfileUpdatesResponse:
+        master = self.master().resume
+        profile = UniversalCareerProfileService().get_profile()
+        layout = {source: title for source, _section_type, title in SECTION_LAYOUT}
+        return ProfileUpdatesResponse(
+            master_resume_id=master.master_resume_id,
+            items=[
+                ProfileUpdateItem(
+                    item_id=item.item_id,
+                    item_type=item.type,
+                    title=item.title,
+                    subtitle=item.organization or item.institution or "",
+                    section_title=layout[section_for_item(item)],
+                )
+                for item in profile_updates(profile, master)
+            ],
+            changed=[
+                ProfileChangedItem(
+                    item_id=item.item_id,
+                    item_type=item.type,
+                    title=item.title,
+                    section_title=section_title,
+                    changes=[
+                        ProfileFieldChange(field=field, in_master=before, in_profile=after)
+                        for field, (before, after) in diff.items()
+                    ],
+                )
+                for item, section_title, diff in profile_changes(profile, master)
+            ],
+        )
+
+    def refresh_profile_facts(self, item_ids: list[str]) -> MasterResumeResponse:
+        """Bring the current Profile text of chosen facts into the Master (never the reverse)."""
+        master = self.master().resume
+        profile = UniversalCareerProfileService().get_profile()
+        try:
+            updated = refresh_profile_facts(master, profile, item_ids)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        if updated is master:
+            return MasterResumeResponse(resume=master)
+        return MasterResumeResponse(
+            resume=self._call(
+                self.repository.save_master_resume, updated, expected_updated_at=master.updated_at
+            )
+        )
+
+    def apply_profile_updates(self, item_ids: list[str]) -> MasterResumeResponse:
+        master = self.master().resume
+        profile = UniversalCareerProfileService().get_profile()
+        try:
+            updated = apply_profile_updates(master, profile, item_ids)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        if updated is master:  # every chosen fact is already there: a retry, nothing to write
+            return MasterResumeResponse(resume=master)
+        return MasterResumeResponse(
+            resume=self._call(
+                self.repository.save_master_resume, updated, expected_updated_at=master.updated_at
+            )
+        )
+
+    def save_master(
+        self,
+        resume: MasterResume,
+        *,
+        expected_updated_at: datetime | None = None,
+        replace_existing: bool = False,
+    ) -> MasterResumeResponse:
+        """Save a Master Resume.
+
+        A client that edits a copy it loaded sends that copy's ``updated_at`` as
+        ``expected_updated_at`` and gets 409 instead of erasing a newer save (another tab, or
+        facts applied from the Profile meanwhile).
+
+        A different resume (an imported draft has its own id) becomes the Master the app uses
+        only with ``replace_existing``: before, adopting a re-imported file silently took the
+        place of the Master being edited. With it, ``expected_updated_at`` must name the Master
+        the person saw being replaced. The previous one is not deleted; it stays in the database
+        and in backups, no longer the current Master.
+        """
+        current = self.repository.get_master_resume()
+        if current is not None and current.master_resume_id != resume.master_resume_id:
+            if not replace_existing:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Já existe um Currículo Mestre; confirme a substituição para adotar "
+                    "este currículo no lugar dele.",
+                )
+            if expected_updated_at is not None and current.updated_at != expected_updated_at:
+                raise HTTPException(
+                    status_code=409,
+                    detail="O Currículo Mestre mudou depois de ser exibido; revise de novo "
+                    "antes de substituí-lo.",
+                )
+            expected_updated_at = None  # checked above; the new resume has no stored copy yet
         prepared = resume.model_copy(update={"updated_at": datetime.now(UTC)})
-        return MasterResumeResponse(resume=self._call(self.repository.save_master_resume, prepared))
+        return MasterResumeResponse(
+            resume=self._call(
+                self.repository.save_master_resume,
+                prepared,
+                expected_updated_at=expected_updated_at,
+            )
+        )
 
     def ingest_resume(self, file_name: str, content_base64: str) -> ResumeIngestionResponse:
         try:
@@ -177,11 +309,17 @@ class ApplicationLabApiService:
             ),
         )
 
-    def save_variant(self, variant: ResumeVariant) -> ResumeVariantResponse:
+    def save_variant(
+        self, variant: ResumeVariant, *, expected_updated_at: datetime | None = None
+    ) -> ResumeVariantResponse:
         if self.repository.get_master_resume(variant.master_resume_id) is None:
             raise HTTPException(status_code=404, detail="Currículo Mestre não encontrado.")
         prepared = variant.model_copy(update={"updated_at": datetime.now(UTC)})
-        return ResumeVariantResponse(variant=self._call(self.repository.save_variant, prepared))
+        return ResumeVariantResponse(
+            variant=self._call(
+                self.repository.save_variant, prepared, expected_updated_at=expected_updated_at
+            )
+        )
 
     def variant(self, variant_id: str) -> ResumeVariantResponse:
         variant = self.repository.get_variant(variant_id)
@@ -189,14 +327,23 @@ class ApplicationLabApiService:
             raise HTTPException(status_code=404, detail="Variante não encontrada.")
         return ResumeVariantResponse(variant=variant)
 
-    def update_variant(self, variant_id: str, changes: dict[str, Any]) -> ResumeVariantResponse:
+    def update_variant(
+        self,
+        variant_id: str,
+        changes: dict[str, Any],
+        *,
+        expected_updated_at: datetime | None = None,
+    ) -> ResumeVariantResponse:
+        """Patch a variant. With ``expected_updated_at`` a newer stored copy answers 409."""
         current = self.variant(variant_id).variant
         allowed = {"title", "target_role", "sections", "validation_warnings"}
         update = {
             key: value for key, value in changes.items() if key in allowed and value is not None
         }
         update["updated_at"] = datetime.now(UTC)
-        return self.save_variant(current.model_copy(update=update))
+        return self.save_variant(
+            current.model_copy(update=update), expected_updated_at=expected_updated_at
+        )
 
     def templates(self) -> ResumeTemplatesResponse:
         return ResumeTemplatesResponse(items=self.repository.list_templates())
@@ -226,6 +373,8 @@ class ApplicationLabApiService:
     def _call(function, *args, **kwargs):
         try:
             return function(*args, **kwargs)
+        except StaleWriteError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         except LookupError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ValueError as exc:

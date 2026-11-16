@@ -67,9 +67,20 @@ class LocalSecurityMiddleware:
             async with asyncio.timeout(self.policy.timeout_seconds):
                 await self.app(scope, replay, send)
         except RequestLimitError as exc:
-            await _error(send, exc.status_code, exc.code, str(exc))
+            await _error(send, exc.status_code, exc.code, str(exc), self._cors_origin(origin))
         except TimeoutError:
-            await _error(send, 504, "request_timeout", "A requisição local excedeu o tempo limite.")
+            await _error(
+                send,
+                504,
+                "request_timeout",
+                "A requisição local excedeu o tempo limite.",
+                self._cors_origin(origin),
+            )
+
+    def _cors_origin(self, origin: str) -> str:
+        # This middleware sits outside CORSMiddleware, so its own rejections must carry the CORS
+        # headers for an allowed origin; otherwise the browser hides the 401 that starts pairing.
+        return origin if origin in self.allowed_origins else ""
 
     def _validate_client(self, scope: Scope) -> None:
         client = scope.get("client")
@@ -197,23 +208,26 @@ def _cookie(raw_cookie: str, name: str) -> str:
     return morsel.value if morsel else ""
 
 
-async def _error(send: Send, status_code: int, code: str, message: str) -> None:
+async def _error(
+    send: Send, status_code: int, code: str, message: str, cors_origin: str = ""
+) -> None:
     payload = json.dumps(
         {"error": {"code": code, "message": message, "details": {}}, "request_id": ""},
         ensure_ascii=False,
         separators=(",", ":"),
     ).encode("utf-8")
-    await send(
-        {
-            "type": "http.response.start",
-            "status": status_code,
-            "headers": [
-                (b"content-type", b"application/json; charset=utf-8"),
-                (b"content-length", str(len(payload)).encode("ascii")),
-                (b"cache-control", b"no-store"),
-            ],
-        }
-    )
+    headers = [
+        (b"content-type", b"application/json; charset=utf-8"),
+        (b"content-length", str(len(payload)).encode("ascii")),
+        (b"cache-control", b"no-store"),
+        (b"vary", b"Origin"),
+    ]
+    if cors_origin:
+        headers += [
+            (b"access-control-allow-origin", cors_origin.encode("latin-1")),
+            (b"access-control-allow-credentials", b"true"),
+        ]
+    await send({"type": "http.response.start", "status": status_code, "headers": headers})
     await send({"type": "http.response.body", "body": payload})
 
 

@@ -26,7 +26,6 @@ import { useMemo, useState } from "react";
 import { toast } from "@/lib/notify";
 import { AppShell } from "@/components/app-shell";
 import { SectionCard } from "@/components/section-card";
-import { StatCard } from "@/components/stat-card";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
 import { useApi } from "@/lib/api/hooks";
 import { useApiMode } from "@/lib/api/mode";
@@ -446,29 +445,80 @@ function RadarPage() {
       }
     >
       <div className="space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
-          <div className="flex items-start gap-3">
-            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent">
-              <RadioTower className="h-5 w-5" />
+        <section
+          id="radar-summary"
+          data-testid="radar-summary"
+          aria-labelledby="radar-summary-title"
+          className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-soft)]"
+        >
+          <div className="flex flex-wrap items-start justify-between gap-3 p-5">
+            <div className="flex min-w-0 items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-surface-accent text-accent-strong">
+                <RadioTower aria-hidden className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <h2 id="radar-summary-title" className="font-semibold">
+                  Radar local-first com revisão manual
+                </h2>
+                <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground">
+                  O Radar consulta somente fontes configuradas por você, como RSS público ou páginas
+                  públicas simples. APIs oficiais ficam preparadas por adapter e nada vai para
+                  Candidaturas sem sua ação.
+                </p>
+              </div>
             </div>
-            <div>
-              <div className="font-semibold">Radar local-first com revisão manual</div>
-              <p className="mt-1 max-w-3xl text-xs leading-relaxed text-muted-foreground">
-                O Radar consulta somente fontes configuradas por você, como RSS público ou páginas
-                públicas simples. APIs oficiais ficam preparadas por adapter e nada vai para
-                Candidaturas sem sua ação.
-              </p>
-            </div>
+            {mode === "demo" && (
+              <span
+                data-testid="radar-demo-badge"
+                className="rounded-full bg-highlight px-3 py-1 text-[11px] font-semibold text-highlight-foreground"
+              >
+                Dados de demonstração
+              </span>
+            )}
           </div>
-          {mode === "demo" && (
-            <span
-              data-testid="radar-demo-badge"
-              className="rounded-full bg-warning/15 px-3 py-1 text-[11px] font-semibold text-warning"
-            >
-              Dados de demonstração
-            </span>
-          )}
-        </div>
+          {/* One strip, not four look-alike cards: each figure jumps to where it is handled.
+              "—" when the numbers did not load, never a zero that looks like data. */}
+          <ul className="grid grid-cols-2 border-t bg-surface-muted/60 sm:grid-cols-4 sm:divide-x">
+            {(
+              [
+                ["Fontes ativas", statsQ.data?.active_sources, "#radar-sources", RadioTower, ""],
+                [
+                  "Resultados",
+                  statsQ.data?.total_results,
+                  "#radar-results",
+                  FileSearch,
+                  "text-accent-strong",
+                ],
+                [
+                  "Alertas novos",
+                  statsQ.data?.unread_alerts ??
+                    (statsQ.isError
+                      ? undefined
+                      : shownAlerts.filter((a) => a.status === "unread").length),
+                  "#radar-alerts",
+                  Bell,
+                  "text-seal-strong",
+                ],
+                ["Duplicatas", statsQ.data?.duplicates, "#radar-results", Filter, ""],
+              ] as const
+            ).map(([label, value, href, Icon, tone]) => (
+              <li key={label}>
+                <a
+                  href={href}
+                  className="group flex items-center gap-3 px-5 py-3.5 transition-colors duration-(--duration-1) hover:bg-surface-muted"
+                >
+                  <Icon aria-hidden className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0">
+                    <span className={cn("text-metric block text-2xl", (value ?? 0) > 0 && tone)}>
+                      {value ?? "—"}
+                    </span>
+                    <span className="block text-xs text-muted-foreground">{label}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
 
         {hasRealEmpty && (
           <div
@@ -487,38 +537,11 @@ function RadarPage() {
           </div>
         )}
 
-        <section
-          id="radar-summary"
-          data-testid="radar-summary"
-          className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4"
-        >
-          <StatCard
-            label="Fontes ativas"
-            value={statsQ.data?.active_sources ?? 0}
-            icon={RadioTower}
-          />
-          <StatCard
-            label="Resultados"
-            value={statsQ.data?.total_results ?? 0}
-            icon={FileSearch}
-            tone="accent"
-          />
-          <StatCard
-            label="Alertas novos"
-            value={
-              statsQ.data?.unread_alerts ?? shownAlerts.filter((a) => a.status === "unread").length
-            }
-            icon={Bell}
-            tone="warning"
-          />
-          <StatCard label="Duplicatas" value={statsQ.data?.duplicates ?? 0} icon={Filter} />
-        </section>
-
         <SectionCard
           id="radar-ai-wishlist"
           title={
             <span className="flex items-center gap-2">
-              <WandSparkles className="h-4 w-4 text-accent" />
+              <WandSparkles className="h-4 w-4 text-accent-strong" />
               Criar wishlist com IA
             </span>
           }
@@ -549,7 +572,7 @@ function RadarPage() {
               {useProfileContext && (
                 <span
                   data-testid="radar-profile-context-badge"
-                  className="inline-flex rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent"
+                  className="inline-flex rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 text-[11px] font-semibold text-accent-strong"
                 >
                   Contexto do perfil aplicado
                 </span>
@@ -635,7 +658,7 @@ function RadarPage() {
             id="radar-wishlist"
             title={
               <span className="flex items-center gap-2">
-                <Target className="h-4 w-4 text-accent" />
+                <Target className="h-4 w-4 text-accent-strong" />
                 Wishlist
               </span>
             }
@@ -740,7 +763,7 @@ function RadarPage() {
             id="radar-alerts"
             title={
               <span className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-accent" />
+                <Bell className="h-4 w-4 text-accent-strong" />
                 Alertas
               </span>
             }
@@ -782,7 +805,7 @@ function RadarPage() {
             id="radar-schedules"
             title={
               <span className="flex items-center gap-2">
-                <Bell className="h-4 w-4 text-accent" />
+                <Bell className="h-4 w-4 text-accent-strong" />
                 Agendamentos
               </span>
             }
@@ -967,7 +990,7 @@ function RadarPage() {
           id="radar-sources"
           title={
             <span className="flex items-center gap-2">
-              <RadioTower className="h-4 w-4 text-accent" />
+              <RadioTower className="h-4 w-4 text-accent-strong" />
               Fontes do Radar
             </span>
           }
@@ -1008,7 +1031,7 @@ function RadarPage() {
             id="radar-results"
             title={
               <span className="flex items-center gap-2">
-                <Search className="h-4 w-4 text-accent" />
+                <Search className="h-4 w-4 text-accent-strong" />
                 Resultados do Radar
               </span>
             }
@@ -1017,6 +1040,7 @@ function RadarPage() {
               <select
                 value={sourceFilter}
                 onChange={(event) => setSourceFilter(event.target.value)}
+                aria-label="Filtrar oportunidades por fonte"
                 data-testid="radar-source-filter"
                 className="h-8 rounded-md border border-input bg-card px-2 text-xs outline-none"
               >
@@ -1090,7 +1114,7 @@ function RadarPage() {
           id="radar-settings"
           title={
             <span className="flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-accent" />
+              <ShieldCheck className="h-4 w-4 text-accent-strong" />
               Segurança e próximos passos
             </span>
           }
@@ -1139,7 +1163,7 @@ function WishlistCard({ wishlist }: { wishlist: JobWishlist }) {
           <div className="font-semibold">{wishlist.name}</div>
           <div className="text-muted-foreground">Score mínimo {wishlist.min_match_score}%</div>
         </div>
-        <span className="rounded-full bg-success/15 px-2 py-0.5 font-medium text-success">
+        <span className="rounded-full bg-success/15 px-2 py-0.5 font-medium text-success-strong">
           Ativa
         </span>
       </div>
@@ -1188,7 +1212,7 @@ function SourceBox({ source }: { source: RadarSource }) {
       </div>
       {source.notes && <p className="mt-3 text-xs text-muted-foreground">{source.notes}</p>}
       {source.last_error && (
-        <p className="mt-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive">
+        <p className="mt-2 rounded-md bg-destructive/10 p-2 text-xs text-destructive-strong">
           {source.last_error}
         </p>
       )}
@@ -1361,7 +1385,7 @@ function ResultCard({
             href={result.url}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+            className="inline-flex items-center gap-1 text-xs font-medium text-accent-strong hover:underline"
           >
             Ver fonte <ExternalLink className="h-3 w-3" />
           </a>
@@ -1437,9 +1461,9 @@ function Badge({
     <span
       className={cn(
         "rounded-full px-2 py-0.5 text-[11px] font-medium",
-        tone === "success" && "bg-success/15 text-success",
-        tone === "warning" && "bg-warning/15 text-warning",
-        tone === "error" && "bg-destructive/15 text-destructive",
+        tone === "success" && "bg-success/15 text-success-strong",
+        tone === "warning" && "bg-warning/15 text-warning-strong",
+        tone === "error" && "bg-destructive/15 text-destructive-strong",
         tone === "muted" && "bg-muted text-muted-foreground",
       )}
     >
@@ -1480,7 +1504,7 @@ function InfoBox({
       href={to}
       className="rounded-lg border border-border bg-muted/30 p-4 transition-colors hover:bg-muted"
     >
-      <Icon className="h-4 w-4 text-accent" />
+      <Icon className="h-4 w-4 text-accent-strong" />
       <div className="mt-2 text-sm font-semibold">{title}</div>
       <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{text}</p>
     </a>

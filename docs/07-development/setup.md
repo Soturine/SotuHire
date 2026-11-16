@@ -33,21 +33,19 @@ source .venv/bin/activate
 ## Instalar dependências
 
 ```bash
-pip install -r docs/requirements/requirements.txt
+pip install -e ".[dev]"
 ```
 
-Dependências sugeridas para o MVP:
+As dependências vivem só no `pyproject.toml`. A instalação padrão traz a API e o núcleo; os
+extras são opcionais:
 
-```text
-streamlit
-google-genai
-pypdf
-reportlab
-pydantic
-python-dotenv
-pytest
-ruff
-```
+| Extra | Para quê |
+| --- | --- |
+| `ai` | SDKs do Gemini e da Anthropic (a análise local não precisa deles) |
+| `browser` | Captura assistida em um Chromium aberto pela própria pessoa (Playwright via CDP) |
+| `legacy-ui` | Interface Streamlit legada (`streamlit run app.py`) |
+| `docs` | Build do MkDocs |
+| `dev` | Testes, lint, tipos, docs e a interface legada (o CI usa este) |
 
 ## Configurar ambiente
 

@@ -153,19 +153,6 @@ class PortfolioItem(StrictModel):
     stale_at: datetime | None = None
 
 
-class ProfessionalRegistration(StrictModel):
-    type: str
-    council: str
-    registration_number: str
-    jurisdiction: str = ""
-    status: str = ""
-    issue_date: str | None = None
-    expiry_date: str | None = None
-    source: str = "manual"
-    confirmed: bool = False
-    sensitive: bool = True
-
-
 class NextBestAction(StrictModel):
     action_id: str
     type: str

@@ -4,6 +4,31 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Metric-matched fallback for the display serif (CP-UX06). Until Source Serif 4 arrives, titles
+   render in Georgia, which is wider: the landing headline wrapped into an extra line and jumped
+   when the web font swapped in (CLS 0.14). One face per weight, because local("Georgia") is only
+   the regular file and bold would be synthesized from it. Width ratios measured in Chromium on the
+   landing headline: 600 vs Georgia Bold 79.3%, 400 vs Georgia 91.5%; ascent 1.04 em, descent
+   0.34 em (Source Serif 4). */
+@font-face {
+  font-family: "Source Serif 4 Fallback";
+  font-weight: 100 500;
+  src: local("Georgia");
+  size-adjust: 91.5%;
+  ascent-override: 104%;
+  descent-override: 34%;
+  line-gap-override: 0%;
+}
+@font-face {
+  font-family: "Source Serif 4 Fallback";
+  font-weight: 501 900;
+  src: local("Georgia Bold"), local("Georgia-Bold");
+  size-adjust: 79.3%;
+  ascent-override: 104%;
+  descent-override: 34%;
+  line-gap-override: 0%;
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -32,6 +57,26 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  /* Text-on-surface variants of the semantic fills (WCAG AA on card, background and 15-20% tints). */
+  --color-accent-strong: var(--accent-strong);
+  --color-success-strong: var(--success-strong);
+  --color-warning-strong: var(--warning-strong);
+  --color-destructive-strong: var(--destructive-strong);
+  /* Dossier marks: highlighter (pending review) and seal (waiting on the person). */
+  --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
+  --color-seal: var(--seal);
+  --color-seal-strong: var(--seal-strong);
+  --color-paper: var(--paper);
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-accent: var(--surface-accent);
+  --color-surface-interactive: var(--surface-interactive);
+  --color-hero-foreground: var(--hero-foreground);
+  --color-hero-muted: var(--hero-muted);
+  --color-hero-accent: var(--hero-accent);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -42,6 +87,7 @@
   --color-chart-5: var(--chart-5);
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-muted: var(--sidebar-muted);
   --color-sidebar-primary: var(--sidebar-primary);
   --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
   --color-sidebar-accent: var(--sidebar-accent);
@@ -49,113 +95,234 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
-  --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  --font-mono: "Cascadia Code", "SFMono-Regular", Consolas, ui-monospace, monospace;
+  /* Self-hosted OFL fonts (src/main.tsx), so the app stays offline-capable. */
+  --font-sans:
+    "IBM Plex Sans Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display:
+    "Source Serif 4 Variable", "Source Serif 4 Fallback", Georgia, "Times New Roman", serif;
+  --font-mono: "IBM Plex Mono", "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+
+  --animate-page-in: page-in var(--duration-2) var(--ease-out) both;
+  --animate-rise-in: page-in var(--duration-3) var(--ease-out) both;
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.625rem;
 
-  /* SotuHire v2: calm compass blue, evidence teal and warm trajectory surfaces. */
-  --background: oklch(0.985 0.003 240);
-  --foreground: oklch(0.18 0.03 250);
+  /* Motion: three durations, all off under prefers-reduced-motion. */
+  --duration-1: 120ms;
+  --duration-2: 200ms;
+  --duration-3: 320ms;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 250);
+  /* SotuHire (CP-UX01B): a deep navy rail beside a cool, layered workspace; petrol-teal for
+     confirmed evidence and brand moments; ochre highlighter for what waits for review; a
+     vermilion seal for what waits on the person. The serif is kept for page titles and the
+     hero statement only. */
+  --canvas: oklch(0.968 0.007 235);
+  --paper: var(--canvas);
+  --background: var(--canvas);
+  --foreground: oklch(0.2 0.03 258);
+
+  /* Surface hierarchy: canvas < surface-muted < surface < surface-raised (cards). */
+  --surface: oklch(0.985 0.004 235);
+  --surface-raised: oklch(1 0 0);
+  --surface-muted: oklch(0.948 0.009 235);
+  --surface-accent: oklch(0.955 0.032 188);
+  --surface-interactive: oklch(0.93 0.022 205);
+
+  --card: var(--surface-raised);
+  --card-foreground: oklch(0.2 0.03 258);
 
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 250);
+  --popover-foreground: oklch(0.2 0.03 258);
 
-  /* Primary = deep ink navy */
-  --primary: oklch(0.22 0.04 255);
-  --primary-foreground: oklch(0.985 0.003 240);
+  /* Primary = navy ink */
+  --primary: oklch(0.25 0.05 258);
+  --primary-foreground: oklch(0.985 0.004 235);
 
-  --secondary: oklch(0.965 0.008 250);
-  --secondary-foreground: oklch(0.22 0.04 255);
+  --secondary: oklch(0.945 0.012 235);
+  --secondary-foreground: oklch(0.25 0.05 258);
 
-  --muted: oklch(0.96 0.006 250);
-  --muted-foreground: oklch(0.52 0.02 255);
+  --muted: oklch(0.948 0.009 235);
+  --muted-foreground: oklch(0.47 0.025 255);
 
-  /* Accent = emerald */
-  --accent: oklch(0.63 0.13 183);
-  --accent-foreground: oklch(0.16 0.04 200);
+  /* Accent = petrol teal (confirmed evidence, brand moments, links) */
+  --accent: oklch(0.56 0.11 188);
+  --accent-foreground: oklch(0.99 0.004 235);
 
-  --destructive: oklch(0.62 0.22 25);
-  --destructive-foreground: oklch(0.985 0.003 240);
+  --destructive: oklch(0.6 0.2 27);
+  --destructive-foreground: oklch(0.99 0.004 85);
 
-  --success: oklch(0.7 0.16 160);
-  --success-foreground: oklch(0.16 0.04 200);
+  --success: oklch(0.66 0.14 160);
+  --success-foreground: oklch(0.17 0.04 165);
 
-  --warning: oklch(0.78 0.15 75);
-  --warning-foreground: oklch(0.22 0.06 60);
+  --warning: oklch(0.8 0.14 78);
+  --warning-foreground: oklch(0.24 0.06 60);
 
-  --border: oklch(0.92 0.008 250);
-  --input: oklch(0.92 0.008 250);
-  --ring: oklch(0.63 0.13 183);
+  --highlight: oklch(0.93 0.085 95);
+  --highlight-foreground: oklch(0.25 0.05 75);
+  --seal: oklch(0.6 0.17 35);
+  --seal-strong: oklch(0.46 0.16 35);
 
-  --chart-1: oklch(0.55 0.16 255); /* indigo */
-  --chart-2: oklch(0.72 0.16 165); /* emerald */
-  --chart-3: oklch(0.78 0.15 75); /* amber */
-  --chart-4: oklch(0.65 0.2 20); /* coral */
-  --chart-5: oklch(0.6 0.13 290); /* violet */
+  /* Fills above are for backgrounds, icons and borders; text uses the -strong variants
+     (contrast computed in OKLCH with gamma-correct blending, calibrated against axe). */
+  --accent-strong: oklch(0.45 0.1 190);
+  --success-strong: oklch(0.45 0.13 158);
+  --warning-strong: oklch(0.46 0.12 70);
+  --destructive-strong: oklch(0.46 0.19 27);
 
-  --sidebar: oklch(0.18 0.03 255);
-  --sidebar-foreground: oklch(0.92 0.01 240);
-  --sidebar-primary: oklch(0.68 0.12 183);
-  --sidebar-primary-foreground: oklch(0.16 0.04 200);
-  --sidebar-accent: oklch(0.24 0.04 255);
-  --sidebar-accent-foreground: oklch(0.97 0.005 240);
-  --sidebar-border: oklch(0.28 0.03 255);
-  --sidebar-ring: oklch(0.68 0.12 183);
+  --border: oklch(0.9 0.011 240);
+  --input: oklch(0.86 0.014 240);
+  --ring: oklch(0.5 0.11 190);
 
+  --chart-1: oklch(0.42 0.09 258); /* navy */
+  --chart-2: oklch(0.56 0.11 188); /* petrol */
+  --chart-3: oklch(0.78 0.13 80); /* ochre */
+  --chart-4: oklch(0.6 0.17 35); /* seal */
+  --chart-5: oklch(0.62 0.12 230); /* azure */
+
+  /* The navigation rail stays dark in both themes: it frames the workspace. */
+  --sidebar: oklch(0.205 0.042 260);
+  --sidebar-foreground: oklch(0.93 0.012 240);
+  --sidebar-muted: oklch(0.74 0.028 245);
+  --sidebar-primary: oklch(0.8 0.115 182);
+  --sidebar-primary-foreground: oklch(0.18 0.04 200);
+  --sidebar-accent: oklch(0.275 0.05 258);
+  --sidebar-accent-foreground: oklch(0.98 0.006 240);
+  --sidebar-border: oklch(0.31 0.04 258);
+  --sidebar-ring: oklch(0.8 0.115 182);
+
+  /* Hero: navy into petrol with two soft lights. Text on it uses the hero-* tokens. */
   --gradient-hero:
-    radial-gradient(ellipse at top, oklch(0.96 0.04 165 / 0.5), transparent 60%),
-    linear-gradient(180deg, oklch(0.98 0.005 240), oklch(0.96 0.01 250));
-  --gradient-ink: linear-gradient(135deg, oklch(0.22 0.04 255), oklch(0.32 0.06 255));
-  --shadow-soft: 0 1px 2px oklch(0.2 0.03 255 / 0.04), 0 8px 24px -12px oklch(0.2 0.03 255 / 0.08);
+    radial-gradient(110% 130% at 100% 0%, oklch(0.6 0.12 188 / 0.55), transparent 55%),
+    radial-gradient(70% 110% at 0% 100%, oklch(0.48 0.11 235 / 0.5), transparent 60%),
+    linear-gradient(135deg, oklch(0.23 0.05 260), oklch(0.29 0.06 228));
+  --hero-foreground: oklch(0.985 0.004 235);
+  --hero-muted: oklch(0.85 0.03 215);
+  --hero-accent: oklch(0.85 0.12 178);
+  --gradient-brand: linear-gradient(135deg, oklch(0.55 0.11 188), oklch(0.48 0.1 222));
+  --gradient-accent-soft: linear-gradient(
+    135deg,
+    oklch(0.955 0.035 188),
+    oklch(0.975 0.012 225) 70%
+  );
+  --gradient-ink: linear-gradient(135deg, oklch(0.24 0.05 260), oklch(0.31 0.06 240));
+  --shadow-soft: 0 1px 2px oklch(0.2 0.03 258 / 0.05), 0 2px 10px -4px oklch(0.2 0.03 258 / 0.07);
   --shadow-elevated:
-    0 4px 12px -2px oklch(0.2 0.03 255 / 0.08), 0 24px 48px -16px oklch(0.2 0.03 255 / 0.12);
+    0 2px 6px -1px oklch(0.2 0.03 258 / 0.07), 0 20px 44px -20px oklch(0.2 0.04 258 / 0.22);
+  --shadow-hero: 0 24px 60px -28px oklch(0.25 0.08 230 / 0.55);
 }
 
 .dark {
-  --background: oklch(0.14 0.02 255);
-  --foreground: oklch(0.96 0.005 240);
-  --card: oklch(0.18 0.03 255);
-  --card-foreground: oklch(0.96 0.005 240);
-  --popover: oklch(0.18 0.03 255);
-  --popover-foreground: oklch(0.96 0.005 240);
-  --primary: oklch(0.96 0.005 240);
-  --primary-foreground: oklch(0.18 0.03 255);
-  --secondary: oklch(0.24 0.03 255);
-  --secondary-foreground: oklch(0.96 0.005 240);
-  --muted: oklch(0.24 0.03 255);
-  --muted-foreground: oklch(0.7 0.02 250);
-  --accent: oklch(0.7 0.12 183);
-  --accent-foreground: oklch(0.14 0.04 200);
-  --border: oklch(1 0 0 / 8%);
-  --input: oklch(1 0 0 / 12%);
+  --canvas: oklch(0.165 0.022 258);
+  --paper: var(--canvas);
+  --background: var(--canvas);
+  --foreground: oklch(0.95 0.008 235);
+  --surface: oklch(0.185 0.024 258);
+  --surface-raised: oklch(0.21 0.027 258);
+  --surface-muted: oklch(0.19 0.024 258);
+  --surface-accent: oklch(0.24 0.045 205);
+  --surface-interactive: oklch(0.27 0.04 220);
+  --card: var(--surface-raised);
+  --card-foreground: oklch(0.95 0.008 235);
+  --popover: oklch(0.225 0.028 258);
+  --popover-foreground: oklch(0.95 0.008 235);
+  --primary: oklch(0.95 0.008 235);
+  --primary-foreground: oklch(0.2 0.03 258);
+  --secondary: oklch(0.26 0.03 258);
+  --secondary-foreground: oklch(0.95 0.008 235);
+  --muted: oklch(0.25 0.028 258);
+  --muted-foreground: oklch(0.75 0.02 240);
+  --accent: oklch(0.7 0.11 185);
+  --accent-foreground: oklch(0.16 0.03 190);
+  --success: oklch(0.7 0.13 158);
+  --success-foreground: oklch(0.16 0.03 160);
+  --warning: oklch(0.8 0.13 80);
+  --warning-foreground: oklch(0.2 0.05 70);
+  --destructive: oklch(0.66 0.18 27);
+  --destructive-foreground: oklch(0.16 0.03 27);
+  --highlight: oklch(0.36 0.07 85);
+  --highlight-foreground: oklch(0.95 0.04 90);
+  --seal: oklch(0.68 0.15 35);
+  --seal-strong: oklch(0.82 0.11 40);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 16%);
+  --ring: oklch(0.78 0.11 185);
+  --accent-strong: oklch(0.84 0.1 185);
+  --success-strong: oklch(0.84 0.12 158);
+  --warning-strong: oklch(0.86 0.11 80);
+  --destructive-strong: oklch(0.84 0.13 27);
+  --chart-1: oklch(0.78 0.07 258);
+  --chart-2: oklch(0.72 0.11 185);
+  --chart-3: oklch(0.8 0.12 80);
+  --chart-4: oklch(0.7 0.14 35);
+  --chart-5: oklch(0.72 0.1 230);
+  --gradient-hero:
+    radial-gradient(110% 130% at 100% 0%, oklch(0.55 0.11 188 / 0.45), transparent 55%),
+    radial-gradient(70% 110% at 0% 100%, oklch(0.42 0.1 235 / 0.45), transparent 60%),
+    linear-gradient(135deg, oklch(0.22 0.045 258), oklch(0.27 0.055 228));
+  --gradient-accent-soft: linear-gradient(135deg, oklch(0.25 0.045 200), oklch(0.215 0.03 240) 70%);
+  --shadow-soft: 0 1px 2px oklch(0 0 0 / 0.35);
+  --shadow-elevated: 0 1px 2px oklch(0 0 0 / 0.35), 0 18px 40px -20px oklch(0 0 0 / 0.65);
+  --shadow-hero: 0 24px 60px -28px oklch(0 0 0 / 0.8);
 }
 
+:root.dark {
+  /* Darker than the canvas, with its own edge, so the rail still reads as a separate plane. */
+  --sidebar: oklch(0.115 0.026 262);
+  --sidebar-foreground: oklch(0.92 0.01 240);
+  --sidebar-muted: oklch(0.72 0.025 245);
+  --sidebar-primary: oklch(0.8 0.115 182);
+  --sidebar-primary-foreground: oklch(0.16 0.03 190);
+  --sidebar-accent: oklch(0.215 0.04 255);
+  --sidebar-accent-foreground: oklch(0.98 0.006 240);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.8 0.115 182);
+}
+
+/* The rail is a dark island (class="dark" on it): shared components inside it pick up the dark
+   tokens, while --sidebar-* above follow the page theme only (they are not redefined by .dark). */
+
 @layer components {
+  /* The hero plane: navy into petrol. Use for one statement per screen, never for every card. */
   .trajectory-surface {
-    background:
-      radial-gradient(
-        circle at 85% 15%,
-        color-mix(in oklab, var(--color-accent) 22%, transparent),
-        transparent 32%
-      ),
-      linear-gradient(
-        135deg,
-        color-mix(in oklab, var(--color-card) 94%, var(--color-accent)),
-        var(--color-card)
-      );
-    box-shadow: var(--shadow-elevated);
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: var(--gradient-hero);
+    color: var(--hero-foreground);
+    box-shadow: var(--shadow-hero);
   }
-  .trajectory-surface::before {
+  /* A faint trajectory line across the hero, echoing the brand mark. */
+  .trajectory-surface::after {
     content: "";
     position: absolute;
+    inset: auto -10% -30% 35%;
+    height: 140%;
+    z-index: -1;
     pointer-events: none;
+    border-top: 1.5px solid oklch(1 0 0 / 0.1);
+    border-radius: 50%;
+    transform: rotate(-14deg);
+  }
+  /* Insight surface: soft petrol wash for evidence-backed highlights. */
+  .insight-surface {
+    background: var(--gradient-accent-soft);
+    border-color: color-mix(in oklab, var(--color-accent) 22%, var(--color-border));
   }
   .portfolio-cover {
     display: flex;
@@ -195,28 +362,67 @@
     -webkit-font-smoothing: antialiased;
   }
   ::selection {
-    background: oklch(0.72 0.16 165 / 0.35);
+    background: color-mix(in oklab, var(--color-highlight) 80%, transparent);
+    color: var(--color-highlight-foreground);
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
   }
 }
 
 @utility text-display {
   font-family: var(--font-display);
-  font-weight: 700;
-  letter-spacing: -0.025em;
+  font-weight: 600;
+  font-optical-sizing: auto;
+  letter-spacing: -0.012em;
 }
 
-@utility grid-bg {
-  background-image:
-    linear-gradient(to right, oklch(0.85 0.01 250 / 0.4) 1px, transparent 1px),
-    linear-gradient(to bottom, oklch(0.85 0.01 250 / 0.4) 1px, transparent 1px);
-  background-size: 48px 48px;
-  mask-image: radial-gradient(ellipse at center, black 40%, transparent 75%);
+/* Section label of the dossier: monospace, tracked caps; never the only cue. */
+@utility eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
-@utility glass {
-  background: color-mix(in oklab, var(--color-card) 70%, transparent);
-  backdrop-filter: blur(12px);
+/* Figures in metrics and tables: sans, tabular, tight. The serif stays for titles. */
+@utility text-metric {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  line-height: 1;
 }
+
+@utility bg-brand-gradient {
+  background-image: var(--gradient-brand);
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Text awaiting review, like a highlighter on paper. */
+@utility mark-pending {
+  background: linear-gradient(
+    180deg,
+    transparent 55%,
+    color-mix(in oklab, var(--color-highlight) 90%, transparent) 55%
+  );
+}
+
+/* grid-bg and glass were removed in CP-UX05: no consumer left after the landing moved to the
+   hero plane. */
 
 @media (prefers-reduced-motion: reduce) {
   *,

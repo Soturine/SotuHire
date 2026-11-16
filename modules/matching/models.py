@@ -6,6 +6,8 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from modules.schemas.job_analysis import Recommendation
+
 
 class MatchModel(BaseModel):
     """Base model for Match Engine 2 contracts."""
@@ -34,13 +36,16 @@ RequirementCategory = Literal[
     "domain_knowledge",
     "other",
 ]
+# Same vocabulary as modules/ai/schemas/job_extraction.py; importing it from there would make
+# this pure module load the whole modules.ai package (whose __init__ imports the analyzer,
+# which imports this module). tests/test_shared_vocabularies.py pins the two together.
 RequirementImportance = Literal["required", "preferred", "optional", "unclear"]
 RequirementCriticality = Literal["low", "medium", "high", "knockout"]
 MatchStatus = Literal["met", "partial", "missing", "unknown", "not_applicable"]
 GapSeverity = Literal["none", "low", "medium", "high", "knockout"]
 EvidenceSource = Literal["resume", "github", "portfolio", "memory", "profile", "manual", "none"]
 EvidenceStrength = Literal["weak", "medium", "strong", "verified", "unclear"]
-RecommendationAction = Literal["apply", "apply_with_adjustments", "save_for_later", "ignore"]
+RecommendationAction = Recommendation
 
 OTHER_PROFESSIONAL_REGISTRATION_OPTION = "Outro conselho / Outro registro profissional"
 

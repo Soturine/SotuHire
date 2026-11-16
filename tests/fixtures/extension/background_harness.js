@@ -21,6 +21,8 @@ const storageArea = (name) => ({
 global.chrome = {
   storage: { local: storageArea("local"), session: storageArea("session") },
   runtime: {
+    id: "test-extension-id",
+    getURL: (file = "") => `chrome-extension://test-extension-id/${file}`,
     onInstalled: { addListener() {} },
     onMessage: {
       addListener(callback) {
@@ -94,8 +96,13 @@ function aiInsights(provider) {
   };
 }
 
-function send(message) {
-  return new Promise((resolve) => listener(message, {}, resolve));
+const POPUP_SENDER = {
+  id: "test-extension-id",
+  url: "chrome-extension://test-extension-id/popup.html",
+};
+
+function send(message, sender = POPUP_SENDER) {
+  return new Promise((resolve) => listener(message, sender, resolve));
 }
 
 async function main() {

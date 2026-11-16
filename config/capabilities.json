@@ -797,12 +797,11 @@
                                                   ],
                              "core_modules":  [
                                                   "modules/storage/database.py",
-                                                  "modules/storage/repositories/base.py",
                                                   "modules/storage/migrations/runner.py"
                                               ],
                              "stores":  [
                                             "modules/storage/database.py",
-                                            "modules/storage/repositories/sqlite_repository.py"
+                                            "modules/storage/snapshots.py"
                                         ],
                              "profile_integration":  "Migra e protege o perfil e demais entidades sem apagar os stores legados.",
                              "context_purpose":  null,

@@ -34,6 +34,26 @@ def test_queue_runtime_deduplicates_retries_and_exports_safely() -> None:
     }
 
 
+def test_service_worker_rejects_untrusted_routes_and_privileged_senders() -> None:
+    result = _run_node("background_security_harness.js")
+
+    # A crafted path must never turn the loopback URL into another host (token leak).
+    assert result["userinfoHost"] is False
+    assert result["absoluteUrl"] is False
+    assert result["protocolRelative"] is False
+    assert result["traversal"] is False
+    assert result["unknownRoute"] is False
+    assert result["allowedRoute"] is True
+    assert result["fetchedHosts"] == ["127.0.0.1:8765"]
+    assert result["tokenSentOutsideLoopback"] is False
+    # Secrets and pairing are managed only from the extension's own pages.
+    assert result["saveKeyFromContentScript"] is False
+    assert result["removeKeyFromContentScript"] is False
+    assert result["pairFromContentScript"] is False
+    assert result["statusFromOtherExtension"] is False
+    assert result["statusFromPopup"] is True
+
+
 def test_content_runtime_prioritizes_nested_schema_org_jobposting() -> None:
     capture = _run_node("content_jobposting_harness.js")
 
@@ -79,7 +99,7 @@ def test_popup_uses_versioned_handshake_contract() -> None:
     popup = Path("browser-extension/popup.js").read_text(encoding="utf-8")
     manifest = json.loads(Path("browser-extension/manifest.json").read_text(encoding="utf-8"))
 
-    assert manifest["version"] == "0.10.0"
+    assert manifest["version"] == "0.10.1"
     assert 'request("/handshake"' in popup
     assert "chrome.runtime.getManifest().version" in popup
     assert "handshake.compatible" in popup
@@ -95,7 +115,7 @@ def test_companion_handshake_negotiates_current_and_old_extension(
     status, current = app.handle(
         "POST",
         "/handshake",
-        body=b'{"extension_version":"0.10.0"}',
+        body=b'{"extension_version":"0.10.1"}',
         token="companion-test-token",
     )
     old_status, old = app.handle(
@@ -106,8 +126,8 @@ def test_companion_handshake_negotiates_current_and_old_extension(
     )
 
     assert status == 200
-    assert current["extension_version"] == "0.10.0"
-    assert current["companion_version"] == "2.0.0"
+    assert current["extension_version"] == "0.10.1"
+    assert current["companion_version"] == "2.1.0"
     assert current["compatible"] is True
     capabilities = cast(list[str], current["capabilities"])
     assert "queue.retry" in capabilities

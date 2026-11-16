@@ -1,5 +1,7 @@
 ﻿import { expect, test } from "@playwright/test";
 
+import { expectToast, navTo } from "./nav";
+
 const coreScreens = [
   { path: "/", heading: /SotuHire/i },
   { path: "/dashboard", heading: "Cockpit de carreira" },
@@ -34,7 +36,7 @@ test("home, dashboard and guided flow render without legacy branding", async ({ 
 
   await page.goto("/dashboard");
   await expect(page.getByRole("heading", { name: "Cockpit de carreira" })).toBeVisible();
-  await expect(page.getByText("Próximas melhores ações")).toBeVisible();
+  await expect(page.getByText("Próximos passos")).toBeVisible();
   await expect(page.getByText("Aguardando sua aprovação").first()).toBeVisible();
 });
 
@@ -52,19 +54,18 @@ test("sidebar navigates across core screens", async ({ page }) => {
   await page.goto("/dashboard");
 
   const routes = [
-    { label: /Curr.culo/i, url: /\/resume$/, heading: /Curr.culo/ },
-    { label: /Vaga/i, url: /\/job$/, heading: "Vaga" },
+    { label: /^Currículos$/, url: /\/resume$/, heading: /Curr.culo/ },
+    { label: /^Vagas$/, url: /\/job$/, heading: "Vaga" },
     { label: /Compatibilidade/i, url: /\/match$/, heading: /Compatibilidade/ },
     { label: /Radar/i, url: /\/radar$/, heading: "Radar de Vagas" },
     { label: /Editais \/ Concursos/i, url: /\/public-exams$/, heading: "Editais / Concursos" },
-    { label: /Perfil/i, url: /\/profile$/, heading: "Perfil" },
+    { label: /^Perfil profissional$/, url: /\/profile$/, heading: "Perfil" },
     { label: /Fontes e Captura/i, url: /\/sources$/, heading: "Fontes e Captura" },
     { label: /Prefer.ncias/i, url: /\/settings$/, heading: /Configura..es/ },
   ];
 
   for (const route of routes) {
-    const link = page.getByRole("link", { name: route.label }).first();
-    await link.click();
+    await navTo(page, route.label);
     await expect(page).toHaveURL(route.url);
     await expect(page.getByRole("heading", { name: route.heading }).first()).toBeVisible();
   }
@@ -75,17 +76,28 @@ test("profile page imports fictitious text and keeps review before saving", asyn
 
   await expect(page.getByRole("heading", { name: "Perfil", exact: true })).toBeVisible();
   await expect(page.getByText("Perfil Profissional Universal", { exact: true })).toBeVisible();
+  await page.getByRole("tab", { name: "Identidade e objetivos" }).click();
+  // nothing changed yet: saving is not offered
+  await expect(page.getByTestId("profile-save")).toBeDisabled();
   await page.getByTestId("profile-name").fill("Pessoa Ficticia E2E");
+  await expect(page.getByText("Alterações ainda não salvas.")).toBeVisible();
   await page.getByTestId("profile-save").click();
   await expect(page.getByText(/Perfil atualizado|Modo Demo/i).first()).toBeVisible();
 
+  await page.getByRole("button", { name: "Adicionar fato" }).first().click();
+  const dialog = page.getByRole("dialog", { name: "Adicionar um fato ao Perfil" });
+  // a fact without a title is refused inline, not sent
+  await dialog.getByTestId("profile-add-item").click();
+  await expect(dialog.getByText("Dê um título ao fato.")).toBeVisible();
   await page.getByTestId("profile-item-title").fill("NR10");
   await page
     .getByTestId("profile-item-evidence")
     .fill("Certificado ficticio informado pelo usuario.");
   await page.getByTestId("profile-add-item").click();
   await expect(page.getByText(/Item adicionado|Modo Demo/i).first()).toBeVisible();
+  await expect(dialog).toHaveCount(0);
 
+  await page.getByRole("tab", { name: "Importar" }).click();
   await page
     .getByTestId("profile-import-textarea")
     .fill("Sou estudante de engenharia com CREA e experiencia em obra.");
@@ -96,11 +108,12 @@ test("profile page imports fictitious text and keeps review before saving", asyn
   );
   await page.getByRole("button", { name: "Adicionar ao perfil" }).first().click();
   await expect(page.getByText(/Item adicionado|Modo Demo/i).first()).toBeVisible();
+  await page.getByRole("tab", { name: /Fatos e evidências/ }).click();
   await expect(page.getByTestId("profile-items")).toContainText(/NR10|Engenharia|Registro/);
 });
 
 test("profile page extracts Lattes candidates and confirms selected items", async ({ page }) => {
-  await page.goto("/profile");
+  await page.goto("/profile?tab=import");
 
   await expect(page.getByTestId("profile-lattes-section")).toBeVisible();
   await expect(page.getByTestId("profile-lattes-review-warning")).toBeVisible();
@@ -173,6 +186,38 @@ test("settings AI flow uses backend status shape and never stores secrets in bro
   expect(storage.session).not.toContain(fakeKey);
 });
 
+test("Claude can be chosen as provider with Haiku 5.5 as the default model and a backend-only key", async ({
+  page,
+}) => {
+  const fakeKey = "test-playwright-anthropic-secret";
+  await page.goto("/settings");
+
+  await expect(page.getByTestId("ai-key-link-anthropic")).toHaveAttribute(
+    "href",
+    "https://platform.claude.com/settings/keys",
+  );
+  const keyInput = page.getByTestId("ai-api-key-input");
+  await expect(async () => {
+    await page.getByTestId("ai-provider-anthropic").click();
+    await expect(page.getByTestId("ai-model-select")).toHaveValue("claude-haiku-5-5", {
+      timeout: 1_000,
+    });
+    await expect(keyInput).toBeEnabled({ timeout: 1_000 });
+  }).toPass({ timeout: 10_000 });
+  // A background refetch (window refocus) must not revert an unsaved choice: it used to put the
+  // provider back to "local" and disable the key field while the person was typing.
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  await page.waitForTimeout(500);
+  await expect(page.getByTestId("ai-model-select")).toHaveValue("claude-haiku-5-5");
+  await expect(keyInput).toBeEnabled();
+  await keyInput.fill(fakeKey);
+  await page.getByRole("button", { name: /Salvar no backend local/i }).click();
+  await expect(keyInput).toHaveValue("");
+
+  const storage = await page.evaluate(() => JSON.stringify({ ...localStorage, ...sessionStorage }));
+  expect(storage).not.toContain(fakeKey);
+});
+
 test("demo personas stay coherent and can be restored without touching real data", async ({
   page,
 }) => {
@@ -183,15 +228,16 @@ test("demo personas stay coherent and can be restored without touching real data
   await expect(page.getByRole("heading", { name: /Configura..es/ }).first()).toBeVisible();
 
   await page.goto("/profile");
+  await expect(page.getByText("COREN ativo — exemplo fictício")).toBeVisible();
+  await page.getByRole("tab", { name: "Identidade e objetivos" }).click();
   await expect(page.getByLabel("Headline")).toHaveValue(
     "Enfermeira assistencial com COREN confirmado",
   );
-  await expect(page.getByText("COREN ativo — exemplo fictício")).toBeVisible();
 
   await page.goto("/settings");
   await Promise.all([page.waitForNavigation(), page.getByTestId("restore-demo-data").click()]);
   await expect(page.getByRole("heading", { name: /Configura..es/ }).first()).toBeVisible();
-  await page.goto("/profile");
+  await page.goto("/profile?tab=identity");
   await expect(page.getByLabel("Headline")).toHaveValue(
     "Estudante de engenharia com projetos acadêmicos",
   );
@@ -200,14 +246,14 @@ test("demo personas stay coherent and can be restored without touching real data
 test("sources page handles local extension offline and fake capture imports", async ({ page }) => {
   await page.goto("/settings");
   await page.getByRole("button", { name: "API Real" }).click();
-  await page.getByRole("link", { name: /Fontes e Captura/i }).click();
+  await navTo(page, /Fontes e Captura/i);
   await expect(
     page.getByText(/Companion offline|Companion conectado|API Real sem oportunidades/i).first(),
   ).toBeVisible();
 
-  await page.getByRole("link", { name: "Preferências", exact: true }).click();
+  await navTo(page, /^Preferências$/);
   await page.getByRole("button", { name: "Demo" }).click();
-  await page.getByRole("link", { name: /Fontes e Captura/i }).click();
+  await navTo(page, /Fontes e Captura/i);
   await expect(page.getByText(/Extens.o Local/).first()).toBeVisible();
   await expect(page.getByTestId("extension-capture-row").first()).toBeVisible();
   await page.getByTestId("import-capture-job").first().click();
@@ -271,31 +317,32 @@ test("job radar creates wishlist/source, runs demo and saves results", async ({ 
   await expect(
     page.getByText(/rascunho de wishlist gerado|Wishlist sugerida/i).first(),
   ).toBeVisible();
-  await expect(page.getByText(/wishlist criada/i)).toHaveCount(0);
+  // one-shot: a retrying toHaveCount(0) would wait for a toast to fade and pass
+  expect(await page.getByText(/wishlist criada/i).count()).toBe(0);
   await page.getByLabel("Nome").first().fill("Wishlist revisada E2E");
   await page.getByTestId("radar-create-wishlist").click();
-  await expect(page.getByText(/wishlist criada|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /wishlist criada/i);
   await page.getByTestId("radar-create-source").click();
-  await expect(page.getByText(/fonte criada|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /fonte criada/i);
   await page.getByTestId("radar-run-now").first().click();
   await expect(page.getByTestId("radar-result-card").first()).toBeVisible();
-  await expect(page.getByText(/Nova vaga|Radar concluido|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /Nova vaga|Radar concluido/i);
   await page.getByTestId("radar-save-inbox").first().click();
   await expect(page.getByText(/Caixa de Entrada|salvo/i).first()).toBeVisible();
   await page.getByTestId("radar-save-tracker").first().click();
   await expect(page.getByText(/Candidaturas|salvo/i).first()).toBeVisible();
   await page.getByTestId("radar-mark-alert-read").first().click();
-  await expect(page.getByText(/Alerta atualizado|lido|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /alerta atualizado/i);
   await expect(page.getByTestId("radar-schedules-panel")).toBeVisible();
   await page.getByTestId("radar-create-schedule").click();
-  await expect(page.getByText(/agendamento criado|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /agendamento criado/i);
   await page.getByTestId("radar-schedule-run-now").first().click();
-  await expect(page.getByText(/agendamento executado|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /agendamento executado/i);
   await page.getByTestId("radar-schedule-toggle").first().click();
-  await expect(page.getByText(/agendamento atualizado|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /agendamento (atualizado|pausado)/i);
   await expect(page.getByTestId("notifications-panel")).toBeVisible();
   await page.getByTestId("notification-mark-read").first().click();
-  await expect(page.getByText(/notificacao atualizada|lida|Modo Demo/i).first()).toBeVisible();
+  await expectToast(page, /notificacao atualizada/i);
   const storage = await page.evaluate(() => ({
     local: JSON.stringify(localStorage),
     session: JSON.stringify(sessionStorage),
@@ -454,14 +501,11 @@ test("API Real empty states do not silently show demo opportunity data", async (
 
   await page.goto("/settings");
   await page.getByRole("button", { name: "API Real" }).click();
-  await page.getByRole("link", { name: /Fontes e Captura/i }).click();
+  await navTo(page, /Fontes e Captura/i);
   await expect(page.getByTestId("source-real-empty")).toContainText("API Real sem oportunidades");
   await expect(page.locator("#opportunity-inbox")).not.toContainText("Empresa Exemplo");
 
-  await page
-    .getByRole("navigation")
-    .getByRole("link", { name: /Tracker/i })
-    .click();
+  await navTo(page, /Tracker/i);
   await expect(page.getByText("Nenhuma candidatura ainda")).toBeVisible();
   await expect(page.locator("body")).not.toContainText("Empresa Demo");
 });
@@ -570,7 +614,7 @@ test("API Real radar empty state does not show demo radar results silently", asy
 
   await page.goto("/settings");
   await page.getByRole("button", { name: "API Real" }).click();
-  await page.getByRole("link", { name: /Radar/i }).click();
+  await navTo(page, /Radar/i);
   await expect(page.getByTestId("radar-real-empty")).toContainText("API Real sem Radar");
   await expect(page.locator("body")).not.toContainText("Empresa Exemplo");
   await expect(page.locator("body")).not.toContainText("Desenvolvedor Backend Python");
@@ -592,8 +636,12 @@ test("public UI does not contain common mojibake sequences", async ({ page }) =>
 });
 
 test("kanban creates and moves a fake application", async ({ page }) => {
+  // both columns on screen: Playwright scrolls to the target mid-drag, which cancels an HTML5
+  // drop (a person gets the browser's edge auto-scroll, and the status select as an alternative)
+  await page.setViewportSize({ width: 1440, height: 1600 });
   await page.goto("/tracker");
-
+  // Created right away, while the first list request may still be in flight (SH-NEW-041: that
+  // answer used to replace the cache without the new application).
   await page.getByTestId("new-application-button").first().click();
   const dialog = page.getByTestId("create-application-dialog");
   await expect(dialog).toBeVisible();
@@ -604,13 +652,21 @@ test("kanban creates and moves a fake application", async ({ page }) => {
   await page.getByTestId("create-application-submit").click();
   await expect(page.getByTestId("create-application-dialog")).toBeHidden();
 
-  const firstCard = page.getByTestId("kanban-card").first();
-  await expect(firstCard).toBeVisible();
-  await firstCard.dragTo(page.getByTestId("kanban-column-interview"));
+  // the created card, not whichever card the board shows first
+  const newCard = page.getByTestId("kanban-card").filter({ hasText: "Backend Python E2E" });
+  await expect(newCard).toHaveCount(1);
+  // grab the card by its title row: its centre is the status <select>, which takes the press
+  await newCard.dragTo(page.getByTestId("kanban-column-interview"), {
+    sourcePosition: { x: 24, y: 14 },
+  });
   await expect(page.getByTestId("kanban-column-interview")).toContainText("Backend Python E2E");
+  // only the dragged application moved: the sample cards keep their columns
+  await expect(page.getByTestId("kanban-column-interview").getByTestId("kanban-card")).toHaveCount(
+    2,
+  );
   await page.getByRole("button", { name: /Lista/i }).click();
   await page.getByTestId("application-status-select").first().selectOption("interview");
-  await expect(page.locator("body")).toContainText(/Última análise|Sem análise/);
+  await expect(page.locator("body")).toContainText(/Atualizada|Última análise|Sem análise/);
 });
 
 test("responsive layouts avoid page-level horizontal overflow", async ({ page }, testInfo) => {

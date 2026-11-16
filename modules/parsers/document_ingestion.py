@@ -27,6 +27,10 @@ MAX_ZIP_UNCOMPRESSED_BYTES = 40 * 1024 * 1024
 MAX_COMPRESSION_RATIO = 250
 
 
+# Elements whose text is never kept and whose presence counts as active content.
+_ACTIVE_TAGS = frozenset({"script", "style", "noscript", "iframe", "object", "embed"})
+
+
 class DocumentPage(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -331,7 +335,7 @@ class _VisibleTextParser(HTMLParser):
         self.active_content_count = 0
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if tag in {"script", "style", "noscript", "iframe", "object", "embed"}:
+        if tag in _ACTIVE_TAGS:
             self._ignored_depth += 1
             self.active_content_count += 1
         self.active_content_count += sum(
@@ -342,7 +346,7 @@ class _VisibleTextParser(HTMLParser):
         )
 
     def handle_endtag(self, tag: str) -> None:
-        if tag in {"script", "style", "noscript", "iframe", "object", "embed"}:
+        if tag in _ACTIVE_TAGS:
             self._ignored_depth = max(0, self._ignored_depth - 1)
 
     def handle_data(self, data: str) -> None:

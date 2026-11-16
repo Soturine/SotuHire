@@ -1,17 +1,30 @@
-"""Write deterministic SHA-256 checksums for the v2.0 release assets."""
+"""Write deterministic SHA-256 checksums for the current release assets."""
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import json
+import tomllib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "dist"
-DEFAULT_ASSETS = (
-    DIST / "sotuhire-extension-v0.10.0.zip",
-    DIST / "sotuhire-sbom-v2.0.0.cdx.json",
-)
+
+
+def default_assets() -> tuple[Path, ...]:
+    """Asset names derived from the versioned manifests, never hardcoded per release."""
+    project = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    manifest = json.loads(
+        (ROOT / "browser-extension" / "manifest.json").read_text(encoding="utf-8")
+    )
+    return (
+        DIST / f"sotuhire-extension-v{manifest['version']}.zip",
+        DIST / f"sotuhire-sbom-v{project['project']['version']}.cdx.json",
+    )
+
+
+DEFAULT_ASSETS = default_assets()
 
 
 def main() -> int:

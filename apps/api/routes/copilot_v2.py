@@ -20,6 +20,9 @@ from modules.copilot_v2.models import (
     ReviewStatus,
 )
 from modules.copilot_v2.repository import utc_now
+from modules.copilot_v2.search import SearchHit, rank
+from modules.profile.service import UniversalCareerProfileService
+from modules.tracker.job_tracker import JobTracker
 from pydantic import BaseModel, ConfigDict, Field, HttpUrl
 
 from apps.api.routes.responses import ok
@@ -293,36 +296,85 @@ def audit_log(limit: int = Query(default=100, ge=1, le=1_000)) -> ApiEnvelope[li
 def universal_search(
     query: str = Query(min_length=2, max_length=200),
 ) -> ApiEnvelope[list[GlobalSearchResult]]:
+    """Search the person's local data, accent- and case-insensitive (see ``search.fold``).
+
+    Covers evidence, portfolio, confirmed non-sensitive Profile facts and tracked applications.
+    SQLite ``LIKE`` is accent-sensitive, so records are read and matched here; the volumes are
+    those of one person's local data.
+    """
     repository = _repository()
-    evidence = repository.list_nodes(query=query, limit=30)
-    portfolio = [
-        item
-        for item in repository.list_portfolio_items(limit=100)
-        if query.casefold() in f"{item.title} {item.description}".casefold()
-    ][:20]
-    results = [
-        GlobalSearchResult(
-            entity_type="evidence",
-            entity_id=node.node_id,
-            title=node.title,
-            subtitle=node.node_type,
-            route="/evidence",
-            review_status=node.review_status,
+    profile = UniversalCareerProfileService().get_profile()
+    candidates: list[tuple[SearchHit, tuple[str, ...]]] = []
+    candidates.extend(
+        (
+            SearchHit(
+                "evidence",
+                node.node_id,
+                node.title,
+                node.node_type,
+                "/evidence",
+                str(node.review_status),
+            ),
+            (node.summary,),
         )
-        for node in evidence
-    ]
-    results.extend(
-        GlobalSearchResult(
-            entity_type="portfolio",
-            entity_id=item.portfolio_item_id,
-            title=item.title,
-            subtitle=item.type,
-            route="/portfolio",
-            review_status=item.review_status,
-        )
-        for item in portfolio
+        for node in repository.list_nodes(limit=1_000)
     )
-    return ok(results)
+    candidates.extend(
+        (
+            SearchHit(
+                "portfolio",
+                item.portfolio_item_id,
+                item.title,
+                item.type,
+                "/portfolio",
+                str(item.review_status),
+            ),
+            (item.description,),
+        )
+        for item in repository.list_portfolio_items(limit=500)
+    )
+    candidates.extend(
+        (
+            SearchHit(
+                "profile",
+                item.item_id,
+                item.title,
+                item.organization or item.institution or item.type,
+                "/profile",
+                "confirmed" if item.confirmed_by_user else "pending",
+            ),
+            (item.description or "", item.evidence or "", item.domain or "", item.type),
+        )
+        for item in [*profile.items, *profile.constraints]
+        if not item.sensitive
+    )
+    candidates.extend(
+        (
+            SearchHit(
+                "application",
+                record.id,
+                record.job_title or "Candidatura",
+                record.company,
+                "/tracker",
+            ),
+            (" ".join(record.requirements),),
+        )
+        for record in JobTracker().list_analyses()
+    )
+    hits = rank(query, candidates, limit=40)
+    return ok(
+        [
+            GlobalSearchResult(
+                entity_type=hit.entity_type,
+                entity_id=hit.entity_id,
+                title=hit.title,
+                subtitle=hit.subtitle,
+                route=hit.route,
+                review_status=hit.review_status,
+            )
+            for hit in hits
+        ]
+    )
 
 
 def _proposal_transition(operation: Any) -> Any:

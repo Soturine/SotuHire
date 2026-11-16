@@ -61,8 +61,17 @@ nav:
       - Migração e recovery: 06-engineering/v2-migration-and-recovery.md
       - Implementação: 07-development/v2.0-implementation.md
       - Aceite: 09-testing/v2.0-acceptance-matrix.md
-      - Release notes: releases/v2.0.md
+      - Release notes v2.1.0: releases/v2.1.md
+      - Release notes v2.0: releases/v2.0.md
   - Auditoria:
+      - Assurance independente 2026-11: 00-audit/2026-11-independent-assurance-audit.md
+      - Dependências 2026-11: 00-audit/2026-11-dependency-review.md
+      - Dogfood e pesquisa 2026-11: 00-audit/2026-11-dogfood-and-external-research.md
+      - Código morto e duplicação 2026-11: 00-audit/2026-11-dead-dedupe-triage.md
+      - Matriz de conclusão 2026-11: 00-audit/2026-11-completion-matrix.md
+      - Checkpoints 2026-11: 00-audit/2026-11-checkpoint-ledger.md
+      - Autoridade dos dados 2026-11: 00-audit/2026-11-data-authority-map.md
+      - Frontend e UX 2026-11: 00-audit/2026-11-frontend-product-ux.md
       - Baseline v2.0: 00-audit/v2.0-baseline-full-repository-audit.md
       - Arquitetura/dead code v2.0: 00-audit/v2.0-dead-code-dedup-and-architecture-audit.md
       - Wiring Copilot v2.0: 00-audit/v2.0-ai-and-copilot-wiring-audit.md
@@ -120,6 +129,7 @@ nav:
           - Tool Registry: 02-architecture/adrs/003-copilot-tool-registry.md
           - MCP read/draft: 02-architecture/adrs/004-mcp-read-draft.md
           - Sem auto-apply: 02-architecture/adrs/005-no-auto-apply.md
+          - Navegação por jornada e design editorial: 02-architecture/adrs/006-journey-navigation-and-editorial-design-system.md
       - Interoperabilidade com IA local: 02-architecture/local-ai-interoperability.md
       - Matching por domínio: 02-architecture/domain-matching-policies.md
       - Atualizações de taxonomia: 02-architecture/taxonomy-updates.md
@@ -380,6 +390,7 @@ nav:
       - API contract: 08-frontend/api-contract.md
       - Mock data contract: 08-frontend/mock-data-contract.md
       - Design system notes: 08-frontend/design-system-notes.md
+      - Direção de design 2026-11: 08-frontend/design-direction-2026-11.md
       - Frontend rules: 08-frontend/frontend-rules.md
       - Application Intelligence: 08-frontend/application-intelligence.md
   - Benchmark:

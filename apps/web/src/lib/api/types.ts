@@ -99,7 +99,7 @@ export interface AnalysisMeta {
   warnings?: string[];
 }
 
-export type AiProvider = "local" | "gemini" | "openai" | "openai_future";
+export type AiProvider = "local" | "gemini" | "openai" | "anthropic" | "openai_future";
 export type AiSettingsStatus = "ready" | "configured" | "not_configured" | "planned" | "error";
 export type AiSettingsPreset = "local_safe" | "basic" | "complete" | "custom";
 
@@ -166,7 +166,7 @@ export interface AiSettingsTestResult {
 }
 
 export interface AiProviderInfo {
-  id: "local" | "gemini" | "openai";
+  id: "local" | "gemini" | "openai" | "anthropic";
   label: string;
   status: string;
   requires_api_key: boolean;
@@ -189,7 +189,7 @@ export interface AiModelInfo {
 }
 
 export interface AiModelsResult {
-  provider: "local" | "gemini" | "openai";
+  provider: "local" | "gemini" | "openai" | "anthropic";
   models: AiModelInfo[];
   source: "cache" | "provider_api" | "builtin";
   updated_at?: string;
@@ -1242,12 +1242,7 @@ export interface RadarResult {
   source_name?: string;
   source_type: RadarSourceType;
   opportunity_type?:
-    | "job"
-    | "public_exam"
-    | "academic_call"
-    | "scholarship"
-    | "residency"
-    | "internship_public";
+    "job" | "public_exam" | "academic_call" | "scholarship" | "residency" | "internship_public";
   wishlist_id?: string;
   title: string;
   company?: string;
@@ -1519,13 +1514,7 @@ export interface OutcomeSummary {
 }
 
 export type ApplicationLabStatus =
-  | "draft"
-  | "ready"
-  | "analyzing"
-  | "review"
-  | "completed"
-  | "cancelled"
-  | "failed";
+  "draft" | "ready" | "analyzing" | "review" | "completed" | "cancelled" | "failed";
 export type SuggestionStatus = "pending" | "accepted" | "edited" | "rejected";
 export type KitItemStatus = SuggestionStatus | "stale";
 export type ResumeExportFormat = "json_resume" | "pdf" | "docx";
@@ -1933,4 +1922,29 @@ export interface ProfessionalAssetsResult {
   items: ProfessionalAsset[];
   limit: number;
   offset: number;
+}
+
+/** A confirmed Universal Profile fact the Master Resume does not contain yet. */
+export interface ProfileUpdateItem {
+  item_id: string;
+  item_type: string;
+  title: string;
+  subtitle: string;
+  section_title: string;
+}
+
+/** A projected fact whose Profile text no longer matches its Master Resume entry. */
+export interface ProfileChangedItem {
+  item_id: string;
+  item_type: string;
+  title: string;
+  section_title: string;
+  changes: { field: string; in_master: string; in_profile: string }[];
+}
+
+export interface ProfileUpdatesResult {
+  master_resume_id: string;
+  items: ProfileUpdateItem[];
+  /** Absent on APIs older than CP-UX02. */
+  changed?: ProfileChangedItem[];
 }

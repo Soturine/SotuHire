@@ -11,6 +11,10 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 ProjectPageType = Literal["github_profile", "github_repo", "portfolio", "project"]
 
 
+# Letter grade for portfolio and repository analysis; github_analyzer imports it from here.
+Grade = Literal["A", "B", "C", "D", "F"]
+
+
 class ProjectAnalysisPayload(BaseModel):
     """Public project information captured by the extension or entered in SotuHire."""
 
@@ -64,7 +68,7 @@ class ProjectAnalysisReport(BaseModel):
     page_type: ProjectPageType
     provider_used: str = "local"
     overall_score: int = Field(ge=0, le=100)
-    grade: Literal["A", "B", "C", "D", "F"]
+    grade: Grade
     github_profile_score: int = Field(ge=0, le=100)
     repository_quality_score: int = Field(ge=0, le=100)
     portfolio_score: int = Field(ge=0, le=100)

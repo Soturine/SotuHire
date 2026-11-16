@@ -218,10 +218,16 @@ class CareerStateEngine:
             in {"education", "research", "publication", "teaching", "extension_activity"}
         ][:20]
         goals = [node.title for node in confirmed if node.node_type == "career_goal"][:10]
+        top_opportunities = [dict(row) for row in top_rows]
+        recent_outcomes = [dict(row) for row in outcome_rows]
+        # Every input the state exposes to the human must be part of the fingerprint, or an
+        # approval can be executed against a state the user never saw (SH-AUD-004).
         dependency_payload = {
             "confirmed": [(node.node_id, node.updated_at.isoformat()) for node in confirmed],
             "pending": [(node.node_id, node.updated_at.isoformat()) for node in pending],
             "counts": counts,
+            "top_opportunities": top_opportunities,
+            "recent_outcomes": recent_outcomes,
         }
         dependency_hash = hashlib.sha256(
             json.dumps(dependency_payload, sort_keys=True).encode("utf-8")
@@ -245,9 +251,13 @@ class CareerStateEngine:
             pending_followups=counts["pending_followups"],
             overdue_tasks=counts["overdue_tasks"],
             stale_artifacts=counts["stale_artifacts"],
-            top_opportunities=[dict(row) for row in top_rows],
-            recent_outcomes=[dict(row) for row in outcome_rows],
+            top_opportunities=top_opportunities,
+            recent_outcomes=recent_outcomes,
             provider_health="explicit-check-required",
+            # Reachable only after ensure_database() verified schema version, foreign keys and
+            # PRAGMA integrity_check; a failing database raises MigrationError instead.
+            # rule_confidence=1.0 states that the rules are deterministic, not that they are
+            # right for this person (data_coverage carries the evidence-based part).
             data_health="healthy",
             recommendation_candidates=recommendations,
             confidence=ConfidenceBreakdown(data_coverage=coverage, rule_confidence=1.0),

@@ -51,6 +51,51 @@ def test_evidence_to_state_to_human_approved_execution(monkeypatch, tmp_path) ->
     assert undone.json()["data"]["status"] == "undone"
 
 
+def test_executed_copilot_task_is_listed_by_the_career_api(monkeypatch, tmp_path) -> None:
+    """SH-NEW-002: a Copilot task used to break GET /api/v1/career/tasks (empty payload)."""
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    client = api_client()
+    proposal_id = client.post(
+        "/api/v2/approvals",
+        json={
+            "tool_id": "create_task",
+            "input": {"title": "Preparar entrevista", "due_at": "2026-12-01T12:00:00-03:00"},
+            "reason": "Entrevista registrada.",
+            "evidence_refs": ["interview-1"],
+        },
+    ).json()["data"]["proposal_id"]
+    client.post(f"/api/v2/approvals/{proposal_id}/approve")
+    client.post(f"/api/v2/approvals/{proposal_id}/execute")
+
+    tasks = client.get("/api/v1/career/tasks")
+
+    assert tasks.status_code == 200
+    [task] = tasks.json()["data"]
+    assert task["title"] == "Preparar entrevista"
+    assert task["due_at"] == "2026-12-01T15:00:00Z"
+    assert task["related_refs"] == [f"proposal:{proposal_id}", "interview-1"]
+
+
+def test_post_approval_change_returns_conflict_without_effect(monkeypatch, tmp_path) -> None:
+    """SH-AUD-001 at the HTTP boundary: 409, proposal stale, no task written."""
+    monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
+    client = api_client()
+    proposal_id = client.post(
+        "/api/v2/approvals",
+        json={"tool_id": "create_task", "input": {"title": "Tarefa"}, "reason": "Teste."},
+    ).json()["data"]["proposal_id"]
+    client.post(f"/api/v2/approvals/{proposal_id}/approve")
+    client.post("/api/v2/evidence", json={"node_type": "project", "title": "Mudança tardia"})
+
+    executed = client.post(f"/api/v2/approvals/{proposal_id}/execute")
+    queue = client.get("/api/v2/approvals").json()["data"]
+
+    assert executed.status_code == 409
+    assert "stale" in str(executed.json())
+    assert [item["status"] for item in queue] == ["stale"]
+    assert client.get("/api/v1/career/tasks").json()["data"] == []
+
+
 def test_forbidden_tool_and_external_context_privacy(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("SOTUHIRE_DATA_DIR", str(tmp_path))
     client = api_client()

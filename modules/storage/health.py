@@ -13,6 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from modules.storage.database import connect_readonly_database, default_data_dir
 from modules.storage.json_recovery import json_store_health
+from modules.storage.legacy_migration import LEGACY_PATHS
 from modules.storage.migrations import LATEST_SCHEMA_VERSION, MigrationRunner
 
 
@@ -72,21 +73,7 @@ def check_data_health(
 
 
 def _check_legacy_files(report: DataHealthReport) -> None:
-    candidates = [
-        "profile/profiles.json",
-        "memory/career-profile.json",
-        "memory/career-memory.jsonl",
-        "sotuhire-history.json",
-        "sotuhire-opportunities.json",
-        "sources/imports.json",
-        "public_exams/notices.json",
-        "radar/radar.json",
-        "radar/schedules.json",
-        "companion/captures.jsonl",
-        "companion/active-context.json",
-        "portfolio/project-analyses.jsonl",
-    ]
-    for relative in candidates:
+    for relative in LEGACY_PATHS:
         path = report.data_dir / relative
         recovery_health = json_store_health(path)
         if recovery_health.status == "degraded":

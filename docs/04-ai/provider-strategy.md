@@ -113,7 +113,7 @@ A camada atual usa `modules/ai/providers/`:
 
 `DEFAULT_AI_PROVIDER=local` é a configuração segura. Quando `gemini` é selecionado sem chave ou SDK, o app não quebra: registra warning e usa o provider local.
 
-O provider não pode ignorar schemas Pydantic, inventar fatos ou contornar regras determinísticas. O SDK Gemini fica em `docs/requirements/requirements-ai.txt`, fora das dependências obrigatórias.
+O provider não pode ignorar schemas Pydantic, inventar fatos ou contornar regras determinísticas. O SDK Gemini fica no extra `ai` do `pyproject.toml`, fora das dependências obrigatórias.
 
 ```mermaid
 flowchart LR
@@ -137,7 +137,7 @@ GEMINI_MODEL=gemini-2.5-flash
 Para usar Gemini, altere `DEFAULT_AI_PROVIDER=gemini`, informe a chave e instale:
 
 ```bash
-pip install -r docs/requirements/requirements-ai.txt
+pip install -e ".[ai]"
 ```
 
 `LLM_PROVIDER` e `LLM_MODEL` continuam aceitos como aliases para instalações antigas. As variáveis novas têm precedência quando ambas estão configuradas.
@@ -151,7 +151,7 @@ O resultado estruturado registra:
 - `fallback_used`: confirmação explícita do fallback;
 - `warning`: motivo resumido e ação necessária.
 
-A interface nunca apresenta `mock` ao usuário. O nome exibido é `Análise local`. Quando Gemini não possui chave, o aviso é `Gemini não configurado. Usando análise local.`. Quando falta o SDK, a orientação é `Instale com: pip install -r docs/requirements/requirements-ai.txt`.
+A interface nunca apresenta `mock` ao usuário. O nome exibido é `Análise local`. Quando Gemini não possui chave, o aviso é `Gemini não configurado. Usando análise local.`. Quando falta o SDK, a orientação é `Instale com: pip install -e ".[ai]"`.
 
 ## Evolução na v0.5.0
 
@@ -190,3 +190,23 @@ padrão. A UI mantém **Enviar contexto relevante para Gemini** desabilitado at�
 Quando habilitado, `structured_analysis.py` resume apenas as evidências recuperadas para a vaga
 atual. O arquivo completo de memória, itens não relacionados e dados fora do top-k não entram no
 prompt. Se Gemini falhar, o fallback local ainda pode usar as evidências recuperadas.
+
+## Anthropic (Claude) desde 2026-11
+
+`modules/ai/providers/anthropic_provider.py` implementa o mesmo contrato `AIProvider` que Gemini e
+OpenAI. O SDK oficial (`anthropic`, extra `ai`) fica só nesse arquivo e é importado sob demanda.
+
+| Item | Decisão |
+| --- | --- |
+| Modelo padrão | `claude-haiku-5-5` (Claude Haiku 5.5: extração e classificação em volume, latência baixa). Sonnet 5.5 e Opus 5.5 aparecem no catálogo local; o catálogo não consulta a API. |
+| Saída estruturada | `messages.parse(output_format=<schema Pydantic do PromptSpec>)`; o JSON volta a ser validado localmente como nos outros providers. |
+| Parâmetros | sem `temperature`, `top_p` e `top_k`, que os modelos Claude atuais rejeitam. |
+| Erros | 401 → `AUTHENTICATION`, 403 → `PERMISSION`, 404 → `MODEL_NOT_FOUND`, 400 → `INVALID_REQUEST` (sem nova tentativa); 429 → `RATE_LIMIT` respeitando `retry-after`, 529 → `MODEL_UNAVAILABLE`, 5xx, timeout e rede são tentados de novo pela `ProviderRetryPolicy` do projeto (as tentativas do SDK ficam desligadas para que cada uma seja registrada). `stop_reason` `refusal` → `SAFETY_BLOCK`; `max_tokens` → `TRUNCATED_RESPONSE`. Mensagens passam pelo sanitizador de segredos. |
+| Chave | só no backend: Configurações → IA (arquivo de segredos local) ou `ANTHROPIC_API_KEY`. Nunca no navegador nem na extensão. |
+| Dados | como nos demais providers externos, só depois do opt-in por recurso nas configurações; o conteúdo do usuário vai delimitado como dado não confiável. |
+
+Evidência nesta revisão: testes de contrato com transporte injetado (`tests/test_anthropic_provider.py`,
+classe `MOCK_PASS`), teste da API de configurações e E2E da tela de configurações. Nenhuma chamada real
+foi feita: não houve chave nem autorização de gasto para este teste (`BLOCKED_EXTERNAL_CREDENTIALS`).
+Uma assinatura do Claude Code não é credencial da API e não foi usada.
+

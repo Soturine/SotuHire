@@ -13,11 +13,12 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-CatalogProvider = Literal["local", "gemini", "openai"]
+CatalogProvider = Literal["local", "gemini", "openai", "anthropic"]
 
 MODEL_CACHE_RELATIVE_PATH = Path("settings") / "ai-models-cache.json"
 GEMINI_KEY_URL = "https://aistudio.google.com/app/apikey"
 OPENAI_KEY_URL = "https://platform.openai.com/api-keys"
+ANTHROPIC_KEY_URL = "https://platform.claude.com/settings/keys"
 
 
 class CatalogModel(BaseModel):
@@ -109,6 +110,24 @@ BUILTIN_MODELS: dict[CatalogProvider, list[CatalogModel]] = {
             recommended_for=["compatibility", "structured_output"],
         ),
     ],
+    # Builtin only: the catalog is not refreshed from the Anthropic API.
+    "anthropic": [
+        CatalogModel(
+            id="claude-haiku-5-5",
+            label="Claude Haiku 5.5",
+            recommended_for=["fast", "cost_effective", "extraction"],
+        ),
+        CatalogModel(
+            id="claude-sonnet-5-5",
+            label="Claude Sonnet 5.5",
+            recommended_for=["general", "structured_output"],
+        ),
+        CatalogModel(
+            id="claude-opus-5-5",
+            label="Claude Opus 5.5",
+            recommended_for=["reasoning", "review"],
+        ),
+    ],
 }
 
 
@@ -138,6 +157,14 @@ def providers_catalog(*, configured: dict[str, bool] | None = None) -> list[Cata
             requires_api_key=True,
             key_url=OPENAI_KEY_URL,
             supports_model_catalog=True,
+        ),
+        CatalogProviderInfo(
+            id="anthropic",
+            label="Anthropic (Claude)",
+            status="configured" if configured.get("anthropic") else "not_configured",
+            requires_api_key=True,
+            key_url=ANTHROPIC_KEY_URL,
+            supports_model_catalog=False,
         ),
     ]
 
@@ -169,6 +196,13 @@ def refresh_models(
     warnings: list[str] = []
     if normalized == "local":
         return list_models("local", cache_path=path)
+    if normalized == "anthropic":
+        result = list_models(normalized, cache_path=path)
+        return result.model_copy(
+            update={
+                "warnings": [*result.warnings, "Catálogo Anthropic é local; nada foi consultado."]
+            }
+        )
     if not api_key.strip():
         result = list_models(normalized, cache_path=path)
         return result.model_copy(
@@ -210,7 +244,7 @@ def normalize_provider(provider: str) -> CatalogProvider:
     raw = (provider or "local").strip().lower()
     if raw == "openai_future":
         raw = "openai"
-    if raw in {"local", "gemini", "openai"}:
+    if raw in {"local", "gemini", "openai", "anthropic"}:
         return raw  # type: ignore[return-value]
     return "local"
 

@@ -35,20 +35,28 @@ export function normalizeLocalApiBaseUrl(value: string): string {
   return `${parsed.origin}/api/v1`;
 }
 
+/**
+ * Fetch from the paired Local API. `baseUrl` is always the configured `/api/v1` URL (pairing,
+ * session and CSRF belong to the origin); `apiVersion: "v2"` sends the request to `/api/v2` on
+ * the same origin. Before this option, the Career Copilot layer passed an `/api/v2` URL here, the
+ * normalizer rejected it, and every v2 call failed in API mode without reaching the network.
+ */
 export async function pairedApiFetch(
   baseUrl: string,
   path: string,
   init: RequestInit = {},
+  { apiVersion = "v1" }: { apiVersion?: "v1" | "v2" } = {},
 ): Promise<Response> {
   const normalized = normalizeLocalApiBaseUrl(baseUrl);
-  const first = await fetchWithSession(normalized, path, init);
+  const target = apiVersion === "v2" ? normalized.replace(/\/api\/v1$/, "/api/v2") : normalized;
+  const first = await fetchWithSession(normalized, target, path, init);
   if (first.status !== 401) return first;
   if (await refreshCsrf(normalized)) {
-    const refreshed = await fetchWithSession(normalized, path, init);
+    const refreshed = await fetchWithSession(normalized, target, path, init);
     if (refreshed.status !== 401) return refreshed;
   }
   await pairLocalApi(normalized);
-  return fetchWithSession(normalized, path, init);
+  return fetchWithSession(normalized, target, path, init);
 }
 
 export function pairLocalApi(baseUrl: string): Promise<void> {
@@ -114,12 +122,13 @@ async function refreshCsrf(baseUrl: string): Promise<boolean> {
 
 async function fetchWithSession(
   baseUrl: string,
+  target: string,
   path: string,
   init: RequestInit,
 ): Promise<Response> {
   const method = String(init.method || "GET").toUpperCase();
   const csrfToken = stateFor(baseUrl).csrfToken;
-  return fetch(`${baseUrl.replace(/\/+$/, "")}${path}`, {
+  return fetch(`${target.replace(/\/+$/, "")}${path}`, {
     ...init,
     credentials: "include",
     headers: {

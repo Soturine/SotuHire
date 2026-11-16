@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from modules.security.credentials import contains_provider_secret
 from modules.storage.database import default_data_dir
-from modules.storage.migrations import MigrationRunner
+from modules.storage.migrations import MigrationRunner, forget_verified_databases
 from modules.storage.migrations.versions import LATEST_SCHEMA_VERSION
 from modules.storage.safe_paths import UnsafeStorePath, ensure_within, resolve_within, safe_relative
 
@@ -98,13 +98,17 @@ def create_backup(
     source = (Path(data_dir) if data_dir is not None else default_data_dir()).resolve()
     source.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now(UTC).strftime("%Y%m%d-%H%M%S")
-    default_name = (
-        f"sotuhire-data-export-{timestamp[:8]}.zip"
+    stem = (
+        f"sotuhire-data-export-{timestamp[:8]}"
         if kind == "export"
-        else f"sotuhire-data-backup-{timestamp}.zip"
+        else f"sotuhire-data-backup-{timestamp}"
     )
-    archive = Path(destination) if destination is not None else source / "backups" / default_name
-    archive.parent.mkdir(parents=True, exist_ok=True)
+    if destination is not None:
+        archive = Path(destination)
+        archive.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        (source / "backups").mkdir(parents=True, exist_ok=True)
+        archive = _unused_archive_path(source / "backups", stem)
     database = source / "sotuhire.db"
     schema_version = MigrationRunner(database).current_version() if database.is_file() else 0
     manifest = BackupManifest(kind=kind, schema_version=schema_version)
@@ -140,8 +144,14 @@ def create_backup(
                 )
             )
 
+        # "x": an archive is never overwritten. Names had one-second resolution, so the safety
+        # backup taken by a restore in the same second as the backup being restored replaced it
+        # (the restore then failed with an invalid ZIP, or restored the current state).
         with zipfile.ZipFile(
-            archive, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9
+            archive,
+            "x" if destination is None else "w",
+            compression=zipfile.ZIP_DEFLATED,
+            compresslevel=9,
         ) as bundle:
             for item in manifest.files:
                 original = resolve_within(source, _safe_relative_path(item.path))
@@ -152,6 +162,16 @@ def create_backup(
                 manifest.model_dump_json(indent=2),
             )
     return BackupResult(archive_path=archive, manifest=manifest)
+
+
+def _unused_archive_path(directory: Path, stem: str) -> Path:
+    """`stem.zip`, or `stem-2.zip`, `stem-3.zip`… when taken: names never collide."""
+    candidate = directory / f"{stem}.zip"
+    counter = 2
+    while candidate.exists():
+        candidate = directory / f"{stem}-{counter}.zip"
+        counter += 1
+    return candidate
 
 
 def backup_database_file(database_path: str | Path) -> Path:
@@ -227,6 +247,8 @@ def restore_backup(
                 shutil.copy2(source_path, temporary_path)
                 temporary_path.replace(destination_path)
                 result.files_restored += 1
+        # The restored database is new content: never trust an earlier verification of that path.
+        forget_verified_databases()
         return result
 
 

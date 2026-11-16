@@ -32,7 +32,7 @@ backend.
 Rode localmente:
 
 ```bash
-pip install -r docs/requirements/requirements.txt
+pip install -e ".[legacy-ui]"
 streamlit run app.py
 ```
 

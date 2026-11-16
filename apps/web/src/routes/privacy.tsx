@@ -98,7 +98,7 @@ function PrivacyPage() {
                   key={item.title}
                   className="flex gap-3 rounded-lg border border-border bg-muted/30 p-3"
                 >
-                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-card text-accent">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-card text-accent-strong">
                     <item.icon className="h-4 w-4" />
                   </div>
                   <div>
@@ -300,7 +300,7 @@ function DataReliabilityPanel() {
             <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
               <div className="rounded-xl border border-border bg-muted/20 p-4">
                 <div className="flex items-start gap-3">
-                  <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent/10 text-accent">
+                  <div className="grid h-10 w-10 place-items-center rounded-lg bg-accent/10 text-accent-strong">
                     <Archive className="h-5 w-5" />
                   </div>
                   <div>
@@ -386,7 +386,7 @@ function DataReliabilityPanel() {
                 <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                   <div className="max-w-2xl">
                     <div className="flex items-center gap-2 font-semibold">
-                      <RotateCcw className="h-4 w-4 text-warning" />
+                      <RotateCcw className="h-4 w-4 text-warning-strong" />
                       Restauração protegida
                     </div>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -483,7 +483,7 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
   return (
     <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4" role="alert">
       <div className="flex items-start gap-3">
-        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+        <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive-strong" />
         <div className="flex-1">
           <div className="font-medium">Não foi possível verificar os dados</div>
           <p className="mt-1 text-xs text-muted-foreground">{message}</p>
@@ -500,7 +500,7 @@ function HealthIssues({ issues }: { issues: DataHealthIssue[] }) {
   return (
     <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
       <div className="flex items-center gap-2 font-medium">
-        <AlertTriangle className="h-4 w-4 text-warning" />
+        <AlertTriangle className="h-4 w-4 text-warning-strong" />
         {issues.length} {issues.length === 1 ? "aviso encontrado" : "avisos encontrados"}
       </div>
       <ul className="mt-3 grid gap-2 md:grid-cols-2">
@@ -515,9 +515,9 @@ function HealthIssues({ issues }: { issues: DataHealthIssue[] }) {
                 className={cn(
                   "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
                   issue.severity === "error"
-                    ? "bg-destructive/10 text-destructive"
+                    ? "bg-destructive/10 text-destructive-strong"
                     : issue.severity === "warning"
-                      ? "bg-warning/10 text-warning"
+                      ? "bg-warning/10 text-warning-strong"
                       : "bg-muted text-muted-foreground",
                 )}
               >
@@ -548,9 +548,9 @@ function Metric({
   tone: "success" | "destructive" | "accent" | "muted";
 }) {
   const tones = {
-    success: "border-success/30 bg-success/5 text-success",
-    destructive: "border-destructive/30 bg-destructive/5 text-destructive",
-    accent: "border-accent/20 bg-accent/5 text-accent",
+    success: "border-success/30 bg-success/5 text-success-strong",
+    destructive: "border-destructive/30 bg-destructive/5 text-destructive-strong",
+    accent: "border-accent/20 bg-accent/5 text-accent-strong",
     muted: "border-border bg-muted/30 text-muted-foreground",
   };
   return (

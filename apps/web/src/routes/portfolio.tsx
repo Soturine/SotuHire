@@ -95,7 +95,7 @@ function Summary({
 }) {
   return (
     <div className="rounded-2xl border bg-card p-5">
-      <Icon className="h-5 w-5 text-accent" />
+      <Icon className="h-5 w-5 text-accent-strong" />
       <div className="mt-4 text-3xl font-semibold">{value}</div>
       <div className="text-sm text-muted-foreground">{label}</div>
     </div>

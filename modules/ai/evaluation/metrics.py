@@ -42,10 +42,6 @@ def required_field_completion(payload: Mapping[str, Any], required_fields: Seque
     return rate(_path_value(payload, path) not in (None, "", [], {}) for path in required_fields)
 
 
-def type_correctness(checks: Iterable[tuple[object, type | tuple[type, ...]]]) -> float:
-    return rate(isinstance(value, expected) for value, expected in checks)
-
-
 def fallback_rate(values: Iterable[bool]) -> float:
     return rate(values)
 
@@ -78,28 +74,6 @@ def normalized_exact_match(expected: object, actual: object) -> float:
     return float(_normalize(expected) == _normalize(actual))
 
 
-def date_accuracy(expected: Iterable[object], actual: Iterable[object]) -> float:
-    return field_recall(
-        (_normalize_date(value) for value in expected), (_normalize_date(value) for value in actual)
-    )
-
-
-def salary_accuracy(
-    expected: float | None, actual: float | None, *, tolerance: float = 0.01
-) -> float:
-    if expected is None or actual is None:
-        return float(expected is actual)
-    return float(math.isclose(float(expected), float(actual), rel_tol=tolerance, abs_tol=0.01))
-
-
-def requirement_classification_accuracy(expected: Iterable[str], actual: Iterable[str]) -> float:
-    return _paired_accuracy(expected, actual)
-
-
-def domain_classification_accuracy(expected: Iterable[str], actual: Iterable[str]) -> float:
-    return _paired_accuracy(expected, actual)
-
-
 def evidence_precision(
     claim_evidence: Mapping[str, Iterable[str]], supported_refs: Iterable[str]
 ) -> float:
@@ -130,21 +104,10 @@ def hallucination_rate(claims: Iterable[str], forbidden_claims: Iterable[str]) -
     return rate(any(term and term in claim for term in forbidden) for claim in claim_items)
 
 
-def source_ref_coverage(claim_evidence: Mapping[str, Iterable[str]]) -> float:
-    return rate(any(str(ref).strip() for ref in refs) for refs in claim_evidence.values())
-
-
 def confirmed_evidence_usage_rate(used_refs: Iterable[str], confirmed_refs: Iterable[str]) -> float:
     used = {_normalize(value) for value in used_refs}
     confirmed = {_normalize(value) for value in confirmed_refs}
     return safe_rate(len(used & confirmed), len(used))
-
-
-def unconfirmed_claim_rate(
-    claim_refs: Mapping[str, Iterable[str]], unconfirmed_refs: Iterable[str]
-) -> float:
-    unconfirmed = {_normalize(value) for value in unconfirmed_refs}
-    return rate(any(_normalize(ref) in unconfirmed for ref in refs) for refs in claim_refs.values())
 
 
 def brier_score(confidences: Sequence[float], labels: Sequence[int | bool]) -> float:
@@ -267,18 +230,6 @@ def estimated_cost(costs: Iterable[float | None]) -> float:
     return sum(float(value) for value in costs if value is not None)
 
 
-def cost_per_accepted_suggestion(cost: float, accepted: int) -> float:
-    return safe_rate(cost, accepted)
-
-
-def quality_per_cost(quality: float, cost: float) -> float:
-    return safe_rate(quality, cost)
-
-
-def quality_per_latency(quality: float, latency_ms: float) -> float:
-    return safe_rate(quality, latency_ms)
-
-
 def dedup_precision(true_merges: int, false_merges: int) -> float:
     return safe_rate(true_merges, true_merges + false_merges)
 
@@ -299,25 +250,10 @@ def _normalize(value: object) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", str(value).casefold()).split())
 
 
-def _normalize_date(value: object) -> str:
-    digits = re.sub(r"[^0-9]", "", str(value))
-    return digits[:8]
-
-
 def _normalized_sets(
     expected: Iterable[object], actual: Iterable[object]
 ) -> tuple[set[str], set[str]]:
     return ({_normalize(value) for value in expected}, {_normalize(value) for value in actual})
-
-
-def _paired_accuracy(expected: Iterable[str], actual: Iterable[str]) -> float:
-    expected_items, actual_items = list(expected), list(actual)
-    if len(expected_items) != len(actual_items):
-        return 0.0
-    return rate(
-        _normalize(left) == _normalize(right)
-        for left, right in zip(expected_items, actual_items, strict=True)
-    )
 
 
 def _same_length(left: Sequence[object], right: Sequence[object]) -> None:

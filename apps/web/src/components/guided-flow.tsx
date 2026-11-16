@@ -102,7 +102,7 @@ export function GuidedFlow({ compact = false }: { compact?: boolean }) {
                 <StatusChip status={step.status} />
               </div>
               <div className="mt-4 flex items-center gap-2">
-                <Icon className="h-4 w-4 text-muted-foreground group-hover:text-accent" />
+                <Icon className="h-4 w-4 text-muted-foreground group-hover:text-accent-strong" />
                 <span className="text-sm font-semibold">{step.label}</span>
               </div>
               <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground">{step.desc}</p>
@@ -117,9 +117,9 @@ export function GuidedFlow({ compact = false }: { compact?: boolean }) {
 function StatusChip({ status }: { status: FlowStatus }) {
   const cls = {
     Pendente: "bg-muted text-muted-foreground",
-    Pronto: "bg-success/15 text-success",
-    Recomendado: "bg-accent/15 text-accent",
-    Opcional: "bg-warning/15 text-warning",
+    Pronto: "bg-success/15 text-success-strong",
+    Recomendado: "bg-accent/15 text-accent-strong",
+    Opcional: "bg-warning/15 text-warning-strong",
   }[status];
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", cls)}>{status}</span>

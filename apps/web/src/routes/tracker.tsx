@@ -1,14 +1,16 @@
-﻿import { createFileRoute } from "@tanstack/react-router";
+﻿import { Link, createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { GripVertical, Plus, Search, LayoutGrid, Rows3 } from "lucide-react";
+import { ArrowRight, BellRing, GripVertical, Plus, Search, LayoutGrid, Rows3 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { addCreatedJob } from "@/features/tracker/jobs-cache";
 import { useApi } from "@/lib/api/hooks";
 import type { TrackerJob, TrackerJobsResult, TrackerStatus } from "@/lib/api/types";
 import { useApiMode } from "@/lib/api/mode";
 import { statusLabel } from "@/lib/labels";
 import { toast } from "@/lib/notify";
+import { normalize } from "@/lib/search";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/tracker")({
@@ -52,7 +54,13 @@ function TrackerPage() {
   const jobsQ = useQuery({ queryKey: jobsKey, queryFn: () => api.trackerJobs() });
   const [creating, setCreating] = useState(false);
   const [query, setQuery] = useState("");
-  const [view, setView] = useState<"board" | "list">("board");
+  // On a phone the board needs sideways scrolling across 11 columns; start with the list there.
+  const [view, setView] = useState<"board" | "list">(() =>
+    typeof window !== "undefined" && window.matchMedia?.("(max-width: 639px)").matches
+      ? "list"
+      : "board",
+  );
+  const [stageFilter, setStageFilter] = useState<ColumnDef["stage"] | null>(null);
   const [dragOver, setDragOver] = useState<TrackerStatus | null>(null);
 
   const update = useMutation({
@@ -90,11 +98,7 @@ function TrackerPage() {
     mutationFn: (input: { title: string; company: string; source?: string; notes?: string }) =>
       api.trackerCreate({ ...input, status: "found" }),
     onSuccess: (data) => {
-      qc.setQueryData<TrackerJobsResult>(jobsKey, (current) => ({
-        context_summary: current?.context_summary ?? "",
-        job_contexts: current?.job_contexts ?? {},
-        jobs: [data.job, ...(current?.jobs ?? []).filter((job) => job.id !== data.job.id)],
-      }));
+      void addCreatedJob(qc, jobsKey, data.job);
       toast.success("Candidatura adicionada");
       setCreating(false);
     },
@@ -102,16 +106,27 @@ function TrackerPage() {
   });
 
   const filteredJobs = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    const all = jobsQ.data?.jobs ?? [];
-    if (!q) return all;
-    return all.filter(
-      (j) =>
-        j.title.toLowerCase().includes(q) ||
-        j.company.toLowerCase().includes(q) ||
-        (j.source ?? "").toLowerCase().includes(q),
-    );
-  }, [jobsQ.data, query]);
+    // accents and case do not matter, and every word must appear (same rule as the global search)
+    const words = normalize(query).split(/\s+/).filter(Boolean);
+    const stageOf = (status: string) => COLUMNS.find((c) => c.id === status)?.stage ?? "novas";
+    return (jobsQ.data?.jobs ?? []).filter((j) => {
+      if (stageFilter && stageOf(j.status) !== stageFilter) return false;
+      const haystack = normalize(`${j.title} ${j.company} ${j.source ?? ""}`);
+      return words.every((word) => haystack.includes(word));
+    });
+  }, [jobsQ.data, query, stageFilter]);
+
+  const stageCounts = useMemo(() => {
+    const counts: Record<ColumnDef["stage"], number> = { novas: 0, andamento: 0, resultado: 0 };
+    for (const job of jobsQ.data?.jobs ?? []) {
+      counts[COLUMNS.find((c) => c.id === job.status)?.stage ?? "novas"] += 1;
+    }
+    return counts;
+  }, [jobsQ.data]);
+  const today = new Date().toISOString().slice(0, 10);
+  const followUpsDue = (jobsQ.data?.jobs ?? []).filter(
+    (job) => job.follow_up_at && job.follow_up_at.slice(0, 10) <= today,
+  ).length;
 
   const byColumn = useMemo(() => {
     const m = new Map<TrackerStatus, TrackerJob[]>();
@@ -139,8 +154,13 @@ function TrackerPage() {
       description="Acompanhe cada vaga do primeiro contato até a oferta. Arraste cards entre as etapas."
       actions={
         <>
-          <div className="hidden items-center rounded-md border border-input bg-card p-0.5 sm:flex">
+          <div
+            role="group"
+            aria-label="Visualização"
+            className="flex items-center rounded-lg border border-input bg-card p-0.5"
+          >
             <button
+              aria-pressed={view === "board"}
               onClick={() => setView("board")}
               className={cn(
                 "inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium transition-colors",
@@ -152,6 +172,7 @@ function TrackerPage() {
               <LayoutGrid className="h-3 w-3" /> Quadro
             </button>
             <button
+              aria-pressed={view === "list"}
               onClick={() => setView("list")}
               className={cn(
                 "inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-medium transition-colors",
@@ -193,12 +214,72 @@ function TrackerPage() {
         />
       ) : (
         <div className="space-y-6">
-          {jobsQ.data?.context_summary && (
-            <div className="rounded-xl border border-accent/20 bg-accent/5 px-4 py-3 text-xs text-muted-foreground">
-              <span className="font-semibold text-foreground">Contexto profissional:</span>{" "}
-              {jobsQ.data.context_summary}
+          <section
+            aria-label="Funil de candidaturas"
+            className="rounded-xl border bg-card p-4 shadow-[var(--shadow-soft)] md:p-5"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="eyebrow text-muted-foreground">Funil</p>
+              {followUpsDue > 0 ? (
+                <p className="inline-flex items-center gap-1.5 rounded-full bg-seal/10 px-2.5 py-1 text-xs font-medium text-seal-strong">
+                  <BellRing aria-hidden className="h-3.5 w-3.5" />
+                  {followUpsDue} follow-up(s) com data vencida
+                </p>
+              ) : null}
             </div>
-          )}
+            <div className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+              {STAGES.map((stage) => (
+                <span
+                  key={stage.id}
+                  className={cn(
+                    "h-full transition-[width] duration-(--duration-3) ease-(--ease-out)",
+                    stage.id === "novas"
+                      ? "bg-chart-5"
+                      : stage.id === "andamento"
+                        ? "bg-brand-gradient"
+                        : "bg-success",
+                  )}
+                  style={{ width: `${(stageCounts[stage.id] / Math.max(1, totalCount)) * 100}%` }}
+                />
+              ))}
+            </div>
+            <ul className="mt-3 grid grid-cols-3 gap-2">
+              {STAGES.map((stage) => {
+                const active = stageFilter === stage.id;
+                return (
+                  <li key={stage.id}>
+                    <button
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => setStageFilter(active ? null : stage.id)}
+                      className={cn(
+                        "w-full rounded-lg border px-3 py-2 text-left transition-colors duration-(--duration-1)",
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-transparent bg-surface-muted hover:border-border",
+                      )}
+                    >
+                      <span className="text-metric block text-2xl">{stageCounts[stage.id]}</span>
+                      <span
+                        className={cn(
+                          "block truncate text-xs",
+                          active ? "opacity-90" : "text-muted-foreground",
+                        )}
+                      >
+                        {stage.label}
+                      </span>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+            {jobsQ.data?.context_summary ? (
+              <p className="mt-3 border-t pt-3 text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">Contexto profissional:</span>{" "}
+                {jobsQ.data.context_summary}
+              </p>
+            ) : null}
+          </section>
           {/* Toolbar */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[220px]">
@@ -207,6 +288,7 @@ function TrackerPage() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="Filtrar por cargo, empresa ou fonte"
+                aria-label="Filtrar candidaturas"
                 className="h-9 w-full rounded-md border border-input bg-card pl-9 pr-3 text-sm outline-none transition-colors focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
               />
             </div>
@@ -225,7 +307,7 @@ function TrackerPage() {
             />
           ) : (
             <div className="space-y-8">
-              {STAGES.map((stage) => {
+              {STAGES.filter((stage) => !stageFilter || stage.id === stageFilter).map((stage) => {
                 const cols = COLUMNS.filter((c) => c.stage === stage.id);
                 const stageTotal = cols.reduce(
                   (acc, c) => acc + (byColumn.get(c.id)?.length ?? 0),
@@ -267,7 +349,7 @@ function TrackerPage() {
                               onDrop={(e) => onDrop(e, c.id)}
                               aria-label={`Coluna ${c.label}`}
                               className={cn(
-                                "group flex min-h-40 flex-col rounded-xl border bg-muted/30 p-3 transition-all duration-200",
+                                "group flex min-h-40 flex-col rounded-xl border bg-surface-muted p-3 transition-[border-color,background-color,box-shadow] duration-(--duration-2)",
                                 isOver
                                   ? "border-accent/60 bg-accent/5 ring-2 ring-accent/20"
                                   : "border-border hover:border-border/70",
@@ -333,6 +415,9 @@ function JobCard({
   onChange: (status: TrackerStatus) => void;
   updating?: boolean;
 }) {
+  const followUpDue = Boolean(
+    job.follow_up_at && job.follow_up_at.slice(0, 10) <= new Date().toISOString().slice(0, 10),
+  );
   return (
     <div
       data-testid="kanban-card"
@@ -372,39 +457,49 @@ function JobCard({
           ))}
         </select>
       </div>
-      <div className="mt-3 flex items-center gap-1.5">
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
         {job.match_score !== undefined && (
-          <span className="inline-flex items-center gap-1 rounded bg-chart-1/15 px-1.5 py-0.5 text-[10px] font-medium text-chart-1 tabular-nums">
-            <span className="opacity-70">Comp.</span> {job.match_score}
+          <span className="inline-flex items-center gap-1 rounded-full bg-chart-1/12 px-2 py-0.5 text-[11px] font-semibold tabular-nums">
+            <span className="font-normal text-muted-foreground">Comp.</span> {job.match_score}
           </span>
         )}
         {job.ats_score !== undefined && (
-          <span className="inline-flex items-center gap-1 rounded bg-accent/15 px-1.5 py-0.5 text-[10px] font-medium text-accent tabular-nums">
-            <span className="opacity-70">ATS</span> {job.ats_score}
+          <span className="inline-flex items-center gap-1 rounded-full bg-accent/12 px-2 py-0.5 text-[11px] font-semibold text-accent-strong tabular-nums">
+            <span className="font-normal">ATS</span> {job.ats_score}
           </span>
         )}
         {job.job_snapshot_id && (
-          <span className="inline-flex items-center rounded bg-success/10 px-1.5 py-0.5 text-[10px] font-medium text-success">
+          <span className="inline-flex items-center rounded-full bg-success/12 px-2 py-0.5 text-[11px] font-medium text-success-strong">
             anúncio preservado
           </span>
         )}
-        {job.source && (
-          <span className="ml-auto max-w-[40%] truncate text-[10px] text-muted-foreground">
-            {job.source}
-          </span>
-        )}
       </div>
-      <div className="mt-2 grid gap-1 text-[10px] text-muted-foreground">
-        <div className="flex items-center justify-between gap-2">
-          <span className="truncate">Origem: {job.source ?? "-"}</span>
-          <span>{job.updated_at ? `Última análise: ${job.updated_at}` : "Sem análise"}</span>
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <span>{job.created_at ? `Data: ${job.created_at}` : "Data não informada"}</span>
-          <span>Score: {job.match_score ?? "-"}</span>
-        </div>
-        {job.notes && <p className="line-clamp-2 rounded bg-muted/60 p-1.5">{job.notes}</p>}
-      </div>
+      {followUpDue ? (
+        <p className="mt-2 inline-flex items-center gap-1 text-[11px] font-medium text-seal-strong">
+          <BellRing aria-hidden className="h-3 w-3" /> Follow-up desde{" "}
+          {formatDate(job.follow_up_at)}
+        </p>
+      ) : null}
+      <p className="mt-2 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
+        <span className="truncate">
+          {job.source ? `Origem: ${job.source}` : "Origem não informada"}
+        </span>
+        <span className="shrink-0 tabular">
+          {job.updated_at ? `Atualizada ${formatDate(job.updated_at)}` : "Sem análise"}
+        </span>
+      </p>
+      {job.notes && (
+        <p className="mt-2 line-clamp-2 rounded-md bg-muted/60 p-1.5 text-[11px]">{job.notes}</p>
+      )}
+      {job.job_snapshot_id && ["found", "analyzed", "good_fit"].includes(job.status) ? (
+        <Link
+          to="/application-lab"
+          search={{ novo: true, job_snapshot_id: job.job_snapshot_id }}
+          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent-strong underline-offset-4 hover:underline"
+        >
+          Preparar candidatura <ArrowRight aria-hidden className="h-3.5 w-3.5" />
+        </Link>
+      ) : null}
     </div>
   );
 }
@@ -448,6 +543,7 @@ function ListView({
                 <select
                   value={j.status}
                   onChange={(e) => onChange(j.id, e.target.value as TrackerStatus)}
+                  aria-label={`Status de ${j.title}`}
                   data-testid="application-status-select"
                   className="rounded border border-input bg-background px-2 py-1 text-xs outline-none focus:border-accent/50 focus:ring-2 focus:ring-accent/20"
                 >
@@ -461,12 +557,12 @@ function ListView({
               <td className="px-4 py-2.5">
                 <div className="flex justify-end gap-1.5 text-[10px]">
                   {j.match_score !== undefined && (
-                    <span className="rounded bg-chart-1/15 px-1.5 py-0.5 font-medium text-chart-1 tabular-nums">
+                    <span className="rounded bg-chart-1/15 px-1.5 py-0.5 font-semibold text-foreground tabular-nums">
                       C {j.match_score}
                     </span>
                   )}
                   {j.ats_score !== undefined && (
-                    <span className="rounded bg-accent/15 px-1.5 py-0.5 font-medium text-accent tabular-nums">
+                    <span className="rounded bg-accent/15 px-1.5 py-0.5 font-medium text-accent-strong tabular-nums">
                       A {j.ats_score}
                     </span>
                   )}
@@ -546,4 +642,12 @@ function CreateDialog({
       </div>
     </div>
   );
+}
+
+function formatDate(value: string | undefined): string {
+  if (!value) return "";
+  const date = new Date(value.length === 10 ? `${value}T12:00:00` : value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : date.toLocaleDateString("pt-BR", { day: "2-digit", month: "short" });
 }

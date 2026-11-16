@@ -10,6 +10,7 @@ from modules.evidence import EvidenceReviewStatus
 from modules.profile import ProfileContextOrchestrator
 from modules.profile.models import ProfileImportDraft, ProfileItem
 from modules.profile.service import UniversalCareerProfileService
+from modules.security.credentials import contains_secret_field
 
 from apps.api.schemas.profile import (
     ProfileContextResponse,
@@ -120,7 +121,7 @@ def profile_import_text(
         "source_type": request.source_type,
         "language": request.language,
     }
-    if _contains_secret_field(payload):
+    if contains_secret_field(payload):
         raise HTTPException(status_code=422, detail="Payload contem campo inseguro.")
 
     try:
@@ -191,7 +192,7 @@ def profile_import_lattes(
     if not request.text.strip():
         raise HTTPException(status_code=422, detail="Cole um texto do Lattes para importar.")
     payload = LattesImportInput.model_validate(request.model_dump(exclude={"request_id"}))
-    if _contains_secret_field(payload.model_dump()):
+    if contains_secret_field(payload.model_dump()):
         raise HTTPException(status_code=422, detail="Payload contém campo inseguro.")
 
     service = LattesService()
@@ -274,16 +275,3 @@ def profile_context() -> ProfileContextResponse:
         context=context,
         message="Contexto do Perfil Profissional montado localmente.",
     )
-
-
-def _contains_secret_field(value: object) -> bool:
-    secret_markers = {"api_key", "apikey", "secret", "token", "cookie", "session"}
-    if isinstance(value, dict):
-        for key, nested in value.items():
-            if any(marker in str(key).lower() for marker in secret_markers):
-                return True
-            if _contains_secret_field(nested):
-                return True
-    if isinstance(value, list):
-        return any(_contains_secret_field(item) for item in value)
-    return False

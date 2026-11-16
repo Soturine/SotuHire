@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -33,6 +34,18 @@ from modules.storage.database import connect_database, default_database_path
 from modules.storage.migrations import ensure_database
 
 
+class StaleWriteError(Exception):
+    """A conditional write found a newer stored version than the one it was computed from."""
+
+
+class MasterResumeConflictError(StaleWriteError):
+    """The Master Resume changed after the copy this write was computed from was read."""
+
+
+class ResumeVariantConflictError(StaleWriteError):
+    """The variant changed after the copy this write was computed from was read."""
+
+
 class ApplicationLabRepository:
     """Persist resumable Lab state without duplicating existing analysis engines."""
 
@@ -41,12 +54,35 @@ class ApplicationLabRepository:
             Path(database_path) if database_path is not None else default_database_path()
         )
 
-    def save_master_resume(self, resume: MasterResume) -> MasterResume:
+    def save_master_resume(
+        self, resume: MasterResume, *, expected_updated_at: datetime | None = None
+    ) -> MasterResume:
+        """Upsert the Master Resume.
+
+        With ``expected_updated_at`` the write is conditional: it happens only if the stored row
+        still has that ``updated_at`` (or does not exist yet). The check and the write run inside
+        one ``BEGIN IMMEDIATE`` transaction, so two writers that read the same copy cannot both
+        succeed; the second gets :class:`MasterResumeConflictError` instead of erasing the first.
+        """
         resume = resume.model_copy(deep=True)
         _normalize_positions(resume.sections)
         canonical = canonical_document(resume)
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            if expected_updated_at is not None:
+                current = connection.execute(
+                    "SELECT updated_at FROM master_resumes WHERE master_resume_id = ?",
+                    (resume.master_resume_id,),
+                ).fetchone()
+                if (
+                    current is not None
+                    and datetime.fromisoformat(current["updated_at"]) != expected_updated_at
+                ):
+                    raise MasterResumeConflictError(
+                        "O Currículo Mestre mudou depois de ser carregado; recarregue e tente "
+                        "de novo."
+                    )
             if resume.profile_id:
                 now = resume.updated_at.isoformat()
                 connection.execute(
@@ -208,12 +244,33 @@ class ApplicationLabRepository:
             updated_at=row["updated_at"],
         )
 
-    def save_variant(self, variant: ResumeVariant) -> ResumeVariant:
+    def save_variant(
+        self, variant: ResumeVariant, *, expected_updated_at: datetime | None = None
+    ) -> ResumeVariant:
+        """Upsert a variant; conditional on ``expected_updated_at`` like the Master Resume.
+
+        Two tabs (or a stale browser draft and a fresh edit) editing the same variant used to be
+        last-write-wins. With ``expected_updated_at`` the second writer gets
+        :class:`ResumeVariantConflictError` and the editor asks which version to keep.
+        """
         variant = variant.model_copy(deep=True)
         _normalize_positions(variant.sections)
         canonical = canonical_document(variant)
         ensure_database(self.database_path)
         with connect_database(self.database_path) as connection:
+            connection.execute("BEGIN IMMEDIATE")
+            if expected_updated_at is not None:
+                current = connection.execute(
+                    "SELECT updated_at FROM resume_variants WHERE resume_variant_id = ?",
+                    (variant.resume_variant_id,),
+                ).fetchone()
+                if (
+                    current is not None
+                    and datetime.fromisoformat(current["updated_at"]) != expected_updated_at
+                ):
+                    raise ResumeVariantConflictError(
+                        "Esta variante foi salva em outra aba ou sessão depois de ser aberta aqui."
+                    )
             connection.execute(
                 """INSERT INTO resume_variants
                 (resume_variant_id, master_resume_id, job_snapshot_id, title, target_role,

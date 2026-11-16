@@ -23,8 +23,11 @@ from apps.api.schemas.application_lab import (
     ApplicationLabSessionDetail,
     ApplicationLabSessionPage,
     ApplicationLabSessionUpdateRequest,
+    MasterResumeFromProfileRequest,
     MasterResumeResponse,
     MasterResumeUpsertRequest,
+    ProfileUpdatesApplyRequest,
+    ProfileUpdatesResponse,
     RequestMetadata,
     ResumeExportRequest,
     ResumeExportResponse,
@@ -300,11 +303,59 @@ def ingest_resume(
     )
 
 
+@resume_studio_router.post(
+    "/master/from-profile", response_model=ApiEnvelope[MasterResumeResponse], status_code=201
+)
+def create_master_from_profile(
+    payload: MasterResumeFromProfileRequest, service: LabDependency
+) -> ApiEnvelope[MasterResumeResponse]:
+    """Build the Master Resume from confirmed Universal Profile facts (no second import)."""
+    return ok(service.master_from_profile(), request_id=payload.request_id)
+
+
+@resume_studio_router.get(
+    "/master/profile-updates", response_model=ApiEnvelope[ProfileUpdatesResponse]
+)
+def list_profile_updates(service: LabDependency) -> ApiEnvelope[ProfileUpdatesResponse]:
+    """Confirmed profile facts the Master Resume does not contain yet; nothing is changed."""
+    return ok(service.profile_updates())
+
+
+@resume_studio_router.post(
+    "/master/profile-updates", response_model=ApiEnvelope[MasterResumeResponse]
+)
+def apply_master_profile_updates(
+    payload: ProfileUpdatesApplyRequest, service: LabDependency
+) -> ApiEnvelope[MasterResumeResponse]:
+    """Append the chosen profile facts to the Master Resume after the user's review."""
+    return ok(service.apply_profile_updates(payload.item_ids), request_id=payload.request_id)
+
+
+@resume_studio_router.post(
+    "/master/profile-refresh", response_model=ApiEnvelope[MasterResumeResponse]
+)
+def refresh_master_profile_facts(
+    payload: ProfileUpdatesApplyRequest, service: LabDependency
+) -> ApiEnvelope[MasterResumeResponse]:
+    """Replace Master entries of the chosen facts with their current Profile text, on request.
+
+    The Profile is never written from here: the Master follows the Profile, not the reverse.
+    """
+    return ok(service.refresh_profile_facts(payload.item_ids), request_id=payload.request_id)
+
+
 @resume_studio_router.put("/master", response_model=ApiEnvelope[MasterResumeResponse])
 def put_master_resume(
     payload: MasterResumeUpsertRequest, service: LabDependency
 ) -> ApiEnvelope[MasterResumeResponse]:
-    return ok(service.save_master(payload.resume), request_id=payload.request_id)
+    return ok(
+        service.save_master(
+            payload.resume,
+            expected_updated_at=payload.expected_updated_at,
+            replace_existing=payload.replace_existing,
+        ),
+        request_id=payload.request_id,
+    )
 
 
 @resume_studio_router.get("/variants", response_model=ApiEnvelope[ResumeVariantPage])
@@ -347,9 +398,11 @@ def update_resume_variant(
     payload: ResumeVariantUpdateRequest,
     service: LabDependency,
 ) -> ApiEnvelope[ResumeVariantResponse]:
-    changes = payload.model_dump(exclude={"request_id"}, exclude_unset=True)
+    changes = payload.model_dump(exclude={"request_id", "expected_updated_at"}, exclude_unset=True)
     return ok(
-        service.update_variant(variant_id, changes),
+        service.update_variant(
+            variant_id, changes, expected_updated_at=payload.expected_updated_at
+        ),
         request_id=payload.request_id,
     )
 

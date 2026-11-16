@@ -135,6 +135,7 @@ Use este índice para localizar a documentação atual. Documentos de versões a
 
 ## Releases
 
-- [Release atual — v2.0](releases/v2.0.md)
+- [Release atual — v2.1.0](releases/v2.1.md)
+- [Release v2.0](releases/v2.0.md)
 - [CHANGELOG](https://github.com/Soturine/SotuHire/blob/main/CHANGELOG.md)
 - [Releases anteriores](https://github.com/Soturine/SotuHire/tree/main/docs/releases)

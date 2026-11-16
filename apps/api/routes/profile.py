@@ -79,20 +79,17 @@ def import_profile_text(
     return ok(data, warnings=warnings, request_id=payload.request_id)
 
 
-@router.post("/import-lattes", response_model=ApiEnvelope[ProfileLattesImportResponse])
-def import_lattes_profile(
-    payload: ProfileLattesImportRequest,
-) -> ApiEnvelope[ProfileLattesImportResponse]:
-    """Extract draft academic profile items from pasted Lattes text."""
-    data, warnings = profile_import_lattes(payload)
-    return ok(data, warnings=warnings, request_id=payload.request_id)
-
-
 @router.post("/lattes/draft", response_model=ApiEnvelope[ProfileLattesImportResponse])
+@router.post(
+    "/import-lattes",
+    response_model=ApiEnvelope[ProfileLattesImportResponse],
+    deprecated=True,
+    summary="Deprecated alias of POST /profile/lattes/draft",
+)
 def draft_lattes_profile(
     payload: ProfileLattesImportRequest,
 ) -> ApiEnvelope[ProfileLattesImportResponse]:
-    """Alias for Lattes draft extraction used by the web UI."""
+    """Extract draft academic profile items from pasted Lattes text without saving them."""
     data, warnings = profile_import_lattes(payload)
     return ok(data, warnings=warnings, request_id=payload.request_id)
 

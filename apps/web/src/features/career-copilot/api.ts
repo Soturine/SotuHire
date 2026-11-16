@@ -1,5 +1,7 @@
 import { pairedApiFetch } from "@/features/local-security/api-pairing";
+import { ApiHttpError } from "@/lib/api/client";
 import type { ApiMode } from "@/lib/api/mode";
+import { normalize } from "@/lib/search";
 
 export interface NextBestAction {
   action_id: string;
@@ -204,19 +206,82 @@ const demoApprovals: ProposedAction[] = [
   },
 ];
 
-function v2Base(baseUrl: string): string {
-  return baseUrl.replace(/\/api\/v1\/?$/, "/api/v2");
+export type SearchResult = {
+  entity_type: string;
+  entity_id: string;
+  title: string;
+  subtitle?: string;
+  route: string;
+};
+
+export type ApprovalAction = "approve" | "reject" | "execute" | "undo";
+
+/**
+ * Sample-mode decisions live for the page session and follow the API's state machine, so the
+ * buttons behave as they do against the real API (before: the queue reloaded the static sample and
+ * "Aprovar" seemed to do nothing).
+ */
+const demoDecisions = new Map<string, string>();
+const demoCreated: ProposedAction[] = [];
+
+function demoCreateProposal(payload: {
+  tool_id: string;
+  input: Record<string, unknown>;
+  reason: string;
+  evidence_refs?: string[];
+}): ProposedAction {
+  const proposal: ProposedAction = {
+    proposal_id: `demo-proposal-${demoCreated.length + 1}`,
+    action_type: payload.tool_id,
+    title: String(payload.input.title ?? payload.tool_id),
+    description: "",
+    reason: payload.reason,
+    evidence_refs: payload.evidence_refs ?? [],
+    affected_entities: ["task"],
+    before_snapshot: {},
+    after_preview: payload.input,
+    risk: "low",
+    reversible: true,
+    undo_strategy: "Remover a tarefa criada",
+    status: "proposed",
+    created_at: new Date().toISOString(),
+  };
+  demoCreated.unshift(proposal);
+  return proposal;
+}
+const DEMO_TRANSITIONS: Record<ApprovalAction, { from: string[]; to: string }> = {
+  approve: { from: ["proposed", "reviewing"], to: "approved" },
+  reject: { from: ["proposed", "reviewing"], to: "rejected" },
+  execute: { from: ["approved"], to: "executed" },
+  undo: { from: ["executed"], to: "undone" },
+};
+
+async function demoTransition(proposalId: string, action: ApprovalAction) {
+  const item = [...demoCreated, ...demoApprovals].find(
+    (candidate) => candidate.proposal_id === proposalId,
+  );
+  if (!item) throw new Error("Proposta não encontrada.");
+  const current = demoDecisions.get(proposalId) ?? item.status;
+  const rule = DEMO_TRANSITIONS[action];
+  if (!rule.from.includes(current) || (action === "undo" && !item.reversible))
+    throw new Error(`Transição inválida: ${current} → ${rule.to}.`);
+  demoDecisions.set(proposalId, rule.to);
+  return { ...item, status: rule.to };
 }
 
 async function request<T>(baseUrl: string, path: string, init?: RequestInit): Promise<T> {
-  const response = await pairedApiFetch(v2Base(baseUrl), path, {
-    ...init,
-    headers: { "content-type": "application/json", ...(init?.headers ?? {}) },
-  });
-  const envelope = (await response.json()) as Envelope<T>;
-  if (!response.ok || !envelope.ok) {
-    throw new Error(envelope.error?.message || `HTTP ${response.status}`);
+  const response = await pairedApiFetch(
+    baseUrl,
+    path,
+    { ...init, headers: { "content-type": "application/json", ...(init?.headers ?? {}) } },
+    { apiVersion: "v2" },
+  );
+  const envelope = (await response.json().catch(() => ({ ok: false }))) as Envelope<T>;
+  if (!response.ok) {
+    // Keep the status: callers and the retry policy tell "not found" from "server down".
+    throw new ApiHttpError(response.status, envelope.error?.message || `HTTP ${response.status}`);
   }
+  if (!envelope.ok) throw new Error(envelope.error?.message || "Resposta inválida da API.");
   return envelope.data;
 }
 
@@ -238,21 +303,16 @@ export const v2Api = (mode: ApiMode, baseUrl: string) => ({
       : request<PortfolioItem[]>(baseUrl, "/portfolio"),
   approvals: () =>
     mode === "demo"
-      ? Promise.resolve(demoApprovals)
+      ? Promise.resolve(
+          [...demoCreated, ...demoApprovals].map((item) => ({
+            ...item,
+            status: demoDecisions.get(item.proposal_id) ?? item.status,
+          })),
+        )
       : request<ProposedAction[]>(baseUrl, "/approvals"),
-  transition: (proposalId: string, action: "approve" | "reject" | "execute" | "undo") =>
+  transition: (proposalId: string, action: ApprovalAction) =>
     mode === "demo"
-      ? Promise.resolve({
-          ...demoApprovals[0],
-          status:
-            action === "approve"
-              ? "approved"
-              : action === "reject"
-                ? "rejected"
-                : action === "undo"
-                  ? "undone"
-                  : "executed",
-        })
+      ? demoTransition(proposalId, action)
       : request<ProposedAction | { proposal: ProposedAction; result: Record<string, unknown> }>(
           baseUrl,
           `/approvals/${encodeURIComponent(proposalId)}/${action}`,
@@ -265,25 +325,28 @@ export const v2Api = (mode: ApiMode, baseUrl: string) => ({
     evidence_refs?: string[];
   }) =>
     mode === "demo"
-      ? Promise.resolve(demoApprovals[0])
+      ? Promise.resolve(demoCreateProposal(payload))
       : request<ProposedAction>(baseUrl, "/approvals", {
           method: "POST",
           body: JSON.stringify(payload),
         }),
-  search: (query: string) =>
-    mode === "demo"
-      ? Promise.resolve(
-          [...demoEvidence, ...demoPortfolio]
-            .filter((item) => item.title.toLowerCase().includes(query.toLowerCase()))
-            .map((item) => ({
-              entity_type: "node_id" in item ? "evidence" : "portfolio",
-              entity_id: "node_id" in item ? item.node_id : item.portfolio_item_id,
-              title: item.title,
-              route: "node_id" in item ? "/evidence" : "/portfolio",
-            })),
-        )
-      : request<Array<{ entity_type: string; entity_id: string; title: string; route: string }>>(
-          baseUrl,
-          `/search?query=${encodeURIComponent(query)}`,
-        ),
+  /** Accent-insensitive, every word must appear: the same rule as the API (copilot_v2/search.py). */
+  search: (query: string, signal?: AbortSignal) => {
+    if (mode !== "demo")
+      return request<SearchResult[]>(baseUrl, `/search?query=${encodeURIComponent(query)}`, {
+        signal,
+      });
+    const words = normalize(query).split(/\s+/).filter(Boolean);
+    return Promise.resolve(
+      [...demoEvidence, ...demoPortfolio]
+        .filter((item) => words.every((word) => normalize(item.title).includes(word)))
+        .map((item): SearchResult => ({
+          entity_type: "node_id" in item ? "evidence" : "portfolio",
+          entity_id: "node_id" in item ? item.node_id : item.portfolio_item_id,
+          title: item.title,
+          subtitle: "",
+          route: "node_id" in item ? "/evidence" : "/portfolio",
+        })),
+    );
+  },
 });

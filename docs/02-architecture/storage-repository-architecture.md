@@ -10,11 +10,7 @@ O diretório de dados é definido por `SOTUHIRE_DATA_DIR`. Sem essa variável, o
 
 ```text
 Módulos de produto
-  ├─ stores legados JSON/JSONL
-  ├─ EntityRepository (contrato comum)
-  │    ├─ JsonRepository
-  │    ├─ JsonlRepository
-  │    └─ SqliteRepository
+  ├─ stores legados JSON/JSONL (LocalStore, perfil universal, fontes, editais)
   └─ stores SQLite especializados
        ├─ SnapshotStore
        ├─ ApplicationRepository
@@ -23,55 +19,22 @@ Módulos de produto
 
 Não há Redis, servidor SQL, fila distribuída ou banco vetorial nessa camada.
 
-## Contrato comum
+## Por que não há um repositório genérico
 
-`modules/storage/repositories/base.py` define `EntityRepository`, um `Protocol` estrutural com cinco operações:
+Até 2026-11 existia `modules/storage/repositories` (`EntityRepository`, `JsonRepository`,
+`JsonlRepository`, `SqliteRepository`), um CRUD genérico criado em 2026-07 para uma migração
+futura. Nenhum módulo de produto chegou a usá-lo: os únicos consumidores eram o próprio teste de
+contrato e este documento. Ele foi removido na auditoria de 2026-11 (ver
+[triagem de duplicação e código morto](../00-audit/2026-11-dead-dedupe-triage.md)); o código
+continua no histórico do Git.
 
-```python
-class EntityRepository(Protocol):
-    def get(self, entity_id: str) -> dict[str, object] | None: ...
-    def list(self, *, filters: Mapping[str, object] | None = None) -> list[dict[str, object]]: ...
-    def save(self, entity: Mapping[str, object]) -> dict[str, object]: ...
-    def delete(self, entity_id: str) -> bool: ...
-    def exists(self, entity_id: str) -> bool: ...
-```
-
-O contrato é propositalmente pequeno. Ele permite substituir o adapter sem levar detalhes de arquivo ou SQL para serviços novos, mas não tenta esconder consultas relacionais complexas.
-
-## Adapters
-
-### `JsonRepository`
-
-- espera um documento JSON cuja raiz seja uma lista de objetos;
-- exige um campo de identidade, `id` por padrão;
-- atualiza ou acrescenta por identidade;
-- grava em um arquivo `.tmp` e usa substituição do arquivo de destino;
-- aplica filtros por igualdade em memória;
-- propaga JSON inválido e raiz incompatível como erro, em vez de retornar silenciosamente uma lista vazia.
-
-### `JsonlRepository`
-
-- exige um objeto JSON por linha não vazia;
-- informa corrupção com o número da linha;
-- reescreve o arquivo completo por meio de `.tmp` ao salvar ou apagar;
-- mantém o mesmo contrato e a mesma semântica de filtros do adapter JSON.
-
-Ele é um adapter de compatibilidade, não um log append-only para alto volume.
-
-### `SqliteRepository`
-
-- atende tabelas simples com `id`, `payload`, `created_at` e `updated_at`;
-- valida nomes de tabela e campo por expressão regular antes de interpolá-los no SQL;
-- usa parâmetros para valores;
-- faz upsert do JSON serializado em `payload`;
-- ordena listagens por `updated_at DESC`;
-- aplica filtros de conteúdo depois de desserializar os registros.
-
-O adapter genérico pressupõe que a tabela já exista. `MigrationRunner` ou `ensure_database()` deve preparar o schema antes do primeiro uso.
+As entidades que precisam de persistência têm stores próprios, porque cada uma tem invariantes que
+um CRUD genérico não expressa (dedupe por hash, FKs, transações entre tabelas, bloqueio de
+segredos).
 
 ## Stores especializados
 
-Algumas entidades não cabem no contrato CRUD genérico:
+Stores SQLite em uso:
 
 | Store | Responsabilidade | Por que é especializado |
 |---|---|---|
@@ -116,7 +79,7 @@ não recebem novas gravações do Tracker.
 - cada migração de schema é validada e confirmada separadamente;
 - a importação dos registros legados ocorre dentro de `BEGIN IMMEDIATE`;
 - inserts repetidos são controlados por `legacy_migration_history`;
-- adapters JSON/JSONL usam troca de arquivo, mas não oferecem transação entre vários stores;
+- stores JSON/JSONL usam troca de arquivo, mas não oferecem transação entre vários stores;
 - a conclusão do Application Lab usa `BEGIN IMMEDIATE` para cartão, links,
   `application_created`, status da sessão e chave idempotente;
 - a chave estável combina perfil, identidade da oportunidade, snapshots, sessão e ação;
@@ -136,8 +99,6 @@ O banco SQLite é incluído integralmente no backup. Portanto, a regra principal
 
 ## Limitações atuais
 
-- nem todos os módulos dependem de `EntityRepository` ainda;
-- filtros do adapter SQLite genérico não são convertidos em `WHERE` sobre o JSON;
 - JSON/JSONL continuam sem transação cruzada;
 - o runner não implementa migração `down`; rollback é restauração do backup;
 - arquivos legados corrompidos são reportados e preservados, não reparados automaticamente;
@@ -146,7 +107,6 @@ O banco SQLite é incluído integralmente no backup. Portanto, a regra principal
 ## Testes relacionados
 
 ```bash
-pytest tests/test_storage_repository_contract.py
 pytest tests/test_storage_migrations.py
 pytest tests/test_storage_snapshots.py
 pytest tests/test_legacy_data_migration.py

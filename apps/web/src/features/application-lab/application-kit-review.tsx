@@ -50,9 +50,7 @@ export function ApplicationKitReview({
             {kit.items.length} item(ns) · {approved.length} pronto(s) para copiar/exportar
           </p>
           {kit.stale_reason && (
-            <p className="mt-1 text-xs text-warning-foreground">
-              Desatualizado: {kit.stale_reason}
-            </p>
+            <p className="mt-1 text-xs text-warning-strong">Desatualizado: {kit.stale_reason}</p>
           )}
         </div>
         <div className="flex flex-wrap gap-2">
@@ -110,11 +108,11 @@ export function ApplicationKitReview({
                 <span
                   className={cn(
                     "rounded-full px-2 py-1 text-[10px] font-bold uppercase",
-                    item.status === "accepted" && "bg-success/15 text-success",
-                    item.status === "edited" && "bg-accent/15 text-accent",
-                    item.status === "rejected" && "bg-destructive/10 text-destructive",
+                    item.status === "accepted" && "bg-success/15 text-success-strong",
+                    item.status === "edited" && "bg-accent/15 text-accent-strong",
+                    item.status === "rejected" && "bg-destructive/10 text-destructive-strong",
                     (item.status === "pending" || item.status === "stale") &&
-                      "bg-warning/15 text-warning-foreground",
+                      "bg-warning/15 text-warning-strong",
                   )}
                 >
                   {STATUS_LABEL[item.status]}
@@ -136,7 +134,7 @@ export function ApplicationKitReview({
                 {item.evidence_used.length} evidência(s) · {item.warnings.length} aviso(s)
               </p>
               {item.warnings.map((warning) => (
-                <p key={warning} className="mt-1 text-xs text-warning-foreground">
+                <p key={warning} className="mt-1 text-xs text-warning-strong">
                   {warning}
                 </p>
               ))}

@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-import hmac
 import os
 from ipaddress import ip_address
-
-MAX_LOG_TEXT = 160
 
 
 def is_local_client(host: str) -> bool:
@@ -22,18 +19,7 @@ def configured_token() -> str:
     return os.getenv("SOTUHIRE_COMPANION_TOKEN", "").strip()
 
 
-def token_is_valid(provided: str, expected: str | None = None) -> bool:
-    """Require a non-empty constant-time installation-token match."""
-    required = configured_token() if expected is None else expected
-    return bool(required and provided and hmac.compare_digest(provided, required))
-
-
 def sanitize_text(value: str, *, limit: int) -> str:
     """Remove control characters and cap locally persisted visible text."""
     clean = "".join(character for character in value if character in "\n\t" or ord(character) >= 32)
     return clean.strip()[:limit]
-
-
-def safe_log_label(value: str) -> str:
-    """Return a short single-line label suitable for minimal logs."""
-    return sanitize_text(value, limit=MAX_LOG_TEXT).replace("\n", " ")

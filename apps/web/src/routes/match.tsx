@@ -199,7 +199,7 @@ function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult 
         </div>
         {a.recommendation && (
           <div className="mt-5 flex items-start gap-3 rounded-lg border border-accent/30 bg-accent/10 p-4">
-            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+            <ShieldAlert className="mt-0.5 h-4 w-4 shrink-0 text-accent-strong" />
             <div className="text-sm">
               <div className="font-medium">Recomendação: {translate(a.recommendation)}</div>
               <div className="text-xs text-muted-foreground">
@@ -223,20 +223,20 @@ function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult 
       <div className="grid gap-6 lg:grid-cols-3">
         <RequirementsList
           title="Requisitos atendidos"
-          icon={<CheckCircle2 className="h-4 w-4 text-success" />}
+          icon={<CheckCircle2 className="h-4 w-4 text-success-strong" />}
           items={a.matched_requirements}
           tone="success"
           showEvidence
         />
         <RequirementsList
           title="Requisitos parciais"
-          icon={<MinusCircle className="h-4 w-4 text-warning" />}
+          icon={<MinusCircle className="h-4 w-4 text-warning-strong" />}
           items={a.partial_requirements}
           tone="warning"
         />
         <RequirementsList
           title="Requisitos ausentes"
-          icon={<XCircle className="h-4 w-4 text-destructive" />}
+          icon={<XCircle className="h-4 w-4 text-destructive-strong" />}
           items={a.missing_requirements}
           tone="destructive"
         />
@@ -250,7 +250,7 @@ function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult 
                 key={g.name}
                 className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 p-3 text-sm"
               >
-                <AlertTriangle className="mt-0.5 h-4 w-4 text-destructive" />
+                <AlertTriangle className="mt-0.5 h-4 w-4 text-destructive-strong" />
                 <div>
                   <div className="font-medium">{g.name}</div>
                   {g.reason && <div className="text-xs text-muted-foreground">{g.reason}</div>}
@@ -303,7 +303,7 @@ function MatchResult({ a, meta }: { a: MatchAnalysis; meta?: MatchAnalyzeResult 
           <ul className="space-y-2 text-sm">
             {a.safe_actions.map((s, i) => (
               <li key={i} className="flex gap-2 rounded-md border border-border bg-muted/40 p-3">
-                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent-strong" />
                 <span>{s}</span>
               </li>
             ))}

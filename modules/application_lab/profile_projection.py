@@ -1,0 +1,245 @@
+"""Project the Universal Profile into the Master Resume without retyping and without write-back.
+
+Authority: the Universal Profile owns professional facts and their confirmation; the Master Resume is
+an editable document derived from it; job variants derive from the Master Resume. Data only flows
+downstream here, and only facts the user confirmed (and did not mark sensitive) are projected. An
+entry keeps the profile item id in ``source_profile_item_ids`` so a later projection can tell
+which confirmed facts the resume does not contain yet. Nothing in this module writes the profile.
+"""
+
+from __future__ import annotations
+
+from datetime import UTC, datetime
+
+from modules.application_lab.models import MasterResume, ResumeEntry, ResumeSection
+from modules.profile.json_resume import section_for_item
+from modules.profile.models import ProfileItem, UniversalCareerProfile
+
+# JSON Resume section -> (resume section_type, title). Order is the resume order. References are
+# not projected: they name third parties.
+SECTION_LAYOUT: tuple[tuple[str, str, str], ...] = (
+    ("work", "experience", "Experiência"),
+    ("education", "education", "Formação"),
+    ("projects", "projects", "Projetos"),
+    ("certificates", "certifications", "Certificações e registros"),
+    ("skills", "skills", "Competências"),
+    ("languages", "languages", "Idiomas"),
+    ("publications", "publications", "Publicações"),
+    ("awards", "awards", "Prêmios"),
+    ("volunteer", "volunteer", "Voluntariado"),
+    ("interests", "interests", "Interesses"),
+)
+_LAYOUT = {source: (section_type, title) for source, section_type, title in SECTION_LAYOUT}
+
+
+def projectable_items(profile: UniversalCareerProfile) -> list[ProfileItem]:
+    """Confirmed, non-sensitive profile items that have a resume section."""
+    return [
+        item
+        for item in profile.items
+        if item.confirmed_by_user and not item.sensitive and section_for_item(item) in _LAYOUT
+    ]
+
+
+def master_resume_from_profile(profile: UniversalCareerProfile) -> MasterResume:
+    """Build a new Master Resume from the confirmed facts of the profile."""
+    items = projectable_items(profile)
+    sections = _sections(items)
+    skipped = [item for item in profile.items if not item.confirmed_by_user and not item.sensitive]
+    warnings = (
+        [
+            f"{len(skipped)} item(ns) do Perfil ainda não confirmado(s) ficaram de fora; "
+            "confirme no Perfil para trazê-los."
+        ]
+        if skipped
+        else []
+    )
+    return MasterResume(
+        profile_id=profile.profile_id,
+        title="Currículo Mestre",
+        target_role=(profile.target_roles[0] if profile.target_roles else profile.headline or ""),
+        summary=profile.summary or "",
+        source_type="profile",
+        source_refs=[f"profile:{profile.profile_id}"],
+        source_profile_item_ids=[item.item_id for item in items],
+        sections=sections,
+        validation_warnings=warnings,
+    )
+
+
+def _projected_item_ids(master: MasterResume) -> set[str]:
+    return {
+        item_id
+        for section in master.sections
+        for entry in section.entries
+        for item_id in entry.source_profile_item_ids
+    }
+
+
+def profile_updates(profile: UniversalCareerProfile, master: MasterResume) -> list[ProfileItem]:
+    """Confirmed profile facts that no entry of the Master Resume was built from yet."""
+    present = _projected_item_ids(master)
+    return [item for item in projectable_items(profile) if item.item_id not in present]
+
+
+REFRESHABLE_FIELDS = ("title", "subtitle", "content", "start_date", "end_date")
+
+
+def profile_changes(
+    profile: UniversalCareerProfile, master: MasterResume
+) -> list[tuple[ProfileItem, str, dict[str, tuple[str, str]]]]:
+    """Projected facts whose Profile version no longer matches the Master Resume entry.
+
+    Only entries built from exactly one profile item are compared (an entry the person merged
+    from several facts is theirs). Returns (item, section title, {field: (in master, in
+    profile)}). The difference may be an edit in the Profile or in the Master; the person
+    decides, and nothing is ever written back to the Profile.
+    """
+    eligible = {item.item_id: item for item in projectable_items(profile)}
+    changes: list[tuple[ProfileItem, str, dict[str, tuple[str, str]]]] = []
+    for section in master.sections:
+        for entry in section.entries:
+            if len(entry.source_profile_item_ids) != 1:
+                continue
+            item = eligible.get(entry.source_profile_item_ids[0])
+            if item is None:
+                continue
+            fresh = _entry(item, position=entry.position)
+            diff = {
+                field: (getattr(entry, field), getattr(fresh, field))
+                for field in REFRESHABLE_FIELDS
+                if getattr(entry, field) != getattr(fresh, field)
+            }
+            if diff:
+                changes.append((item, section.title, diff))
+    return changes
+
+
+def refresh_profile_facts(
+    master: MasterResume, profile: UniversalCareerProfile, item_ids: list[str]
+) -> MasterResume:
+    """Overwrite the Master entries of the chosen facts with their current Profile text.
+
+    Keeps the entry id, position and enabled flag. Idempotent: ids whose entry already matches
+    are no-ops and, when nothing changes, the very same object is returned. Ids that are not a
+    changed, projected, confirmed fact are refused as a whole.
+    """
+    chosen = list(dict.fromkeys(item_ids))
+    pending = {item.item_id: item for item, _title, _diff in profile_changes(profile, master)}
+    present = _projected_item_ids(master)
+    eligible = {item.item_id for item in projectable_items(profile)} & present
+    unknown = [item_id for item_id in chosen if item_id not in eligible]
+    if unknown:
+        raise ValueError(
+            "Itens que não estão no Currículo Mestre ou não estão confirmados no Perfil: "
+            + ", ".join(sorted(unknown))
+        )
+    targets = {item_id: pending[item_id] for item_id in chosen if item_id in pending}
+    if not targets:
+        return master
+    now = datetime.now(UTC)
+    sections = [section.model_copy(deep=True) for section in master.sections]
+    for section in sections:
+        for entry in section.entries:
+            if len(entry.source_profile_item_ids) != 1:
+                continue
+            item = targets.get(entry.source_profile_item_ids[0])
+            if item is None:
+                continue
+            fresh = _entry(item, position=entry.position)
+            for field in REFRESHABLE_FIELDS:
+                setattr(entry, field, getattr(fresh, field))
+            entry.updated_at = now
+            section.updated_at = now
+    return master.model_copy(update={"sections": sections, "updated_at": now})
+
+
+def apply_profile_updates(
+    master: MasterResume, profile: UniversalCareerProfile, item_ids: list[str]
+) -> MasterResume:
+    """Append the chosen confirmed profile facts to the Master Resume; existing entries are kept.
+
+    Idempotent: a repeated id counts once, and an id the resume already has an entry for is a
+    no-op, so a retried request returns the same resume (the very same object when nothing is
+    added, which tells the caller there is nothing to save). Ids that are not confirmed,
+    sensitive or unknown are refused as a whole.
+    """
+    chosen = list(dict.fromkeys(item_ids))
+    eligible = {item.item_id: item for item in projectable_items(profile)}
+    unknown = [item_id for item_id in chosen if item_id not in eligible]
+    if unknown:
+        raise ValueError(
+            "Itens não disponíveis para o Currículo Mestre (não confirmados, sensíveis ou "
+            "inexistentes): " + ", ".join(sorted(unknown))
+        )
+    present = _projected_item_ids(master)
+    to_add = [eligible[item_id] for item_id in chosen if item_id not in present]
+    if not to_add:
+        return master
+    sections = [section.model_copy(deep=True) for section in master.sections]
+    by_type = {section.section_type: section for section in sections}
+    now = datetime.now(UTC)
+    for item in to_add:
+        section_type, title = _LAYOUT[section_for_item(item)]
+        section = by_type.get(section_type)
+        if section is None:
+            section = ResumeSection(section_type=section_type, title=title, position=len(sections))
+            sections.append(section)
+            by_type[section_type] = section
+        section.entries.append(_entry(item, position=len(section.entries)))
+        section.updated_at = now
+    return master.model_copy(
+        update={
+            "sections": sections,
+            "source_profile_item_ids": list(
+                dict.fromkeys([*master.source_profile_item_ids, *(item.item_id for item in to_add)])
+            ),
+            "updated_at": now,
+        }
+    )
+
+
+def _sections(items: list[ProfileItem]) -> list[ResumeSection]:
+    grouped: dict[str, list[ProfileItem]] = {}
+    for item in items:
+        grouped.setdefault(section_for_item(item), []).append(item)
+    sections: list[ResumeSection] = []
+    for source, section_type, title in SECTION_LAYOUT:
+        members = grouped.get(source, [])
+        if not members:
+            continue
+        sections.append(
+            ResumeSection(
+                section_type=section_type,
+                title=title,
+                position=len(sections),
+                entries=[_entry(item, position=index) for index, item in enumerate(members)],
+            )
+        )
+    return sections
+
+
+def _entry(item: ProfileItem, *, position: int) -> ResumeEntry:
+    return ResumeEntry(
+        entry_type=item.type,
+        title=item.title,
+        subtitle=item.organization or item.institution or "",
+        content=item.description or item.evidence or "",
+        start_date=item.start_date or "",
+        end_date=item.end_date or "",
+        position=position,
+        source_profile_item_ids=[item.item_id],
+        source_refs=[item.source_ref] if item.source_ref else [],
+        confirmed_by_user=True,
+    )
+
+
+__all__ = [
+    "SECTION_LAYOUT",
+    "apply_profile_updates",
+    "master_resume_from_profile",
+    "profile_changes",
+    "profile_updates",
+    "projectable_items",
+    "refresh_profile_facts",
+]

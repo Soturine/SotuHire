@@ -10,7 +10,7 @@
 ## Resultado local
 
 `npm audit` encontrou zero vulnerabilidades. Vite/PostCSS passou a resolver `nanoid 3.3.18`, acima
-do fix 3.3.17. `pip-audit -r docs/requirements/requirements.txt` encontrou zero vulnerabilidades
+do fix 3.3.17. `pip-audit -r docs/requirements/requirements.txt` (arquivo removido em 2026-11; as dependências vivem só no `pyproject.toml`) encontrou zero vulnerabilidades
 nas dependências resolvidas do projeto em 2026-08-10.
 
 Um audit inicial sem `-r` encontrou vulnerabilidades no ambiente Python global compartilhado,

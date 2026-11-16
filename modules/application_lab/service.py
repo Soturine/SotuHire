@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any, Literal
 from uuid import uuid4
 
+from modules.ai.claim_validation import unsupported_credential_claims
 from modules.application_lab.analysis_pipeline import (
     build_local_analysis_products,
     match_result_to_job_analysis,
@@ -340,7 +341,7 @@ class ApplicationLabService:
         edited_value: str = "",
     ) -> ApplicationSuggestion:
         """Apply a review decision without mutating any resume."""
-        self._session(session_id)
+        session = self._session(session_id)
         item = self.repository.get_suggestion(suggestion_id)
         if item is None or item.session_id != session_id:
             raise LookupError("Sugestão não encontrada nesta sessão.")
@@ -349,6 +350,19 @@ class ApplicationLabService:
         selected_text = edited_value if action == "edited" else item.after
         if action in {"accepted", "edited"} and selected_text.strip() and not item.evidence_used:
             raise ValueError("Afirmações sem evidência não podem ser aceitas.")
+        if action == "accepted":
+            # evidence_used is the session's evidence scope, not proof of each sentence: a
+            # registration or degree the model wrote must already be in the confirmed resume.
+            unsupported = unsupported_credential_claims(
+                selected_text, [item.before, *self._confirmed_resume_texts(session)]
+            )
+            if unsupported:
+                raise ValueError(
+                    "A sugestão afirma "
+                    + ", ".join(unsupported)
+                    + ", que não aparece no Currículo Mestre confirmado. Edite o texto ou "
+                    "confirme a evidência antes de aceitar."
+                )
         reviewed = self.repository.review_suggestion(
             suggestion_id,
             SuggestionStatus(action),
@@ -926,6 +940,19 @@ class ApplicationLabService:
             raise LookupError("Sessão do Application Lab não encontrada.")
         return session
 
+    def _confirmed_resume_texts(self, session: ApplicationLabSession) -> list[str]:
+        if not session.master_resume_id:
+            return []
+        master = self.repository.get_master_resume(session.master_resume_id)
+        if master is None:
+            return []
+        texts = [master.summary, master.target_role]
+        for section in master.sections:
+            for entry in section.entries:
+                if entry.confirmed_by_user:
+                    texts.extend((entry.title, entry.content))
+        return [text for text in texts if text]
+
     def _master(self, master_resume_id: str) -> MasterResume:
         if not master_resume_id:
             raise ValueError("Selecione um Currículo Mestre.")
@@ -957,24 +984,6 @@ def _replace_in_sections(sections: list[Any], before: str, after: str) -> bool:
                 entry.updated_at = utc_now()
                 return True
     return False
-
-
-def _job_requirements(data: dict[str, Any]) -> list[str]:
-    result: list[str] = []
-    for key in ("requirements", "required_skills", "mandatory_requirements", "qualifications"):
-        value = data.get(key)
-        if isinstance(value, list):
-            for item in value:
-                text = (
-                    item
-                    if isinstance(item, str)
-                    else str(item.get("name", ""))
-                    if isinstance(item, dict)
-                    else ""
-                )
-                if text.strip():
-                    result.append(text.strip())
-    return list(dict.fromkeys(result))
 
 
 def _kit_snapshot_id(snapshot_ids: list[str], snapshots: SnapshotStore) -> str:

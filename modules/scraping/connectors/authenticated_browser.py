@@ -91,9 +91,7 @@ class PlaywrightAuthenticatedCrawler:
         try:
             from playwright.sync_api import sync_playwright
         except ImportError as exc:
-            raise RuntimeError(
-                "Instale com: pip install -r docs/requirements/requirements-scraping.txt."
-            ) from exc
+            raise RuntimeError('Instale com: pip install -e ".[browser]".') from exc
 
         selectors = selectors_for_source(source)
         session = inspect_browser_session(source.browser_cdp_url)

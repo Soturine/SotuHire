@@ -28,6 +28,7 @@ from modules.radar import (
     ScheduledRadarService,
 )
 from modules.radar.wishlist_draft import build_local_wishlist_draft
+from modules.security.credentials import contains_secret_field
 from pydantic import ValidationError
 
 from apps.api.schemas.radar import (
@@ -135,7 +136,7 @@ def radar_draft_wishlist(
         "profile_context": _context_payload(context, include_sensitive=False),
         "language": request.language,
     }
-    if _contains_secret_field(payload):
+    if contains_secret_field(payload):
         raise HTTPException(status_code=422, detail="Payload de IA contem campo inseguro.")
 
     try:
@@ -636,17 +637,3 @@ def _context_payload(
         "warnings": context.warnings,
         "privacy_notes": context.privacy_notes,
     }
-
-
-def _contains_secret_field(value: object) -> bool:
-    secret_markers = {"api_key", "apikey", "secret", "token", "cookie", "session"}
-    if isinstance(value, dict):
-        for key, nested in value.items():
-            normalized_key = str(key).lower()
-            if any(marker in normalized_key for marker in secret_markers):
-                return True
-            if _contains_secret_field(nested):
-                return True
-    if isinstance(value, list):
-        return any(_contains_secret_field(item) for item in value)
-    return False

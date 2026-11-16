@@ -8,8 +8,8 @@ from pydantic import Field
 
 from modules.github_analyzer.evidence_index import EvidenceItem
 from modules.github_analyzer.repository_models import RepositoryAnalyzerModel
+from modules.portfolio.schemas import Grade
 
-Grade = Literal["A", "B", "C", "D", "F"]
 RiskLevel = Literal["low", "medium", "high", "critical", "unclear"]
 
 

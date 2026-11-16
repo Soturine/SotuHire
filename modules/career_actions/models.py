@@ -6,7 +6,7 @@ from datetime import UTC, datetime
 from typing import Literal
 from uuid import uuid4
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 def utc_now() -> datetime:
@@ -37,6 +37,15 @@ class CareerTask(BaseModel):
     created_at: datetime = Field(default_factory=utc_now)
     updated_at: datetime = Field(default_factory=utc_now)
     completed_at: datetime | None = None
+
+    @field_validator("due_at")
+    @classmethod
+    def normalize_due_at(cls, value: datetime | None) -> datetime | None:
+        # Stored ``due_at`` is compared as text against UTC "now" (overdue detection), so
+        # every zone-aware deadline is persisted in UTC. Naive legacy values are kept as-is.
+        if value is not None and value.tzinfo is not None:
+            return value.astimezone(UTC)
+        return value
 
 
 class Reminder(BaseModel):

@@ -10,7 +10,7 @@ from modules.core.collection_method import CollectionMethod
 from modules.github_analyzer.repository_models import RepositoryAnalysisInput
 from modules.github_analyzer.schemas import GitHubAnalyzerReport
 from modules.portfolio.schemas import ProjectAnalysisPayload
-from modules.schemas.job_analysis import JobAnalysisSchema
+from modules.schemas.job_analysis import JobAnalysisSchema, Recommendation
 from modules.schemas.job_posting import JobPostingSchema
 from modules.schemas.resume_profile import ResumeProfileSchema
 from modules.schemas.resume_tailor import ResumeTailorOutput
@@ -235,9 +235,7 @@ class TrackerJobCreateRequest(BaseModel):
     ats_score: int = Field(default=0, ge=0, le=100)
     opportunity_fit_score: int = Field(default=0, ge=0, le=100)
     risk_score: int = Field(default=0, ge=0, le=100)
-    recommendation: Literal["apply", "apply_with_adjustments", "save_for_later", "ignore"] = (
-        "save_for_later"
-    )
+    recommendation: Recommendation = "save_for_later"
     collection_method: CollectionMethod = "manual_url"
     notes: str = Field(default="", max_length=10_000)
     job_text: str = Field(default="", max_length=200_000)

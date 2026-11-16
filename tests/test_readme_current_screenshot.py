@@ -2,19 +2,23 @@ from pathlib import Path
 
 
 def test_readme_references_only_current_v2_product_visuals() -> None:
+    """The README shows the 2.1 build (scripts/capture_readme_media.py), nothing older."""
     readme = Path("README.md").read_text(encoding="utf-8")
-    screenshots = [
-        Path("docs/assets/screenshots/sotuhire-v2-human-approved-career-copilot.gif"),
-        Path("docs/assets/screenshots/v2/01-cockpit-light.png"),
-        Path("docs/assets/screenshots/v2/03-copilot.png"),
-        Path("docs/assets/screenshots/v2/04-approval-queue.png"),
-        Path("docs/assets/screenshots/v2/05-evidence-inbox.png"),
-        Path("docs/assets/screenshots/v2/08-portfolio.png"),
-        Path("docs/assets/screenshots/v2/19-mobile-cockpit.png"),
+    app = [
+        "cockpit",
+        "copilot",
+        "profile",
+        "resume-studio",
+        "radar",
+        "tracker",
+        "application-lab",
+        "approvals",
+        "cockpit-dark",
+        "mobile-cockpit",
+    ]
+    screenshots = [Path(f"docs/assets/screenshots/app/{name}.png") for name in app] + [
         Path("docs/assets/screenshots/extension/popup-main.png"),
-        Path("docs/assets/screenshots/extension/capture-job.png"),
         Path("docs/assets/screenshots/extension/github-analysis-modal.png"),
-        Path("docs/assets/screenshots/extension/ai-provider-setup.png"),
     ]
 
     for screenshot in screenshots:
@@ -22,8 +26,12 @@ def test_readme_references_only_current_v2_product_visuals() -> None:
         assert screenshot.exists()
         assert 10_000 < screenshot.stat().st_size < 2_000_000
     assert readme.count("docs/assets/screenshots/") == len(screenshots)
-    assert "sotuhire-web-product-walkthrough.gif" not in readme
-    assert "sotuhire-v1.9.9-document-to-application-walkthrough.gif" not in readme
+    demo = Path("docs/assets/demo/sotuhire-demo.gif")
+    assert demo.as_posix() in readme
+    assert 100_000 < demo.stat().st_size < 3_000_000  # readable, still light for a README
+    assert Path("docs/assets/demo/sotuhire-demo.webm").exists()
+    assert "sotuhire-v2-human-approved-career-copilot.gif" not in readme
+    assert "docs/assets/screenshots/v2/" not in readme
     assert "sotuhire-v1.11.0" not in readme
 
 
@@ -44,7 +52,7 @@ def test_readme_is_a_complete_v2_product_entrypoint() -> None:
         "## Privacidade e segurança",
         "## Migração e recuperação",
         "## Desenvolvimento, testes e documentação",
-        "## Post-v2",
+        "## Próximos passos",
         "## Licença",
     ]:
         assert section in readme
@@ -54,6 +62,7 @@ def test_readme_is_a_complete_v2_product_entrypoint() -> None:
         "docs/02-architecture/evidence-graph.md",
         "docs/02-architecture/human-approved-copilot.md",
         "docs/06-engineering/v2-security-threat-model.md",
+        "docs/releases/v2.1.md",
         "docs/releases/v2.0.md",
         "CHANGELOG.md",
         "browser-extension/README.md",

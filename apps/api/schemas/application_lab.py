@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Any, Literal
 
 from modules.application_lab.models import (
@@ -124,11 +125,57 @@ class ApplicationKitExportResponse(LabApiModel):
 
 class MasterResumeUpsertRequest(LabApiModel):
     resume: MasterResume
+    # updated_at of the copy the client edited; when set, a newer stored copy answers 409
+    expected_updated_at: datetime | None = None
+    # a different resume (an imported draft) takes the place of the current Master only when the
+    # person confirmed it; expected_updated_at then names the Master they saw being replaced
+    replace_existing: bool = False
     request_id: str = Field(default="", max_length=120)
 
 
 class MasterResumeResponse(LabApiModel):
     resume: MasterResume
+
+
+class MasterResumeFromProfileRequest(LabApiModel):
+    request_id: str = Field(default="", max_length=120)
+
+
+class ProfileUpdateItem(LabApiModel):
+    """A confirmed profile fact the Master Resume does not contain yet."""
+
+    item_id: str
+    item_type: str
+    title: str
+    subtitle: str = ""
+    section_title: str
+
+
+class ProfileFieldChange(LabApiModel):
+    field: str
+    in_master: str
+    in_profile: str
+
+
+class ProfileChangedItem(LabApiModel):
+    """A projected fact whose Profile text differs from its Master Resume entry."""
+
+    item_id: str
+    item_type: str
+    title: str
+    section_title: str
+    changes: list[ProfileFieldChange] = Field(default_factory=list)
+
+
+class ProfileUpdatesResponse(LabApiModel):
+    master_resume_id: str
+    items: list[ProfileUpdateItem] = Field(default_factory=list)
+    changed: list[ProfileChangedItem] = Field(default_factory=list)
+
+
+class ProfileUpdatesApplyRequest(LabApiModel):
+    item_ids: list[str] = Field(min_length=1, max_length=200)
+    request_id: str = Field(default="", max_length=120)
 
 
 class ResumeIngestionRequest(LabApiModel):
@@ -153,6 +200,8 @@ class ResumeVariantCreateRequest(LabApiModel):
 
 
 class ResumeVariantUpdateRequest(LabApiModel):
+    # The updated_at of the copy being edited; a newer stored version answers 409.
+    expected_updated_at: datetime | None = None
     title: str | None = Field(default=None, max_length=240)
     target_role: str | None = Field(default=None, max_length=240)
     sections: list[ResumeSection] | None = None

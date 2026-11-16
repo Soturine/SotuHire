@@ -52,6 +52,22 @@ describe("local API pairing", () => {
     expect(window.location.hash).toBe("");
   });
 
+  it("sends Career Copilot (v2) requests to /api/v2 with the v1 pairing session", async () => {
+    // Before the apiVersion option the v2 layer passed an /api/v2 base here and the normalizer
+    // threw "deve terminar em /api/v1": no v2 request ever left the browser in API mode.
+    const calls: string[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        calls.push(url);
+        return response(200, { ok: true, data: [] });
+      }),
+    );
+    const result = await pairedApiFetch(BASE, "/career-state", {}, { apiVersion: "v2" });
+    expect(result.status).toBe(200);
+    expect(calls).toEqual(["http://127.0.0.1:8787/api/v2/career-state"]);
+  });
+
   it("accepts only loopback API roots", () => {
     expect(normalizeLocalApiBaseUrl("http://localhost:8787/api/v1/")).toBe(
       "http://localhost:8787/api/v1",

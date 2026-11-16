@@ -48,7 +48,10 @@ impedem que texto invoque tool.
 ### Approval bypass
 
 Um cliente pode tentar executar proposal pendente ou rejeitada. O executor aceita apenas status
-`approved` e revalida expiry, dependency hash e idempotência.
+`approved` e, numa única transação SQLite `BEGIN IMMEDIATE`, relê a proposta, revalida expiry e o
+dependency hash contra o Career State atual e grava efeito, execução, transição e audit juntos
+(`tests/test_copilot_v2_integrity.py`; a auditoria de 2026-11 encontrou essas revalidações apenas
+na aprovação, SH-AUD-001/007).
 
 ### Tool escape
 
@@ -57,13 +60,15 @@ extras e o registry recusa tools desconhecidas/proibidas.
 
 ### Replay e concorrência
 
-Retry ou duas abas podem repetir a ação. Idempotency key evita duplicação; compare-and-set impede
-transição incompatível.
+Retry ou duas abas podem repetir a ação. Idempotency key deduplica propostas abertas; o lock de
+escrita e o compare-and-set de status fazem uma segunda execução concorrente falhar sem efeito
+(`test_concurrent_execute_applies_effect_once`). Undo só reverte se o registro ainda está como o
+efeito o deixou; edição posterior vira conflito (`test_undo_archive_does_not_overwrite_later_edit`).
 
 ### Stale execution
 
-O contexto pode mudar entre preview e aprovação. Dependency hash diferente marca stale e exige nova
-proposta.
+O contexto pode mudar entre preview e aprovação ou entre aprovação e execução. Dependency hash
+diferente (incluindo top oportunidades e outcomes exibidos) marca stale e exige nova proposta.
 
 ### Exposição de dado sensível
 

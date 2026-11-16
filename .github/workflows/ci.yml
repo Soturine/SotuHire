@@ -81,17 +81,20 @@ jobs:
           python scripts/check_data_health.py
           # The dedicated frontend job installs Chromium and runs E2E. Keep
           # this archive validation browser-independent to avoid duplicating
-          # a large browser install in the Python quality job.
-          python scripts/verify_clean_install.py --skip-e2e
+          # a large browser install in the Python quality job. --install makes
+          # it a real clean install: a fresh venv from the commit archive, not
+          # the packages this job already installed.
+          python scripts/verify_clean_install.py --install --skip-e2e
 
       - name: Measure coverage baseline
         run: pytest --cov=modules --cov=apps/api --cov-report=term-missing --cov-report=json:coverage.json
 
       - name: Upload coverage report
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: python-coverage
           path: coverage.json
+          if-no-files-found: error
 
       - name: Secret pattern scan
         run: python scripts/scan_secrets.py --paths . data dist site outputs benchmarks
@@ -99,13 +102,15 @@ jobs:
       - name: Dependency audit and CycloneDX SBOM
         run: |
           pip-audit
-          python scripts/build_sbom.py
+          python scripts/build_sbom.py --output dist/sotuhire-sbom.cdx.json
+          python scripts/verify_sbom.py dist/sotuhire-sbom.cdx.json
 
       - name: Upload CycloneDX SBOM
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sotuhire-sbom
-          path: dist/sotuhire-sbom-v1.11.0.cdx.json
+          path: dist/sotuhire-sbom.cdx.json
+          if-no-files-found: error
 
   ai-quality:
     name: AI golden, injection and local regression
@@ -177,11 +182,20 @@ jobs:
         working-directory: apps/web
         run: npx playwright install --with-deps chromium
 
-      - name: Browser smoke and data reliability E2E
+      # Every E2E spec in Chromium (copilot-v2 and application-lab included);
+      # release-capture specs skip themselves unless CAPTURE_* is set.
+      # Firefox/WebKit are not in CI; run npm run test:e2e:cross-browser before a release.
+      - name: Browser E2E (Chromium, all specs)
         working-directory: apps/web
-        run: npx playwright test tests/e2e/smoke.spec.ts tests/e2e/data-reliability.spec.ts --project=chromium
+        run: npx playwright test --project=chromium
 
-      - name: npm audit report
+      - name: npm audit (blocking on critical)
+        working-directory: apps/web
+        run: npm audit --audit-level=critical
+
+      # High advisories are reported here and triaged in
+      # docs/00-audit/2026-11-dependency-review.md (fix, defer with risk, or not reachable).
+      - name: npm audit report (high, triaged)
         continue-on-error: true
         working-directory: apps/web
         run: npm audit --audit-level=high
@@ -206,7 +220,8 @@ jobs:
           python scripts/verify_extension_package.py
 
       - name: Upload extension artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: sotuhire-extension
           path: dist/sotuhire-extension-*.zip
+          if-no-files-found: error

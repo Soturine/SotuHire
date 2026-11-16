@@ -4,26 +4,36 @@ import {
   ArrowDown,
   ArrowUp,
   CheckCircle2,
+  ChevronDown,
+  CircleDot,
   Download,
   Eye,
   FileJson,
   FileText,
+  FileUp,
   History,
+  Link2,
   Loader2,
   MonitorUp,
   Redo2,
-  Save,
+  TriangleAlert,
   Undo2,
 } from "lucide-react";
-import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useReducer, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { Field, controlClass, textareaClass } from "@/components/field";
 import {
   approximatePageCount,
   createResumeEditorState,
   resumeEditorReducer,
 } from "@/components/resume-editor-state";
 import { EmptyState, ErrorState, LoadingState } from "@/components/states";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { ResumeImport } from "@/features/document-ingestion/resume-import";
+import { MasterOnboarding, ProfileUpdatesPanel } from "@/features/resume-studio/profile-sync";
+import { ApiHttpError, isNotFound } from "@/lib/api/client";
+import { draftKey, pickDraft, readDraft, safeStorage } from "@/features/resume-studio/draft";
 import { ProfessionalAssetsPanel } from "@/features/professional-assets/professional-assets-panel";
 import { downloadResumeExport } from "@/features/resume-studio/resume-download";
 import { useApi } from "@/lib/api/hooks";
@@ -54,6 +64,16 @@ export const Route = createFileRoute("/resume-studio")({
 
 type StudioView = "editor" | "preview" | "diff";
 
+const FORMAT_NAME: Record<string, string> = {
+  pdf: "PDF",
+  docx: "DOCX",
+  json_resume: "JSON Resume",
+  markdown: "Markdown",
+  txt: "Texto",
+};
+
+type SaveState = "saving" | "dirty" | "conflict" | "saved";
+
 function ResumeStudioPage() {
   const api = useApi();
   const { mode, baseUrl } = useApiMode();
@@ -79,47 +99,95 @@ function ResumeStudioPage() {
   const fallback = useMemo(() => emptyVariant(), []);
   const [state, dispatch] = useReducer(resumeEditorReducer, fallback, createResumeEditorState);
   const autosaveTimer = useRef<number | undefined>(undefined);
+  // updated_at of the stored copy this editor is based on; null while the variant is not stored.
+  const serverVersion = useRef<string | null>(null);
+  const [conflict, setConflict] = useState(false);
+  const [savedAt, setSavedAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (loaded || !masterQ.data?.resume || !variantsQ.data) return;
-    const storageKey = `sotuhire:resume-draft:${masterQ.data.resume.master_resume_id}`;
-    const stored = localStorage.getItem(storageKey);
-    let selected = variantsQ.data.items[0] ?? variantFromMaster(masterQ.data.resume);
-    if (stored) {
-      try {
-        selected = JSON.parse(stored) as ResumeVariant;
-      } catch {
-        localStorage.removeItem(storageKey);
-      }
-    }
-    dispatch({ type: "replace", variant: selected });
+    const storageKey = draftKey(masterQ.data.resume.master_resume_id);
+    const stored = variantsQ.data.items[0];
+    const server = stored ?? variantFromMaster(masterQ.data.resume);
+    serverVersion.current = stored?.updated_at ?? null;
+    const { variant: selected, restoredDraft } = pickDraft(readDraft(storageKey), server);
+    if (!restoredDraft) safeStorage(() => localStorage.removeItem(storageKey));
+    else
+      toast.info(
+        "Rascunho local mais recente que o salvo foi restaurado; ele será salvo em seguida.",
+      );
+    // A restored draft is newer than the stored copy: keep it dirty so autosave stores it.
+    dispatch({ type: "replace", variant: selected, dirty: restoredDraft });
     setLoaded(true);
   }, [loaded, masterQ.data, variantsQ.data]);
 
-  const autosave = useMutation({
-    mutationFn: (variant: ResumeVariant) =>
-      variantsQ.data?.items.some((item) => item.resume_variant_id === variant.resume_variant_id)
-        ? api.resumeStudioUpdateVariant(variant.resume_variant_id, {
+  const persist = (variant: ResumeVariant, expected: string | null) =>
+    serverVersion.current
+      ? api.resumeStudioUpdateVariant(
+          variant.resume_variant_id,
+          {
             title: variant.title,
             target_role: variant.target_role,
             sections: variant.sections,
             validation_warnings: variant.validation_warnings,
-          })
-        : api.resumeStudioSaveVariant(variant),
-    onSuccess: () => dispatch({ type: "saved" }),
-    onError: (error: Error) => toast.warning(`Rascunho salvo no navegador. API: ${error.message}`),
+          },
+          expected ?? undefined,
+        )
+      : api.resumeStudioSaveVariant(variant);
+
+  const settle = (result: { variant: ResumeVariant }) => {
+    serverVersion.current = result.variant.updated_at;
+    setSavedAt(result.variant.updated_at);
+    setConflict(false);
+    dispatch({ type: "saved" });
+    // The server now holds this state: a stale browser copy must not win on the next visit.
+    safeStorage(() => localStorage.removeItem(draftKey(result.variant.master_resume_id)));
+  };
+
+  const autosave = useMutation({
+    mutationFn: (variant: ResumeVariant) => persist(variant, serverVersion.current),
+    onSuccess: settle,
+    onError: (error: Error) => {
+      if (error instanceof ApiHttpError && error.status === 409) {
+        // Saved in another tab or session since this copy was loaded: ask, never overwrite.
+        setConflict(true);
+        return;
+      }
+      toast.warning(`Rascunho salvo no navegador. API: ${error.message}`);
+    },
+  });
+
+  const keepMine = useMutation({
+    mutationFn: () => persist(state.present, null),
+    onSuccess: (result) => {
+      settle(result);
+      toast.success("Sua versão foi salva por cima da outra.");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const loadSaved = useMutation({
+    mutationFn: () => api.resumeStudioVariant(state.present.resume_variant_id),
+    onSuccess: ({ variant }) => {
+      dispatch({ type: "replace", variant });
+      settle({ variant });
+      toast.info("Versão salva carregada; suas alterações locais foram descartadas.");
+    },
+    onError: (error: Error) => toast.error(error.message),
   });
 
   useEffect(() => {
-    if (!loaded || !state.dirty) return;
+    if (!loaded || !state.dirty || conflict) return;
     window.clearTimeout(autosaveTimer.current);
     autosaveTimer.current = window.setTimeout(() => {
-      const storageKey = `sotuhire:resume-draft:${state.present.master_resume_id}`;
-      localStorage.setItem(storageKey, JSON.stringify(state.present));
+      const draft = { ...state.present, updated_at: new Date().toISOString() };
+      safeStorage(() =>
+        localStorage.setItem(draftKey(draft.master_resume_id), JSON.stringify(draft)),
+      );
       if (navigator.onLine) autosave.mutate(state.present);
     }, 650);
     return () => window.clearTimeout(autosaveTimer.current);
-  }, [autosave, loaded, state.dirty, state.present]);
+  }, [autosave, conflict, loaded, state.dirty, state.present]);
 
   const exportMutation = useMutation({
     mutationFn: (format: ResumeExportFormat) =>
@@ -130,7 +198,7 @@ function ResumeStudioPage() {
         toast.success(
           mode === "demo"
             ? "DEMO: artefato fictício exportado; nenhum dado real foi alterado."
-            : `${result.export.format.toUpperCase()} exportado com o conteúdo renderizado.`,
+            : `${FORMAT_NAME[result.export.format] ?? result.export.format} exportado com o conteúdo renderizado.`,
         );
       } catch (error) {
         toast.warning(error instanceof Error ? error.message : String(error));
@@ -141,42 +209,42 @@ function ResumeStudioPage() {
 
   const validation = useMemo(() => validateVariant(state.present), [state.present]);
   const pages = approximatePageCount(state.present, pageSize);
+  const saveState: SaveState = conflict
+    ? "conflict"
+    : autosave.isPending
+      ? "saving"
+      : state.dirty
+        ? "dirty"
+        : "saved";
 
   return (
     <AppShell
       title="Resume Studio"
       description="Currículo Mestre, variantes rastreáveis, preview ATS-safe e export honesto."
-      actions={
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          {autosave.isPending ? (
-            <>
-              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Salvando…
-            </>
-          ) : state.dirty ? (
-            <>
-              <History className="h-3.5 w-3.5" /> Rascunho local
-            </>
-          ) : (
-            <>
-              <CheckCircle2 className="h-3.5 w-3.5 text-success" /> Salvo
-            </>
-          )}
-        </div>
-      }
+      actions={loaded ? <SaveStatus state={saveState} savedAt={savedAt} /> : null}
     >
-      {masterQ.isLoading || variantsQ.isLoading || templatesQ.isLoading || !loaded ? (
-        <LoadingState label="Abrindo seu estúdio local…" />
-      ) : masterQ.isError ? (
-        <ErrorState error={masterQ.error} onRetry={() => masterQ.refetch()} />
+      {masterQ.isError && isNotFound(masterQ.error) ? (
+        <MasterOnboarding
+          onCreated={(resume) => {
+            queryClient.setQueryData(["resume-studio-master", mode, baseUrl], { resume });
+            void queryClient.invalidateQueries({ queryKey: ["resume-studio-variants"] });
+          }}
+        />
+      ) : masterQ.isLoading || variantsQ.isLoading || templatesQ.isLoading || !loaded ? (
+        masterQ.isError ? (
+          <ErrorState error={masterQ.error} onRetry={() => masterQ.refetch()} />
+        ) : (
+          <LoadingState label="Abrindo seu estúdio local…" />
+        )
       ) : !masterQ.data?.resume ? (
         <EmptyState
           title="Crie seu Currículo Mestre"
           description="Confirme dados do Perfil ou importe um texto antes de criar variantes."
         />
       ) : (
-        <div className="space-y-5" data-testid="resume-studio">
+        <div className="mx-auto max-w-7xl space-y-5" data-testid="resume-studio">
           {search.capture_id && (
-            <div className="rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-xs">
+            <div className="rounded-xl border border-accent/30 bg-surface-accent px-4 py-3 text-xs">
               <strong>Vaga vinculada pela extensão.</strong> Somente identificadores seguros foram
               recebidos: captura <code>{search.capture_id}</code>
               {search.job_snapshot_id && (
@@ -188,12 +256,23 @@ function ResumeStudioPage() {
               . Importe o currículo diretamente aqui; a extensão nunca lê documentos locais.
             </div>
           )}
-          <ResumeImport
-            onImported={(resume) => {
-              queryClient.setQueryData(["resume-studio-master", mode], { resume });
-              dispatch({ type: "replace", variant: variantFromMaster(resume) });
-            }}
+
+          {conflict && (
+            <ConflictNotice
+              onLoadSaved={() => loadSaved.mutate()}
+              onKeepMine={() => keepMine.mutate()}
+              busy={loadSaved.isPending || keepMine.isPending}
+            />
+          )}
+
+          <StudioHeader
+            master={masterQ.data.resume}
+            variant={state.present}
+            pages={pages}
+            pageSize={pageSize}
+            warnings={validation.length}
           />
+
           <StudioToolbar
             view={view}
             onView={setView}
@@ -207,12 +286,16 @@ function ResumeStudioPage() {
             canUndo={state.past.length > 0}
             canRedo={state.future.length > 0}
             onExport={(format) => exportMutation.mutate(format)}
-            exporting={exportMutation.isPending}
+            exporting={exportMutation.isPending ? exportMutation.variables : undefined}
           />
 
-          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(360px,0.8fr)]">
+          <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.85fr)]">
             <div className="min-w-0 space-y-4">
-              <MasterBanner master={masterQ.data.resume} variant={state.present} />
+              <ProfileUpdatesPanel
+                onApplied={(resume) =>
+                  queryClient.setQueryData(["resume-studio-master", mode, baseUrl], { resume })
+                }
+              />
               {view === "editor" ? (
                 <ResumeEditor variant={state.present} dispatch={dispatch} validation={validation} />
               ) : view === "diff" ? (
@@ -227,10 +310,153 @@ function ResumeStudioPage() {
               <ResumePreview variant={state.present} pageSize={pageSize} pages={pages} />
             </div>
           </div>
+
+          <details className="group rounded-xl border bg-card shadow-[var(--shadow-soft)]">
+            <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-5 py-4 text-sm font-semibold">
+              <span className="flex items-center gap-2">
+                <FileUp aria-hidden className="h-4 w-4 text-accent-strong" />
+                Importar outro currículo para o Mestre
+              </span>
+              <ChevronDown
+                aria-hidden
+                className="h-4 w-4 text-muted-foreground transition-transform duration-(--duration-2) group-open:rotate-180"
+              />
+            </summary>
+            <div className="border-t px-5 py-4">
+              <ResumeImport
+                current={masterQ.data?.resume ?? null}
+                onImported={(resume) => {
+                  queryClient.setQueryData(["resume-studio-master", mode, baseUrl], { resume });
+                  dispatch({ type: "replace", variant: variantFromMaster(resume) });
+                }}
+              />
+            </div>
+          </details>
           <ProfessionalAssetsPanel />
         </div>
       )}
     </AppShell>
+  );
+}
+
+const SAVE_STATUS: Record<SaveState, { label: string; icon: typeof History; cls: string }> = {
+  saving: { label: "Salvando…", icon: Loader2, cls: "text-muted-foreground" },
+  dirty: { label: "Alterações no navegador", icon: History, cls: "text-warning-strong" },
+  conflict: { label: "Escolha qual versão manter", icon: TriangleAlert, cls: "text-seal-strong" },
+  saved: { label: "Salvo", icon: CheckCircle2, cls: "text-success-strong" },
+};
+
+function SaveStatus({ state, savedAt }: { state: SaveState; savedAt: string | null }) {
+  const config = SAVE_STATUS[state];
+  const Icon = config.icon;
+  const time =
+    state === "saved" && savedAt
+      ? new Date(savedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })
+      : "";
+  return (
+    <span
+      role="status"
+      aria-live="polite"
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1 text-xs font-medium shadow-[var(--shadow-soft)]",
+        config.cls,
+      )}
+    >
+      <Icon aria-hidden className={cn("h-3.5 w-3.5", state === "saving" && "animate-spin")} />
+      {config.label}
+      {time ? <span className="tabular text-muted-foreground"> às {time}</span> : null}
+    </span>
+  );
+}
+
+function ConflictNotice({
+  onLoadSaved,
+  onKeepMine,
+  busy,
+}: {
+  onLoadSaved: () => void;
+  onKeepMine: () => void;
+  busy: boolean;
+}) {
+  return (
+    <div
+      role="alert"
+      className="flex flex-wrap items-start gap-3 rounded-xl border border-seal/40 bg-seal/8 p-4"
+      data-testid="variant-conflict"
+    >
+      <TriangleAlert aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-seal-strong" />
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold">Esta variante foi salva em outra aba ou sessão.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          O salvamento automático parou para não apagar nenhuma das duas versões. Suas alterações
+          continuam aqui e no navegador até você escolher.
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant="outline" disabled={busy} onClick={onLoadSaved}>
+          Carregar a versão salva
+        </Button>
+        <Button size="sm" disabled={busy} onClick={onKeepMine}>
+          Manter a minha
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function StudioHeader({
+  master,
+  variant,
+  pages,
+  pageSize,
+  warnings,
+}: {
+  master: MasterResume;
+  variant: ResumeVariant;
+  pages: number;
+  pageSize: "A4" | "Letter";
+  warnings: number;
+}) {
+  const facts = [
+    { label: "vínculos com o Perfil", value: variant.source_profile_item_ids.length },
+    { label: `pág. ${pageSize} (aprox.)`, value: pages },
+    { label: warnings === 1 ? "ponto a revisar" : "pontos a revisar", value: warnings },
+  ];
+  return (
+    <section className="grid gap-4 rounded-xl border bg-card p-5 shadow-[var(--shadow-soft)] md:grid-cols-[1fr_auto] md:items-center md:p-6">
+      <div className="min-w-0">
+        <p className="eyebrow text-accent-strong">Variante ativa</p>
+        <h2 className="mt-1.5 truncate text-xl font-semibold tracking-tight">{variant.title}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Derivada de “{master.title}”
+          {variant.target_role ? (
+            <>
+              {" "}
+              · para <span className="text-foreground">{variant.target_role}</span>
+            </>
+          ) : null}
+          . Remover daqui nunca remove do Mestre.
+        </p>
+      </div>
+      <dl className="grid grid-cols-3 gap-2">
+        {facts.map((fact) => (
+          <div key={fact.label} className="rounded-lg bg-surface-muted px-3 py-2 text-center">
+            <dt className="sr-only">{fact.label}</dt>
+            <dd
+              className={cn(
+                "text-metric text-xl",
+                fact.label.includes("revisar") && fact.value > 0 && "text-warning-strong",
+              )}
+            >
+              {fact.value}
+            </dd>
+            <dd aria-hidden className="mt-0.5 text-[11px] leading-tight text-muted-foreground">
+              {fact.label}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   );
 }
 
@@ -261,11 +487,32 @@ function StudioToolbar({
   canUndo: boolean;
   canRedo: boolean;
   onExport: (format: ResumeExportFormat) => void;
-  exporting: boolean;
+  exporting: ResumeExportFormat | undefined;
 }) {
+  const exportButton = (format: ResumeExportFormat, label: string, primary = false) => (
+    <Button
+      size="sm"
+      variant={primary ? "default" : "outline"}
+      onClick={() => onExport(format)}
+      disabled={exporting !== undefined}
+    >
+      {exporting === format ? (
+        <Loader2 aria-hidden className="h-3.5 w-3.5 animate-spin" />
+      ) : format === "json_resume" ? (
+        <FileJson aria-hidden className="h-3.5 w-3.5" />
+      ) : (
+        <Download aria-hidden className="h-3.5 w-3.5" />
+      )}
+      {label}
+    </Button>
+  );
   return (
-    <div className="sticky top-[65px] z-20 flex flex-wrap items-center gap-2 rounded-xl border bg-background/95 p-2 shadow-[var(--shadow-soft)] backdrop-blur">
-      <div className="flex rounded-md border p-0.5">
+    <div className="z-20 flex flex-wrap items-center gap-2 rounded-xl border bg-card/95 p-2 shadow-[var(--shadow-elevated)] backdrop-blur-md md:sticky md:top-[8.5rem]">
+      <div
+        role="group"
+        aria-label="Modo de visualização"
+        className="flex rounded-lg bg-muted p-0.5"
+      >
         {(
           [
             ["editor", "Editor", FileText],
@@ -276,34 +523,39 @@ function StudioToolbar({
           <button
             key={id}
             type="button"
+            aria-pressed={view === id}
             onClick={() => onView(id)}
             className={cn(
-              "inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-xs font-semibold",
-              view === id ? "bg-primary text-primary-foreground" : "hover:bg-muted",
+              "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-[background-color,color,box-shadow] duration-(--duration-1)",
+              view === id
+                ? "bg-card text-foreground shadow-[var(--shadow-soft)]"
+                : "text-muted-foreground hover:text-foreground",
             )}
           >
-            <Icon className="h-3.5 w-3.5" /> {label}
+            <Icon aria-hidden className="h-3.5 w-3.5" /> {label}
           </button>
         ))}
       </div>
-      <button
-        type="button"
-        onClick={onUndo}
-        disabled={!canUndo}
-        aria-label="Desfazer"
-        className="grid h-8 w-8 place-items-center rounded-md border hover:bg-muted disabled:opacity-30"
-      >
-        <Undo2 className="h-3.5 w-3.5" />
-      </button>
-      <button
-        type="button"
-        onClick={onRedo}
-        disabled={!canRedo}
-        aria-label="Refazer"
-        className="grid h-8 w-8 place-items-center rounded-md border hover:bg-muted disabled:opacity-30"
-      >
-        <Redo2 className="h-3.5 w-3.5" />
-      </button>
+      <div className="flex gap-1">
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onUndo}
+          disabled={!canUndo}
+          aria-label="Desfazer"
+        >
+          <Undo2 aria-hidden className="h-4 w-4" />
+        </Button>
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={onRedo}
+          disabled={!canRedo}
+          aria-label="Refazer"
+        >
+          <Redo2 aria-hidden className="h-4 w-4" />
+        </Button>
+      </div>
       <div className="ml-auto flex flex-wrap items-center gap-2">
         <label className="sr-only" htmlFor="template-select">
           Template
@@ -312,7 +564,7 @@ function StudioToolbar({
           id="template-select"
           value={templateId}
           onChange={(event) => onTemplateId(event.target.value)}
-          className="h-8 rounded-md border bg-background px-2 text-xs"
+          className="h-8 rounded-lg border bg-card px-2 text-xs"
         >
           {templates.map((template) => (
             <option key={template.template_id} value={template.template_id}>
@@ -324,61 +576,15 @@ function StudioToolbar({
           aria-label="Tamanho da página"
           value={pageSize}
           onChange={(event) => onPageSize(event.target.value as "A4" | "Letter")}
-          className="h-8 rounded-md border bg-background px-2 text-xs"
+          className="h-8 rounded-lg border bg-card px-2 text-xs"
         >
           <option value="A4">A4</option>
           <option value="Letter">Letter</option>
         </select>
-        <button
-          type="button"
-          onClick={() => onExport("json_resume")}
-          disabled={exporting}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-semibold text-primary-foreground disabled:opacity-50"
-        >
-          {exporting ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <FileJson className="h-3.5 w-3.5" />
-          )}
-          JSON Resume
-        </button>
-        <button
-          type="button"
-          onClick={() => onExport("pdf")}
-          disabled={exporting}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold"
-        >
-          <Download className="h-3.5 w-3.5" /> PDF
-        </button>
-        <button
-          type="button"
-          onClick={() => onExport("docx")}
-          disabled={exporting}
-          className="inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-semibold"
-        >
-          <Download className="h-3.5 w-3.5" /> DOCX
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function MasterBanner({ master, variant }: { master: MasterResume; variant: ResumeVariant }) {
-  return (
-    <div className="rounded-xl border border-accent/20 bg-accent/5 p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-accent">
-            Variante ativa
-          </p>
-          <h2 className="mt-1 font-semibold">{variant.title}</h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Derivada de “{master.title}”. Remover daqui nunca remove do mestre.
-          </p>
-        </div>
-        <span className="rounded-full bg-success/15 px-2 py-1 text-[10px] font-semibold text-success">
-          {variant.source_profile_item_ids.length} vínculo(s) de origem
-        </span>
+        <span aria-hidden className="mx-1 hidden h-5 w-px bg-border sm:block" />
+        {exportButton("pdf", "PDF", true)}
+        {exportButton("docx", "DOCX")}
+        {exportButton("json_resume", "JSON Resume")}
       </div>
     </div>
   );
@@ -395,34 +601,43 @@ function ResumeEditor({
 }) {
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2">
-        <label className="text-xs font-semibold">
-          Nome da variante
-          <input
-            value={variant.title}
-            onChange={(event) =>
-              dispatch({ type: "edit-meta", field: "title", value: event.target.value })
-            }
-            className="mt-2 h-9 w-full rounded-md border bg-background px-3 text-sm font-normal"
-          />
-        </label>
-        <label className="text-xs font-semibold">
-          Cargo-alvo
-          <input
-            value={variant.target_role}
-            onChange={(event) =>
-              dispatch({ type: "edit-meta", field: "target_role", value: event.target.value })
-            }
-            className="mt-2 h-9 w-full rounded-md border bg-background px-3 text-sm font-normal"
-          />
-        </label>
+      <div className="grid gap-4 rounded-xl border bg-card p-5 shadow-[var(--shadow-soft)] sm:grid-cols-2">
+        <Field label="Nome da variante">
+          {(control) => (
+            <input
+              {...control}
+              value={variant.title}
+              onChange={(event) =>
+                dispatch({ type: "edit-meta", field: "title", value: event.target.value })
+              }
+              className={controlClass}
+            />
+          )}
+        </Field>
+        <Field label="Cargo-alvo" hint="Aparece no topo do currículo exportado.">
+          {(control) => (
+            <input
+              {...control}
+              value={variant.target_role}
+              onChange={(event) =>
+                dispatch({ type: "edit-meta", field: "target_role", value: event.target.value })
+              }
+              className={controlClass}
+            />
+          )}
+        </Field>
       </div>
       {validation.length > 0 && (
-        <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 text-xs">
-          <strong>Validação:</strong>
-          <ul className="mt-2 space-y-1 text-muted-foreground">
+        <div className="rounded-xl border border-warning/40 bg-highlight/40 p-4 text-sm">
+          <p className="flex items-center gap-2 font-semibold">
+            <TriangleAlert aria-hidden className="h-4 w-4 text-warning-strong" />
+            Antes de exportar
+          </p>
+          <ul className="mt-2 space-y-1 pl-6 text-muted-foreground">
             {validation.map((item) => (
-              <li key={item}>• {item}</li>
+              <li key={item} className="list-disc">
+                {item}
+              </li>
             ))}
           </ul>
         </div>
@@ -440,6 +655,43 @@ function ResumeEditor({
   );
 }
 
+function MoveButtons({
+  label,
+  first,
+  last,
+  onMove,
+}: {
+  label: string;
+  first: boolean;
+  last: boolean;
+  onMove: (direction: -1 | 1) => void;
+}) {
+  return (
+    <span className="flex gap-0.5">
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-7 w-7"
+        onClick={() => onMove(-1)}
+        disabled={first}
+        aria-label={`Mover ${label} para cima`}
+      >
+        <ArrowUp aria-hidden className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-7 w-7"
+        onClick={() => onMove(1)}
+        disabled={last}
+        aria-label={`Mover ${label} para baixo`}
+      >
+        <ArrowDown aria-hidden className="h-3.5 w-3.5" />
+      </Button>
+    </span>
+  );
+}
+
 function EditorSection({
   section,
   index,
@@ -451,98 +703,95 @@ function EditorSection({
   total: number;
   dispatch: React.Dispatch<Parameters<typeof resumeEditorReducer>[1]>;
 }) {
+  const toggleId = useId();
   return (
-    <article className={cn("rounded-xl border bg-card", !section.enabled && "opacity-60")}>
-      <header className="flex flex-wrap items-center gap-2 border-b bg-muted/30 px-4 py-3">
-        <div className="mr-auto">
+    <article
+      className={cn(
+        "rounded-xl border bg-card shadow-[var(--shadow-soft)] transition-opacity duration-(--duration-2)",
+        !section.enabled && "opacity-60",
+      )}
+    >
+      <header className="flex flex-wrap items-center gap-2 border-b bg-surface/60 px-4 py-3">
+        <div className="mr-auto min-w-0">
           <h3 className="text-sm font-semibold">{section.title}</h3>
-          <p className="text-[10px] text-muted-foreground">{section.section_type}</p>
+          <p className="text-xs text-muted-foreground">
+            {section.entries.length} entrada(s)
+            {section.enabled ? "" : " · fora do currículo exportado"}
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={() =>
-            dispatch({ type: "move-section", sectionId: section.section_id, direction: -1 })
+        <MoveButtons
+          label={section.title}
+          first={index === 0}
+          last={index === total - 1}
+          onMove={(direction) =>
+            dispatch({ type: "move-section", sectionId: section.section_id, direction })
           }
-          disabled={index === 0}
-          aria-label={`Mover ${section.title} para cima`}
-          className="grid h-7 w-7 place-items-center rounded border disabled:opacity-30"
-        >
-          <ArrowUp className="h-3 w-3" />
-        </button>
-        <button
-          type="button"
-          onClick={() =>
-            dispatch({ type: "move-section", sectionId: section.section_id, direction: 1 })
-          }
-          disabled={index === total - 1}
-          aria-label={`Mover ${section.title} para baixo`}
-          className="grid h-7 w-7 place-items-center rounded border disabled:opacity-30"
-        >
-          <ArrowDown className="h-3 w-3" />
-        </button>
-        <label className="flex items-center gap-2 text-xs">
-          <input
-            type="checkbox"
+        />
+        <span className="flex items-center gap-2 text-xs">
+          <Switch
+            id={toggleId}
             checked={section.enabled}
-            onChange={() => dispatch({ type: "toggle-section", sectionId: section.section_id })}
+            onCheckedChange={() =>
+              dispatch({ type: "toggle-section", sectionId: section.section_id })
+            }
           />
-          Ativa
-        </label>
+          <label htmlFor={toggleId}>Ativa</label>
+        </span>
       </header>
       <div className="space-y-4 p-4">
-        <label className="block text-xs font-semibold">
-          Texto da seção
-          <textarea
-            value={section.content}
-            onChange={(event) =>
-              dispatch({
-                type: "edit-section",
-                sectionId: section.section_id,
-                content: event.target.value,
-              })
-            }
-            className="mt-2 min-h-20 w-full rounded-md border bg-background p-3 text-sm font-normal"
-          />
-        </label>
+        <Field label="Texto da seção" optional>
+          {(control) => (
+            <textarea
+              {...control}
+              value={section.content}
+              onChange={(event) =>
+                dispatch({
+                  type: "edit-section",
+                  sectionId: section.section_id,
+                  content: event.target.value,
+                })
+              }
+              className={cn(textareaClass, "min-h-20")}
+            />
+          )}
+        </Field>
         {section.entries.map((entry, entryIndex) => (
-          <div key={entry.entry_id} className="rounded-lg border p-3">
-            <div className="mb-2 flex items-center gap-2">
-              <strong className="mr-auto text-xs">{entry.title || "Entrada sem título"}</strong>
-              <span className="text-[10px] text-muted-foreground">
+          <div key={entry.entry_id} className="rounded-lg border bg-surface p-3">
+            <div className="mb-2 flex flex-wrap items-center gap-2">
+              <strong className="mr-auto min-w-0 text-sm">
+                {entry.title || "Entrada sem título"}
+                {entry.subtitle ? (
+                  <span className="font-normal text-muted-foreground"> · {entry.subtitle}</span>
+                ) : null}
+              </strong>
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
+                  entry.confirmed_by_user
+                    ? "bg-success/12 text-success-strong"
+                    : "bg-highlight text-highlight-foreground",
+                )}
+              >
+                {entry.confirmed_by_user ? (
+                  <CheckCircle2 aria-hidden className="h-3 w-3" />
+                ) : (
+                  <CircleDot aria-hidden className="h-3 w-3" />
+                )}
                 {entry.confirmed_by_user ? "confirmada" : "revisão pendente"}
               </span>
-              <button
-                type="button"
-                onClick={() =>
+              <MoveButtons
+                label={entry.title}
+                first={entryIndex === 0}
+                last={entryIndex === section.entries.length - 1}
+                onMove={(direction) =>
                   dispatch({
                     type: "move-entry",
                     sectionId: section.section_id,
                     entryId: entry.entry_id,
-                    direction: -1,
+                    direction,
                   })
                 }
-                disabled={entryIndex === 0}
-                aria-label={`Mover ${entry.title} para cima`}
-                className="grid h-6 w-6 place-items-center rounded border disabled:opacity-30"
-              >
-                <ArrowUp className="h-3 w-3" />
-              </button>
-              <button
-                type="button"
-                onClick={() =>
-                  dispatch({
-                    type: "move-entry",
-                    sectionId: section.section_id,
-                    entryId: entry.entry_id,
-                    direction: 1,
-                  })
-                }
-                disabled={entryIndex === section.entries.length - 1}
-                aria-label={`Mover ${entry.title} para baixo`}
-                className="grid h-6 w-6 place-items-center rounded border disabled:opacity-30"
-              >
-                <ArrowDown className="h-3 w-3" />
-              </button>
+              />
             </div>
             <textarea
               aria-label={`Conteúdo de ${entry.title}`}
@@ -555,11 +804,14 @@ function EditorSection({
                   content: event.target.value,
                 })
               }
-              className="min-h-20 w-full rounded-md border bg-background p-3 text-sm"
+              className={cn(textareaClass, "min-h-20")}
             />
-            <p className="mt-2 text-[10px] text-muted-foreground">
-              {entry.source_refs.length} fonte(s) · {entry.source_profile_item_ids.length} item(ns)
-              do Perfil
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Link2 aria-hidden className="h-3 w-3" />
+              {entry.source_profile_item_ids.length
+                ? `Vem de ${entry.source_profile_item_ids.length} fato(s) do Perfil`
+                : "Sem vínculo com o Perfil"}
+              {entry.source_refs.length ? ` · ${entry.source_refs.length} fonte(s)` : ""}
             </p>
           </div>
         ))}
@@ -578,18 +830,18 @@ function ResumePreview({
   pages: number;
 }) {
   return (
-    <div className="xl:sticky xl:top-40">
-      <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+    <div className="rounded-xl bg-surface-muted p-3 xl:sticky xl:top-56 md:p-5">
+      <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
         <span className="inline-flex items-center gap-1.5">
-          <MonitorUp className="h-3.5 w-3.5" /> Preview em tempo real
+          <MonitorUp aria-hidden className="h-3.5 w-3.5" /> Preview em tempo real
         </span>
-        <span>
+        <span className="tabular">
           ~{pages} pág. · {pageSize}
         </span>
       </div>
       <article
         className={cn(
-          "resume-print-preview mx-auto overflow-hidden border bg-white p-8 text-slate-900 shadow-[var(--shadow-elevated)]",
+          "resume-print-preview mx-auto overflow-hidden rounded-sm bg-white p-8 text-slate-900 shadow-[var(--shadow-elevated)] ring-1 ring-black/5",
           pageSize === "A4" ? "aspect-[210/297]" : "aspect-[8.5/11]",
         )}
       >
@@ -613,7 +865,7 @@ function ResumePreview({
                       <div key={entry.entry_id}>
                         <h4 className="text-[11px] font-bold">{entry.title}</h4>
                         {entry.subtitle && (
-                          <p className="text-[10px] text-slate-500">{entry.subtitle}</p>
+                          <p className="text-[10px] text-slate-600">{entry.subtitle}</p>
                         )}
                         <p className="mt-1 text-[10px] leading-4">{entry.content}</p>
                       </div>
@@ -638,17 +890,20 @@ function VariantDiff({ variant }: { variant: ResumeVariant }) {
   return (
     <div className="space-y-3">
       {variant.change_set.map((change) => (
-        <article key={change.change_id} className="overflow-hidden rounded-xl border bg-card">
-          <header className="border-b bg-muted/30 px-4 py-3 text-xs font-semibold">
+        <article
+          key={change.change_id}
+          className="overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-soft)]"
+        >
+          <header className="border-b bg-surface/60 px-4 py-3 text-xs font-semibold">
             {change.section} · {change.change_type}
           </header>
           <div className="grid md:grid-cols-2">
             <div className="bg-destructive/5 p-4 text-xs">
-              <strong className="text-[10px] uppercase text-muted-foreground">Antes</strong>
+              <strong className="eyebrow text-destructive-strong">Antes</strong>
               <p className="mt-2 leading-5">{change.before || "—"}</p>
             </div>
-            <div className="bg-success/5 p-4 text-xs">
-              <strong className="text-[10px] uppercase text-muted-foreground">Depois</strong>
+            <div className="bg-success/8 p-4 text-xs">
+              <strong className="eyebrow text-success-strong">Depois</strong>
               <p className="mt-2 leading-5">{change.after || "—"}</p>
             </div>
           </div>

@@ -19,11 +19,16 @@ test("Application Lab completes the guided human-approved journey", async ({ pag
   await expect(page.getByText(/não é probabilidade de entrevista/i).first()).toBeVisible();
 
   await page.getByRole("button", { name: /Melhorias$/ }).click();
-  await page.getByRole("button", { name: "Aceitar", exact: true }).first().click();
-  await expect(page.getByText("Aceita", { exact: true })).toBeVisible();
-  await page.getByRole("button", { name: "Desfazer decisão" }).click();
-  await expect(page.getByText("Pendente", { exact: true }).first()).toBeVisible();
-  await page.getByRole("button", { name: "Aceitar", exact: true }).first().click();
+  // target the evidence-backed suggestion by content, not by position: the list also holds an
+  // unsupported claim whose "Aceitar" is (rightly) disabled
+  const backed = page
+    .getByRole("article")
+    .filter({ hasText: "Tornar a evidência confirmada mais explícita" });
+  await backed.getByRole("button", { name: "Aceitar", exact: true }).click();
+  await expect(backed.getByText("Aceita", { exact: true })).toBeVisible();
+  await backed.getByRole("button", { name: "Desfazer decisão" }).click();
+  await expect(backed.getByText("Pendente", { exact: true })).toBeVisible();
+  await backed.getByRole("button", { name: "Aceitar", exact: true }).click();
 
   await page.getByRole("button", { name: /Variante$/ }).click();
   await page.getByRole("button", { name: "Criar variante" }).click();

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bot, CheckCircle2, Compass, Eye, ShieldCheck } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { ArrowRight, Bot, CheckCircle2, Compass, Eye, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -13,12 +14,18 @@ import {
 } from "@/components/ui/sheet";
 import { v2Api } from "./api";
 import { useApiMode } from "@/lib/api/mode";
+import { ErrorState } from "@/components/states";
+import { entryFor } from "@/lib/navigation";
+import { toast } from "@/lib/notify";
 import { usePreferences } from "@/lib/preferences";
+import { actionCopy } from "@/lib/recommendations";
 
 export function CopilotDrawer({ pathname }: { pathname: string }) {
   const { mode, baseUrl } = useApiMode();
-  const { locale } = usePreferences();
+  const { locale, t } = usePreferences();
   const pt = locale === "pt-BR";
+  const entry = entryFor(pathname);
+  const [proposed, setProposed] = useState<Set<string>>(new Set());
   const client = useQueryClient();
   const [open, setOpen] = useState(false);
   const state = useQuery({
@@ -39,7 +46,16 @@ export function CopilotDrawer({ pathname }: { pathname: string }) {
           state.data?.recommendation_candidates.find((item) => item.action_id === actionId)
             ?.reason ?? "User-requested review",
       }),
-    onSuccess: () => client.invalidateQueries({ queryKey: ["v2", "approvals", mode, baseUrl] }),
+    onSuccess: (_data, actionId) => {
+      setProposed((current) => new Set(current).add(actionId));
+      toast.success(
+        pt
+          ? "Proposta criada. Ela espera sua decisão em Aprovações; nada foi executado."
+          : "Proposal created. It waits for your decision in Approvals; nothing ran.",
+      );
+      return client.invalidateQueries({ queryKey: ["v2", "approvals", mode, baseUrl] });
+    },
+    onError: (error: Error) => toast.error(error.message),
   });
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -55,19 +71,22 @@ export function CopilotDrawer({ pathname }: { pathname: string }) {
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
         <SheetHeader>
           <SheetTitle className="flex items-center gap-2">
-            <Compass className="text-accent" />
+            <Compass className="text-accent-strong" />
             {pt ? "Copilot sob sua aprovação" : "Human-approved Copilot"}
           </SheetTitle>
           <SheetDescription>
             {pt
-              ? `Contexto atual: ${pathname}. Ele propõe; você decide e executa.`
-              : `Current context: ${pathname}. It proposes; you decide and execute.`}
+              ? `Contexto: ${entry ? t(entry.label) : pathname}. Ele propõe; você decide e executa.`
+              : `Context: ${entry ? t(entry.label) : pathname}. It proposes; you decide and run.`}
           </SheetDescription>
         </SheetHeader>
-        <div className="mt-6 space-y-5">
-          <div className="rounded-xl border bg-muted/30 p-4">
+        <div className="mt-6 space-y-5 px-4 pb-6">
+          {state.isError ? (
+            <ErrorState error={state.error} onRetry={() => state.refetch()} />
+          ) : null}
+          <div className="rounded-xl border bg-surface-accent/60 p-4">
             <div className="flex items-center gap-2 text-sm font-medium">
-              <Eye className="h-4 w-4 text-accent" />
+              <Eye className="h-4 w-4 text-accent-strong" />
               {pt ? "O que foi considerado" : "What was considered"}
             </div>
             <p className="mt-2 text-xs text-muted-foreground">
@@ -87,24 +106,40 @@ export function CopilotDrawer({ pathname }: { pathname: string }) {
             </h3>
             <div className="space-y-3">
               {state.data?.recommendation_candidates.slice(0, 4).map((action) => (
-                <article key={action.action_id} className="rounded-xl border p-4">
+                <article
+                  key={action.action_id}
+                  className="rounded-xl border bg-card p-4 shadow-[var(--shadow-soft)]"
+                >
                   <div className="flex items-start gap-3">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-accent-strong" />
                     <div className="min-w-0 flex-1">
-                      <h4 className="text-sm font-semibold">{action.type.replaceAll("_", " ")}</h4>
+                      <h4 className="text-sm font-semibold">
+                        {actionCopy(action.type, locale).title}
+                      </h4>
                       <p className="mt-1 text-xs text-muted-foreground">{action.reason}</p>
                       <p className="mt-2 text-xs">
                         <strong>{pt ? "Impacto" : "Impact"}:</strong> {action.impact}
                       </p>
-                      <Button
-                        className="mt-3"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => propose.mutate(action.action_id)}
-                        disabled={propose.isPending}
-                      >
-                        {pt ? "Criar proposta" : "Create proposal"}
-                      </Button>
+                      {proposed.has(action.action_id) ? (
+                        <Link
+                          to="/approvals"
+                          onClick={() => setOpen(false)}
+                          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent-strong underline-offset-4 hover:underline"
+                        >
+                          {pt ? "Ver em Aprovações" : "See in Approvals"}
+                          <ArrowRight aria-hidden className="h-3.5 w-3.5" />
+                        </Link>
+                      ) : (
+                        <Button
+                          className="mt-3"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => propose.mutate(action.action_id)}
+                          disabled={propose.isPending}
+                        >
+                          {pt ? "Criar proposta" : "Create proposal"}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </article>

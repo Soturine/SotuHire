@@ -90,7 +90,7 @@ revisão humana.
 5. Fixe o SotuHire na barra do navegador, se desejar.
 
 Para testar um ZIP gerado pelo projeto, extraia-o primeiro e carregue a pasta resultante. O arquivo
-`manifest.json` informa a versão instalada; a implementação atual usa a linha `0.10.0`.
+`manifest.json` informa a versão instalada; a implementação atual usa a linha `0.10.1`.
 
 ### Iniciar a integração local
 
@@ -139,8 +139,18 @@ preferência; a chave não acompanha essa preferência.
 ### Análise local
 
 O modo **Análise local — sem chave** produz um relatório determinístico. Também é o fallback
-seguro quando um provider externo falha. O relatório informa `provider_requested`,
-`provider_used`, modelo, modo de análise e motivo do fallback; a troca não deve ser silenciosa.
+seguro quando um provider externo falha ou quando **IA configurada no SotuHire** (o padrão) está
+selecionada sem o SotuHire local rodando: o relatório local chega marcado como `fallback local`,
+com o motivo. O relatório informa `provider_requested`, `provider_used`, modelo, modo de análise e
+motivo do fallback; a troca não é silenciosa.
+
+### Diferenças entre os três caminhos
+
+| Caminho | Onde roda | Chave | Sai da máquina |
+| --- | --- | --- | --- |
+| Análise local | service worker da extensão | nenhuma | só as chamadas públicas ao GitHub |
+| Provider próprio (Gemini/OpenAI) | service worker → API do provider | da pessoa, na extensão | sinais públicos do projeto, ao provider escolhido |
+| IA configurada no SotuHire | Local Companion/backend | no backend local | o que o backend permitir, conforme a configuração do app |
 
 Quando a IA do SotuHire devolve um `run_id` persistido, o modal permite marcar o resultado como útil, editado, rejeitado ou contendo afirmação sem evidência. A extensão envia somente `run_id`, `task_id`, rating, decisão e o booleano de claim sem suporte. README, relatório, texto da página, chave e token não entram nesse payload.
 
@@ -167,8 +177,8 @@ O popup envia sua versão ao endpoint `POST /handshake` da Local Companion. A re
 
 ```json
 {
-  "extension_version": "0.10.0",
-  "companion_version": "1.9.8",
+  "extension_version": "0.10.1",
+  "companion_version": "2.1.0",
   "api_version": "v1",
   "capabilities": ["application_lab.open"],
   "compatible": true,
@@ -271,8 +281,9 @@ cookies ou sessão com ela.
 | IA e contexto | [provider](../docs/assets/screenshots/extension/ai-provider-setup.png) · [contexto seguro](../docs/assets/screenshots/extension/safe-context.png) |
 | Offline | [Companion offline](../docs/assets/screenshots/extension/companion-offline.png) |
 
-As imagens são produzidas por `scripts/capture_extension_screenshots.py` com dados fictícios,
-sem chaves e sem informações pessoais.
+As imagens são produzidas por `scripts/capture_extension_screenshots.py` e, na 0.10.1, o popup e a
+análise de GitHub por `scripts/verify_extension_modes.py`, sempre com dados fictícios, sem chaves e
+sem informações pessoais.
 
 ## Empacotar e testar
 
@@ -293,9 +304,36 @@ O empacotador valida Manifest V3, permissões, arquivos de runtime, ícones e pa
 Gemini/OpenAI/GitHub. O ZIP executável contém somente o necessário para a extensão; documentação,
 testes e materiais da loja ficam fora.
 
+### Verificação no navegador, nos três modos
+
+```bash
+cd apps/web && npx vite build && cd ../..
+python scripts/verify_extension_modes.py --out report.json --screenshots shots/
+```
+
+O script empacota o ZIP, carrega-o num Chromium real e usa o **popup de verdade** (aberto com
+`chrome.action.openPopup()`, sem aba própria, então a regra "só o popup salva chave e pareia" vale
+como para uma pessoa). Serviços sobem num diretório de dados descartável. Resultado da release 0.10.1
+([relatório](../docs/00-audit/2026-11-extension-modes-report.json)):
+
+| Modo | Verificações | O que cobre |
+| --- | --- | --- |
+| A — independente (Companion, API e site desligados) | 19/19 | service worker, permissões mínimas, abas, captura com JSON-LD, fila offline sem duplicar, análise local, provider padrão com fallback declarado, botão SotuHire Insight, GitHub indisponível, sem cookies |
+| Providers (fixtures) | 11/11 | Gemini e OpenAI com chave válida e inválida (controle negativo), chave nunca em `storage.local`, cada chave só ao próprio provider, página web sem acesso à extensão, remoção da chave |
+| B — Companion ativo, site desligado | 15/15 | pareamento e handshake de versão, entrega da fila, recaptura sem duplicar, Tracker, edital, Match/ATS, sessão expirada e renovada, nada pedido ao site, sessão some ao reiniciar o navegador |
+| C — integração completa | 7/7 | site pareado, **Preparar candidatura** abre o Lab só com identificadores, a vaga aparece uma vez no Tracker mesmo enviada duas, evidência de projeto para revisão, nada pendente após reiniciar |
+
+Limites desta validação: páginas-alvo são servidas offline sob `github.com` (o `openPopup()` não
+concede `activeTab` como o clique no ícone); GitHub, Gemini e OpenAI respondem por fixtures que
+recusam o que as APIs reais recusam; nenhuma chamada real a provider foi feita
+(`BLOCKED_EXTERNAL_CREDENTIALS`). A validação é em Chromium; não há certificação da Chrome Web Store.
+
 ## Solução de problemas
 
 - **Companion offline:** inicie `python -m modules.local_api.server`; a pendência permanece na fila.
+- **"Companion online · pareamento necessário":** na aba **IA**, abra **Conexão local avançada** e
+  clique em **Parear extensão nesta sessão**; depois **Reenviar pendências**. O pareamento vale até
+  fechar o navegador.
 - **Companion antigo:** abra o diagnóstico e compare as versões mínima e máxima informadas.
 - **Catálogo indisponível:** confirme a chave, a rede e o warning; o fallback não apaga o cache.
 - **Botão GitHub ausente:** recarregue a página e confirme que a extensão tem acesso a `github.com`.

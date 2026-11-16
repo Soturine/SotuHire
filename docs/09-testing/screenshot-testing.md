@@ -20,7 +20,7 @@ docs/assets/screenshots/sotuhire-v0.6-ai-setup.png
 Instale as dependências e o navegador:
 
 ```bash
-pip install -r docs/requirements/requirements-dev.txt
+pip install -e ".[dev]"
 playwright install chromium
 ```
 
@@ -82,12 +82,9 @@ A v1.1.0 separa duas famílias de captura:
 - Streamlit local: screenshots reais do app atual/dev usados no README raiz.
 - MkDocs/GitHub Pages: screenshots do site público estático usados em `visual-preview.md`.
 
-Para recapturar o app Streamlit:
-
-```bash
-streamlit run app.py
-python scripts/capture_streamlit_v1_1_screenshots.py --url http://localhost:8501
-```
+O script de captura do Streamlit da v1.1 foi removido em 2026-11: as imagens dessa versão já estão
+versionadas e o script continua no histórico do Git. A galeria e o GIF atuais do README vêm de
+`python scripts/capture_v2_walkthrough.py` (frontend web com dados fictícios).
 
 Para recapturar o site MkDocs:
 

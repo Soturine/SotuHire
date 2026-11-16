@@ -241,3 +241,13 @@ def test_lattes_confirm_rejects_empty_selection(tmp_path: Path, monkeypatch) -> 
     response = client.post("/api/v1/profile/lattes/confirm", json={"items": []})
 
     assert response.status_code == 422
+
+
+def test_import_lattes_is_a_deprecated_alias_of_the_draft_route():
+    from apps.api.main import app
+
+    paths = app.openapi()["paths"]
+    old = paths["/api/v1/profile/import-lattes"]["post"]
+    new = paths["/api/v1/profile/lattes/draft"]["post"]
+    assert old.get("deprecated") is True and not new.get("deprecated")
+    assert old["responses"]["200"] == new["responses"]["200"]

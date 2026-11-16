@@ -4,6 +4,292 @@ Todas as mudanças relevantes deste projeto serão documentadas aqui.
 
 ## Unreleased
 
+## [2.1.0] - 2026-11-16
+
+Redesign da interface (identidade 2.1), Perfil → Currículo Mestre sem redigitação e o trabalho da
+auditoria independente de 2026-11 (ver `docs/00-audit/2026-11-independent-assurance-audit.md` e
+[notas da release](docs/releases/v2.1.md)). Extensão 0.10.1. Schema SQLite continua 8.
+
+### Adicionado
+
+- `scripts/verify_extension_modes.py`: carrega o ZIP da extensão num Chromium real e usa o popup de
+  verdade nos três modos (independente, com Local Companion, integrado ao site e à API), com
+  serviços num diretório descartável e fixtures para GitHub, Gemini e OpenAI que recusam o que as
+  APIs reais recusam. 52 verificações na 0.10.1.
+- `scripts/capture_readme_media.py`: capturas do README, GIF e vídeo WebM gravados do build de
+  produção em modo de exemplo.
+- `scripts/dast_local_api.py`: sondas dinâmicas contra a API local rodando (Host forjado, origem
+  estranha e preflight, rotas sem sessão, prova de pareamento forjada, corpo grande sem sessão e
+  tamanho declarado acima do limite, travessia no download de backup, vazamento de caminho em erros).
+  Com `--bootstrap` (instância descartável) pareia uma sessão como o app web e repete a travessia
+  com ela, com controle positivo (o arquivo legítimo baixa): 27 sondas.
+- `scripts/verify_extension_in_chromium.py`: empacota a extensão, carrega o ZIP distribuído num
+  Chromium real e verifica service worker, popup sem erros e a captura (o mesmo fluxo do popup)
+  numa página do GitHub servida offline; com o ZIP sem `content.js` o relatório falha.
+- Gate de experiência (CP-UX06): suíte E2E aprovada em Chromium, Firefox e WebKit; Web Vitals do
+  build de produção medidos com script versionado (`apps/web/scripts/measure-vitals.mjs`); harness
+  de mutação adversarial de UI (`apps/web/scripts/ui-mutants.py`, 10 mutantes, 9 mortos, 1
+  equivalente). O modo de exemplo do Application Lab mostra uma afirmação sem evidência com
+  "Aceitar" desabilitado.
+- Tela inicial na identidade nova (CP-UX05): marca própria, hero marinho→petróleo, números em sans
+  tabular. `TextField` compartilhado substitui três cópias locais de campo.
+- Aprovações recompostas (CP-UX04): filtros por etapa da decisão, risco e status em português,
+  prévia campo a campo (o que muda, hoje e depois de executar), como desfazer sempre visível, botões
+  com estado pendente e falhas ditas. Copilot com os nomes e destinos do Cockpit e caminho até a
+  fila depois de criar uma proposta. Configurações dizem para onde vai o texto de cada provider.
+  Application Lab separa orientação de mudança e mostra o estado da sessão em português.
+- Radar, Fontes e Tracker recompostos (CP-UX03). Tracker: funil com proporção e filtro por etapa,
+  follow-ups vencidos em destaque, cartões sem informação repetida e com "Preparar candidatura" quando
+  o anúncio foi preservado, filtro sem acento, lista como padrão no celular com troca de visualização
+  visível. Radar: um painel com a explicação e uma faixa de indicadores que leva às seções, no lugar de
+  4 cartões iguais. Fontes: navegação por seções e indicadores da caixa de entrada sem zero falso.
+- Busca nos dados (`/api/v2/search`) sem acento, com todas as palavras, sobre evidências, portfólio,
+  fatos do Perfil (exceto sensíveis) e candidaturas; resultados ordenados por relevância. A paleta
+  mostra o tipo e o subtítulo de cada resultado.
+- Perfil e Resume Studio recompostos (CP-UX02). Perfil: hero com nome, headline, áreas e parcela de
+  fatos confirmados; abas "Fatos e evidências", "Identidade e objetivos" e "Importar" com link direto
+  (`/profile?tab=…`); fatos com tipo e origem legíveis, estado de confirmação, "Confirmar" para o que
+  está pendente, edição no lugar e remoção com confirmação; "Adicionar fato" em diálogo com validação;
+  identidade com aviso de alterações não salvas e "Descartar". Resume Studio: cabeçalho da variante
+  (vínculos com o Perfil, páginas, pendências), barra de ferramentas agrupada, estado de salvamento
+  anunciado, preview em papel, importação recolhida. Componente `Field` compartilhado (rótulo ligado ao
+  controle, dica e erro anunciados).
+- Fatos alterados no Perfil depois de entrarem no Currículo Mestre aparecem com o texto do Mestre e o
+  do Perfil lado a lado; a pessoa escolhe quais atualizar (`POST /resume-studio/master/profile-refresh`).
+  O Perfil nunca é escrito a partir do Mestre.
+- Variantes com controle de versão: `PATCH /resume-studio/variants/{id}` aceita `expected_updated_at`
+  e responde 409 se a variante foi salva em outra aba; o editor para o autosave e pergunta qual versão
+  fica.
+- Primeira visita em 2 etapas (antes 8): idioma, tema e princípios; depois os caminhos de início.
+- Correção visual do redesign (CP-UX01B): barra lateral marinho também no tema claro (e no menu
+  "Mais" e na barra de jornadas do celular), com o item atual em petróleo; superfícies em camadas
+  (`canvas`, `surface`, `surface-raised`, `surface-muted`, `surface-accent`, `surface-interactive`)
+  e sombras suaves; hero do Cockpit com gradiente marinho→petróleo e anel de cobertura;
+  indicadores com ícone e cor por tipo; forças comprovadas e lacunas diferenciadas; primeiro passo
+  como ação principal. Serifa só em títulos e no hero; números em sans tabular. Marca e favicon em
+  selo petróleo→azul. Nada do comportamento do CP-UX01 mudou (jornadas, busca, estados, traduções,
+  destinos).
+- Redesign, primeira fatia (CP-UX01): identidade "dossiê de carreira" (papel e tinta, verde-pinho
+  para evidência confirmada, ocre para o que espera revisão, vermelho-selo para o que espera a
+  pessoa), fontes OFL empacotadas que funcionam offline (Source Serif 4, IBM Plex Sans e Mono),
+  marca e favicon próprios no lugar do ícone genérico. A navegação passa a ser por jornada (Hoje,
+  Quem eu sou, Currículos, Oportunidades, Candidaturas, Sistema) a partir de um registro único de
+  telas, com a jornada atual aberta; no celular, barra inferior com as jornadas e "Mais". Cabeçalho
+  com a jornada como sobrelinha e o título inteiro também no celular. Todas as telas mantêm o
+  endereço.
+- Busca única (Ctrl+K) sobre todas as telas, sem acento, com ranking, destaque do termo, telas
+  visitadas recentemente, dados locais com cancelamento da requisição anterior e mensagens de
+  carregamento, falha, modo de exemplo e "nada encontrado". A Central de Ajuda usa o mesmo ranking.
+- Cockpit: próximos passos com nome em português e destino certo (preparar entrevista abre
+  Entrevistas, evidências pendentes abre Evidências; antes todos levavam a Aprovações), faixa de
+  indicadores no lugar de quatro cartões idênticos, estados de carregamento, erro e vazio.
+- Baseline do redesign (CP-UX00): a captura de UX cobre as 25 rotas reais (faltavam 3), 4 larguras
+  (1440, 1024, 390, 360), tema claro e escuro e en-US, e um spec novo grava 10 estados de uso
+  (primeira visita, busca, navegação mobile, API fora do ar, primeiro uso do Resume Studio, Copilot).
+  `scripts/build_ux_gallery.py` gera a galeria versionada e o manifesto com o hash de cada captura.
+  Direção de design em `docs/08-frontend/design-direction-2026-11.md` e ADR 006.
+- Resume Studio monta o Currículo Mestre a partir do Perfil Universal (só fatos confirmados e não
+  sensíveis, com a origem de cada entrada) em vez de pedir o currículo de novo, e lista fatos
+  confirmados depois no Perfil para a pessoa escolher quais entram. Nada volta da variante para o
+  Perfil. Ver `docs/00-audit/2026-11-data-authority-map.md`.
+- Provider Anthropic (Claude) com Claude Haiku 5.5 como modelo padrão: saída estruturada validada
+  pelo schema do prompt, chave só no backend (Configurações → IA ou `ANTHROPIC_API_KEY`), mesma
+  política de opt-in, erros e novas tentativas dos outros providers. Validado por testes de contrato;
+  nenhuma chamada real foi feita nesta revisão.
+
+### Segurança
+
+- A API local respondia 401/403/429 sem cabeçalhos CORS, porque o middleware de segurança fica do
+  lado de fora do CORS. O navegador escondia o 401, e o pareamento da interface web (que começa
+  justamente com um 401) nunca acontecia. As rejeições para uma origem autorizada agora trazem os
+  cabeçalhos; origens não autorizadas continuam sem eles.
+- O Copilot revalida status, expiração e `dependency_hash` da proposta dentro da mesma transação
+  `BEGIN IMMEDIATE` que grava o efeito, o registro de execução, o status e o audit; aprovar e depois
+  mudar o estado de carreira ou deixar expirar não executa mais a ação.
+- `undo` de arquivamento é condicional: se a evidência foi editada depois da execução, retorna
+  conflito em vez de sobrescrever a edição.
+- O service worker da extensão aceita mensagens privilegiadas só das páginas da própria extensão e
+  monta URLs apenas para rotas conhecidas do Local Companion na origem pareada; um content script não
+  consegue mais desviar o token para outra URL.
+- Pisos de dependências vulneráveis elevados (`pypdf>=6.21.4`, `python-dotenv>=1.2.2`) e lockfile
+  web corrigido por `npm audit fix` (incluindo a crítica em `seroval`).
+- A checagem de campos com cara de credencial antes de chamadas de IA e capturas tem um único dono
+  (`modules/security`); duas das quatro cópias não bloqueavam `headers`.
+- Local Companion autentica antes de ler o conteúdo: o corpo de uma rota protegida só é
+  decodificado e interpretado depois da credencial, e o servidor HTTP passou a só limitar e ler
+  bytes. Antes, um corpo inválido sem credencial respondia 422 (o JSON era interpretado antes da
+  autenticação, em duas camadas) e um `[]` em `/pairing/complete` derrubava o handler com
+  `AttributeError`. Agora: 401 sem credencial, qualquer que seja o corpo; 413 acima do limite
+  antes de tudo; 400 para corpo que não é JSON UTF-8 e 422 para JSON que não é objeto, profundo
+  demais ou com lote acima do limite, só depois da autenticação. Caminho público com método
+  errado responde 405.
+
+### Corrigido
+
+- Tracker: uma candidatura criada enquanto a lista inicial ainda carregava sumia da tela, porque a
+  resposta da listagem pedida antes substituía o cache (SH-NEW-041). Reproduzido em teste com
+  respostas controladas; a criação agora invalida a listagem (que cancela a requisição em voo) e o
+  modo de exemplo guarda as candidaturas criadas na sessão.
+- Resume Studio: adotar um currículo reimportado substituía o Currículo Mestre em uso sem aviso.
+  A API recusa (409) a troca do Mestre por outro currículo sem `replace_existing`, e a confirmação
+  precisa nomear o Mestre exibido; a tela mostra o que será substituído e pede confirmação. O Mestre
+  anterior não é apagado.
+- Banco local: o primeiro acesso concorrente a um banco novo (várias requisições, ou Local
+  Companion e API no mesmo diretório) rodava as migrações duas vezes e podia responder 500
+  ("Schema divergente"). Migração e verificação agora são serializadas por um lock de arquivo
+  entre threads e processos.
+- Local Companion: recapturar uma página sem mudança marcava análises, variante e kit como
+  desatualizados ("A vaga mudou"), porque o horário da captura entrava no hash do snapshot. Vagas e
+  editais iguais agora reaproveitam o snapshot.
+- Extensão 0.10.1: a análise "OpenAI própria" enviava `response_format` à Responses API, que a
+  rejeita, e caía sempre no fallback local; uma falha na análise de projeto deixava o popup em
+  "Processando…" para sempre; com "IA configurada no SotuHire" (o padrão) e nada rodando, a análise
+  agora devolve o relatório local com o fallback declarado.
+- Testes: a suíte força `SOTUHIRE_DATA_DIR` e `SOTUHIRE_BENCHMARK_DATABASE` para uma pasta
+  descartável (antes, um `SOTUHIRE_DATA_DIR` exportado recebia escritas) e falha se algo em
+  `data/` ou `benchmarks/` do checkout mudar.
+- Dados locais: cinco stores (perfil de carreira legado, oportunidades, análises de projeto,
+  cache de scraping, token de instalação) usavam `data/...` relativo ao diretório de trabalho
+  e ignoravam `SOTUHIRE_DATA_DIR`. A suíte de testes regravava o perfil de carreira do checkout
+  do desenvolvedor, e a API de extensão lia análises fora do diretório configurado. Os padrões
+  agora ficam no diretório de dados configurado (SH-NEW-040).
+- DAST: a sonda de corpo grande sem sessão contava uma conexão derrubada como recusa correta; agora
+  envia 64 KB de 6 MB por socket e só passa ao ler a linha `401`; sem resposta é inconclusivo e
+  falha. A sonda de prova de pareamento forjada não mandava `Origin` e parava no 403 da origem sem
+  chegar à prova; agora usa uma origem permitida e exige o 401 da checagem da prova.
+- Contrato cliente × API: a cópia versionada do OpenAPI mudava com a versão do FastAPI/Pydantic
+  instalada (o CI instala as mais novas compatíveis) e falhava sem mudança de API. Passa a ser uma
+  visão do contrato (corpos de requisição, respostas 2xx e os schemas alcançados; sem títulos,
+  descrições e defaults), idêntica nas duas combinações testadas; um campo novo na requisição ou um
+  campo renomeado na resposta continuam mudando a visão (testes).
+- Backup: arquivos de backup tinham nome com resolução de segundo e eram sobrescritos sem aviso. Ao
+  restaurar um backup criado no mesmo segundo, o backup de segurança da própria restauração
+  substituía o arquivo escolhido (restauração falhava com "Arquivo ZIP inválido" ou trazia o estado
+  atual). Duas exportações no mesmo dia também se sobrescreviam. Nomes agora nunca colidem e um
+  arquivo existente nunca é sobrescrito.
+- API Real: "Adicionar ao perfil" a partir de um texto importado respondia 422 sempre (o cliente
+  enviava o item de rascunho inteiro, com `item_id` e datas que o contrato não aceita). Achado pelo
+  teste de contrato novo: `src/lib/api/contract.test.ts` envia os corpos das escritas que as telas
+  fazem com objetos de domínio pelo cliente real e os confere contra o OpenAPI versionado
+  (`scripts/export_openapi.py`; o pytest acusa se a cópia ficar desatualizada).
+- Tela inicial: o título pulava ~60 px quando a fonte serifada carregava (CLS 0,14 → 0,002), com
+  fallback de métricas medidas por peso.
+- Testes: quatro verificações não podiam falhar (checagem de "Aprovar tudo" antes de a fila carregar,
+  em dois specs; `toHaveCount(0)` sobre toasts, que espera o toast sumir, em três specs).
+- Modo de exemplo: aprovar, rejeitar, executar, desfazer e criar proposta não mudavam nada na tela.
+- Aprovações: sem estados de carregamento, erro e vazio (a página ficava em branco numa falha); falha
+  de transição não era dita.
+- Tracker em lista: o seletor de status de cada candidatura não tinha nome acessível.
+- API Real: criar candidatura pelo Tracker respondia 422 sempre (o frontend enviava `source`, que o
+  contrato não aceita; o campo da API é `source_url`). Corpo montado com os campos do contrato e
+  teste que falha se um campo desconhecido voltar.
+- Configurações de IA: escolher um provider antes de a configuração salva carregar (ou durante um
+  refetch) era desfeito e o campo da chave voltava a ficar desabilitado.
+- Resume Studio: erro diferente de 404 ao abrir ficava em "Abrindo…" para sempre; rascunho do
+  navegador restaurado não era salvo; importação gravava o Mestre numa chave de cache errada; toast
+  dizia "JSON_RESUME".
+- Perfil: remover um fato não pedia confirmação; tipos e origens apareciam como identificadores
+  (`higher_education`, `demo_resume`).
+- Consultas não repetem mais respostas 4xx: o primeiro uso do Resume Studio (404 "Mestre ainda não
+  existe") mostrava "Abrindo seu estúdio…" por cerca de 7 s antes do onboarding, e o E2E
+  correspondente falhava sob carga (2 de 3 execuções). Política em `src/lib/api/retry.ts` (408, 429 e
+  5xx repetem; conexão recusada repete uma vez) com testes. A camada v2 passa a lançar
+  `ApiHttpError` com o status.
+- Gráfico "Status do Kanban" (Inteligência): cada setor tem nome acessível (`svg-img-alt`).
+- Modo API Real: nenhuma chamada do Career Copilot (Cockpit, aprovações, evidências, portfólio e
+  busca) saía do navegador; a camada v2 passava uma URL `/api/v2` ao pareamento, que só aceita
+  `/api/v1`, e falhava antes da rede (desde `880a5f1`, 2026-08-10). Verificado contra a API real:
+  pareamento, Cockpit, busca e primeiro uso do Resume Studio.
+- Com a API local fora do ar, o Cockpit mostrava "Carregando…" e zeros como se fossem dados; agora
+  mostra a falha, um aviso global com "Dados de exemplo" e "Gerenciar conexão", e tenta de novo só
+  uma vez em erro de conexão.
+- Tema escuro: 28 nós de contraste insuficiente por largura de tela (`text-*-foreground` sobre
+  tons claros) migrados para as variantes `-strong`.
+- Teste E2E do Radar que passava sem verificar nada: a expressão `/…|lida|Modo Demo/` casava com
+  "Compatibi**lida**de" no menu lateral. As checagens de toast agora olham só o toast e a mensagem
+  de cada ação.
+- Local Companion: as rotas autenticadas viraram uma tabela explícita, testada rota a rota (só
+  `/health` e o pareamento são públicos); rota conhecida com método errado responde 405 e rota
+  desconhecida continua escondida atrás da autenticação.
+- O teste da fronteira da Companion percorre a tabela de rotas que o app usa (não uma cópia), fixa
+  o conjunto de caminhos públicos e confere que todo caminho chamado pela extensão está declarado.
+- Aplicar fatos do Perfil ao Currículo Mestre é idempotente: um ID repetido no pedido gerava
+  entradas duplicadas, e repetir um pedido que já tinha dado certo respondia 422. Agora o ID conta
+  uma vez e o que já está no Mestre não muda nada (o retry responde 200 com o mesmo currículo).
+- Gravações do Currículo Mestre baseadas numa cópia antiga respondem 409 em vez de apagar o que
+  outra aba ou a aplicação de fatos do Perfil tinha gravado: a aplicação de fatos sempre confere a
+  versão, e `PUT /resume-studio/master` confere quando recebe `expected_updated_at`. A conferência
+  e a gravação ficam na mesma transação `BEGIN IMMEDIATE`. A tela de atualizações do Perfil recarrega
+  o Mestre e a lista ao receber 409.
+- Application Lab: aceitar uma sugestão sem edição falha quando o texto afirma registro profissional
+  (os 26 conselhos e registros conhecidos, como CRM, OAB e COREN) ou pós-graduação (doutorado, mestrado, MBA,
+  especialização) que não aparece no texto substituído nem no Currículo Mestre confirmado. Antes, bastava
+  a sessão ter alguma evidência selecionada. Um texto editado pela pessoa continua sendo dela.
+- Tarefas criadas pelo Copilot quebravam a listagem de tarefas da Career API (HTTP 500).
+- `create_task` retornava `created: true` mesmo quando a tarefa já existia; propostas rejeitadas ou
+  expiradas eram devolvidas ao repropor; a aresta salva retornava um id diferente do persistido.
+- O catálogo de prompts marcava `career_advice_v1`, `github_profile_analysis_v1` e
+  `portfolio_gap_analysis_v1` como implementados; o único arquivo que os chamava não era importado por
+  nada. Agora aparecem como registrados sem consumidor, e o gerador só conta como consumidor um
+  arquivo que o código de produção importa.
+- Salvar um provider de IA sem escolher modelo gravava o modelo do Gemini para qualquer provider
+  (OpenAI seria chamado com `gemini-2.5-flash`); agora vale o padrão do provider escolhido.
+- `.env.example` listava 24 variáveis, das quais só 4 eram lidas pelo código, e omitia outras em uso
+  (`SOTUHIRE_DATA_DIR`, `OPENAI_MODEL`, configuração da API local); agora lista só o que existe.
+- Resume Studio sem Currículo Mestre mostrava erro com "tentar novamente" em vez do primeiro uso.
+- Um rascunho antigo guardado no navegador substituía a variante salva no servidor ao reabrir o
+  Resume Studio; agora só vence se for da mesma variante e mais novo, e é apagado ao salvar.
+- Acessibilidade: o axe (WCAG 2.x A/AA) apontava 20 nós críticos e 309 sérios em 22 rotas; agora
+  zero. Texto em cores semânticas usa tokens de contraste próprios, campos ganharam nome acessível
+  e a busca universal usa o texto visível como nome.
+- `due_at` de tarefas agora exige fuso horário e é normalizado para UTC na API e no frontend.
+- Fingerprint do Career State passa a incluir oportunidades e resultados recentes.
+- Página Carreira: lembrete pede a tarefa relacionada explicitamente; o modo demo mostra o que foi
+  salvo na sessão em vez de não fazer nada.
+
+### Alterado
+
+- `ensure_database()` não repete as verificações completas de integridade a cada chamada de
+  repositório quando o arquivo não mudou: `list_nodes` com 2.000 evidências caiu de 18 para 5,5 ms;
+  uma chamada em cache custa 0,5 ms contra 19,6 ms da verificação completa. A identidade do arquivo
+  usa tamanho, data e hash do cabeçalho do banco e tamanho e cabeçalho do WAL (os sais mudam quando
+  o WAL reinicia, então uma escrita que reaproveita quadros sem crescer é vista); a verificação vale
+  no máximo 10 minutos (dano que preserva tamanho, data e cabeçalhos é pego então) e restaurar um
+  backup a descarta.
+- Instalação padrão sem Streamlit e sem pandas: a interface Streamlit (modo legado/dev desde a
+  v1.4) vai para o extra `legacy-ui`; o fechamento de runtime caiu de 51 para 28 pacotes.
+- Dependências vivem só no `pyproject.toml` com extras `ai`, `browser`, `docs`, `legacy-ui` e `dev`;
+  as mensagens de instalação da UI e da API apontam para eles.
+- Licença declarada como expressão SPDX com `LICENSE` dentro do wheel (o formato antigo deixa de
+  ser aceito pelo setuptools em 2027-02-18).
+- SBOM CycloneDX inventaria o fechamento transitivo Python e todo o lockfile npm, com arestas de
+  dependência, e é verificado no CI; uploads de artefatos obrigatórios falham se o arquivo faltar.
+- CI roda todas as specs E2E em Chromium, a instalação limpa realmente cria um venv novo e
+  `npm audit` bloqueia em severidade crítica.
+- Dependabot agrupa CodeQL e atualizações minor/patch por ecossistema.
+- Atualizações de dependências revisadas: Ruff 0.17.3, CodeQL 4.38.3, upload-artifact 7.0.2,
+  deploy-pages 5.0.1 (pins por SHA conferidos contra as tags), Tailwind 4.3, Radix tabs/label e
+  Prettier 3.10; `@axe-core/playwright` como dependência só de desenvolvimento.
+
+### Obsoleto
+
+- `POST /api/v1/profile/import-lattes` é alias de `POST /api/v1/profile/lattes/draft` e aparece como
+  `deprecated` no OpenAPI.
+
+### Removido
+
+- Utilitários CSS `grid-bg` e `glass`, sem consumidor depois do CP-UX05.
+- `docs/requirements/*.txt` (duplicavam o `pyproject.toml` e já divergiam dele).
+- Código sem nenhum consumidor: `modules/storage/repositories` (CRUD genérico nunca adotado),
+  `modules/alerts`, `modules/sources/registry.py`, módulos de tracker/currículo/perfil/busca sem
+  importador, dez métricas de avaliação de IA e helpers isolados. Detalhes e prova por item em
+  `docs/00-audit/2026-11-dead-dedupe-triage.md`.
+- Segunda camada de código sem consumidor, exposta pelas remoções anteriores: `modules/ai/guidance.py`,
+  o reexport `modules/ai/provider.py`, `modules/rag`, `modules/sources/base.py`,
+  `modules/core/schemas.py`, `matching/exceptions.py`, `memory/memory_index.py` e módulos de busca e
+  portfólio usados só por testes (`query_generator`, `post_detector`, `source_ranker`, `portfolio_score`).
+- Scripts de captura de screenshots de versões passadas (v1.1, v1.9.8, v1.9.9, v1.10.1, v1.11.0).
+
 ## [2.0.0] - 2026-08-10
 
 ### Adicionado

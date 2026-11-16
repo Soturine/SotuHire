@@ -101,7 +101,7 @@ class LocalAuthManager:
         *,
         installation_token: str = "",
         pairing_bootstrap: str = "",
-        token_path: str | Path = "data/security/local-auth.json",
+        token_path: str | Path | None = None,
         pairing_ttl_seconds: int = DEFAULT_PAIRING_TTL_SECONDS,
         session_ttl_seconds: int = DEFAULT_SESSION_TTL_SECONDS,
         clock: Callable[[], float] = time.monotonic,
@@ -110,6 +110,12 @@ class LocalAuthManager:
         self._pairing_bootstrap_digest = (
             _digest(pairing_bootstrap.strip()) if pairing_bootstrap.strip() else ""
         )
+        if token_path is None:
+            # Imported here: modules.security must stay importable without the app's dependencies
+            # (the extension packaging scans for secrets in a bare environment).
+            from modules.storage.database import default_data_dir
+
+            token_path = default_data_dir() / "security" / "local-auth.json"
         self._store = InstallationTokenStore(token_path)
         self._installation_token = ""
         self.pairing_ttl_seconds = max(10, pairing_ttl_seconds)

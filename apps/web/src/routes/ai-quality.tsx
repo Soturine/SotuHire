@@ -408,7 +408,7 @@ function AiQualityPage() {
                 <PrivacyItem title="Trechos" value="somente metadados redigidos" />
               </div>
               <div className="mt-4 flex items-start gap-2 rounded-md bg-muted p-4 text-sm">
-                <ShieldCheck className="mt-0.5 h-4 w-4 text-accent" />
+                <ShieldCheck className="mt-0.5 h-4 w-4 text-accent-strong" />
                 <p>
                   API keys, Authorization, cookies, tokens, currículo, vaga, prompt e resposta
                   integral não entram no AiRunStore.
