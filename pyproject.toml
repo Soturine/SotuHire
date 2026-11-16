@@ -45,7 +45,7 @@ dev = [
 ]
 ai = [
   "anthropic>=2.8.0,<3.0.0",
-  "google-genai>=1.0.0,<3.0.0",
+  "google-genai>=1.0.0,<4.0.0",
 ]
 # Authenticated-browser source capture attaches to a Chromium the user started (CDP).
 browser = [
